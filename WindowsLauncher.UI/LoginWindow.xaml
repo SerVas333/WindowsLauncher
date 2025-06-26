@@ -1,0 +1,163 @@
+﻿<!-- LoginWindow.xaml -->
+<Window x:Class="WindowsLauncher.UI.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        Title="Company Launcher - Login" 
+        Height="831" Width="500"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Background="#F5F5F5">
+
+    <Window.Resources>
+        <Style x:Key="ModernButton" TargetType="Button">
+            <Setter Property="Background" Value="#2196F3"/>
+            <Setter Property="Foreground" Value="White"/>
+            <Setter Property="BorderThickness" Value="0"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}" 
+                                CornerRadius="4">
+                            <ContentPresenter HorizontalAlignment="Center" 
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="#1976D2"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="#CCCCCC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModernTextBox" TargetType="TextBox">
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" 
+                                        Margin="{TemplateBinding Padding}"
+                                        VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="ModernPasswordBox" TargetType="PasswordBox">
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="BorderBrush" Value="#CCCCCC"/>
+            <Setter Property="Background" Value="White"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="PasswordBox">
+                        <Border Background="{TemplateBinding Background}" 
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost" 
+                                        Margin="{TemplateBinding Padding}"
+                                        VerticalAlignment="Center"/>
+                        </Border>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Height="624" VerticalAlignment="Top">
+        <!-- Header -->
+        <Border Background="#1976D2" Height="80" VerticalAlignment="Top">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                <Ellipse Width="40" Height="40" Fill="#FFC107" Margin="0,0,0,8"/>
+                <TextBlock Text="Company Launcher" FontSize="18" FontWeight="Bold" Foreground="White"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Login Form -->
+        <Border Background="White" Margin="40,100,40,-75" CornerRadius="8" Padding="40">
+            <Border.Effect>
+                <DropShadowEffect Color="Gray" Direction="315" ShadowDepth="2" BlurRadius="10" Opacity="0.3"/>
+            </Border.Effect>
+            
+            <StackPanel>
+                <TextBlock Text="Sign In" FontSize="24" FontWeight="Bold" 
+                          HorizontalAlignment="Center" Margin="0,0,0,20" Foreground="#333"/>
+
+                <!-- Current User Option -->
+                <Border Background="#E8F5E8" CornerRadius="4" Padding="16" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="Current Windows User:" FontWeight="SemiBold" Foreground="#2E7D32"/>
+                        <TextBlock x:Name="CurrentUserText" Text="Loading..." Foreground="#2E7D32" Margin="0,4,0,8"/>
+                        <Button Content="Continue as Current User" 
+                                Style="{StaticResource ModernButton}"
+                                Background="#4CAF50"
+                                Click="CurrentUserButton_Click"
+                                x:Name="CurrentUserButton"/>
+                    </StackPanel>
+                </Border>
+
+                <TextBlock Text="Or sign in with different credentials:" 
+                          FontWeight="SemiBold" Margin="0,0,0,16" HorizontalAlignment="Center"/>
+
+                <!-- Username -->
+                <TextBlock Text="Username:" FontWeight="SemiBold" Margin="8,0,8,4"/>
+                <TextBox x:Name="UsernameTextBox" 
+                         Style="{StaticResource ModernTextBox}"
+                         Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"/>
+
+                <!-- Password -->
+                <TextBlock Text="Password:" FontWeight="SemiBold" Margin="8,16,8,4"/>
+                <PasswordBox x:Name="PasswordBox" 
+                            Style="{StaticResource ModernPasswordBox}"/>
+
+                <!-- Error Message -->
+                <TextBlock x:Name="ErrorMessage" 
+                          Foreground="Red" FontSize="12" 
+                          Margin="8,8,8,0" TextWrapping="Wrap"
+                          Visibility="Collapsed"/>
+
+                <!-- Login Button -->
+                <Button Content="Sign In" 
+                        Style="{StaticResource ModernButton}"
+                        Click="LoginButton_Click"
+                        x:Name="LoginButton"
+                        Margin="8,20,8,8"/>
+
+                <!-- Cancel Button -->
+                <Button Content="Cancel" 
+                        Style="{StaticResource ModernButton}"
+                        Background="#757575"
+                        Click="CancelButton_Click" Height="30"/>
+
+                <!-- Loading Indicator -->
+                <StackPanel x:Name="LoadingPanel" Orientation="Horizontal" 
+                           HorizontalAlignment="Center" Margin="0,16,0,0"
+                           Visibility="Collapsed">
+                    <TextBlock Text="🔄" FontSize="16" Margin="0,0,8,0"/>
+                    <TextBlock Text="Authenticating..." FontSize="12" VerticalAlignment="Center"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

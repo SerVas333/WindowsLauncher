@@ -1,0 +1,326 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+		<xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+		<xsd:element name="root" msdata:IsDataSet="true">
+			<xsd:complexType>
+				<xsd:choice maxOccurs="unbounded">
+					<xsd:element name="metadata">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" />
+							</xsd:sequence>
+							<xsd:attribute name="name" use="required" type="xsd:string" />
+							<xsd:attribute name="type" type="xsd:string" />
+							<xsd:attribute name="mimetype" type="xsd:string" />
+							<xsd:attribute ref="xml:space" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="assembly">
+						<xsd:complexType>
+							<xsd:attribute name="alias" type="xsd:string" />
+							<xsd:attribute name="name" type="xsd:string" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="data">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+							<xsd:attribute ref="xml:space" />
+						</xsd:complexType>
+					</xsd:element>
+					<xsd:element name="resheader">
+						<xsd:complexType>
+							<xsd:sequence>
+								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+							</xsd:sequence>
+							<xsd:attribute name="name" type="xsd:string" use="required" />
+						</xsd:complexType>
+					</xsd:element>
+				</xsd:choice>
+			</xsd:complexType>
+		</xsd:element>
+	</xsd:schema>
+	<resheader name="resmimetype">
+		<value>text/microsoft-resx</value>
+	</resheader>
+	<resheader name="version">
+		<value>2.0</value>
+	</resheader>
+	<resheader name="reader">
+		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+	<resheader name="writer">
+		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+	</resheader>
+
+	<!-- Main Window -->
+	<data name="AppTitle" xml:space="preserve">
+    <value>Company Launcher</value>
+  </data>
+	<data name="WindowTitle" xml:space="preserve">
+    <value>Company Launcher - {0} ({1})</value>
+  </data>
+	<data name="SearchPlaceholder" xml:space="preserve">
+    <value>Search applications...</value>
+  </data>
+
+	<!-- Buttons -->
+	<data name="Settings" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+	<data name="Refresh" xml:space="preserve">
+    <value>Refresh</value>
+  </data>
+	<data name="Logout" xml:space="preserve">
+    <value>Logout</value>
+  </data>
+	<data name="SwitchUser" xml:space="preserve">
+    <value>Switch User</value>
+  </data>
+	<data name="Login" xml:space="preserve">
+    <value>Sign In</value>
+  </data>
+	<data name="Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+
+	<!-- Categories -->
+	<data name="CategoryAll" xml:space="preserve">
+    <value>All</value>
+  </data>
+	<data name="AllCategories" xml:space="preserve">
+    <value>All Categories</value>
+  </data>
+	<data name="CategoryTools" xml:space="preserve">
+    <value>Tools</value>
+  </data>
+	<data name="CategoryWeb" xml:space="preserve">
+    <value>Web</value>
+  </data>
+	<data name="CategorySystem" xml:space="preserve">
+    <value>System</value>
+  </data>
+	<data name="CategoryOffice" xml:space="preserve">
+    <value>Office</value>
+  </data>
+	<data name="CategoryDevelopment" xml:space="preserve">
+    <value>Development</value>
+  </data>
+	<data name="Category_Business" xml:space="preserve">
+    <value>Business</value>
+  </data>
+	<data name="Category_Development" xml:space="preserve">
+    <value>Development</value>
+  </data>
+	<data name="Category_Communication" xml:space="preserve">
+    <value>Communication</value>
+  </data>
+	<data name="Category_Utilities" xml:space="preserve">
+    <value>Utilities</value>
+  </data>
+
+	<!-- Status Messages -->
+	<data name="Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+	<data name="Loading" xml:space="preserve">
+    <value>Loading...</value>
+  </data>
+	<data name="LoadingApplications" xml:space="preserve">
+    <value>Loading applications...</value>
+  </data>
+	<data name="Initializing" xml:space="preserve">
+    <value>Initializing...</value>
+  </data>
+	<data name="Welcome" xml:space="preserve">
+    <value>Welcome, {0}!</value>
+  </data>
+	<data name="WelcomeMessage" xml:space="preserve">
+    <value>Welcome, {0}!</value>
+  </data>
+	<data name="LaunchingApp" xml:space="preserve">
+    <value>Launching {0}...</value>
+  </data>
+	<data name="SuccessfullyLaunched" xml:space="preserve">
+    <value>Successfully launched {0}</value>
+  </data>
+	<data name="AppLaunchedSuccessfully" xml:space="preserve">
+    <value>Successfully launched {0}</value>
+  </data>
+	<data name="AppLaunchFailed" xml:space="preserve">
+    <value>Failed to launch {0}: {1}</value>
+  </data>
+	<data name="AppLaunchError" xml:space="preserve">
+    <value>Error launching {0}: {1}</value>
+  </data>
+	<data name="SwitchedToUser" xml:space="preserve">
+    <value>Switched to user: {0}</value>
+  </data>
+	<data name="LoadedApps" xml:space="preserve">
+    <value>Loaded {0} applications</value>
+  </data>
+	<data name="ApplicationsRefreshed" xml:space="preserve">
+    <value>Applications refreshed</value>
+  </data>
+	<data name="ApplicationLaunched" xml:space="preserve">
+    <value>Application launched: {0}</value>
+  </data>
+	<data name="LoggedOut" xml:space="preserve">
+    <value>Logged out</value>
+  </data>
+	<data name="Applications" xml:space="preserve">
+    <value>applications</value>
+  </data>
+	<data name="Apps" xml:space="preserve">
+    <value>apps</value>
+  </data>
+	<data name="NoApplicationsFound" xml:space="preserve">
+    <value>No applications found</value>
+  </data>
+	<data name="NoApplicationsHint" xml:space="preserve">
+    <value>Try adjusting your search or category filter</value>
+  </data>
+
+	<!-- Login Window -->
+	<data name="LoginWindowTitle" xml:space="preserve">
+    <value>Company Launcher - Login</value>
+  </data>
+	<data name="CurrentWindowsUser" xml:space="preserve">
+    <value>Current Windows User:</value>
+  </data>
+	<data name="ContinueAsCurrentUser" xml:space="preserve">
+    <value>Continue as Current User</value>
+  </data>
+	<data name="OrSignInDifferent" xml:space="preserve">
+    <value>Or sign in with different credentials:</value>
+  </data>
+	<data name="Username" xml:space="preserve">
+    <value>Username:</value>
+  </data>
+	<data name="Password" xml:space="preserve">
+    <value>Password:</value>
+  </data>
+	<data name="Authenticating" xml:space="preserve">
+    <value>Authenticating...</value>
+  </data>
+	<data name="PleaseEnterUsername" xml:space="preserve">
+    <value>Please enter username</value>
+  </data>
+	<data name="PleaseEnterPassword" xml:space="preserve">
+    <value>Please enter password</value>
+  </data>
+
+	<!-- Error Messages -->
+	<data name="Error" xml:space="preserve">
+    <value>Error</value>
+  </data>
+	<data name="Warning" xml:space="preserve">
+    <value>Warning</value>
+  </data>
+	<data name="Information" xml:space="preserve">
+    <value>Information</value>
+  </data>
+	<data name="Confirmation" xml:space="preserve">
+    <value>Confirmation</value>
+  </data>
+	<data name="AccessDenied" xml:space="preserve">
+    <value>Access Denied</value>
+  </data>
+	<data name="TimeoutError" xml:space="preserve">
+    <value>Timeout Error</value>
+  </data>
+	<data name="ErrorAccessDenied" xml:space="preserve">
+    <value>Access denied. Please check your permissions.</value>
+  </data>
+	<data name="ErrorTimeout" xml:space="preserve">
+    <value>Operation timed out. Please try again.</value>
+  </data>
+	<data name="ErrorInvalidOperation" xml:space="preserve">
+    <value>Invalid operation.</value>
+  </data>
+	<data name="ErrorInvalidData" xml:space="preserve">
+    <value>Invalid data provided.</value>
+  </data>
+	<data name="ErrorUnknown" xml:space="preserve">
+    <value>An unknown error occurred</value>
+  </data>
+	<data name="LaunchError" xml:space="preserve">
+    <value>Launch Error</value>
+  </data>
+	<data name="AuthenticationFailed" xml:space="preserve">
+    <value>Authentication failed: {0}</value>
+  </data>
+	<data name="SwitchUserError" xml:space="preserve">
+    <value>Switch user error: {0}</value>
+  </data>
+	<data name="LogoutError" xml:space="preserve">
+    <value>Logout error: {0}</value>
+  </data>
+	<data name="InitializationError" xml:space="preserve">
+    <value>Initialization error: {0}</value>
+  </data>
+	<data name="ErrorLoadingApplications" xml:space="preserve">
+    <value>Error loading applications: {0}</value>
+  </data>
+	<data name="FailedToLaunch" xml:space="preserve">
+    <value>Failed to launch {0}: {1}</value>
+  </data>
+
+	<!-- Confirmations -->
+	<data name="ConfirmLogout" xml:space="preserve">
+    <value>Are you sure you want to logout?</value>
+  </data>
+
+	<!-- Settings -->
+	<data name="SettingsComingSoon" xml:space="preserve">
+    <value>Settings functionality coming soon...</value>
+  </data>
+	<data name="SettingsWindowMessage" xml:space="preserve">
+    <value>Settings window will be implemented in the next iteration.</value>
+  </data>
+
+	<!-- Tooltips -->
+	<data name="SettingsTooltip" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+	<data name="RefreshTooltip" xml:space="preserve">
+    <value>Refresh applications</value>
+  </data>
+	<data name="LogoutTooltip" xml:space="preserve">
+    <value>Logout from application</value>
+  </data>
+	<data name="SwitchUserTooltip" xml:space="preserve">
+    <value>Switch to different user</value>
+  </data>
+
+	<!-- User Roles -->
+	<data name="RoleStandard" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+	<data name="RolePowerUser" xml:space="preserve">
+    <value>PowerUser</value>
+  </data>
+	<data name="RoleAdministrator" xml:space="preserve">
+    <value>Administrator</value>
+  </data>
+
+	<!-- Application Descriptions -->
+	<data name="CalculatorDescription" xml:space="preserve">
+    <value>Windows Calculator</value>
+  </data>
+	<data name="NotepadDescription" xml:space="preserve">
+    <value>Text Editor</value>
+  </data>
+	<data name="GoogleDescription" xml:space="preserve">
+    <value>Google Search</value>
+  </data>
+	<data name="ControlPanelDescription" xml:space="preserve">
+    <value>Windows Control Panel</value>
+  </data>
+</root>
