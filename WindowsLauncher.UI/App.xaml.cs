@@ -61,9 +61,11 @@ namespace WindowsLauncher.UI
 
             // ViewModels
             services.AddTransient<MainViewModel>();
+            services.AddTransient<AdminViewModel>();
 
             // Windows
             services.AddTransient<MainWindow>();
+            services.AddTransient<AdminWindow>();
 
             // Memory cache for authorization
             services.AddMemoryCache();

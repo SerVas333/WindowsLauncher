@@ -181,7 +181,8 @@ namespace WindowsLauncher.UI.ViewModels
         public AsyncRelayCommand RefreshCommand { get; private set; } = null!;
         public RelayCommand LogoutCommand { get; private set; } = null!;
         public RelayCommand OpenSettingsCommand { get; private set; } = null!;
-        public RelayCommand SwitchUserCommand { get; private set; } = null!;
+        public RelayCommand OpenAdminCommand { get; private set; } = null!;
+        public RelayCommand SwitchUserCommand { get; private set; } = null!;        
 
         private void InitializeCommands()
         {
@@ -677,6 +678,25 @@ namespace WindowsLauncher.UI.ViewModels
             DialogService.ShowInfo(
                 LocalizationManager.GetString("SettingsWindowMessage"),
                 LocalizationManager.GetString("Settings"));
+        }
+
+        private void OpenAdminWindow()
+        {
+            try
+            {
+                var adminWindow = new AdminWindow(_serviceProvider);
+                adminWindow.Owner = WpfApplication.Current.MainWindow;
+                adminWindow.ShowDialog();
+
+                // После закрытия окна администрирования обновляем список приложений
+                _ = RefreshApplications();
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = "Ошибка при открытии окна администрирования";
+                Logger.LogError(ex, errorMessage);
+                DialogService.ShowError($"{errorMessage}: {ex.Message}");
+            }
         }
 
         private void SwitchUser()
