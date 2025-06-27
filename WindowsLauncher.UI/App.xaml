@@ -1,8 +1,26 @@
-﻿<Application x:Class="WindowsLauncher.UI.App"
+﻿<!-- ===== WindowsLauncher.UI/App.xaml - ОБНОВЛЕННАЯ ВЕРСИЯ ===== -->
+<Application x:Class="WindowsLauncher.UI.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              StartupUri="MainWindow.xaml">
     <Application.Resources>
-        <!-- Пока без MaterialDesign - добавим позже -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <!-- Подключаем корпоративные стили -->
+                <ResourceDictionary Source="Styles/CorporateStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+
+            <!-- Глобальные стили -->
+            <Style TargetType="Window">
+                <Setter Property="FontFamily" Value="Segoe UI"/>
+                <Setter Property="Background" Value="#F5F5F5"/>
+            </Style>
+
+            <!-- Стиль по умолчанию для всех TextBlock -->
+            <Style TargetType="TextBlock" BasedOn="{StaticResource CorporateBodyText}"/>
+
+            <!-- Стиль по умолчанию для всех Button -->
+            <Style TargetType="Button" BasedOn="{StaticResource CorporateButton}"/>
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

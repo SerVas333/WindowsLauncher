@@ -1,4 +1,5 @@
-﻿using System;
+﻿// ===== WindowsLauncher.UI/LoginWindow.xaml.cs - ОБНОВЛЕННАЯ ВЕРСИЯ =====
+using System;
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Extensions.DependencyInjection;
@@ -33,13 +34,13 @@ namespace WindowsLauncher.UI
                 }
                 else
                 {
-                    CurrentUserText.Text = "Windows authentication failed";
+                    CurrentUserText.Text = "Ошибка аутентификации Windows";
                     CurrentUserButton.IsEnabled = false;
                 }
             }
             catch (Exception ex)
             {
-                CurrentUserText.Text = $"Error: {ex.Message}";
+                CurrentUserText.Text = $"Ошибка: {ex.Message}";
                 CurrentUserButton.IsEnabled = false;
             }
         }
@@ -65,6 +66,7 @@ namespace WindowsLauncher.UI
             try
             {
                 ShowLoading(true);
+                HideError();
 
                 using var scope = _serviceProvider.CreateScope();
                 var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
@@ -79,12 +81,12 @@ namespace WindowsLauncher.UI
                 }
                 else
                 {
-                    ShowError($"Authentication failed: {result.ErrorMessage}");
+                    ShowError($"Ошибка аутентификации: {result.ErrorMessage}");
                 }
             }
             catch (Exception ex)
             {
-                ShowError($"Error: {ex.Message}");
+                ShowError($"Ошибка: {ex.Message}");
             }
             finally
             {
@@ -99,14 +101,14 @@ namespace WindowsLauncher.UI
 
             if (string.IsNullOrEmpty(username))
             {
-                ShowError("Please enter username");
+                ShowError("Пожалуйста, введите имя пользователя");
                 UsernameTextBox.Focus();
                 return;
             }
 
             if (string.IsNullOrEmpty(password))
             {
-                ShowError("Please enter password");
+                ShowError("Пожалуйста, введите пароль");
                 PasswordBox.Focus();
                 return;
             }
@@ -114,6 +116,7 @@ namespace WindowsLauncher.UI
             try
             {
                 ShowLoading(true);
+                HideError();
 
                 using var scope = _serviceProvider.CreateScope();
                 var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
@@ -128,14 +131,14 @@ namespace WindowsLauncher.UI
                 }
                 else
                 {
-                    ShowError($"Authentication failed: {result.ErrorMessage}");
+                    ShowError($"Ошибка аутентификации: {result.ErrorMessage}");
                     PasswordBox.Clear();
                     PasswordBox.Focus();
                 }
             }
             catch (Exception ex)
             {
-                ShowError($"Error: {ex.Message}");
+                ShowError($"Ошибка: {ex.Message}");
             }
             finally
             {
@@ -146,7 +149,12 @@ namespace WindowsLauncher.UI
         private void ShowError(string message)
         {
             ErrorMessage.Text = message;
-            ErrorMessage.Visibility = Visibility.Visible;
+            ErrorBorder.Visibility = Visibility.Visible;
+        }
+
+        private void HideError()
+        {
+            ErrorBorder.Visibility = Visibility.Collapsed;
         }
 
         private void ShowLoading(bool isLoading)

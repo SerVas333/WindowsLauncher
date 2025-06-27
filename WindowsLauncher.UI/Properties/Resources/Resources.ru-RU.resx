@@ -1,326 +1,426 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-		<xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-		<xsd:element name="root" msdata:IsDataSet="true">
-			<xsd:complexType>
-				<xsd:choice maxOccurs="unbounded">
-					<xsd:element name="metadata">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" />
-							</xsd:sequence>
-							<xsd:attribute name="name" use="required" type="xsd:string" />
-							<xsd:attribute name="type" type="xsd:string" />
-							<xsd:attribute name="mimetype" type="xsd:string" />
-							<xsd:attribute ref="xml:space" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="assembly">
-						<xsd:complexType>
-							<xsd:attribute name="alias" type="xsd:string" />
-							<xsd:attribute name="name" type="xsd:string" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="data">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-							<xsd:attribute ref="xml:space" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="resheader">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" use="required" />
-						</xsd:complexType>
-					</xsd:element>
-				</xsd:choice>
-			</xsd:complexType>
-		</xsd:element>
-	</xsd:schema>
-	<resheader name="resmimetype">
-		<value>text/microsoft-resx</value>
-	</resheader>
-	<resheader name="version">
-		<value>2.0</value>
-	</resheader>
-	<resheader name="reader">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-	<resheader name="writer">
-		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
 
-	<!-- Main Window -->
-	<data name="AppTitle" xml:space="preserve">
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
     <value>Корпоративный Лаунчер</value>
   </data>
-	<data name="WindowTitle" xml:space="preserve">
+  <data name="WindowTitle" xml:space="preserve">
     <value>Корпоративный Лаунчер - {0} ({1})</value>
   </data>
-	<data name="SearchPlaceholder" xml:space="preserve">
+  <data name="SearchPlaceholder" xml:space="preserve">
     <value>Поиск приложений...</value>
   </data>
-
-	<!-- Buttons -->
-	<data name="Settings" xml:space="preserve">
+  <data name="Settings" xml:space="preserve">
     <value>Настройки</value>
   </data>
-	<data name="Refresh" xml:space="preserve">
+  <data name="Refresh" xml:space="preserve">
     <value>Обновить</value>
   </data>
-	<data name="Logout" xml:space="preserve">
+  <data name="Logout" xml:space="preserve">
     <value>Выйти</value>
   </data>
-	<data name="SwitchUser" xml:space="preserve">
+  <data name="SwitchUser" xml:space="preserve">
     <value>Сменить пользователя</value>
   </data>
-	<data name="Login" xml:space="preserve">
+  <data name="Login" xml:space="preserve">
     <value>Войти</value>
   </data>
-	<data name="Cancel" xml:space="preserve">
+  <data name="Cancel" xml:space="preserve">
     <value>Отмена</value>
   </data>
-
-	<!-- Categories -->
-	<data name="CategoryAll" xml:space="preserve">
+  <data name="CategoryAll" xml:space="preserve">
     <value>Все</value>
   </data>
-	<data name="AllCategories" xml:space="preserve">
+  <data name="AllCategories" xml:space="preserve">
     <value>Все категории</value>
   </data>
-	<data name="CategoryTools" xml:space="preserve">
+  <data name="CategoryTools" xml:space="preserve">
     <value>Инструменты</value>
   </data>
-	<data name="CategoryWeb" xml:space="preserve">
+  <data name="CategoryWeb" xml:space="preserve">
     <value>Веб</value>
   </data>
-	<data name="CategorySystem" xml:space="preserve">
+  <data name="CategorySystem" xml:space="preserve">
     <value>Система</value>
   </data>
-	<data name="CategoryOffice" xml:space="preserve">
+  <data name="CategoryOffice" xml:space="preserve">
     <value>Офис</value>
   </data>
-	<data name="CategoryDevelopment" xml:space="preserve">
+  <data name="CategoryDevelopment" xml:space="preserve">
     <value>Разработка</value>
   </data>
-	<data name="Category_Business" xml:space="preserve">
+  <data name="Category_Business" xml:space="preserve">
     <value>Бизнес</value>
   </data>
-	<data name="Category_Development" xml:space="preserve">
+  <data name="Category_Development" xml:space="preserve">
     <value>Разработка</value>
   </data>
-	<data name="Category_Communication" xml:space="preserve">
+  <data name="Category_Communication" xml:space="preserve">
     <value>Коммуникации</value>
   </data>
-	<data name="Category_Utilities" xml:space="preserve">
+  <data name="Category_Utilities" xml:space="preserve">
     <value>Утилиты</value>
   </data>
-
-	<!-- Status Messages -->
-	<data name="Ready" xml:space="preserve">
+  <data name="Ready" xml:space="preserve">
     <value>Готов</value>
   </data>
-	<data name="Loading" xml:space="preserve">
+  <data name="Loading" xml:space="preserve">
     <value>Загрузка...</value>
   </data>
-	<data name="LoadingApplications" xml:space="preserve">
+  <data name="LoadingApplications" xml:space="preserve">
     <value>Загрузка приложений...</value>
   </data>
-	<data name="Initializing" xml:space="preserve">
+  <data name="Initializing" xml:space="preserve">
     <value>Инициализация...</value>
   </data>
-	<data name="Welcome" xml:space="preserve">
+  <data name="Welcome" xml:space="preserve">
     <value>Добро пожаловать, {0}!</value>
   </data>
-	<data name="WelcomeMessage" xml:space="preserve">
+  <data name="WelcomeMessage" xml:space="preserve">
     <value>Добро пожаловать, {0}!</value>
   </data>
-	<data name="LaunchingApp" xml:space="preserve">
+  <data name="LaunchingApp" xml:space="preserve">
     <value>Запуск {0}...</value>
   </data>
-	<data name="SuccessfullyLaunched" xml:space="preserve">
+  <data name="SuccessfullyLaunched" xml:space="preserve">
     <value>Успешно запущено {0}</value>
   </data>
-	<data name="AppLaunchedSuccessfully" xml:space="preserve">
+  <data name="AppLaunchedSuccessfully" xml:space="preserve">
     <value>Успешно запущено {0}</value>
   </data>
-	<data name="AppLaunchFailed" xml:space="preserve">
+  <data name="AppLaunchFailed" xml:space="preserve">
     <value>Не удалось запустить {0}: {1}</value>
   </data>
-	<data name="AppLaunchError" xml:space="preserve">
+  <data name="AppLaunchError" xml:space="preserve">
     <value>Ошибка запуска {0}: {1}</value>
   </data>
-	<data name="SwitchedToUser" xml:space="preserve">
+  <data name="SwitchedToUser" xml:space="preserve">
     <value>Переключено на пользователя: {0}</value>
   </data>
-	<data name="LoadedApps" xml:space="preserve">
+  <data name="LoadedApps" xml:space="preserve">
     <value>Загружено {0} приложений</value>
   </data>
-	<data name="ApplicationsRefreshed" xml:space="preserve">
+  <data name="ApplicationsRefreshed" xml:space="preserve">
     <value>Приложения обновлены</value>
   </data>
-	<data name="ApplicationLaunched" xml:space="preserve">
+  <data name="ApplicationLaunched" xml:space="preserve">
     <value>Приложение запущено: {0}</value>
   </data>
-	<data name="LoggedOut" xml:space="preserve">
+  <data name="LoggedOut" xml:space="preserve">
     <value>Выход выполнен</value>
   </data>
-	<data name="Applications" xml:space="preserve">
+  <data name="Applications" xml:space="preserve">
     <value>приложений</value>
   </data>
-	<data name="Apps" xml:space="preserve">
+  <data name="Apps" xml:space="preserve">
     <value>прил.</value>
   </data>
-	<data name="NoApplicationsFound" xml:space="preserve">
+  <data name="NoApplicationsFound" xml:space="preserve">
     <value>Приложения не найдены</value>
   </data>
-	<data name="NoApplicationsHint" xml:space="preserve">
+  <data name="NoApplicationsHint" xml:space="preserve">
     <value>Попробуйте изменить поиск или фильтр категории</value>
   </data>
-
-	<!-- Login Window -->
-	<data name="LoginWindowTitle" xml:space="preserve">
+  <data name="LoginWindowTitle" xml:space="preserve">
     <value>Корпоративный Лаунчер - Вход</value>
   </data>
-	<data name="CurrentWindowsUser" xml:space="preserve">
+  <data name="CurrentWindowsUser" xml:space="preserve">
     <value>Текущий пользователь Windows:</value>
   </data>
-	<data name="ContinueAsCurrentUser" xml:space="preserve">
+  <data name="ContinueAsCurrentUser" xml:space="preserve">
     <value>Продолжить как текущий пользователь</value>
   </data>
-	<data name="OrSignInDifferent" xml:space="preserve">
+  <data name="OrSignInDifferent" xml:space="preserve">
     <value>Или войти с другими учетными данными:</value>
   </data>
-	<data name="Username" xml:space="preserve">
+  <data name="Username" xml:space="preserve">
     <value>Имя пользователя:</value>
   </data>
-	<data name="Password" xml:space="preserve">
+  <data name="Password" xml:space="preserve">
     <value>Пароль:</value>
   </data>
-	<data name="Authenticating" xml:space="preserve">
+  <data name="Authenticating" xml:space="preserve">
     <value>Аутентификация...</value>
   </data>
-	<data name="PleaseEnterUsername" xml:space="preserve">
+  <data name="PleaseEnterUsername" xml:space="preserve">
     <value>Пожалуйста, введите имя пользователя</value>
   </data>
-	<data name="PleaseEnterPassword" xml:space="preserve">
+  <data name="PleaseEnterPassword" xml:space="preserve">
     <value>Пожалуйста, введите пароль</value>
   </data>
-
-	<!-- Error Messages -->
-	<data name="Error" xml:space="preserve">
+  <data name="Error" xml:space="preserve">
     <value>Ошибка</value>
   </data>
-	<data name="Warning" xml:space="preserve">
+  <data name="Warning" xml:space="preserve">
     <value>Предупреждение</value>
   </data>
-	<data name="Information" xml:space="preserve">
+  <data name="Information" xml:space="preserve">
     <value>Информация</value>
   </data>
-	<data name="Confirmation" xml:space="preserve">
+  <data name="Confirmation" xml:space="preserve">
     <value>Подтверждение</value>
   </data>
-	<data name="AccessDenied" xml:space="preserve">
+  <data name="AccessDenied" xml:space="preserve">
     <value>Доступ запрещен</value>
   </data>
-	<data name="TimeoutError" xml:space="preserve">
+  <data name="TimeoutError" xml:space="preserve">
     <value>Ошибка времени ожидания</value>
   </data>
-	<data name="ErrorAccessDenied" xml:space="preserve">
+  <data name="ErrorAccessDenied" xml:space="preserve">
     <value>Доступ запрещен. Проверьте ваши права доступа.</value>
   </data>
-	<data name="ErrorTimeout" xml:space="preserve">
+  <data name="ErrorTimeout" xml:space="preserve">
     <value>Время ожидания операции истекло. Попробуйте снова.</value>
   </data>
-	<data name="ErrorInvalidOperation" xml:space="preserve">
+  <data name="ErrorInvalidOperation" xml:space="preserve">
     <value>Недопустимая операция.</value>
   </data>
-	<data name="ErrorInvalidData" xml:space="preserve">
+  <data name="ErrorInvalidData" xml:space="preserve">
     <value>Предоставлены недопустимые данные.</value>
   </data>
-	<data name="ErrorUnknown" xml:space="preserve">
+  <data name="ErrorUnknown" xml:space="preserve">
     <value>Произошла неизвестная ошибка</value>
   </data>
-	<data name="LaunchError" xml:space="preserve">
+  <data name="LaunchError" xml:space="preserve">
     <value>Ошибка запуска</value>
   </data>
-	<data name="AuthenticationFailed" xml:space="preserve">
+  <data name="AuthenticationFailed" xml:space="preserve">
     <value>Ошибка аутентификации: {0}</value>
   </data>
-	<data name="SwitchUserError" xml:space="preserve">
+  <data name="SwitchUserError" xml:space="preserve">
     <value>Ошибка смены пользователя: {0}</value>
   </data>
-	<data name="LogoutError" xml:space="preserve">
+  <data name="LogoutError" xml:space="preserve">
     <value>Ошибка выхода: {0}</value>
   </data>
-	<data name="InitializationError" xml:space="preserve">
+  <data name="InitializationError" xml:space="preserve">
     <value>Ошибка инициализации: {0}</value>
   </data>
-	<data name="ErrorLoadingApplications" xml:space="preserve">
+  <data name="ErrorLoadingApplications" xml:space="preserve">
     <value>Ошибка загрузки приложений: {0}</value>
   </data>
-	<data name="FailedToLaunch" xml:space="preserve">
+  <data name="FailedToLaunch" xml:space="preserve">
     <value>Не удалось запустить {0}: {1}</value>
   </data>
-
-	<!-- Confirmations -->
-	<data name="ConfirmLogout" xml:space="preserve">
+  <data name="ConfirmLogout" xml:space="preserve">
     <value>Вы уверены, что хотите выйти?</value>
   </data>
-
-	<!-- Settings -->
-	<data name="SettingsComingSoon" xml:space="preserve">
+  <data name="SettingsComingSoon" xml:space="preserve">
     <value>Функция настроек скоро будет доступна...</value>
   </data>
-	<data name="SettingsWindowMessage" xml:space="preserve">
+  <data name="SettingsWindowMessage" xml:space="preserve">
     <value>Окно настроек будет реализовано в следующей итерации.</value>
   </data>
-
-	<!-- Tooltips -->
-	<data name="SettingsTooltip" xml:space="preserve">
+  <data name="SettingsTooltip" xml:space="preserve">
     <value>Настройки</value>
   </data>
-	<data name="RefreshTooltip" xml:space="preserve">
+  <data name="RefreshTooltip" xml:space="preserve">
     <value>Обновить приложения</value>
   </data>
-	<data name="LogoutTooltip" xml:space="preserve">
+  <data name="LogoutTooltip" xml:space="preserve">
     <value>Выйти из приложения</value>
   </data>
-	<data name="SwitchUserTooltip" xml:space="preserve">
+  <data name="SwitchUserTooltip" xml:space="preserve">
     <value>Переключиться на другого пользователя</value>
   </data>
-
-	<!-- User Roles -->
-	<data name="RoleStandard" xml:space="preserve">
+  <data name="RoleStandard" xml:space="preserve">
     <value>Стандартный</value>
   </data>
-	<data name="RolePowerUser" xml:space="preserve">
+  <data name="RolePowerUser" xml:space="preserve">
     <value>Опытный пользователь</value>
   </data>
-	<data name="RoleAdministrator" xml:space="preserve">
+  <data name="RoleAdministrator" xml:space="preserve">
     <value>Администратор</value>
   </data>
-
-	<!-- Application Descriptions -->
-	<data name="CalculatorDescription" xml:space="preserve">
+  <data name="CalculatorDescription" xml:space="preserve">
     <value>Калькулятор Windows</value>
   </data>
-	<data name="NotepadDescription" xml:space="preserve">
+  <data name="NotepadDescription" xml:space="preserve">
     <value>Текстовый редактор</value>
   </data>
-	<data name="GoogleDescription" xml:space="preserve">
+  <data name="GoogleDescription" xml:space="preserve">
     <value>Поиск Google</value>
   </data>
-	<data name="ControlPanelDescription" xml:space="preserve">
+  <data name="ControlPanelDescription" xml:space="preserve">
     <value>Панель управления Windows</value>
+  </data>
+  <data name="CommandPromptDescription" xml:space="preserve">
+    <value>Командная строка Windows</value>
+  </data>
+  <data name="RegistryEditorDescription" xml:space="preserve">
+    <value>Редактор реестра</value>
+  </data>
+  <data name="TaskManagerDescription" xml:space="preserve">
+    <value>Диспетчер задач</value>
+  </data>
+  <data name="FileExplorerDescription" xml:space="preserve">
+    <value>Проводник Windows</value>
+  </data>
+  <data name="PaintDescription" xml:space="preserve">
+    <value>Редактор Paint</value>
+  </data>
+  <data name="WordpadDescription" xml:space="preserve">
+    <value>Редактор WordPad</value>
+  </data>
+  <data name="CategoryGames" xml:space="preserve">
+    <value>Игры</value>
+  </data>
+  <data name="CategoryMedia" xml:space="preserve">
+    <value>Медиа</value>
+  </data>
+  <data name="CategoryGraphics" xml:space="preserve">
+    <value>Графика</value>
+  </data>
+  <data name="CategorySecurity" xml:space="preserve">
+    <value>Безопасность</value>
+  </data>
+  <data name="DatabaseInitializing" xml:space="preserve">
+    <value>Инициализация базы данных...</value>
+  </data>
+  <data name="DatabaseReady" xml:space="preserve">
+    <value>База данных готова</value>
+  </data>
+  <data name="UserDataLoading" xml:space="preserve">
+    <value>Загрузка данных пользователя...</value>
+  </data>
+  <data name="CategoriesLoaded" xml:space="preserve">
+    <value>Категории загружены</value>
+  </data>
+  <data name="FilteringApplications" xml:space="preserve">
+    <value>Фильтрация приложений...</value>
+  </data>
+  <data name="DatabaseError" xml:space="preserve">
+    <value>Ошибка базы данных: {0}</value>
+  </data>
+  <data name="ServiceError" xml:space="preserve">
+    <value>Ошибка сервиса: {0}</value>
+  </data>
+  <data name="ConfigurationError" xml:space="preserve">
+    <value>Ошибка конфигурации: {0}</value>
+  </data>
+  <data name="DatabaseInitialized" xml:space="preserve">
+    <value>База данных успешно инициализирована</value>
+  </data>
+  <data name="UserAuthenticated" xml:space="preserve">
+    <value>Пользователь успешно аутентифицирован</value>
+  </data>
+  <data name="ApplicationsLoaded" xml:space="preserve">
+    <value>Приложения успешно загружены</value>
   </data>
 </root>

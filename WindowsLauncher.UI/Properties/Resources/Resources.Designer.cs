@@ -124,6 +124,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Applications loaded successfully.
+        /// </summary>
+        public static string ApplicationsLoaded {
+            get {
+                return ResourceManager.GetString("ApplicationsLoaded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Applications refreshed.
         /// </summary>
         public static string ApplicationsRefreshed {
@@ -187,6 +196,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Categories loaded.
+        /// </summary>
+        public static string CategoriesLoaded {
+            get {
+                return ResourceManager.GetString("CategoriesLoaded", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Business.
         /// </summary>
         public static string Category_Business {
@@ -241,11 +259,47 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Games.
+        /// </summary>
+        public static string CategoryGames {
+            get {
+                return ResourceManager.GetString("CategoryGames", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Graphics.
+        /// </summary>
+        public static string CategoryGraphics {
+            get {
+                return ResourceManager.GetString("CategoryGraphics", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Media.
+        /// </summary>
+        public static string CategoryMedia {
+            get {
+                return ResourceManager.GetString("CategoryMedia", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Office.
         /// </summary>
         public static string CategoryOffice {
             get {
                 return ResourceManager.GetString("CategoryOffice", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Security.
+        /// </summary>
+        public static string CategorySecurity {
+            get {
+                return ResourceManager.GetString("CategorySecurity", resourceCulture);
             }
         }
         
@@ -273,6 +327,24 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string CategoryWeb {
             get {
                 return ResourceManager.GetString("CategoryWeb", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Windows Command Line Interface.
+        /// </summary>
+        public static string CommandPromptDescription {
+            get {
+                return ResourceManager.GetString("CommandPromptDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Configuration error: {0}.
+        /// </summary>
+        public static string ConfigurationError {
+            get {
+                return ResourceManager.GetString("ConfigurationError", resourceCulture);
             }
         }
         
@@ -318,6 +390,42 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string CurrentWindowsUser {
             get {
                 return ResourceManager.GetString("CurrentWindowsUser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Database error: {0}.
+        /// </summary>
+        public static string DatabaseError {
+            get {
+                return ResourceManager.GetString("DatabaseError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Database initialized successfully.
+        /// </summary>
+        public static string DatabaseInitialized {
+            get {
+                return ResourceManager.GetString("DatabaseInitialized", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Initializing database....
+        /// </summary>
+        public static string DatabaseInitializing {
+            get {
+                return ResourceManager.GetString("DatabaseInitializing", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Database ready.
+        /// </summary>
+        public static string DatabaseReady {
+            get {
+                return ResourceManager.GetString("DatabaseReady", resourceCulture);
             }
         }
         
@@ -390,6 +498,24 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string FailedToLaunch {
             get {
                 return ResourceManager.GetString("FailedToLaunch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Windows File Explorer.
+        /// </summary>
+        public static string FileExplorerDescription {
+            get {
+                return ResourceManager.GetString("FileExplorerDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Filtering applications....
+        /// </summary>
+        public static string FilteringApplications {
+            get {
+                return ResourceManager.GetString("FilteringApplications", resourceCulture);
             }
         }
         
@@ -565,6 +691,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Windows Paint.
+        /// </summary>
+        public static string PaintDescription {
+            get {
+                return ResourceManager.GetString("PaintDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Password:.
         /// </summary>
         public static string Password {
@@ -619,6 +754,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Windows Registry Editor.
+        /// </summary>
+        public static string RegistryEditorDescription {
+            get {
+                return ResourceManager.GetString("RegistryEditorDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Administrator.
         /// </summary>
         public static string RoleAdministrator {
@@ -651,6 +795,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string SearchPlaceholder {
             get {
                 return ResourceManager.GetString("SearchPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Service error: {0}.
+        /// </summary>
+        public static string ServiceError {
+            get {
+                return ResourceManager.GetString("ServiceError", resourceCulture);
             }
         }
         
@@ -736,11 +889,38 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Windows Task Manager.
+        /// </summary>
+        public static string TaskManagerDescription {
+            get {
+                return ResourceManager.GetString("TaskManagerDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Timeout Error.
         /// </summary>
         public static string TimeoutError {
             get {
                 return ResourceManager.GetString("TimeoutError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на User authenticated successfully.
+        /// </summary>
+        public static string UserAuthenticated {
+            get {
+                return ResourceManager.GetString("UserAuthenticated", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Loading user data....
+        /// </summary>
+        public static string UserDataLoading {
+            get {
+                return ResourceManager.GetString("UserDataLoading", resourceCulture);
             }
         }
         
@@ -786,6 +966,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string WindowTitle {
             get {
                 return ResourceManager.GetString("WindowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Windows WordPad.
+        /// </summary>
+        public static string WordpadDescription {
+            get {
+                return ResourceManager.GetString("WordpadDescription", resourceCulture);
             }
         }
     }

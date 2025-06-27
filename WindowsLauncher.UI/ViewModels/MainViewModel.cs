@@ -1,4 +1,4 @@
-﻿// WindowsLauncher.UI/ViewModels/MainViewModel.cs
+﻿// ===== WindowsLauncher.UI/ViewModels/MainViewModel.cs - ПОЛНАЯ ВЕРСИЯ =====
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
@@ -11,36 +11,56 @@ using WindowsLauncher.Core.Models;
 using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.ViewModels.Base;
 using WindowsLauncher.UI.Infrastructure.Commands;
+using System.ComponentModel;
 using WpfApplication = System.Windows.Application;
 using CoreApplication = WindowsLauncher.Core.Models.Application;
-using System.Windows;
-using WindowsLauncher.UI.ViewModels;
 
 namespace WindowsLauncher.UI.ViewModels
 {
+    /// <summary>
+    /// Главная ViewModel с полной функциональностью
+    /// </summary>
     public class MainViewModel : ViewModelBase
     {
-        private readonly IServiceProvider _serviceProvider;
+        #region Fields
 
+        private readonly IServiceProvider _serviceProvider;
         private User? _currentUser;
         private UserSettings? _userSettings;
         private string _searchText = "";
         private string _selectedCategory = "All";
-        private string _statusMessage = "Ready";
+        private string _statusMessage = "";
         private bool _isLoading = false;
+        private bool _isInitialized = false;
 
-        public MainViewModel(IServiceProvider serviceProvider, ILogger<MainViewModel> logger, IDialogService dialogService)
-    : base(logger, dialogService)
+        #endregion
+
+        #region Constructor
+
+        public MainViewModel(
+            IServiceProvider serviceProvider,
+            ILogger<MainViewModel> logger,
+            IDialogService dialogService)
+            : base(logger, dialogService)
         {
             _serviceProvider = serviceProvider;
 
-            Applications = new ObservableCollection<ApplicationViewModel>(); // ИЗМЕНЕНО
-            FilteredApplications = new ObservableCollection<ApplicationViewModel>(); // ИЗМЕНЕНО
-            Categories = new ObservableCollection<string>();
+            // Инициализируем коллекции
+            Applications = new ObservableCollection<ApplicationViewModel>();
+            FilteredApplications = new ObservableCollection<ApplicationViewModel>();
+            LocalizedCategories = new ObservableCollection<CategoryViewModel>();
 
+            // Инициализируем команды
             InitializeCommands();
+
+            // Подписываемся на изменение языка
+            LocalizationManager.LanguageChanged += OnLanguageChanged;
+
+            // Запускаем инициализацию асинхронно
             _ = InitializeAsync();
         }
+
+        #endregion
 
         #region Properties
 
@@ -49,9 +69,15 @@ namespace WindowsLauncher.UI.ViewModels
             get => _currentUser;
             set
             {
-                SetProperty(ref _currentUser, value);
-                OnPropertyChanged(nameof(WindowTitle));
-                OnPropertyChanged(nameof(CanManageSettings));
+                if (SetProperty(ref _currentUser, value))
+                {
+                    OnPropertyChanged(nameof(WindowTitle));
+                    OnPropertyChanged(nameof(LocalizedRole));
+                    OnPropertyChanged(nameof(CanManageSettings));
+
+                    // Обновляем команды
+                    OpenSettingsCommand.RaiseCanExecuteChanged();
+                }
             }
         }
 
@@ -60,10 +86,12 @@ namespace WindowsLauncher.UI.ViewModels
             get => _userSettings;
             set
             {
-                SetProperty(ref _userSettings, value);
-                OnPropertyChanged(nameof(TileSize));
-                OnPropertyChanged(nameof(ShowCategories));
-                OnPropertyChanged(nameof(Theme));
+                if (SetProperty(ref _userSettings, value))
+                {
+                    OnPropertyChanged(nameof(TileSize));
+                    OnPropertyChanged(nameof(ShowCategories));
+                    OnPropertyChanged(nameof(Theme));
+                }
             }
         }
 
@@ -72,8 +100,10 @@ namespace WindowsLauncher.UI.ViewModels
             get => _searchText;
             set
             {
-                SetProperty(ref _searchText, value);
-                FilterApplications();
+                if (SetProperty(ref _searchText, value))
+                {
+                    FilterApplications();
+                }
             }
         }
 
@@ -82,8 +112,11 @@ namespace WindowsLauncher.UI.ViewModels
             get => _selectedCategory;
             set
             {
-                SetProperty(ref _selectedCategory, value);
-                FilterApplications();
+                if (SetProperty(ref _selectedCategory, value))
+                {
+                    UpdateCategorySelection();
+                    FilterApplications();
+                }
             }
         }
 
@@ -99,14 +132,38 @@ namespace WindowsLauncher.UI.ViewModels
             set => SetProperty(ref _isLoading, value);
         }
 
+        // Collections
         public ObservableCollection<ApplicationViewModel> Applications { get; }
         public ObservableCollection<ApplicationViewModel> FilteredApplications { get; }
-        public ObservableCollection<string> Categories { get; }
+        public ObservableCollection<CategoryViewModel> LocalizedCategories { get; }
 
         // Computed Properties
-        public string WindowTitle => CurrentUser != null
-            ? $"Company Launcher - {CurrentUser.DisplayName} ({CurrentUser.Role})"
-            : "Company Launcher";
+        public string WindowTitle
+        {
+            get
+            {
+                if (CurrentUser == null)
+                    return LocalizationManager.GetString("AppTitle");
+
+                return LocalizationManager.GetString("WindowTitle", CurrentUser.DisplayName, LocalizedRole);
+            }
+        }
+
+        public string LocalizedRole
+        {
+            get
+            {
+                if (CurrentUser == null) return "";
+
+                return CurrentUser.Role switch
+                {
+                    Core.Enums.UserRole.Administrator => LocalizationManager.GetString("RoleAdministrator"),
+                    Core.Enums.UserRole.PowerUser => LocalizationManager.GetString("RolePowerUser"),
+                    Core.Enums.UserRole.Standard => LocalizationManager.GetString("RoleStandard"),
+                    _ => CurrentUser.Role.ToString()
+                };
+            }
+        }
 
         public int TileSize => UserSettings?.TileSize ?? 150;
         public bool ShowCategories => UserSettings?.ShowCategories ?? true;
@@ -128,34 +185,47 @@ namespace WindowsLauncher.UI.ViewModels
 
         private void InitializeCommands()
         {
-            LaunchApplicationCommand = new AsyncRelayCommand<ApplicationViewModel>(LaunchApplication, // ИЗМЕНЕНО тип
-                app => app != null && !IsLoading);
+            LaunchApplicationCommand = new AsyncRelayCommand<ApplicationViewModel>(
+                LaunchApplication,
+                app => app != null && !IsLoading,
+                Logger);
+
             SelectCategoryCommand = new RelayCommand<string>(SelectCategory);
-            RefreshCommand = new AsyncRelayCommand(RefreshApplications);
+
+            RefreshCommand = new AsyncRelayCommand(
+                RefreshApplications,
+                () => !IsLoading,
+                Logger);
+
             LogoutCommand = new RelayCommand(Logout);
-            OpenSettingsCommand = new RelayCommand(OpenSettings, () => CanManageSettings);
+
+            OpenSettingsCommand = new RelayCommand(
+                OpenSettings,
+                () => CanManageSettings);
+
             SwitchUserCommand = new RelayCommand(SwitchUser);
         }
-
 
         #endregion
 
         #region Initialization
 
-        private async Task InitializeAsync()
+        public override async Task InitializeAsync()
         {
+            if (_isInitialized) return;
+
             try
             {
-                Logger.LogInformation("=== STARTING INITIALIZATION ===");
+                Logger.LogInformation("=== STARTING MAINVIEWMODEL INITIALIZATION ===");
                 IsLoading = true;
-                StatusMessage = "Starting initialization...";
+                StatusMessage = LocalizationManager.GetString("Initializing");
 
                 using var scope = _serviceProvider.CreateScope();
                 Logger.LogInformation("Created DI scope successfully");
 
                 // STEP 1: Database initialization
                 Logger.LogInformation("Step 1: Initializing database...");
-                StatusMessage = "Initializing database...";
+                StatusMessage = LocalizationManager.GetString("DatabaseInitializing");
 
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
                 await dbInitializer.InitializeAsync();
@@ -163,43 +233,27 @@ namespace WindowsLauncher.UI.ViewModels
 
                 // STEP 2: Authentication
                 Logger.LogInformation("Step 2: Starting authentication...");
-                StatusMessage = "Authenticating user...";
+                await AuthenticateUserAsync();
 
-                var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
-                var authResult = await authService.AuthenticateAsync();
-
-                Logger.LogInformation("Authentication result: Success={Success}, User={User}, Error={Error}",
-                    authResult.IsSuccess, authResult.User?.Username, authResult.ErrorMessage);
-
-                if (!authResult.IsSuccess || authResult.User == null)
+                if (CurrentUser == null)
                 {
-                    var errorMessage = $"Authentication failed: {authResult.ErrorMessage ?? "Unknown error"}";
-                    StatusMessage = errorMessage;
-                    Logger.LogError("Authentication failed: {Error}", authResult.ErrorMessage);
-                    DialogService.ShowError(errorMessage);
+                    Logger.LogWarning("Authentication failed, user is null");
                     return;
                 }
 
-                CurrentUser = authResult.User;
-                Logger.LogInformation("Current user set: {User} ({Role})", CurrentUser.Username, CurrentUser.Role);
-                StatusMessage = $"Welcome, {CurrentUser.DisplayName}!";
+                // STEP 3: Load user data
+                Logger.LogInformation("Step 3: Loading user data...");
+                await LoadUserDataAsync();
 
-                // STEP 3: Load user settings and applications
-                Logger.LogInformation("Step 3: Loading user settings and applications...");
-                StatusMessage = "Loading user data...";
-
-                await LoadUserSettingsAndApplications();
-
-                StatusMessage = "Ready";
-                Logger.LogInformation("=== INITIALIZATION COMPLETED SUCCESSFULLY ===");
+                StatusMessage = LocalizationManager.GetString("Ready");
+                _isInitialized = true;
+                Logger.LogInformation("=== MAINVIEWMODEL INITIALIZATION COMPLETED ===");
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "=== INITIALIZATION FAILED ===");
-                StatusMessage = $"Initialization failed: {ex.Message}";
-
-                // Показываем детальную ошибку пользователю
-                DialogService.ShowError($"Initialization failed:\n{ex.Message}\n\nSee logs for details.");
+                Logger.LogError(ex, "=== MAINVIEWMODEL INITIALIZATION FAILED ===");
+                StatusMessage = LocalizationManager.GetString("InitializationError", ex.Message);
+                await HandleErrorAsync(ex, "initialization");
             }
             finally
             {
@@ -207,163 +261,311 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
 
-        private async Task LoadUserSettingsAndApplications()
+        private async Task AuthenticateUserAsync()
         {
-            if (CurrentUser == null)
+            try
             {
-                Logger.LogWarning("Cannot load user data: CurrentUser is null");
-                return;
+                StatusMessage = LocalizationManager.GetString("Authenticating");
+
+                using var scope = _serviceProvider.CreateScope();
+                var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
+
+                var authResult = await authService.AuthenticateAsync();
+
+                if (authResult.IsSuccess && authResult.User != null)
+                {
+                    CurrentUser = authResult.User;
+                    Logger.LogInformation("User authenticated: {User} ({Role})",
+                        CurrentUser.Username, CurrentUser.Role);
+
+                    StatusMessage = LocalizationManager.GetString("Welcome", CurrentUser.DisplayName);
+                }
+                else
+                {
+                    var errorMessage = LocalizationManager.GetString("AuthenticationFailed",
+                        authResult.ErrorMessage ?? "Unknown error");
+
+                    Logger.LogError("Authentication failed: {Error}", authResult.ErrorMessage);
+                    StatusMessage = errorMessage;
+                    DialogService.ShowError(errorMessage);
+                }
             }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Authentication error");
+                var errorMessage = LocalizationManager.GetString("AuthenticationFailed", ex.Message);
+                StatusMessage = errorMessage;
+                DialogService.ShowError(errorMessage);
+            }
+        }
+
+        private async Task LoadUserDataAsync()
+        {
+            if (CurrentUser == null) return;
 
             try
             {
-                Logger.LogInformation("Loading user settings and applications for user: {User}", CurrentUser.Username);
+                Logger.LogInformation("Loading user data for: {User}", CurrentUser.Username);
+                StatusMessage = LocalizationManager.GetString("LoadingApplications");
 
                 using var scope = _serviceProvider.CreateScope();
                 var authzService = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
                 var appService = scope.ServiceProvider.GetRequiredService<IApplicationService>();
 
                 // Load user settings
-                Logger.LogInformation("Loading user settings...");
                 try
                 {
                     UserSettings = await authzService.GetUserSettingsAsync(CurrentUser);
-                    Logger.LogInformation("User settings loaded successfully");
+                    Logger.LogInformation("User settings loaded");
                 }
                 catch (Exception ex)
                 {
                     Logger.LogWarning(ex, "Failed to load user settings, using defaults");
-                    UserSettings = null; // Will use defaults
+                    UserSettings = CreateDefaultSettings();
                 }
 
                 // Load applications
-                Logger.LogInformation("Loading applications...");
-                StatusMessage = "Loading applications...";
-
                 var apps = await authzService.GetAuthorizedApplicationsAsync(CurrentUser);
-                Logger.LogInformation("Found {Count} authorized applications", apps.Count());
+                Logger.LogInformation("Found {Count} authorized applications", apps.Count);
 
                 Applications.Clear();
                 foreach (var app in apps)
                 {
-                    // ИЗМЕНЕНО: создаем ApplicationViewModel
-                    var appViewModel = CreateApplicationViewModel(app);
+                    var appViewModel = new ApplicationViewModel(app);
                     Applications.Add(appViewModel);
-                    Logger.LogDebug("Added application: {AppName} (Category: {Category})", app.Name, app.Category);
                 }
 
-                // Load categories
-                Logger.LogInformation("Loading categories...");
-                var categories = await appService.GetCategoriesAsync();
-                Logger.LogInformation("Found {Count} categories", categories.Count());
-
-                Categories.Clear();
-                Categories.Add("All");
-                foreach (var category in categories.Where(c => !(UserSettings?.HiddenCategories?.Contains(c) == true)))
-                {
-                    Categories.Add(category);
-                    Logger.LogDebug("Added category: {Category}", category);
-                }
+                // Load and localize categories
+                await LoadLocalizedCategoriesAsync(appService);
 
                 // Apply filters
                 FilterApplications();
 
-                StatusMessage = $"Loaded {Applications.Count} applications";
-                Logger.LogInformation("User data loading completed: {AppCount} apps, {CatCount} categories",
-                    Applications.Count, Categories.Count);
+                var appCount = Applications.Count;
+                StatusMessage = LocalizationManager.GetString("LoadedApps", appCount);
+                Logger.LogInformation("User data loaded: {AppCount} apps", appCount);
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "Failed to load user settings and applications");
-                StatusMessage = $"Error loading applications: {ex.Message}";
+                Logger.LogError(ex, "Failed to load user data");
+                StatusMessage = LocalizationManager.GetString("ErrorLoadingApplications", ex.Message);
 
-                // FALLBACK: Load test data if services fail
-                Logger.LogInformation("Loading test data as fallback...");
-                await LoadTestData();
+                // Load test data as fallback
+                await LoadTestDataAsync();
             }
         }
 
-        // ВРЕМЕННЫЙ метод для тестирования UI
-        private async Task LoadTestData()
+        private async Task LoadLocalizedCategoriesAsync(IApplicationService appService)
         {
-            Logger.LogInformation("Loading TEST DATA for UI verification...");
+            try
+            {
+                var categories = await appService.GetCategoriesAsync();
+                var hiddenCategories = UserSettings?.HiddenCategories ?? new List<string>();
 
-            // Тестовые приложения
+                LocalizedCategories.Clear();
+
+                // Add "All" category
+                LocalizedCategories.Add(new CategoryViewModel
+                {
+                    Key = "All",
+                    DisplayName = LocalizationManager.GetString("CategoryAll"),
+                    IsSelected = SelectedCategory == "All"
+                });
+
+                // Add other categories
+                foreach (var category in categories.Where(c => !hiddenCategories.Contains(c)))
+                {
+                    var localizedName = GetLocalizedCategoryName(category);
+                    LocalizedCategories.Add(new CategoryViewModel
+                    {
+                        Key = category,
+                        DisplayName = localizedName,
+                        IsSelected = SelectedCategory == category
+                    });
+                }
+
+                Logger.LogInformation("Loaded {Count} localized categories", LocalizedCategories.Count);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to load categories");
+            }
+        }
+
+        private string GetLocalizedCategoryName(string category)
+        {
+            if (string.IsNullOrEmpty(category)) return category;
+
+            var key = $"Category{category}";
+            var localized = LocalizationManager.GetString(key);
+
+            // Если локализация не найдена, возвращаем оригинальное название
+            return !string.IsNullOrEmpty(localized) && localized != key ? localized : category;
+        }
+
+        private UserSettings CreateDefaultSettings()
+        {
+            return new UserSettings
+            {
+                Username = CurrentUser?.Username ?? "",
+                Theme = "Light",
+                AccentColor = "Blue",
+                TileSize = 150,
+                ShowCategories = true,
+                DefaultCategory = "All",
+                AutoRefresh = true,
+                RefreshIntervalMinutes = 30,
+                ShowDescriptions = true,
+                LastModified = DateTime.Now
+            };
+        }
+
+        private async Task LoadTestDataAsync()
+        {
+            Logger.LogInformation("Loading test data as fallback...");
+
             Applications.Clear();
 
             var testApps = new[]
             {
-        new CoreApplication
-        {
-            Id = 1,
-            Name = "Calculator",
-            Description = "Windows Calculator",
-            Category = "Utilities",
-            ExecutablePath = "calc.exe",
-            IsEnabled = true
-        },
-        new CoreApplication
-        {
-            Id = 2,
-            Name = "Notepad",
-            Description = "Text Editor",
-            Category = "Utilities",
-            ExecutablePath = "notepad.exe",
-            IsEnabled = true
-        },
-        new CoreApplication
-        {
-            Id = 3,
-            Name = "Control Panel",
-            Description = "Windows Control Panel",
-            Category = "System",
-            ExecutablePath = "control.exe",
-            IsEnabled = true
-        }
-    };
+                new CoreApplication
+                {
+                    Id = 1,
+                    Name = "Calculator",
+                    Description = LocalizationManager.GetString("CalculatorDescription"),
+                    Category = "Utilities",
+                    ExecutablePath = "calc.exe",
+                    IsEnabled = true
+                },
+                new CoreApplication
+                {
+                    Id = 2,
+                    Name = "Notepad",
+                    Description = LocalizationManager.GetString("NotepadDescription"),
+                    Category = "Utilities",
+                    ExecutablePath = "notepad.exe",
+                    IsEnabled = true
+                },
+                new CoreApplication
+                {
+                    Id = 3,
+                    Name = "Control Panel",
+                    Description = LocalizationManager.GetString("ControlPanelDescription"),
+                    Category = "System",
+                    ExecutablePath = "control.exe",
+                    IsEnabled = true
+                },
+                new CoreApplication
+                {
+                    Id = 4,
+                    Name = "Command Prompt",
+                    Description = LocalizationManager.GetString("CommandPromptDescription"),
+                    Category = "System",
+                    ExecutablePath = "cmd.exe",
+                    IsEnabled = true
+                },
+                new CoreApplication
+                {
+                    Id = 5,
+                    Name = "Google",
+                    Description = LocalizationManager.GetString("GoogleDescription"),
+                    Category = "Web",
+                    ExecutablePath = "https://www.google.com",
+                    IsEnabled = true,
+                    Type = Core.Enums.ApplicationType.Web
+                }
+            };
 
             foreach (var app in testApps)
             {
-                var appViewModel = CreateApplicationViewModel(app);
-                Applications.Add(appViewModel);
+                Applications.Add(new ApplicationViewModel(app));
             }
 
-            // Тестовые категории
-            Categories.Clear();
-            Categories.Add("All");
-            Categories.Add("Utilities");
-            Categories.Add("System");
-            Categories.Add("Development");
+            // Load test categories
+            LocalizedCategories.Clear();
+            LocalizedCategories.Add(new CategoryViewModel
+            {
+                Key = "All",
+                DisplayName = LocalizationManager.GetString("CategoryAll"),
+                IsSelected = true
+            });
+            LocalizedCategories.Add(new CategoryViewModel
+            {
+                Key = "Utilities",
+                DisplayName = LocalizationManager.GetString("Category_Utilities"),
+                IsSelected = false
+            });
+            LocalizedCategories.Add(new CategoryViewModel
+            {
+                Key = "System",
+                DisplayName = LocalizationManager.GetString("CategorySystem"),
+                IsSelected = false
+            });
+            LocalizedCategories.Add(new CategoryViewModel
+            {
+                Key = "Web",
+                DisplayName = LocalizationManager.GetString("CategoryWeb"),
+                IsSelected = false
+            });
 
             FilterApplications();
-            StatusMessage = $"Loaded {Applications.Count} TEST applications";
-            Logger.LogInformation("Test data loaded: {Count} applications", Applications.Count);
+            StatusMessage = LocalizationManager.GetString("LoadedApps", Applications.Count);
         }
 
+        #endregion
+
+        #region Localization
+
+        private void OnLanguageChanged(object? sender, EventArgs e)
+        {
+            Logger.LogInformation("Language changed, updating UI strings");
+
+            // Обновляем все локализованные свойства
+            OnPropertyChanged(nameof(WindowTitle));
+            OnPropertyChanged(nameof(LocalizedRole));
+
+            // Обновляем категории
+            foreach (var category in LocalizedCategories)
+            {
+                if (category.Key == "All")
+                {
+                    category.DisplayName = LocalizationManager.GetString("CategoryAll");
+                }
+                else
+                {
+                    category.DisplayName = GetLocalizedCategoryName(category.Key);
+                }
+            }
+
+            // Обновляем статус если это стандартное сообщение
+            if (StatusMessage == "Ready")
+            {
+                StatusMessage = LocalizationManager.GetString("Ready");
+            }
+        }
+
+        private void UpdateCategorySelection()
+        {
+            foreach (var category in LocalizedCategories)
+            {
+                category.IsSelected = category.Key == SelectedCategory;
+            }
+        }
 
         #endregion
 
         #region Data Operations
-        private ApplicationViewModel CreateApplicationViewModel(CoreApplication application)
-        {
-            // Теперь просто создаем ApplicationViewModel без зависимостей
-            return new ApplicationViewModel(application);
-        }
+
         private void FilterApplications()
         {
             try
             {
-                Logger.LogDebug("Filtering applications: SelectedCategory={Category}, SearchText='{Search}'",
-                    SelectedCategory, SearchText);
-
                 var filtered = Applications.AsEnumerable();
-                var originalCount = filtered.Count();
 
                 // Filter by category
                 if (SelectedCategory != "All")
                 {
                     filtered = filtered.Where(a => a.Category == SelectedCategory);
-                    Logger.LogDebug("After category filter: {Count} apps", filtered.Count());
                 }
 
                 // Filter by search
@@ -373,7 +575,6 @@ namespace WindowsLauncher.UI.ViewModels
                     filtered = filtered.Where(a =>
                         a.Name.ToLower().Contains(searchLower) ||
                         a.Description.ToLower().Contains(searchLower));
-                    Logger.LogDebug("After search filter: {Count} apps", filtered.Count());
                 }
 
                 FilteredApplications.Clear();
@@ -382,11 +583,11 @@ namespace WindowsLauncher.UI.ViewModels
                     FilteredApplications.Add(app);
                 }
 
-                Logger.LogInformation("Filtered applications: {FilteredCount}/{TotalCount} apps displayed",
-                    FilteredApplications.Count, originalCount);
-
                 OnPropertyChanged(nameof(ApplicationCount));
                 OnPropertyChanged(nameof(HasNoApplications));
+
+                Logger.LogDebug("Filtered applications: {Count}/{Total}",
+                    FilteredApplications.Count, Applications.Count);
             }
             catch (Exception ex)
             {
@@ -398,8 +599,8 @@ namespace WindowsLauncher.UI.ViewModels
         {
             await ExecuteSafelyAsync(async () =>
             {
-                await LoadUserSettingsAndApplications();
-                StatusMessage = "Applications refreshed";
+                await LoadUserDataAsync();
+                StatusMessage = LocalizationManager.GetString("ApplicationsRefreshed");
             }, "refresh applications");
         }
 
@@ -413,9 +614,8 @@ namespace WindowsLauncher.UI.ViewModels
 
             await ExecuteSafelyAsync(async () =>
             {
-                var app = appViewModel.GetApplication(); // Получаем исходную модель
-                StatusMessage = $"Launching {app.Name}...";
-                Logger.LogInformation("Launching application {App} for user {User}", app.Name, CurrentUser.Username);
+                var app = appViewModel.GetApplication();
+                StatusMessage = LocalizationManager.GetString("LaunchingApp", app.Name);
 
                 using var scope = _serviceProvider.CreateScope();
                 var appService = scope.ServiceProvider.GetRequiredService<IApplicationService>();
@@ -424,25 +624,23 @@ namespace WindowsLauncher.UI.ViewModels
 
                 if (result.IsSuccess)
                 {
-                    StatusMessage = $"Successfully launched {app.Name}";
-                    Logger.LogInformation("Successfully launched {App} for user {User}", app.Name, CurrentUser.Username);
+                    StatusMessage = LocalizationManager.GetString("SuccessfullyLaunched", app.Name);
+                    Logger.LogInformation("Application launched: {App}", app.Name);
                 }
                 else
                 {
-                    var errorMessage = $"Failed to launch {app.Name}: {result.ErrorMessage}";
+                    var errorMessage = LocalizationManager.GetString("FailedToLaunch", app.Name, result.ErrorMessage);
                     StatusMessage = errorMessage;
-                    Logger.LogWarning("Failed to launch {App} for user {User}: {Error}", app.Name, CurrentUser.Username, result.ErrorMessage);
-                    DialogService.ShowWarning(errorMessage);
+                    DialogService.ShowWarning(errorMessage, LocalizationManager.GetString("LaunchError"));
                 }
             }, $"launch application {appViewModel.Name}");
         }
 
         private void SelectCategory(string? category)
         {
-            if (category != null)
+            if (!string.IsNullOrEmpty(category))
             {
                 SelectedCategory = category;
-                Logger.LogDebug("Category selected: {Category}", category);
             }
         }
 
@@ -450,31 +648,35 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                if (!DialogService.ShowConfirmation("Are you sure you want to logout?"))
+                var confirmMessage = LocalizationManager.GetString("ConfirmLogout");
+                var confirmTitle = LocalizationManager.GetString("Confirmation");
+
+                if (!DialogService.ShowConfirmation(confirmMessage, confirmTitle))
                     return;
 
                 using var scope = _serviceProvider.CreateScope();
                 var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
 
                 authService.Logout();
-                Logger.LogInformation("User {User} logged out", CurrentUser?.Username);
+                Logger.LogInformation("User logged out: {User}", CurrentUser?.Username);
 
-                StatusMessage = "Logged out";
+                StatusMessage = LocalizationManager.GetString("LoggedOut");
                 WpfApplication.Current.Shutdown();
             }
             catch (Exception ex)
             {
-                var errorMessage = $"Logout error: {ex.Message}";
+                var errorMessage = LocalizationManager.GetString("LogoutError", ex.Message);
                 StatusMessage = errorMessage;
-                Logger.LogError(ex, "Logout error for user {User}", CurrentUser?.Username);
                 DialogService.ShowError(errorMessage);
             }
         }
 
         private void OpenSettings()
         {
-            StatusMessage = "Settings functionality coming soon...";
-            DialogService.ShowInfo("Settings window will be implemented in the next iteration.");
+            StatusMessage = LocalizationManager.GetString("SettingsComingSoon");
+            DialogService.ShowInfo(
+                LocalizationManager.GetString("SettingsWindowMessage"),
+                LocalizationManager.GetString("Settings"));
         }
 
         private void SwitchUser()
@@ -482,7 +684,7 @@ namespace WindowsLauncher.UI.ViewModels
             try
             {
                 var loginWindow = new LoginWindow(_serviceProvider);
-                loginWindow.Owner = System.Windows.Application.Current.MainWindow;
+                loginWindow.Owner = WpfApplication.Current.MainWindow;
 
                 if (loginWindow.ShowDialog() == true && loginWindow.AuthenticatedUser != null)
                 {
@@ -490,20 +692,87 @@ namespace WindowsLauncher.UI.ViewModels
                         CurrentUser?.Username, loginWindow.AuthenticatedUser.Username);
 
                     CurrentUser = loginWindow.AuthenticatedUser;
-                    UserSettings = null; // Сбросим настройки для перезагрузки
-                    _ = LoadUserSettingsAndApplications(); // Перезагружаем все для нового пользователя
-                    StatusMessage = $"Switched to user: {CurrentUser.DisplayName}";
+                    UserSettings = null;
+
+                    _ = LoadUserDataAsync();
+                    StatusMessage = LocalizationManager.GetString("SwitchedToUser", CurrentUser.DisplayName);
                 }
             }
             catch (Exception ex)
             {
-                var errorMessage = $"Switch user error: {ex.Message}";
+                var errorMessage = LocalizationManager.GetString("SwitchUserError", ex.Message);
                 StatusMessage = errorMessage;
-                Logger.LogError(ex, "Failed to switch user");
                 DialogService.ShowError(errorMessage);
             }
         }
 
         #endregion
+
+        #region Cleanup
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                LocalizationManager.LanguageChanged -= OnLanguageChanged;
+
+                // Очищаем коллекции
+                Applications.Clear();
+                FilteredApplications.Clear();
+                LocalizedCategories.Clear();
+            }
+            base.Dispose(disposing);
+        }
+
+        #endregion
+    }
+
+    /// <summary>
+    /// ViewModel для категорий с локализацией
+    /// </summary>
+    public class CategoryViewModel : INotifyPropertyChanged
+    {
+        private string _displayName = "";
+        private bool _isSelected;
+
+        public string Key { get; set; } = "";
+
+        public string DisplayName
+        {
+            get => _displayName;
+            set
+            {
+                if (_displayName != value)
+                {
+                    _displayName = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public bool IsSelected
+        {
+            get => _isSelected;
+            set
+            {
+                if (_isSelected != value)
+                {
+                    _isSelected = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
+        public override string ToString()
+        {
+            return $"{Key}: {DisplayName} ({IsSelected})";
+        }
     }
 }

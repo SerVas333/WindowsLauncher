@@ -1,25 +1,30 @@
-﻿using System;
+﻿// ===== WindowsLauncher.UI/ViewModels/ApplicationViewModel.cs - КОРПОРАТИВНАЯ ВЕРСИЯ =====
+using System;
+using System.ComponentModel;
 using WindowsLauncher.Core.Models;
 
 namespace WindowsLauncher.UI.ViewModels
 {
     /// <summary>
-    /// ViewModel обертка для Application модели с дополнительными UI свойствами
+    /// ViewModel для приложений с корпоративным дизайном
     /// </summary>
-    public class ApplicationViewModel
+    public class ApplicationViewModel : INotifyPropertyChanged
     {
         private readonly Application _application;
 
         public ApplicationViewModel(Application application)
         {
             _application = application ?? throw new ArgumentNullException(nameof(application));
+
+            // Подписываемся на изменение языка
+            LocalizationManager.LanguageChanged += OnLanguageChanged;
         }
 
         #region Application Properties
 
         public int Id => _application.Id;
         public string Name => _application.Name;
-        public string Description => _application.Description;
+        public string Description => GetLocalizedDescription();
         public string Category => _application.Category;
         public string ExecutablePath => _application.ExecutablePath;
         public bool IsEnabled => _application.IsEnabled;
@@ -29,7 +34,7 @@ namespace WindowsLauncher.UI.ViewModels
         #region UI Properties
 
         /// <summary>
-        /// Текст иконки для отображения (первая буква названия или эмодзи)
+        /// Иконки в корпоративном стиле
         /// </summary>
         public string IconText
         {
@@ -38,7 +43,6 @@ namespace WindowsLauncher.UI.ViewModels
                 if (string.IsNullOrEmpty(Name))
                     return "📱";
 
-                // Возвращаем эмодзи в зависимости от категории
                 return Category?.ToLower() switch
                 {
                     "system" => "⚙️",
@@ -47,7 +51,13 @@ namespace WindowsLauncher.UI.ViewModels
                     "business" => "💼",
                     "communication" => "💬",
                     "office" => "📊",
-                    _ => Name[0].ToString().ToUpper() // Первая буква названия
+                    "web" => "🌐",
+                    "tools" => "🛠️",
+                    "games" => "🎮",
+                    "media" => "🎵",
+                    "graphics" => "🎨",
+                    "security" => "🔒",
+                    _ => Name[0].ToString().ToUpper()
                 };
             }
         }
@@ -62,25 +72,12 @@ namespace WindowsLauncher.UI.ViewModels
                 if (string.IsNullOrEmpty(Category))
                     return string.Empty;
 
-                // Пытаемся получить локализованную строку
-                var key = $"Category_{Category}";
-                try
-                {
-                    var localized = LocalizationManager.GetString(key);
-
-                    // Если локализация не найдена, возвращаем оригинальное название
-                    return !string.IsNullOrEmpty(localized) && localized != key ? localized : Category;
-                }
-                catch
-                {
-                    // Если ошибка локализации, возвращаем оригинал
-                    return Category;
-                }
+                return GetLocalizedCategoryName(Category);
             }
         }
 
         /// <summary>
-        /// Цвет категории для UI
+        /// Корпоративные цвета для категорий
         /// </summary>
         public string CategoryColor
         {
@@ -88,13 +85,19 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 return Category?.ToLower() switch
                 {
-                    "system" => "#FF5722",      // Deep Orange
-                    "utilities" => "#2196F3",   // Blue  
-                    "development" => "#4CAF50", // Green
-                    "business" => "#9C27B0",    // Purple
-                    "communication" => "#FF9800", // Orange
-                    "office" => "#607D8B",      // Blue Grey
-                    _ => "#757575"              // Grey
+                    "system" => "#C41E3A",        // Корпоративный красный
+                    "utilities" => "#E8324F",     // Светло-красный
+                    "development" => "#A01729",   // Темно-красный
+                    "business" => "#2E4B8C",      // Корпоративный синий
+                    "communication" => "#4CAF50", // Зеленый
+                    "office" => "#FF9800",        // Оранжевый
+                    "web" => "#00BCD4",           // Голубой
+                    "tools" => "#795548",         // Коричневый
+                    "games" => "#9C27B0",         // Фиолетовый
+                    "media" => "#673AB7",         // Глубокий фиолетовый
+                    "graphics" => "#FF5722",      // Глубокий оранжевый
+                    "security" => "#F44336",      // Красный
+                    _ => "#666666"                // Серый по умолчанию
                 };
             }
         }
@@ -114,6 +117,12 @@ namespace WindowsLauncher.UI.ViewModels
                     "business" => "💼",
                     "communication" => "💬",
                     "office" => "📊",
+                    "web" => "🌐",
+                    "tools" => "🛠️",
+                    "games" => "🎮",
+                    "media" => "🎵",
+                    "graphics" => "🎨",
+                    "security" => "🔒",
                     _ => "📱"
                 };
             }
@@ -124,6 +133,39 @@ namespace WindowsLauncher.UI.ViewModels
         /// </summary>
         public bool IsVisible { get; set; } = true;
 
+        /// <summary>
+        /// Подсказка для кнопки запуска
+        /// </summary>
+        public string LaunchTooltip => $"Запустить {Name}";
+
+        /// <summary>
+        /// Статус приложения для отображения
+        /// </summary>
+        public string StatusText
+        {
+            get
+            {
+                return _application.Type switch
+                {
+                    Core.Enums.ApplicationType.Web => "Веб-приложение",
+                    Core.Enums.ApplicationType.Folder => "Папка",
+                    Core.Enums.ApplicationType.Desktop => "Приложение",
+                    _ => "Приложение"
+                };
+            }
+        }
+
+        #endregion
+
+        #region Events
+
+        public event PropertyChangedEventHandler? PropertyChanged;
+
+        protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
+        {
+            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
+        }
+
         #endregion
 
         #region Methods
@@ -133,9 +175,101 @@ namespace WindowsLauncher.UI.ViewModels
         /// </summary>
         public Application GetApplication() => _application;
 
+        /// <summary>
+        /// Получить локализованное описание приложения
+        /// </summary>
+        private string GetLocalizedDescription()
+        {
+            if (string.IsNullOrEmpty(_application.Description))
+                return "";
+
+            // Пытаемся найти локализованное описание для системных приложений
+            var descriptionKey = GetDescriptionKey(_application.Name);
+            if (!string.IsNullOrEmpty(descriptionKey))
+            {
+                try
+                {
+                    var localized = LocalizationManager.GetString(descriptionKey);
+                    if (!string.IsNullOrEmpty(localized) && localized != descriptionKey)
+                    {
+                        return localized;
+                    }
+                }
+                catch
+                {
+                    // Если ошибка локализации, возвращаем оригинал
+                }
+            }
+
+            return _application.Description;
+        }
+
+        /// <summary>
+        /// Получить ключ локализации для описания приложения
+        /// </summary>
+        private string GetDescriptionKey(string appName)
+        {
+            return appName?.ToLower() switch
+            {
+                "calculator" => "CalculatorDescription",
+                "notepad" => "NotepadDescription",
+                "google" => "GoogleDescription",
+                "control panel" => "ControlPanelDescription",
+                "command prompt" => "CommandPromptDescription",
+                "registry editor" => "RegistryEditorDescription",
+                "task manager" => "TaskManagerDescription",
+                "file explorer" => "FileExplorerDescription",
+                "paint" => "PaintDescription",
+                "wordpad" => "WordpadDescription",
+                _ => ""
+            };
+        }
+
+        /// <summary>
+        /// Получить локализованное название категории
+        /// </summary>
+        private string GetLocalizedCategoryName(string category)
+        {
+            if (string.IsNullOrEmpty(category))
+                return category;
+
+            // Словарь для перевода категорий
+            var categoryTranslations = new Dictionary<string, string>
+            {
+                { "System", "Система" },
+                { "Utilities", "Утилиты" },
+                { "Development", "Разработка" },
+                { "Business", "Бизнес" },
+                { "Communication", "Коммуникации" },
+                { "Office", "Офис" },
+                { "Web", "Веб" },
+                { "Tools", "Инструменты" },
+                { "Games", "Игры" },
+                { "Media", "Медиа" },
+                { "Graphics", "Графика" },
+                { "Security", "Безопасность" }
+            };
+
+            return categoryTranslations.TryGetValue(category, out var translation)
+                ? translation
+                : category;
+        }
+
+        /// <summary>
+        /// Обработчик изменения языка
+        /// </summary>
+        private void OnLanguageChanged(object? sender, EventArgs e)
+        {
+            // Обновляем локализованные свойства
+            OnPropertyChanged(nameof(Description));
+            OnPropertyChanged(nameof(LocalizedCategory));
+            OnPropertyChanged(nameof(LaunchTooltip));
+            OnPropertyChanged(nameof(StatusText));
+        }
+
         public override string ToString()
         {
-            return $"{Name} ({Category})";
+            return $"{Name} ({LocalizedCategory})";
         }
 
         public override bool Equals(object? obj)
@@ -146,6 +280,35 @@ namespace WindowsLauncher.UI.ViewModels
         public override int GetHashCode()
         {
             return Id.GetHashCode();
+        }
+
+        #endregion
+
+        #region IDisposable Pattern
+
+        private bool _disposed;
+
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (!_disposed)
+            {
+                if (disposing)
+                {
+                    LocalizationManager.LanguageChanged -= OnLanguageChanged;
+                }
+                _disposed = true;
+            }
+        }
+
+        ~ApplicationViewModel()
+        {
+            Dispose(false);
         }
 
         #endregion

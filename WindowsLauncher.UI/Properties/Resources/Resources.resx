@@ -323,4 +323,76 @@
 	<data name="ControlPanelDescription" xml:space="preserve">
     <value>Windows Control Panel</value>
   </data>
+
+	<data name="CommandPromptDescription" xml:space="preserve">
+  <value>Windows Command Line Interface</value>
+</data>
+	<data name="RegistryEditorDescription" xml:space="preserve">
+  <value>Windows Registry Editor</value>
+</data>
+	<data name="TaskManagerDescription" xml:space="preserve">
+  <value>Windows Task Manager</value>
+</data>
+	<data name="FileExplorerDescription" xml:space="preserve">
+  <value>Windows File Explorer</value>
+</data>
+	<data name="PaintDescription" xml:space="preserve">
+  <value>Windows Paint</value>
+</data>
+	<data name="WordpadDescription" xml:space="preserve">
+  <value>Windows WordPad</value>
+</data>
+
+	<!-- Additional Categories -->
+	<data name="CategoryGames" xml:space="preserve">
+  <value>Games</value>
+</data>
+	<data name="CategoryMedia" xml:space="preserve">
+  <value>Media</value>
+</data>
+	<data name="CategoryGraphics" xml:space="preserve">
+  <value>Graphics</value>
+</data>
+	<data name="CategorySecurity" xml:space="preserve">
+  <value>Security</value>
+</data>
+
+	<!-- Additional Status Messages -->
+	<data name="DatabaseInitializing" xml:space="preserve">
+  <value>Initializing database...</value>
+</data>
+	<data name="DatabaseReady" xml:space="preserve">
+  <value>Database ready</value>
+</data>
+	<data name="UserDataLoading" xml:space="preserve">
+  <value>Loading user data...</value>
+</data>
+	<data name="CategoriesLoaded" xml:space="preserve">
+  <value>Categories loaded</value>
+</data>
+	<data name="FilteringApplications" xml:space="preserve">
+  <value>Filtering applications...</value>
+</data>
+
+	<!-- Error Messages -->
+	<data name="DatabaseError" xml:space="preserve">
+  <value>Database error: {0}</value>
+</data>
+	<data name="ServiceError" xml:space="preserve">
+  <value>Service error: {0}</value>
+</data>
+	<data name="ConfigurationError" xml:space="preserve">
+  <value>Configuration error: {0}</value>
+</data>
+
+	<!-- Success Messages -->
+	<data name="DatabaseInitialized" xml:space="preserve">
+  <value>Database initialized successfully</value>
+</data>
+	<data name="UserAuthenticated" xml:space="preserve">
+  <value>User authenticated successfully</value>
+</data>
+	<data name="ApplicationsLoaded" xml:space="preserve">
+  <value>Applications loaded successfully</value>
+</data>
 </root>

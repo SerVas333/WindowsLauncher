@@ -13,17 +13,14 @@ namespace WindowsLauncher.UI
     {
         public MainWindow()
         {
-            InitializeComponent();
-
-            // 🔄 УБИРАЕМ всю бизнес-логику из конструктора
-            // 🆕 ViewModel теперь инжектируется через DI в App.xaml.cs или здесь
+            InitializeComponent();            
             InitializeViewModel();
         }
 
         private void InitializeViewModel()
         {
             try
-            {
+            { 
                 // Получаем ViewModel через DI
                 var serviceProvider = ((App)Application.Current).ServiceProvider;
                 DataContext = serviceProvider.GetRequiredService<MainViewModel>();
@@ -37,8 +34,7 @@ namespace WindowsLauncher.UI
             }
         }
 
-        // 🔄 ОСТАВЛЯЕМ только UI логику
-        private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+               private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count > 0 && e.AddedItems[0] is ComboBoxItem item)
             {
@@ -50,7 +46,6 @@ namespace WindowsLauncher.UI
             }
         }
 
-        // 🔄 УДАЛЯЕМ методы TestDatabase() и TestAD() - они должны быть в сервисном слое
-        // 🔄 УДАЛЯЕМ InitializeAsync() - это ответственность ViewModel
+       
     }
 }
