@@ -77,6 +77,7 @@ namespace WindowsLauncher.UI.ViewModels
 
                     // Обновляем команды
                     OpenSettingsCommand.RaiseCanExecuteChanged();
+                    OpenAdminCommand.RaiseCanExecuteChanged();
                 }
             }
         }
@@ -181,8 +182,8 @@ namespace WindowsLauncher.UI.ViewModels
         public AsyncRelayCommand RefreshCommand { get; private set; } = null!;
         public RelayCommand LogoutCommand { get; private set; } = null!;
         public RelayCommand OpenSettingsCommand { get; private set; } = null!;
+        public RelayCommand SwitchUserCommand { get; private set; } = null!;
         public RelayCommand OpenAdminCommand { get; private set; } = null!;
-        public RelayCommand SwitchUserCommand { get; private set; } = null!;        
 
         private void InitializeCommands()
         {
@@ -205,6 +206,10 @@ namespace WindowsLauncher.UI.ViewModels
                 () => CanManageSettings);
 
             SwitchUserCommand = new RelayCommand(SwitchUser);
+
+            OpenAdminCommand = new RelayCommand(
+                OpenAdminWindow,
+                () => CurrentUser?.Role >= Core.Enums.UserRole.Administrator);
         }
 
         #endregion
@@ -680,25 +685,6 @@ namespace WindowsLauncher.UI.ViewModels
                 LocalizationManager.GetString("Settings"));
         }
 
-        private void OpenAdminWindow()
-        {
-            try
-            {
-                var adminWindow = new AdminWindow(_serviceProvider);
-                adminWindow.Owner = WpfApplication.Current.MainWindow;
-                adminWindow.ShowDialog();
-
-                // После закрытия окна администрирования обновляем список приложений
-                _ = RefreshApplications();
-            }
-            catch (Exception ex)
-            {
-                var errorMessage = "Ошибка при открытии окна администрирования";
-                Logger.LogError(ex, errorMessage);
-                DialogService.ShowError($"{errorMessage}: {ex.Message}");
-            }
-        }
-
         private void SwitchUser()
         {
             try
@@ -723,6 +709,25 @@ namespace WindowsLauncher.UI.ViewModels
                 var errorMessage = LocalizationManager.GetString("SwitchUserError", ex.Message);
                 StatusMessage = errorMessage;
                 DialogService.ShowError(errorMessage);
+            }
+        }
+
+        private void OpenAdminWindow()
+        {
+            try
+            {
+                var adminWindow = new AdminWindow(_serviceProvider);
+                adminWindow.Owner = WpfApplication.Current.MainWindow;
+                adminWindow.ShowDialog();
+
+                // После закрытия окна администрирования обновляем список приложений
+                _ = RefreshApplications();
+            }
+            catch (Exception ex)
+            {
+                var errorMessage = "Ошибка при открытии окна администрирования";
+                Logger.LogError(ex, errorMessage);
+                DialogService.ShowError($"{errorMessage}: {ex.Message}");
             }
         }
 

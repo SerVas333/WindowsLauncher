@@ -3,6 +3,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WindowsLauncher.UI"
+        xmlns:converters="clr-namespace:WindowsLauncher.UI.Converters"
         Title="{Binding WindowTitle}" 
         Height="700" Width="1200"
         WindowStartupLocation="CenterScreen"
@@ -13,9 +14,11 @@
        
 
         <!-- Конвертеры -->
-        <local:BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
-        <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
-        <local:StringToVisibilityConverter x:Key="StringToVisConverter"/>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
+        <converters:StringToVisibilityConverter x:Key="StringToVisConverter"/>
+        <converters:RoleToVisibilityConverter x:Key="RoleToVisibilityConverter"/>
+        
     </Window.Resources>
 
     <Grid>

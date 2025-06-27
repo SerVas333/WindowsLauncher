@@ -1,10 +1,10 @@
-﻿// ===== WindowsLauncher.UI/Converters.cs - ИСПРАВЛЕННАЯ ВЕРСИЯ =====
+﻿// WindowsLauncher.UI/Converters/UIConverters.cs
 using System;
 using System.Globalization;
 using System.Windows;
 using System.Windows.Data;
 
-namespace WindowsLauncher.UI
+namespace WindowsLauncher.UI.Converters
 {
     public class BooleanToVisibilityConverter : IValueConverter
     {
@@ -142,7 +142,6 @@ namespace WindowsLauncher.UI
             throw new NotImplementedException();
         }
     }
-   
 
     /// <summary>
     /// Конвертер bool в строку с параметром
@@ -167,6 +166,7 @@ namespace WindowsLauncher.UI
             throw new NotImplementedException();
         }
     }
+
     /// <summary>
     /// Конвертер роли пользователя в видимость
     /// </summary>
@@ -189,5 +189,4 @@ namespace WindowsLauncher.UI
             throw new NotImplementedException();
         }
     }
-
 }

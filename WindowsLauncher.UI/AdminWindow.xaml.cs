@@ -171,19 +171,29 @@ namespace WindowsLauncher.UI
 
         private void ShowFolderBrowserDialog()
         {
-            // Используем Windows Forms FolderBrowserDialog через WPF
-            using var dialog = new System.Windows.Forms.FolderBrowserDialog
+            // Используем альтернативный способ выбора папки через Win32
+            var dialog = new Microsoft.Win32.SaveFileDialog
             {
-                Description = "Выберите папку",
-                ShowNewFolderButton = false,
-                SelectedPath = _viewModel.EditingApplication?.ExecutablePath ?? ""
+                Title = "Выберите папку",
+                FileName = "Выбор папки",
+                Filter = "Папка|*.none",
+                CheckFileExists = false,
+                CheckPathExists = true,
+                OverwritePrompt = false,
+                InitialDirectory = _viewModel.EditingApplication?.ExecutablePath ?? ""
             };
 
-            if (dialog.ShowDialog() == System.Windows.Forms.DialogResult.OK)
+            // Хак для выбора папки через SaveFileDialog
+            dialog.FileName = "Folder Selection";
+
+            if (dialog.ShowDialog() == true)
             {
-                if (_viewModel.EditingApplication != null)
+                // Получаем только путь к папке
+                var folderPath = System.IO.Path.GetDirectoryName(dialog.FileName);
+
+                if (!string.IsNullOrEmpty(folderPath) && _viewModel.EditingApplication != null)
                 {
-                    _viewModel.EditingApplication.ExecutablePath = dialog.SelectedPath;
+                    _viewModel.EditingApplication.ExecutablePath = folderPath;
                 }
             }
         }

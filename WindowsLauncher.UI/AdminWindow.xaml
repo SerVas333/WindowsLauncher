@@ -3,6 +3,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WindowsLauncher.UI"
+        xmlns:converters="clr-namespace:WindowsLauncher.UI.Converters"
         Title="Управление приложениями - Администратор" 
         Height="800" Width="1400"
         WindowStartupLocation="CenterScreen"
@@ -11,9 +12,12 @@
 
     <Window.Resources>
         <!-- Конвертеры -->
-        <local:BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
-        <local:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
-        <local:EqualityToBooleanConverter x:Key="EqualityToBooleanConverter"/>
+        <converters:BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
+        <converters:EqualityToBooleanConverter x:Key="EqualityToBooleanConverter"/>
+        <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+        <converters:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter"/>
+        <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
     </Window.Resources>
 
     <Grid>
