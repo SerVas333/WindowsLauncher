@@ -13,6 +13,8 @@ using WindowsLauncher.Core.Enums;
 using WindowsLauncher.UI.Infrastructure.Commands;
 using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.ViewModels.Base;
+using WpfApplication = System.Windows.Application;
+using CoreApplication = WindowsLauncher.Core.Models.Application;
 
 namespace WindowsLauncher.UI.ViewModels
 {
@@ -80,14 +82,62 @@ namespace WindowsLauncher.UI.ViewModels
             get => _selectedApplication;
             set
             {
-                if (SetProperty(ref _selectedApplication, value))
+                // Проверяем несохраненные изменения перед сменой выбора
+                if (_selectedApplication != value && HasUnsavedChanges)
                 {
-                    if (value != null && !IsEditMode)
+                    var result = DialogService.ShowConfirmation(
+                        "У вас есть несохраненные изменения. Сохранить их перед переходом к другому приложению?",
+                        "Несохраненные изменения");
+
+                    if (result)
                     {
-                        StartEdit(value);
+                        // Сохраняем изменения асинхронно
+                        _ = SaveChangesAsync().ContinueWith(t =>
+                        {
+                            if (t.IsCompletedSuccessfully)
+                            {
+                                // После успешного сохранения переходим к новому приложению
+                                WpfApplication.Current.Dispatcher.Invoke(() =>
+                                {
+                                    SetSelectedApplicationInternal(value);
+                                });
+                            }
+                        });
+                        return;
                     }
-                    UpdateCommandStates();
+                    else
+                    {
+                        // Спрашиваем, хочет ли пользователь отменить изменения
+                        var cancelResult = DialogService.ShowConfirmation(
+                            "Отменить все несохраненные изменения?",
+                            "Подтверждение отмены");
+
+                        if (!cancelResult)
+                        {
+                            // Пользователь не хочет терять изменения - остаемся на текущем элементе
+                            OnPropertyChanged(nameof(SelectedApplication));
+                            return;
+                        }
+
+                        // Отменяем изменения
+                        CancelEditWithoutConfirmation();
+                    }
                 }
+
+                SetSelectedApplicationInternal(value);
+            }
+        }
+
+        private void SetSelectedApplicationInternal(ApplicationEditViewModel? value)
+        {
+            if (SetProperty(ref _selectedApplication, value))
+            {
+                if (value != null && !IsEditMode)
+                {
+                    // Просто показываем детали для просмотра
+                    EditingApplication = value;
+                }
+                UpdateCommandStates();
             }
         }
 
@@ -296,7 +346,53 @@ namespace WindowsLauncher.UI.ViewModels
 
         private void AddNewApplication()
         {
-            var newApp = new Application
+            // Проверяем несохраненные изменения
+            if (HasUnsavedChanges)
+            {
+                var result = DialogService.ShowConfirmation(
+                    "У вас есть несохраненные изменения. Сохранить их перед созданием нового приложения?",
+                    "Несохраненные изменения");
+
+                if (result)
+                {
+                    // Сохраняем изменения асинхронно
+                    _ = SaveChangesAsync().ContinueWith(t =>
+                    {
+                        if (t.IsCompletedSuccessfully)
+                        {
+                            // После успешного сохранения создаем новое приложение
+                            WpfApplication.Current.Dispatcher.Invoke(() =>
+                            {
+                                CreateNewApplication();
+                            });
+                        }
+                    });
+                    return;
+                }
+                else
+                {
+                    // Спрашиваем, хочет ли пользователь отменить изменения
+                    var cancelResult = DialogService.ShowConfirmation(
+                        "Отменить все несохраненные изменения?",
+                        "Подтверждение отмены");
+
+                    if (!cancelResult)
+                    {
+                        // Пользователь не хочет терять изменения
+                        return;
+                    }
+
+                    // Отменяем изменения
+                    CancelEditWithoutConfirmation();
+                }
+            }
+
+            CreateNewApplication();
+        }
+
+        private void CreateNewApplication()
+        {
+            var newApp = new CoreApplication
             {
                 Id = 0,
                 Name = "Новое приложение",
@@ -317,6 +413,8 @@ namespace WindowsLauncher.UI.ViewModels
 
             var editVm = new ApplicationEditViewModel(newApp) { IsNew = true };
             EditingApplication = editVm;
+            EditingApplication.PropertyChanged += OnEditingApplicationPropertyChanged;
+            SelectedApplication = null; // Снимаем выделение в списке
             IsEditMode = true;
             HasUnsavedChanges = true;
 
@@ -329,6 +427,8 @@ namespace WindowsLauncher.UI.ViewModels
 
             // Создаем копию для редактирования
             EditingApplication = app.CreateCopy();
+            EditingApplication.PropertyChanged += OnEditingApplicationPropertyChanged;
+            SelectedApplication = app;
             IsEditMode = true;
             HasUnsavedChanges = false;
 
@@ -360,7 +460,22 @@ namespace WindowsLauncher.UI.ViewModels
                 if (!result) return;
             }
 
-            EditingApplication = null;
+            CancelEditWithoutConfirmation();
+        }
+
+        private void CancelEditWithoutConfirmation()
+        {
+            if (EditingApplication != null)
+            {
+                EditingApplication.PropertyChanged -= OnEditingApplicationPropertyChanged;
+            }
+
+            // Возвращаемся к просмотру выбранного элемента
+            if (SelectedApplication != null)
+            {
+                EditingApplication = SelectedApplication;
+            }
+
             IsEditMode = false;
             HasUnsavedChanges = false;
 
@@ -425,7 +540,12 @@ namespace WindowsLauncher.UI.ViewModels
 
                 if (success)
                 {
-                    EditingApplication = null;
+                    if (EditingApplication != null)
+                    {
+                        EditingApplication.PropertyChanged -= OnEditingApplicationPropertyChanged;
+                    }
+
+                    EditingApplication = SelectedApplication;
                     IsEditMode = false;
                     HasUnsavedChanges = false;
 
@@ -471,6 +591,15 @@ namespace WindowsLauncher.UI.ViewModels
         {
             if (app == null) return;
 
+            // Проверяем несохраненные изменения
+            if (HasUnsavedChanges)
+            {
+                DialogService.ShowWarning(
+                    "Сохраните или отмените текущие изменения перед удалением другого приложения.",
+                    "Несохраненные изменения");
+                return;
+            }
+
             var result = DialogService.ShowConfirmation(
                 $"Вы действительно хотите удалить приложение '{app.Name}'?\n\n" +
                 "Это действие нельзя отменить.",
@@ -488,6 +617,14 @@ namespace WindowsLauncher.UI.ViewModels
                 if (success)
                 {
                     Applications.Remove(app);
+
+                    // Если удаляем выбранное приложение, очищаем выбор
+                    if (SelectedApplication == app)
+                    {
+                        SelectedApplication = null;
+                        EditingApplication = null;
+                    }
+
                     StatusMessage = $"Приложение '{app.Name}' удалено";
 
                     OnPropertyChanged(nameof(TotalApplications));
@@ -509,6 +646,15 @@ namespace WindowsLauncher.UI.ViewModels
         {
             if (app == null) return;
 
+            // Проверяем несохраненные изменения
+            if (HasUnsavedChanges)
+            {
+                DialogService.ShowWarning(
+                    "Сохраните или отмените текущие изменения перед дублированием приложения.",
+                    "Несохраненные изменения");
+                return;
+            }
+
             await ExecuteSafelyAsync(async () =>
             {
                 var duplicate = app.CreateCopy();
@@ -519,6 +665,8 @@ namespace WindowsLauncher.UI.ViewModels
                 duplicate.ModifiedDate = DateTime.Now;
 
                 EditingApplication = duplicate;
+                EditingApplication.PropertyChanged += OnEditingApplicationPropertyChanged;
+                SelectedApplication = null; // Снимаем выделение в списке
                 IsEditMode = true;
                 HasUnsavedChanges = true;
 
@@ -627,6 +775,7 @@ namespace WindowsLauncher.UI.ViewModels
             if (!string.IsNullOrWhiteSpace(input) && !EditingApplication.RequiredGroups.Contains(input))
             {
                 EditingApplication.RequiredGroups.Add(input);
+                EditingApplication.OnPropertyChanged(nameof(EditingApplication.RequiredGroups));
                 HasUnsavedChanges = true;
             }
         }
@@ -636,6 +785,7 @@ namespace WindowsLauncher.UI.ViewModels
             if (EditingApplication == null || string.IsNullOrEmpty(group)) return;
 
             EditingApplication.RequiredGroups.Remove(group);
+            EditingApplication.OnPropertyChanged(nameof(EditingApplication.RequiredGroups));
             HasUnsavedChanges = true;
         }
 
@@ -658,7 +808,12 @@ namespace WindowsLauncher.UI.ViewModels
 
         private void OnApplicationPropertyChanged(object? sender, PropertyChangedEventArgs e)
         {
-            if (sender == EditingApplication && IsEditMode)
+            // Не нужно в режиме просмотра
+        }
+
+        private void OnEditingApplicationPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (IsEditMode && !HasUnsavedChanges)
             {
                 HasUnsavedChanges = true;
             }
@@ -689,6 +844,11 @@ namespace WindowsLauncher.UI.ViewModels
                 {
                     app.PropertyChanged -= OnApplicationPropertyChanged;
                 }
+
+                if (EditingApplication != null)
+                {
+                    EditingApplication.PropertyChanged -= OnEditingApplicationPropertyChanged;
+                }
             }
             base.Dispose(disposing);
         }
@@ -701,10 +861,10 @@ namespace WindowsLauncher.UI.ViewModels
     /// </summary>
     public class ApplicationEditViewModel : INotifyPropertyChanged
     {
-        private Application _application;
+        private CoreApplication _application;
         private bool _isNew;
 
-        public ApplicationEditViewModel(Application application)
+        public ApplicationEditViewModel(CoreApplication application)
         {
             _application = application;
             RequiredGroups = new ObservableCollection<string>(application.RequiredGroups);
@@ -819,7 +979,7 @@ namespace WindowsLauncher.UI.ViewModels
             _ => MinimumRole.ToString()
         };
 
-        public Application ToApplication()
+        public CoreApplication ToApplication()
         {
             _application.RequiredGroups = RequiredGroups.ToList();
             return _application;
@@ -827,7 +987,7 @@ namespace WindowsLauncher.UI.ViewModels
 
         public ApplicationEditViewModel CreateCopy()
         {
-            var copy = new Application
+            var copy = new CoreApplication
             {
                 Id = Id,
                 Name = Name,
@@ -874,7 +1034,7 @@ namespace WindowsLauncher.UI.ViewModels
 
         public event PropertyChangedEventHandler? PropertyChanged;
 
-        protected void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
+        public void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }

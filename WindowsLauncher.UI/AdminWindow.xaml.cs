@@ -213,5 +213,10 @@ namespace WindowsLauncher.UI
             // Здесь можно настроить дополнительные стили окна
             // Например, убрать стандартную рамку Windows и добавить свою
         }
+
+        private void Button_Click(object sender, RoutedEventArgs e)
+        {
+
+        }
     }
 }

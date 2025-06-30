@@ -5,7 +5,7 @@
         xmlns:local="clr-namespace:WindowsLauncher.UI"
         xmlns:converters="clr-namespace:WindowsLauncher.UI.Converters"
         Title="Управление приложениями - Администратор" 
-        Height="800" Width="1400"
+        Height="800" Width="1198"
         WindowStartupLocation="CenterScreen"
         Background="#F5F5F5"
         MinHeight="600" MinWidth="1000">
@@ -345,6 +345,13 @@
                                         <DataTrigger Binding="{Binding IsEditMode}" Value="True">
                                             <Setter Property="Text" Value="Редактирование приложения"/>
                                         </DataTrigger>
+                                        <MultiDataTrigger>
+                                            <MultiDataTrigger.Conditions>
+                                                <Condition Binding="{Binding IsEditMode}" Value="True"/>
+                                                <Condition Binding="{Binding EditingApplication.IsNew}" Value="True"/>
+                                            </MultiDataTrigger.Conditions>
+                                            <Setter Property="Text" Value="Создание нового приложения"/>
+                                        </MultiDataTrigger>
                                     </Style.Triggers>
                                 </Style>
                             </TextBlock.Style>
@@ -516,6 +523,10 @@
                                        Text="Требуемые группы:" 
                                        VerticalAlignment="Top" Margin="0,6,0,12"/>
                             <Grid Grid.Row="9" Grid.Column="1" Margin="0,0,0,12">
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="347*"/>
+                                    <ColumnDefinition Width="334*"/>
+                                </Grid.ColumnDefinitions>
                                 <Grid.RowDefinitions>
                                     <RowDefinition Height="Auto"/>
                                     <RowDefinition Height="*"/>
@@ -524,7 +535,7 @@
                                 <!-- Add Group -->
                                 <StackPanel Grid.Row="0" Orientation="Horizontal" 
                                             Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisConverter}}"
-                                            Margin="0,0,0,8">
+                                            Margin="0,0,0,8" Grid.ColumnSpan="2">
                                     <ComboBox Width="200" 
                                               ItemsSource="{Binding AvailableGroups}"
                                               IsEditable="True"
@@ -532,7 +543,7 @@
                                     <Button Content="➕ Добавить" 
                                             Style="{StaticResource CorporateButtonSecondary}"
                                             Margin="8,0,0,0"
-                                            Height="30"
+                                            Height="39"
                                             Command="{Binding AddGroupCommand}"/>
                                 </StackPanel>
 
@@ -541,7 +552,7 @@
                                          ItemsSource="{Binding EditingApplication.RequiredGroups}"
                                          MaxHeight="120"
                                          BorderThickness="1"
-                                         BorderBrush="{StaticResource CorporateBorder}">
+                                         BorderBrush="{StaticResource CorporateBorder}" Grid.ColumnSpan="2">
                                     <ListBox.ItemTemplate>
                                         <DataTemplate>
                                             <Border Padding="8,4" Margin="2">
