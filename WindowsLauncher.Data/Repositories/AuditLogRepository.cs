@@ -1,4 +1,4 @@
-﻿// WindowsLauncher.Data/Repositories/AuditLogRepository.cs
+﻿// WindowsLauncher.Data/Repositories/AuditLogRepository.cs - ИСПРАВЛЕННАЯ ВЕРСИЯ
 using Microsoft.EntityFrameworkCore;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
@@ -37,14 +37,17 @@ namespace WindowsLauncher.Data.Repositories
                 .ToListAsync();
         }
 
-        public async Task DeleteOldLogsAsync(DateTime beforeDate)
+        public async Task<int> DeleteOldLogsAsync(DateTime beforeDate)
         {
             var oldLogs = await _dbSet
                 .Where(l => l.Timestamp < beforeDate)
                 .ToListAsync();
 
+            var deletedCount = oldLogs.Count;
             _dbSet.RemoveRange(oldLogs);
             await SaveChangesAsync();
+
+            return deletedCount;
         }
 
         public async Task<Dictionary<string, int>> GetApplicationUsageStatsAsync(DateTime fromDate, DateTime toDate)

@@ -21,6 +21,12 @@ namespace WindowsLauncher.Data.Configurations
             builder.Property(u => u.Email)
                 .HasMaxLength(300);
 
+            builder.Property(u => u.PasswordHash)
+                .HasMaxLength(500);
+
+            builder.Property(u => u.Salt)
+                .HasMaxLength(500);
+
             // Сериализуем список групп в JSON с компаратором
             builder.Property(u => u.Groups)
                 .HasConversion(
@@ -32,9 +38,16 @@ namespace WindowsLauncher.Data.Configurations
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                     c => c.ToList()));
 
+            // Игнорируем вычисляемые свойства
+            builder.Ignore(u => u.LastLoginAt);
+            builder.Ignore(u => u.CreatedAt);
+
+            // Индексы
             builder.HasIndex(u => u.Username).IsUnique();
+            builder.HasIndex(u => u.IsActive);
+            builder.HasIndex(u => u.IsServiceAccount);
+
             builder.ToTable("Users");
         }
     }
 }
-

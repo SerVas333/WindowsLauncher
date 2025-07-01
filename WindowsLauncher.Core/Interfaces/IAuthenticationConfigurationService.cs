@@ -1,5 +1,4 @@
-﻿// WindowsLauncher.Core/Interfaces/IAuthenticationConfigurationService.cs - ЗАМЕНА СУЩЕСТВУЮЩЕГО
-using System.Collections.Generic;
+﻿// WindowsLauncher.Core/Interfaces/IAuthenticationConfigurationService.cs - ИСПРАВЛЕННАЯ ВЕРСИЯ
 using System.Threading.Tasks;
 using WindowsLauncher.Core.Models;
 
@@ -52,7 +51,7 @@ namespace WindowsLauncher.Core.Interfaces
     public class ValidationResult
     {
         public bool IsValid { get; set; }
-        public List<string> Errors { get; set; } = new();
-        public List<string> Warnings { get; set; } = new();
+        public string[] Errors { get; set; } = System.Array.Empty<string>();
+        public string[] Warnings { get; set; } = System.Array.Empty<string>();
     }
 }

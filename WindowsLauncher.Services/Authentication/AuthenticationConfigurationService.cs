@@ -3,13 +3,12 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Options;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 using System.Linq;
 using System.Collections.Generic;
 
-namespace WindowsLauncher.Services
+namespace WindowsLauncher.Services.Authentication
 {
     /// <summary>
     /// Сервис для управления конфигурацией аутентификации
@@ -18,7 +17,7 @@ namespace WindowsLauncher.Services
     {
         private readonly ILogger<AuthenticationConfigurationService> _logger;
         private readonly string _configPath;
-        private ActiveDirectoryConfiguration _currentConfig;
+        private ActiveDirectoryConfiguration? _currentConfig;
         private readonly object _configLock = new();
 
         public AuthenticationConfigurationService(ILogger<AuthenticationConfigurationService> logger)
@@ -53,7 +52,7 @@ namespace WindowsLauncher.Services
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
 
-            var validation = ValidateConfiguration(config);
+            var validation = await ValidateConfigurationAsync(config);
             if (!validation.IsValid)
             {
                 var errors = string.Join(", ", validation.Errors);
@@ -85,9 +84,20 @@ namespace WindowsLauncher.Services
         }
 
         /// <summary>
+        /// Проверить, настроена ли система
+        /// </summary>
+        public bool IsConfigured()
+        {
+            var config = GetConfiguration();
+            return !string.IsNullOrEmpty(config.Domain) &&
+                   !string.IsNullOrEmpty(config.LdapServer) &&
+                   config.ServiceAdmin.IsPasswordSet;
+        }
+
+        /// <summary>
         /// Сброс конфигурации к настройкам по умолчанию
         /// </summary>
-        public async Task ResetConfigurationAsync()
+        public async Task ResetToDefaultsAsync()
         {
             try
             {
@@ -104,166 +114,31 @@ namespace WindowsLauncher.Services
         }
 
         /// <summary>
+        /// Валидировать конфигурацию
+        /// </summary>
+        public async Task<ValidationResult> ValidateConfigurationAsync(ActiveDirectoryConfiguration config)
+        {
+            return await Task.FromResult(ValidateConfiguration(config));
+        }
+
+        /// <summary>
         /// Экспорт конфигурации (без паролей для безопасности)
         /// </summary>
-        public string ExportConfiguration()
+        public async Task<string> ExportConfigurationAsync()
         {
-            try
-            {
-                var config = GetConfiguration();
-
-                // Создаем копию конфигурации без чувствительных данных
-                var exportConfig = new ActiveDirectoryConfiguration
-                {
-                    Domain = config.Domain,
-                    LdapServer = config.LdapServer,
-                    Port = config.Port,
-                    UseTLS = config.UseTLS,
-                    ServiceUser = config.ServiceUser,
-                    // Пароли не экспортируем для безопасности
-                    ServicePassword = string.IsNullOrEmpty(config.ServicePassword) ? null : "***HIDDEN***",
-                    TimeoutSeconds = config.TimeoutSeconds,
-                    RequireDomainMembership = config.RequireDomainMembership,
-                    TrustedDomains = config.TrustedDomains?.ToList() ?? new List<string>(),
-                    ServiceAdmin = new ServiceAdminConfiguration
-                    {
-                        Username = config.ServiceAdmin.Username,
-                        IsEnabled = config.ServiceAdmin.IsEnabled,
-                        SessionTimeoutMinutes = config.ServiceAdmin.SessionTimeoutMinutes,
-                        // Пароли не экспортируем
-                        PasswordHash = string.IsNullOrEmpty(config.ServiceAdmin.PasswordHash) ? null : "***HIDDEN***",
-                        Salt = string.IsNullOrEmpty(config.ServiceAdmin.Salt) ? null : "***HIDDEN***"
-                    }
-                };
-
-                return JsonSerializer.Serialize(exportConfig, new JsonSerializerOptions
-                {
-                    WriteIndented = true,
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to export authentication configuration");
-                throw;
-            }
+            return await Task.FromResult(ExportConfiguration());
         }
 
         /// <summary>
         /// Импорт конфигурации
         /// </summary>
-        public async Task<bool> ImportConfigurationAsync(string configJson)
+        public async Task ImportConfigurationAsync(string configurationJson)
         {
-            if (string.IsNullOrWhiteSpace(configJson))
-                return false;
-
-            try
+            var success = await ImportConfigurationInternalAsync(configurationJson);
+            if (!success)
             {
-                var importedConfig = JsonSerializer.Deserialize<ActiveDirectoryConfiguration>(configJson, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    PropertyNameCaseInsensitive = true
-                });
-
-                if (importedConfig == null)
-                    return false;
-
-                // Сохраняем существующие пароли, если в импортируемой конфигурации они скрыты
-                var currentConfig = GetConfiguration();
-
-                if (importedConfig.ServicePassword == "***HIDDEN***")
-                    importedConfig.ServicePassword = currentConfig.ServicePassword;
-
-                if (importedConfig.ServiceAdmin.PasswordHash == "***HIDDEN***")
-                {
-                    importedConfig.ServiceAdmin.PasswordHash = currentConfig.ServiceAdmin.PasswordHash;
-                    importedConfig.ServiceAdmin.Salt = currentConfig.ServiceAdmin.Salt;
-                }
-
-                var validation = ValidateConfiguration(importedConfig);
-                if (!validation.IsValid)
-                {
-                    _logger.LogWarning("Imported configuration is invalid: {Errors}", string.Join(", ", validation.Errors));
-                    return false;
-                }
-
-                await SaveConfigurationAsync(importedConfig);
-
-                _logger.LogInformation("Authentication configuration imported successfully");
-                return true;
+                throw new ArgumentException("Failed to import configuration");
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to import authentication configuration");
-                return false;
-            }
-        }
-
-        /// <summary>
-        /// Валидация конфигурации
-        /// </summary>
-        public ValidationResult ValidateConfiguration(ActiveDirectoryConfiguration config)
-        {
-            var errors = new List<string>();
-            var warnings = new List<string>();
-
-            if (config == null)
-            {
-                errors.Add("Configuration is null");
-                return new ValidationResult { IsValid = false, Errors = errors.ToArray() };
-            }
-
-            // Валидация основных настроек домена
-            if (string.IsNullOrWhiteSpace(config.Domain))
-                errors.Add("Domain is required");
-            else if (!IsValidDomainName(config.Domain))
-                errors.Add("Domain name format is invalid");
-
-            // Валидация LDAP сервера
-            if (!string.IsNullOrWhiteSpace(config.LdapServer) && !IsValidServerName(config.LdapServer))
-                warnings.Add("LDAP server name format may be invalid");
-
-            // Валидация порта
-            if (config.Port <= 0 || config.Port > 65535)
-                errors.Add("Port must be between 1 and 65535");
-
-            // Валидация таймаута
-            if (config.TimeoutSeconds <= 0 || config.TimeoutSeconds > 300)
-                warnings.Add("Timeout should be between 1 and 300 seconds");
-
-            // Валидация сервисного аккаунта
-            if (!string.IsNullOrEmpty(config.ServiceUser) && string.IsNullOrEmpty(config.ServicePassword))
-                warnings.Add("Service user is specified but password is empty");
-
-            // Валидация доверенных доменов
-            if (config.TrustedDomains?.Any() == true)
-            {
-                foreach (var domain in config.TrustedDomains)
-                {
-                    if (!IsValidDomainName(domain))
-                        warnings.Add($"Trusted domain '{domain}' has invalid format");
-                }
-            }
-
-            // Валидация настроек сервисного администратора
-            if (config.ServiceAdmin != null)
-            {
-                if (string.IsNullOrWhiteSpace(config.ServiceAdmin.Username))
-                    errors.Add("Service admin username is required");
-
-                if (config.ServiceAdmin.SessionTimeoutMinutes <= 0 || config.ServiceAdmin.SessionTimeoutMinutes > 1440)
-                    warnings.Add("Service admin session timeout should be between 1 and 1440 minutes");
-
-                if (config.ServiceAdmin.IsEnabled && !config.ServiceAdmin.IsPasswordSet)
-                    warnings.Add("Service admin is enabled but password is not set");
-            }
-
-            return new ValidationResult
-            {
-                IsValid = errors.Count == 0,
-                Errors = errors.ToArray(),
-                Warnings = warnings.ToArray()
-            };
         }
 
         #region Private Methods
@@ -321,6 +196,8 @@ namespace WindowsLauncher.Services
                 UseTLS = true,
                 TimeoutSeconds = 30,
                 RequireDomainMembership = false,
+                AdminGroups = "LauncherAdmins",
+                PowerUserGroups = "LauncherPowerUsers",
                 TrustedDomains = new List<string>(),
                 ServiceAdmin = new ServiceAdminConfiguration
                 {
@@ -361,6 +238,130 @@ namespace WindowsLauncher.Services
             }
 
             return "company.local"; // Fallback значение
+        }
+
+        /// <summary>
+        /// Валидация конфигурации
+        /// </summary>
+        private ValidationResult ValidateConfiguration(ActiveDirectoryConfiguration config)
+        {
+            var errors = new List<string>();
+            var warnings = new List<string>();
+
+            if (config == null)
+            {
+                errors.Add("Configuration is null");
+                return new ValidationResult { IsValid = false, Errors = errors.ToArray() };
+            }
+
+            // Валидация основных настроек домена
+            if (string.IsNullOrWhiteSpace(config.Domain))
+                errors.Add("Domain is required");
+            else if (!IsValidDomainName(config.Domain))
+                errors.Add("Domain name format is invalid");
+
+            // Валидация LDAP сервера
+            if (!string.IsNullOrWhiteSpace(config.LdapServer) && !IsValidServerName(config.LdapServer))
+                warnings.Add("LDAP server name format may be invalid");
+
+            // Валидация порта
+            if (config.Port <= 0 || config.Port > 65535)
+                errors.Add("Port must be between 1 and 65535");
+
+            // Валидация таймаута
+            if (config.TimeoutSeconds <= 0 || config.TimeoutSeconds > 300)
+                warnings.Add("Timeout should be between 1 and 300 seconds");
+
+            return new ValidationResult
+            {
+                IsValid = errors.Count == 0,
+                Errors = errors.ToArray(),
+                Warnings = warnings.ToArray()
+            };
+        }
+
+        /// <summary>
+        /// Экспорт конфигурации
+        /// </summary>
+        private string ExportConfiguration()
+        {
+            try
+            {
+                var config = GetConfiguration();
+
+                // Создаем копию конфигурации без чувствительных данных
+                var exportConfig = new ActiveDirectoryConfiguration
+                {
+                    Domain = config.Domain,
+                    LdapServer = config.LdapServer,
+                    Port = config.Port,
+                    UseTLS = config.UseTLS,
+                    ServiceUser = config.ServiceUser,
+                    ServicePassword = string.IsNullOrEmpty(config.ServicePassword) ? string.Empty : "***HIDDEN***",
+                    TimeoutSeconds = config.TimeoutSeconds,
+                    RequireDomainMembership = config.RequireDomainMembership,
+                    AdminGroups = config.AdminGroups,
+                    PowerUserGroups = config.PowerUserGroups,
+                    TrustedDomains = config.TrustedDomains?.ToList() ?? new List<string>(),
+                    ServiceAdmin = new ServiceAdminConfiguration
+                    {
+                        Username = config.ServiceAdmin.Username,
+                        IsEnabled = config.ServiceAdmin.IsEnabled,
+                        SessionTimeoutMinutes = config.ServiceAdmin.SessionTimeoutMinutes,
+                        PasswordHash = string.IsNullOrEmpty(config.ServiceAdmin.PasswordHash) ? string.Empty : "***HIDDEN***",
+                        Salt = string.IsNullOrEmpty(config.ServiceAdmin.Salt) ? string.Empty : "***HIDDEN***"
+                    }
+                };
+
+                return JsonSerializer.Serialize(exportConfig, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to export authentication configuration");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Импорт конфигурации
+        /// </summary>
+        private async Task<bool> ImportConfigurationInternalAsync(string configJson)
+        {
+            if (string.IsNullOrWhiteSpace(configJson))
+                return false;
+
+            try
+            {
+                var importedConfig = JsonSerializer.Deserialize<ActiveDirectoryConfiguration>(configJson, new JsonSerializerOptions
+                {
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    PropertyNameCaseInsensitive = true
+                });
+
+                if (importedConfig == null)
+                    return false;
+
+                var validation = await ValidateConfigurationAsync(importedConfig);
+                if (!validation.IsValid)
+                {
+                    _logger.LogWarning("Imported configuration is invalid: {Errors}", string.Join(", ", validation.Errors));
+                    return false;
+                }
+
+                await SaveConfigurationAsync(importedConfig);
+
+                _logger.LogInformation("Authentication configuration imported successfully");
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to import authentication configuration");
+                return false;
+            }
         }
 
         /// <summary>

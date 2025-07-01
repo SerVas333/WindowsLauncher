@@ -1,7 +1,6 @@
-﻿// WindowsLauncher.Core/Interfaces/IActiveDirectoryService.cs - ЗАМЕНА СУЩЕСТВУЮЩЕГО
+﻿// WindowsLauncher.Core/Interfaces/IActiveDirectoryService.cs - ПОЛНОСТЬЮ ОЧИЩЕННАЯ ВЕРСИЯ
 using System.Collections.Generic;
 using System.Threading.Tasks;
-using WindowsLauncher.Core.Enums;
 using WindowsLauncher.Core.Models;
 
 namespace WindowsLauncher.Core.Interfaces
@@ -24,7 +23,7 @@ namespace WindowsLauncher.Core.Interfaces
         /// <summary>
         /// Получить информацию о пользователе из AD
         /// </summary>
-        Task<AdUserInfo> GetUserInfoAsync(string username);
+        Task<AdUserInfo?> GetUserInfoAsync(string username);
 
         /// <summary>
         /// Получить группы пользователя
@@ -50,39 +49,5 @@ namespace WindowsLauncher.Core.Interfaces
         /// Проверить доступность домена
         /// </summary>
         Task<bool> IsDomainAvailableAsync();
-    }
-
-    /// <summary>
-    /// Результат аутентификации в AD
-    /// </summary>
-    public class AuthenticationResult
-    {
-        public bool IsSuccessful { get; set; }
-        public string Username { get; set; } = string.Empty;
-        public string DisplayName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public List<string> Groups { get; set; } = new();
-        public UserRole Role { get; set; }
-        public string ErrorMessage { get; set; } = string.Empty;
-        public DateTime AuthenticatedAt { get; set; } = DateTime.UtcNow;
-    }
-
-    /// <summary>
-    /// Информация о пользователе AD
-    /// </summary>
-    public class AdUserInfo
-    {
-        public string Username { get; set; } = string.Empty;
-        public string DisplayName { get; set; } = string.Empty;
-        public string FirstName { get; set; } = string.Empty;
-        public string LastName { get; set; } = string.Empty;
-        public string Email { get; set; } = string.Empty;
-        public string Department { get; set; } = string.Empty;
-        public string Title { get; set; } = string.Empty;
-        public string Phone { get; set; } = string.Empty;
-        public List<string> Groups { get; set; } = new();
-        public bool IsEnabled { get; set; } = true;
-        public DateTime? LastLogon { get; set; }
-        public DateTime? PasswordLastSet { get; set; }
     }
 }

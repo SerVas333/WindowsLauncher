@@ -1,4 +1,4 @@
-﻿// WindowsLauncher.Services/ActiveDirectory/ActiveDirectoryService.cs
+﻿// WindowsLauncher.Services/ActiveDirectory/ActiveDirectoryService.cs - ИСПРАВЛЕННАЯ ВЕРСИЯ
 using Microsoft.Extensions.Logging;
 using System;
 using System.Collections.Generic;
@@ -79,8 +79,6 @@ namespace WindowsLauncher.Services.ActiveDirectory
         /// </summary>
         public async Task<AuthenticationResult> AuthenticateAsync(string username, string password)
         {
-            var result = new AuthenticationResult { Username = username };
-
             try
             {
                 var config = _configService.GetConfiguration();
@@ -104,34 +102,35 @@ namespace WindowsLauncher.Services.ActiveDirectory
                     var userInfo = await GetUserInfoAsync(username);
                     if (userInfo != null)
                     {
-                        result.IsSuccessful = true;
-                        result.DisplayName = userInfo.DisplayName;
-                        result.Email = userInfo.Email;
-                        result.Groups = userInfo.Groups;
-                        result.Role = DetermineUserRole(userInfo.Groups, config);
+                        var user = new User
+                        {
+                            Username = username,
+                            DisplayName = userInfo.DisplayName,
+                            Email = userInfo.Email,
+                            Groups = userInfo.Groups,
+                            Role = DetermineUserRole(userInfo.Groups, config),
+                            IsActive = userInfo.IsEnabled
+                        };
 
                         _logger.LogInformation("User {Username} authenticated successfully", username);
+                        return AuthenticationResult.Success(user, AuthenticationType.DomainLDAP, config.Domain);
                     }
                 }
-                else
-                {
-                    result.ErrorMessage = "Неверные учетные данные";
-                    _logger.LogWarning("Authentication failed for user {Username}", username);
-                }
+
+                _logger.LogWarning("Authentication failed for user {Username}", username);
+                return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials, "Неверные учетные данные");
             }
             catch (Exception ex)
             {
-                result.ErrorMessage = ex.Message;
                 _logger.LogError(ex, "Error authenticating user {Username}", username);
+                return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
             }
-
-            return await Task.FromResult(result);
         }
 
         /// <summary>
         /// Получить информацию о пользователе из AD
         /// </summary>
-        public async Task<AdUserInfo> GetUserInfoAsync(string username)
+        public async Task<AdUserInfo?> GetUserInfoAsync(string username)
         {
             try
             {
@@ -224,7 +223,7 @@ namespace WindowsLauncher.Services.ActiveDirectory
                     using var searcher = new PrincipalSearcher(groupSearcher);
 
                     var results = searcher.FindAll();
-                    groups.AddRange(results.Select(g => g.Name).Where(name => !string.IsNullOrEmpty(name)));
+                    groups.AddRange(results.OfType<GroupPrincipal>().Select(g => g.Name).Where(name => !string.IsNullOrEmpty(name))!);
                 }
                 else
                 {
@@ -264,7 +263,7 @@ namespace WindowsLauncher.Services.ActiveDirectory
         /// <summary>
         /// Получение пользователя через PrincipalContext
         /// </summary>
-        private async Task<AdUserInfo> GetUserViaPrincipalContextAsync(string username, string domain)
+        private async Task<AdUserInfo?> GetUserViaPrincipalContextAsync(string username, string domain)
         {
             try
             {
@@ -280,12 +279,12 @@ namespace WindowsLauncher.Services.ActiveDirectory
                         .OfType<GroupPrincipal>()
                         .Select(g => g.Name)
                         .Where(name => !string.IsNullOrEmpty(name))
-                        .ToList();
+                        .ToList()!;
 
                     var userInfo = new AdUserInfo
                     {
-                        Username = userPrincipal.SamAccountName,
-                        DisplayName = userPrincipal.DisplayName ?? userPrincipal.SamAccountName,
+                        Username = userPrincipal.SamAccountName ?? username,
+                        DisplayName = userPrincipal.DisplayName ?? userPrincipal.SamAccountName ?? username,
                         FirstName = userPrincipal.GivenName ?? string.Empty,
                         LastName = userPrincipal.Surname ?? string.Empty,
                         Email = userPrincipal.EmailAddress ?? string.Empty,
@@ -353,7 +352,7 @@ namespace WindowsLauncher.Services.ActiveDirectory
         /// <summary>
         /// Получение пользователя через LDAP
         /// </summary>
-        private async Task<AdUserInfo> GetUserViaLdapAsync(string username, string domain)
+        private async Task<AdUserInfo?> GetUserViaLdapAsync(string username, string domain)
         {
             try
             {
@@ -494,7 +493,7 @@ namespace WindowsLauncher.Services.ActiveDirectory
             var connection = new LdapConnection(new LdapDirectoryIdentifier(server, config.Port));
 
             connection.SessionOptions.ProtocolVersion = 3;
-            connection.Timeout = TimeSpan.FromSeconds(config.ConnectionTimeoutSeconds);
+            connection.Timeout = TimeSpan.FromSeconds(config.TimeoutSeconds);
 
             if (config.UseTLS)
             {
@@ -511,7 +510,7 @@ namespace WindowsLauncher.Services.ActiveDirectory
         /// <summary>
         /// Преобразование LDAP записи в AdUserInfo
         /// </summary>
-        private AdUserInfo MapLdapEntryToAdUserInfo(SearchResultEntry entry)
+        private AdUserInfo? MapLdapEntryToAdUserInfo(SearchResultEntry entry)
         {
             var username = GetAttributeValue(entry, "sAMAccountName");
             if (string.IsNullOrEmpty(username))
@@ -535,13 +534,13 @@ namespace WindowsLauncher.Services.ActiveDirectory
             }
 
             // Получаем группы из memberOf
-            var memberOf = entry.Attributes["memberOf"];
             var groups = new List<string>();
-            if (memberOf != null)
+            if (entry.Attributes.Contains("memberOf"))
             {
+                var memberOf = entry.Attributes["memberOf"];
                 for (int i = 0; i < memberOf.Count; i++)
                 {
-                    var dn = (string)memberOf[i];
+                    var dn = (string)memberOf[i]!;
                     var groupName = ExtractCnFromDn(dn);
                     if (!string.IsNullOrEmpty(groupName))
                         groups.Add(groupName);
@@ -567,9 +566,9 @@ namespace WindowsLauncher.Services.ActiveDirectory
         /// <summary>
         /// Получение значения атрибута из LDAP записи
         /// </summary>
-        private static string GetAttributeValue(SearchResultEntry entry, string attributeName)
+        private static string? GetAttributeValue(SearchResultEntry entry, string attributeName)
         {
-            if (entry.Attributes.ContainsKey(attributeName) && entry.Attributes[attributeName].Count > 0)
+            if (entry.Attributes.Contains(attributeName) && entry.Attributes[attributeName].Count > 0)
             {
                 return entry.Attributes[attributeName][0]?.ToString();
             }
@@ -579,7 +578,7 @@ namespace WindowsLauncher.Services.ActiveDirectory
         /// <summary>
         /// Извлечение CN из Distinguished Name
         /// </summary>
-        private static string ExtractCnFromDn(string dn)
+        private static string? ExtractCnFromDn(string dn)
         {
             if (string.IsNullOrEmpty(dn))
                 return null;
@@ -606,7 +605,7 @@ namespace WindowsLauncher.Services.ActiveDirectory
             {
                 if (entry.Properties[propertyName].Value != null)
                 {
-                    return entry.Properties[propertyName].Value.ToString();
+                    return entry.Properties[propertyName].Value.ToString() ?? string.Empty;
                 }
             }
             catch (Exception ex)
@@ -620,13 +619,19 @@ namespace WindowsLauncher.Services.ActiveDirectory
         /// <summary>
         /// Определение роли пользователя на основе групп AD
         /// </summary>
-        private UserRole DetermineUserRole(List<string> groups, AuthenticationConfiguration config)
+        private UserRole DetermineUserRole(List<string> groups, ActiveDirectoryConfiguration config)
         {
             if (groups == null || groups.Count == 0)
                 return UserRole.Standard;
 
-            var adminGroups = config.AdminGroups.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            var powerUserGroups = config.PowerUserGroups.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            // Используем базовые значения если конфигурация пуста
+            var adminGroups = !string.IsNullOrEmpty(config.AdminGroups)
+                ? config.AdminGroups.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                : new List<string> { "LauncherAdmins", "Domain Admins" };
+
+            var powerUserGroups = !string.IsNullOrEmpty(config.PowerUserGroups)
+                ? config.PowerUserGroups.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                : new List<string> { "LauncherPowerUsers" };
 
             if (groups.Any(g => adminGroups.Any(ag => ag.Trim().Equals(g, StringComparison.OrdinalIgnoreCase))))
             {

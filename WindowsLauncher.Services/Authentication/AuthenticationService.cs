@@ -625,8 +625,8 @@ namespace WindowsLauncher.Services.Authentication
         /// </summary>
         private UserRole DetermineUserRoleFromGroups(List<string> groups, AuthenticationConfiguration config)
         {
-            var adminGroups = config.AdminGroups.Split(',', StringSplitOptions.RemoveEmptyEntries);
-            var powerUserGroups = config.PowerUserGroups.Split(',', StringSplitOptions.RemoveEmptyEntries);
+            var adminGroups = config.AdminGroups.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            var powerUserGroups = config.PowerUserGroups.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
 
             if (groups.Any(g => adminGroups.Any(ag => ag.Trim().Equals(g, StringComparison.OrdinalIgnoreCase))))
             {
