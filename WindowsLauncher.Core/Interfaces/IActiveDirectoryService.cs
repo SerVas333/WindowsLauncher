@@ -1,4 +1,4 @@
-﻿// WindowsLauncher.Core/Interfaces/IActiveDirectoryService.cs
+﻿// WindowsLauncher.Core/Interfaces/IActiveDirectoryService.cs - ЗАМЕНА СУЩЕСТВУЮЩЕГО
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WindowsLauncher.Core.Enums;

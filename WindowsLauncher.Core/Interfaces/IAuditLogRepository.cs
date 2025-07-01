@@ -24,9 +24,9 @@ namespace WindowsLauncher.Core.Interfaces
         Task<List<AuditLog>> GetLogsByActionAsync(string action, int limit = 100);
 
         /// <summary>
-        /// Удалить старые логи
+        /// Удалить старые логи и вернуть количество удаленных записей
         /// </summary>
-        Task DeleteOldLogsAsync(DateTime beforeDate);
+        Task<int> DeleteOldLogsAsync(DateTime beforeDate);
 
         /// <summary>
         /// Получить статистику по приложениям

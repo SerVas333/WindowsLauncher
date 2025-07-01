@@ -1,4 +1,5 @@
-﻿// WindowsLauncher.Core/Interfaces/IAuthenticationConfigurationService.cs
+﻿// WindowsLauncher.Core/Interfaces/IAuthenticationConfigurationService.cs - ЗАМЕНА СУЩЕСТВУЮЩЕГО
+using System.Collections.Generic;
 using System.Threading.Tasks;
 using WindowsLauncher.Core.Models;
 
