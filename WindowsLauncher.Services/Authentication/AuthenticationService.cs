@@ -1,390 +1,437 @@
-﻿// ===== WindowsLauncher.Services/Authentication/AuthenticationService.cs - ИСПРАВЛЕНИЕ ИСКЛЮЧЕНИЙ =====
+﻿using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 using System;
-using System.Collections.Generic;
-using System.DirectoryServices;
 using System.DirectoryServices.AccountManagement;
 using System.Linq;
+using System.Net.NetworkInformation;
+using System.Security.Cryptography;
+using System.Security.Principal;
+using System.Text;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Logging;
+using WindowsLauncher.Core.Enums;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
-using WindowsLauncher.Core.Enums;
 
-namespace WindowsLauncher.Services.Authentication
+namespace WindowsLauncher.Services
 {
     /// <summary>
-    /// Исправленный сервис аутентификации
+    /// Гибридный сервис аутентификации с поддержкой Windows SSO, LDAP и сервисного администратора
     /// </summary>
     public class AuthenticationService : IAuthenticationService
     {
-        private readonly ILogger<AuthenticationService> _logger;
-        private readonly IUserRepository _userRepository;
+        private readonly IActiveDirectoryService _adService;
+        private readonly IAuthenticationConfigurationService _configService;
         private readonly IAuditService _auditService;
-        private User? _currentUser;
+        private readonly ILogger<AuthenticationService> _logger;
+        private readonly ActiveDirectoryConfiguration _adConfig;
 
-        public bool IsAuthenticated => _currentUser != null;
-        public event EventHandler<User>? UserAuthenticated;
-        public event EventHandler? UserLoggedOut;
+        private AuthenticationSession _currentSession;
+
+        public AuthenticationSession CurrentSession => _currentSession;
+
+        public event EventHandler<AuthenticationResult> AuthenticationChanged;
 
         public AuthenticationService(
+            IActiveDirectoryService adService,
+            IAuthenticationConfigurationService configService,
+            IAuditService auditService,
             ILogger<AuthenticationService> logger,
-            IUserRepository userRepository,
-            IAuditService auditService)
+            IOptions<ActiveDirectoryConfiguration> adConfig)
         {
-            _logger = logger;
-            _userRepository = userRepository;
-            _auditService = auditService;
+            _adService = adService ?? throw new ArgumentNullException(nameof(adService));
+            _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+            _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _adConfig = adConfig?.Value ?? throw new ArgumentNullException(nameof(adConfig));
         }
 
-        public async Task<AuthenticationResult> AuthenticateAsync(string? username = null, string? password = null)
+        /// <summary>
+        /// Автоматическая аутентификация с приоритетом Windows SSO
+        /// </summary>
+        public async Task<AuthenticationResult> AuthenticateAsync()
         {
+            _logger.LogInformation("Starting automatic authentication process");
+
             try
             {
-                _logger.LogInformation("Starting authentication process for user: {Username}", username ?? "CurrentUser");
-
-                User user;
-
-                // Определяем метод аутентификации
-                if (string.IsNullOrEmpty(username))
+                // 1. Пробуем Windows SSO (если компьютер в домене)
+                if (IsComputerInDomain())
                 {
-                    user = await AuthenticateCurrentWindowsUserAsync();
+                    _logger.LogDebug("Computer is domain-joined, attempting Windows SSO");
+                    var windowsResult = await AuthenticateWindowsAsync();
+
+                    if (windowsResult.IsSuccess)
+                    {
+                        await LogAuthenticationAsync(windowsResult);
+                        return windowsResult;
+                    }
+
+                    _logger.LogWarning("Windows SSO failed: {Error}", windowsResult.ErrorMessage);
                 }
                 else
                 {
-                    user = await AuthenticateUserWithCredentialsAsync(username, password);
+                    _logger.LogInformation("Computer is not domain-joined, Windows SSO unavailable");
                 }
 
+                // 2. Проверяем доступность домена для LDAP
+                var isDomainAvailable = await IsDomainAvailableAsync();
+                if (!isDomainAvailable)
+                {
+                    _logger.LogWarning("Domain is not available for LDAP authentication");
+
+                    // Если домен недоступен, предлагаем только сервисный режим
+                    var serviceResult = AuthenticationResult.Failure(
+                        AuthenticationStatus.ServiceModeRequired,
+                        "Домен недоступен. Доступен только режим сервисного администратора."
+                    );
+
+                    AuthenticationChanged?.Invoke(this, serviceResult);
+                    return serviceResult;
+                }
+
+                // 3. Запрашиваем учетные данные для LDAP аутентификации
+                _logger.LogInformation("Requesting user credentials for LDAP authentication");
+                var credentialsResult = await RequestUserCredentialsAsync();
+
+                if (credentialsResult != null)
+                {
+                    var ldapResult = await AuthenticateLdapAsync(credentialsResult);
+                    await LogAuthenticationAsync(ldapResult);
+                    return ldapResult;
+                }
+
+                // 4. Пользователь отменил ввод учетных данных
+                var cancelledResult = AuthenticationResult.Failure(
+                    AuthenticationStatus.Cancelled,
+                    "Аутентификация отменена пользователем"
+                );
+
+                AuthenticationChanged?.Invoke(this, cancelledResult);
+                return cancelledResult;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error during authentication");
+                var errorResult = AuthenticationResult.Failure(
+                    AuthenticationStatus.NetworkError,
+                    $"Ошибка аутентификации: {ex.Message}"
+                );
+
+                AuthenticationChanged?.Invoke(this, errorResult);
+                return errorResult;
+            }
+        }
+
+        /// <summary>
+        /// Аутентификация с явными учетными данными
+        /// </summary>
+        public async Task<AuthenticationResult> AuthenticateAsync(AuthenticationCredentials credentials)
+        {
+            if (credentials == null || !credentials.IsValid())
+            {
+                return AuthenticationResult.Failure(
+                    AuthenticationStatus.InvalidCredentials,
+                    "Некорректные учетные данные"
+                );
+            }
+
+            _logger.LogInformation("Authenticating user {Username} from domain {Domain}",
+                credentials.Username, credentials.Domain ?? "default");
+
+            try
+            {
+                AuthenticationResult result;
+
+                // Проверяем, является ли это сервисным администратором
+                if (credentials.IsServiceAccount || credentials.Username.Equals(_adConfig.ServiceAdmin.Username, StringComparison.OrdinalIgnoreCase))
+                {
+                    result = await AuthenticateServiceAdminAsync(credentials.Username, credentials.Password);
+                }
+                else
+                {
+                    result = await AuthenticateLdapAsync(credentials);
+                }
+
+                await LogAuthenticationAsync(result);
+                return result;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error authenticating user {Username}", credentials.Username);
+                return AuthenticationResult.Failure(
+                    AuthenticationStatus.NetworkError,
+                    $"Ошибка аутентификации: {ex.Message}"
+                );
+            }
+        }
+
+        /// <summary>
+        /// Windows SSO аутентификация
+        /// </summary>
+        public async Task<AuthenticationResult> AuthenticateWindowsAsync()
+        {
+            try
+            {
+                var identity = WindowsIdentity.GetCurrent();
+
+                if (identity == null || string.IsNullOrEmpty(identity.Name))
+                {
+                    return AuthenticationResult.Failure(
+                        AuthenticationStatus.InvalidCredentials,
+                        "Не удалось получить информацию о текущем пользователе Windows"
+                    );
+                }
+
+                _logger.LogDebug("Windows identity: {Identity}", identity.Name);
+
+                // Проверяем, что это доменный пользователь
+                if (!identity.Name.Contains("\\") || identity.Name.StartsWith(Environment.MachineName, StringComparison.OrdinalIgnoreCase))
+                {
+                    return AuthenticationResult.Failure(
+                        AuthenticationStatus.InvalidCredentials,
+                        "Пользователь не является доменным"
+                    );
+                }
+
+                // Получаем информацию о пользователе из AD
+                var parts = identity.Name.Split('\\');
+                var domain = parts[0];
+                var username = parts[1];
+
+                var user = await _adService.GetUserAsync(username, domain);
                 if (user == null)
                 {
-                    var errorMessage = "Authentication failed - user is null";
-                    _logger.LogWarning(errorMessage);
-                    await _auditService.LogLoginAsync(username ?? "Unknown", false, errorMessage);
-                    return AuthenticationResult.Failure(errorMessage);
+                    return AuthenticationResult.Failure(
+                        AuthenticationStatus.UserNotFound,
+                        $"Пользователь {username} не найден в домене {domain}"
+                    );
                 }
 
-                // Проверяем активность пользователя
-                if (!user.IsActive)
+                // Создаем сессию
+                _currentSession = new AuthenticationSession
                 {
-                    var errorMessage = $"User account {user.Username} is disabled";
-                    _logger.LogWarning(errorMessage);
-                    await _auditService.LogLoginAsync(user.Username, false, errorMessage);
-                    return AuthenticationResult.Failure("User account is disabled");
-                }
+                    User = user,
+                    AuthType = AuthenticationType.WindowsSSO,
+                    Domain = domain,
+                    ExpiresAt = DateTime.Now.AddHours(8) // 8 часов для Windows SSO
+                };
 
-                // Получаем дополнительную информацию о пользователе
-                await EnrichUserInformationAsync(user);
+                var result = AuthenticationResult.Success(user, AuthenticationType.WindowsSSO, domain);
+                result.Metadata["WindowsIdentity"] = identity.Name;
+                result.Metadata["AuthenticationMethod"] = "Integrated Windows Authentication";
 
-                // Сохраняем пользователя в базе данных
-                user = await _userRepository.UpsertUserAsync(user);
+                _logger.LogInformation("Windows SSO authentication successful for {User}", identity.Name);
+                AuthenticationChanged?.Invoke(this, result);
 
-                _currentUser = user;
-
-                // Логируем успешный вход
-                await _auditService.LogLoginAsync(user.Username, true);
-
-                _logger.LogInformation("User {Username} authenticated successfully with role {Role}",
-                    user.Username, user.Role);
-
-                // Уведомляем подписчиков
-                UserAuthenticated?.Invoke(this, user);
-
-                return AuthenticationResult.Success(user);
+                return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Authentication error for user {Username}", username ?? "CurrentUser");
-                await _auditService.LogLoginAsync(username ?? "Unknown", false, ex.Message);
-                return AuthenticationResult.Failure(GetUserFriendlyErrorMessage(ex));
+                _logger.LogError(ex, "Windows SSO authentication failed");
+                return AuthenticationResult.Failure(
+                    AuthenticationStatus.NetworkError,
+                    $"Ошибка Windows SSO: {ex.Message}"
+                );
             }
         }
 
-        public async Task<User?> GetCurrentUserAsync()
+        /// <summary>
+        /// LDAP аутентификация для недоменных компьютеров
+        /// </summary>
+        public async Task<AuthenticationResult> AuthenticateLdapAsync(AuthenticationCredentials credentials)
         {
-            return _currentUser;
-        }
+            if (credentials == null || !credentials.IsValid())
+            {
+                return AuthenticationResult.Failure(
+                    AuthenticationStatus.InvalidCredentials,
+                    "Некорректные учетные данные"
+                );
+            }
 
-        public async Task<List<string>> GetUserGroupsAsync(string username)
-        {
             try
             {
-                _logger.LogDebug("Getting groups for user: {Username}", username);
+                var domain = credentials.Domain ?? _adConfig.Domain;
 
-                // Проверяем домен
-                if (!IsDomainEnvironment())
+                _logger.LogDebug("Attempting LDAP authentication for {User}@{Domain}",
+                    credentials.Username, domain);
+
+                // Проверяем учетные данные в AD
+                var isValid = await _adService.ValidateCredentialsAsync(
+                    credentials.Username,
+                    credentials.Password,
+                    domain
+                );
+
+                if (!isValid)
                 {
-                    _logger.LogInformation("Not in domain environment, returning default groups for {Username}", username);
-                    return GetDefaultGroupsForLocalUser(username);
+                    return AuthenticationResult.Failure(
+                        AuthenticationStatus.InvalidCredentials,
+                        "Неверные учетные данные"
+                    );
                 }
 
-                using var context = new PrincipalContext(ContextType.Domain);
-                var user = UserPrincipal.FindByIdentity(context, username);
-
+                // Получаем информацию о пользователе
+                var user = await _adService.GetUserAsync(credentials.Username, domain);
                 if (user == null)
                 {
-                    _logger.LogWarning("User {Username} not found in AD", username);
-                    return new List<string>();
+                    return AuthenticationResult.Failure(
+                        AuthenticationStatus.UserNotFound,
+                        $"Пользователь {credentials.Username} не найден в домене {domain}"
+                    );
                 }
 
-                var groups = new List<string>();
-                var memberOf = user.GetAuthorizationGroups();
-
-                foreach (var group in memberOf)
+                // Создаем сессию
+                _currentSession = new AuthenticationSession
                 {
-                    if (group is GroupPrincipal groupPrincipal && !string.IsNullOrEmpty(groupPrincipal.Name))
-                    {
-                        groups.Add(groupPrincipal.Name);
-                    }
-                }
+                    User = user,
+                    AuthType = AuthenticationType.DomainLDAP,
+                    Domain = domain,
+                    ExpiresAt = DateTime.Now.AddHours(4) // 4 часа для LDAP
+                };
 
-                _logger.LogDebug("User {Username} is member of {GroupCount} groups: {Groups}",
-                    username, groups.Count, string.Join(", ", groups.Take(10))); // Ограничиваем для логов
+                var result = AuthenticationResult.Success(user, AuthenticationType.DomainLDAP, domain);
+                result.Metadata["Domain"] = domain;
+                result.Metadata["AuthenticationMethod"] = "LDAP";
 
-                return groups;
+                _logger.LogInformation("LDAP authentication successful for {User}@{Domain}",
+                    credentials.Username, domain);
+                AuthenticationChanged?.Invoke(this, result);
+
+                return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Failed to get groups for user {Username}", username);
-                // Возвращаем базовые группы в случае ошибки
-                return GetDefaultGroupsForLocalUser(username);
+                _logger.LogError(ex, "LDAP authentication failed for {User}", credentials.Username);
+                return AuthenticationResult.Failure(
+                    AuthenticationStatus.NetworkError,
+                    $"Ошибка LDAP аутентификации: {ex.Message}"
+                );
             }
         }
 
-        public async Task<UserRole> DetermineUserRoleAsync(List<string> groups)
+        /// <summary>
+        /// Аутентификация сервисного администратора
+        /// </summary>
+        public async Task<AuthenticationResult> AuthenticateServiceAdminAsync(string username, string password)
         {
             try
             {
-                // Конфигурируемые группы для ролей (можно вынести в настройки)
-                var adminGroups = new[] {
-                    "LauncherAdmins",
-                    "Domain Admins",
-                    "Enterprise Admins",
-                    "Administrators",
-                    "Administrator" // Локальная группа
-                };
-
-                var powerUserGroups = new[] {
-                    "LauncherPowerUsers",
-                    "Power Users",
-                    "PowerUsers"
-                };
-
-                _logger.LogDebug("Determining role for groups: {Groups}", string.Join(", ", groups));
-
-                if (groups.Any(g => adminGroups.Contains(g, StringComparer.OrdinalIgnoreCase)))
+                if (!_adConfig.ServiceAdmin.IsEnabled)
                 {
-                    _logger.LogDebug("User assigned Administrator role");
-                    return UserRole.Administrator;
+                    return AuthenticationResult.Failure(
+                        AuthenticationStatus.InvalidCredentials,
+                        "Режим сервисного администратора отключен"
+                    );
                 }
 
-                if (groups.Any(g => powerUserGroups.Contains(g, StringComparer.OrdinalIgnoreCase)))
+                if (!_adConfig.ServiceAdmin.IsPasswordSet)
                 {
-                    _logger.LogDebug("User assigned PowerUser role");
-                    return UserRole.PowerUser;
+                    return AuthenticationResult.Failure(
+                        AuthenticationStatus.InvalidCredentials,
+                        "Пароль сервисного администратора не установлен"
+                    );
                 }
 
-                _logger.LogDebug("User assigned Standard role");
-                return UserRole.Standard;
+                // Проверяем логин
+                if (!username.Equals(_adConfig.ServiceAdmin.Username, StringComparison.OrdinalIgnoreCase))
+                {
+                    await Task.Delay(2000); // Защита от брутфорса
+                    return AuthenticationResult.Failure(
+                        AuthenticationStatus.InvalidCredentials,
+                        "Неверные учетные данные"
+                    );
+                }
+
+                // Проверяем пароль
+                if (!VerifyPassword(password, _adConfig.ServiceAdmin.PasswordHash, _adConfig.ServiceAdmin.Salt))
+                {
+                    await Task.Delay(2000); // Защита от брутфорса
+                    return AuthenticationResult.Failure(
+                        AuthenticationStatus.InvalidCredentials,
+                        "Неверные учетные данные"
+                    );
+                }
+
+                // Создаем локального пользователя-администратора
+                var serviceUser = new User
+                {
+                    Id = Guid.Empty,
+                    Username = _adConfig.ServiceAdmin.Username,
+                    DisplayName = "Service Administrator",
+                    Email = "serviceadmin@local",
+                    Role = UserRole.Administrator,
+                    IsActive = true
+                };
+
+                // Создаем сессию
+                _currentSession = new AuthenticationSession
+                {
+                    User = serviceUser,
+                    AuthType = AuthenticationType.LocalService,
+                    Domain = "LOCAL",
+                    ExpiresAt = DateTime.Now.AddMinutes(_adConfig.ServiceAdmin.SessionTimeoutMinutes)
+                };
+
+                var result = AuthenticationResult.Success(serviceUser, AuthenticationType.LocalService, "LOCAL");
+                result.Metadata["IsServiceAdmin"] = true;
+                result.Metadata["AuthenticationMethod"] = "Local Service Account";
+
+                _logger.LogInformation("Service administrator authentication successful");
+                AuthenticationChanged?.Invoke(this, result);
+
+                return result;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error determining user role, defaulting to Standard");
-                return UserRole.Standard;
+                _logger.LogError(ex, "Service administrator authentication failed");
+                return AuthenticationResult.Failure(
+                    AuthenticationStatus.NetworkError,
+                    $"Ошибка аутентификации администратора: {ex.Message}"
+                );
             }
         }
 
-        public async Task<bool> IsUserInGroupAsync(string username, string groupName)
+        /// <summary>
+        /// Проверка доступности домена
+        /// </summary>
+        public async Task<bool> IsDomainAvailableAsync(string domain = null)
         {
             try
             {
-                var groups = await GetUserGroupsAsync(username);
-                return groups.Contains(groupName, StringComparer.OrdinalIgnoreCase);
+                domain ??= _adConfig.Domain;
+
+                if (string.IsNullOrEmpty(domain))
+                    return false;
+
+                // Пингуем LDAP сервер
+                using var ping = new Ping();
+                var reply = await ping.SendPingAsync(_adConfig.LdapServer ?? domain, 5000);
+
+                if (reply.Status != IPStatus.Success)
+                    return false;
+
+                // Проверяем LDAP порт
+                return await _adService.TestConnectionAsync(_adConfig.LdapServer ?? domain, _adConfig.Port);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error checking if user {Username} is in group {GroupName}", username, groupName);
+                _logger.LogDebug("Domain availability check failed: {Error}", ex.Message);
                 return false;
             }
         }
 
-        public void Logout()
-        {
-            if (_currentUser != null)
-            {
-                var username = _currentUser.Username;
-                _logger.LogInformation("User {Username} logging out", username);
-
-                try
-                {
-                    _auditService.LogLogoutAsync(username);
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogError(ex, "Error logging logout event for user {Username}", username);
-                }
-
-                _currentUser = null;
-                UserLoggedOut?.Invoke(this, EventArgs.Empty);
-            }
-        }
-
-        #region Private Methods
-
-        private async Task<User?> AuthenticateCurrentWindowsUserAsync()
+        /// <summary>
+        /// Проверка, находится ли компьютер в домене
+        /// </summary>
+        public bool IsComputerInDomain()
         {
             try
             {
-                _logger.LogDebug("Authenticating current Windows user");
+                var domain = Environment.UserDomainName;
+                var computerName = Environment.MachineName;
 
-                if (!IsDomainEnvironment())
-                {
-                    return await AuthenticateLocalUserAsync();
-                }
-
-                using var context = new PrincipalContext(ContextType.Domain);
-                var principal = UserPrincipal.Current;
-
-                if (principal == null)
-                {
-                    _logger.LogWarning("Current Windows user principal not found");
-                    return null;
-                }
-
-                var user = new User
-                {
-                    Username = principal.SamAccountName ?? principal.Name ?? Environment.UserName,
-                    DisplayName = principal.DisplayName ?? principal.Name ?? Environment.UserName,
-                    Email = principal.EmailAddress ?? "",
-                    IsActive = principal.Enabled ?? true
-                };
-
-                _logger.LogDebug("Windows user authenticated: {Username} ({DisplayName})",
-                    user.Username, user.DisplayName);
-
-                return user;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to authenticate current Windows user");
-
-                // Fallback to local user authentication
-                return await AuthenticateLocalUserAsync();
-            }
-        }
-
-        private async Task<User?> AuthenticateLocalUserAsync()
-        {
-            try
-            {
-                _logger.LogInformation("Authenticating as local user (not in domain)");
-
-                var currentUser = Environment.UserName;
-                var displayName = Environment.UserDomainName != Environment.MachineName
-                    ? $"{Environment.UserDomainName}\\{currentUser}"
-                    : currentUser;
-
-                var user = new User
-                {
-                    Username = currentUser,
-                    DisplayName = displayName,
-                    Email = "",
-                    IsActive = true
-                };
-
-                _logger.LogInformation("Local user authenticated: {Username}", user.Username);
-                return user;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to authenticate local user");
-                return null;
-            }
-        }
-
-        private async Task<User?> AuthenticateUserWithCredentialsAsync(string username, string? password)
-        {
-            try
-            {
-                if (string.IsNullOrEmpty(password))
-                {
-                    _logger.LogWarning("Password not provided for user {Username}", username);
-                    return null;
-                }
-
-                if (!IsDomainEnvironment())
-                {
-                    _logger.LogWarning("Credential authentication not supported in non-domain environment");
-                    return null;
-                }
-
-                using var context = new PrincipalContext(ContextType.Domain);
-
-                // Проверяем учетные данные
-                if (!context.ValidateCredentials(username, password))
-                {
-                    _logger.LogWarning("Invalid credentials for user {Username}", username);
-                    return null;
-                }
-
-                // Получаем информацию о пользователе
-                var userPrincipal = UserPrincipal.FindByIdentity(context, username);
-                if (userPrincipal == null)
-                {
-                    _logger.LogWarning("User {Username} not found in AD after credential validation", username);
-                    return null;
-                }
-
-                var user = new User
-                {
-                    Username = userPrincipal.SamAccountName ?? username,
-                    DisplayName = userPrincipal.DisplayName ?? userPrincipal.Name ?? username,
-                    Email = userPrincipal.EmailAddress ?? "",
-                    IsActive = userPrincipal.Enabled ?? false
-                };
-
-                _logger.LogDebug("User authenticated with credentials: {Username} ({DisplayName})",
-                    user.Username, user.DisplayName);
-
-                return user;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to authenticate user {Username} with credentials", username);
-                return null;
-            }
-        }
-
-        private async Task EnrichUserInformationAsync(User user)
-        {
-            try
-            {
-                // Получаем группы пользователя
-                user.Groups = await GetUserGroupsAsync(user.Username);
-
-                // Определяем роль на основе групп
-                user.Role = await DetermineUserRoleAsync(user.Groups);
-
-                // Обновляем время последнего входа
-                user.LastLogin = DateTime.Now;
-
-                _logger.LogDebug("User information enriched: {Username} has {GroupCount} groups and role {Role}",
-                    user.Username, user.Groups.Count, user.Role);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to enrich user information for {Username}", user.Username);
-
-                // Устанавливаем минимальные значения по умолчанию
-                user.Groups ??= new List<string>();
-                user.Role = UserRole.Standard;
-                user.LastLogin = DateTime.Now;
-            }
-        }
-
-        private bool IsDomainEnvironment()
-        {
-            try
-            {
-                return Environment.UserDomainName != Environment.MachineName;
+                // Если имя домена совпадает с именем компьютера, то компьютер не в домене
+                return !string.Equals(domain, computerName, StringComparison.OrdinalIgnoreCase);
             }
             catch
             {
@@ -392,66 +439,233 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
-        private List<string> GetDefaultGroupsForLocalUser(string username)
+        /// <summary>
+        /// Выход из системы
+        /// </summary>
+        public async Task LogoutAsync()
+        {
+            if (_currentSession != null)
+            {
+                await _auditService.LogAsync(new AuditLog
+                {
+                    UserId = _currentSession.User.Id,
+                    Action = "Logout",
+                    Details = $"User {_currentSession.User.Username} logged out",
+                    IpAddress = _currentSession.IpAddress,
+                    UserAgent = Environment.MachineName
+                });
+
+                _currentSession.IsActive = false;
+                _currentSession = null;
+
+                _logger.LogInformation("User logged out successfully");
+            }
+
+            AuthenticationChanged?.Invoke(this, AuthenticationResult.Failure(AuthenticationStatus.Cancelled, "Logged out"));
+        }
+
+        /// <summary>
+        /// Обновление сессии
+        /// </summary>
+        public async Task RefreshSessionAsync()
+        {
+            if (_currentSession == null || !_currentSession.IsValid)
+                return;
+
+            // Продлеваем сессию в зависимости от типа аутентификации
+            var extensionTime = _currentSession.AuthType switch
+            {
+                AuthenticationType.WindowsSSO => TimeSpan.FromHours(8),
+                AuthenticationType.DomainLDAP => TimeSpan.FromHours(4),
+                AuthenticationType.LocalService => TimeSpan.FromMinutes(_adConfig.ServiceAdmin.SessionTimeoutMinutes),
+                _ => TimeSpan.FromHours(1)
+            };
+
+            _currentSession.ExtendSession(extensionTime);
+
+            _logger.LogDebug("Session extended for user {User} until {ExpiresAt}",
+                _currentSession.User.Username, _currentSession.ExpiresAt);
+
+            await Task.CompletedTask;
+        }
+
+        /// <summary>
+        /// Проверка активности сессии
+        /// </summary>
+        public bool IsSessionValid()
+        {
+            return _currentSession?.IsValid ?? false;
+        }
+
+        /// <summary>
+        /// Настройка пароля сервисного администратора (только при первом запуске)
+        /// </summary>
+        public async Task<bool> SetupServiceAdminPasswordAsync(string password)
         {
             try
             {
-                _logger.LogDebug("Getting default groups for local user: {Username}", username);
-
-                var groups = new List<string> { "Users" };
-
-                // Проверяем локальные группы если возможно
-                try
+                if (_adConfig.ServiceAdmin.IsPasswordSet)
                 {
-                    using var context = new PrincipalContext(ContextType.Machine);
-                    var user = UserPrincipal.FindByIdentity(context, username);
-
-                    if (user != null)
-                    {
-                        var memberOf = user.GetAuthorizationGroups();
-                        foreach (var group in memberOf)
-                        {
-                            if (group is GroupPrincipal groupPrincipal && !string.IsNullOrEmpty(groupPrincipal.Name))
-                            {
-                                groups.Add(groupPrincipal.Name);
-                            }
-                        }
-                    }
-                }
-                catch (Exception ex)
-                {
-                    _logger.LogDebug(ex, "Could not get local groups for user {Username}", username);
+                    _logger.LogWarning("Attempt to setup service admin password when already configured");
+                    return false;
                 }
 
-                // Добавляем дефолтные группы для тестирования
-                if (username.Equals("Administrator", StringComparison.OrdinalIgnoreCase) ||
-                    username.Equals("Admin", StringComparison.OrdinalIgnoreCase))
+                if (string.IsNullOrWhiteSpace(password) || password.Length < 8)
                 {
-                    groups.Add("Administrators");
-                    groups.Add("LauncherAdmins");
+                    _logger.LogWarning("Invalid password provided for service admin setup");
+                    return false;
                 }
 
-                return groups;
+                // Генерируем соль и хешируем пароль
+                var salt = GenerateSalt();
+                var hash = HashPassword(password, salt);
+
+                // Обновляем конфигурацию
+                var config = _configService.GetConfiguration();
+                config.ServiceAdmin.PasswordHash = hash;
+                config.ServiceAdmin.Salt = salt;
+                config.ServiceAdmin.IsEnabled = true;
+
+                await _configService.SaveConfigurationAsync(config);
+
+                _logger.LogInformation("Service administrator password configured successfully");
+                return true;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting default groups for user {Username}", username);
-                return new List<string> { "Users" };
+                _logger.LogError(ex, "Failed to setup service administrator password");
+                return false;
             }
         }
 
-        // 🆕 ИСПРАВЛЕННАЯ функция обработки ошибок
-        private string GetUserFriendlyErrorMessage(Exception exception)
+        /// <summary>
+        /// Проверка, настроен ли сервисный администратор
+        /// </summary>
+        public bool IsServiceAdminConfigured()
         {
-            return exception switch
+            return _adConfig.ServiceAdmin.IsPasswordSet;
+        }
+
+        #region Private Methods
+
+        /// <summary>
+        /// Запрос учетных данных у пользователя
+        /// </summary>
+        private async Task<AuthenticationCredentials> RequestUserCredentialsAsync()
+        {
+            try
             {
-                UnauthorizedAccessException => "Access denied. Please check your credentials.",
-                //DirectoryServiceException => "Domain service is unavailable. Please try again later.",
-                PrincipalServerDownException => "Domain controller is unreachable. Please contact your administrator.",
-                TimeoutException => "Authentication timed out. Please try again.",
-                SystemException sysEx when sysEx.Message.Contains("server") => "Domain service is unavailable. Please try again later.",
-                _ => $"Authentication failed: {exception.Message}"
-            };
+                // Здесь будет показан LoginWindow
+                // Пока возвращаем null для демонстрации
+                await Task.Delay(100);
+
+                // TODO: Реализовать показ LoginWindow
+                // var loginWindow = new LoginWindow();
+                // if (loginWindow.ShowDialog() == true)
+                // {
+                //     return new AuthenticationCredentials
+                //     {
+                //         Username = loginWindow.Username,
+                //         Password = loginWindow.Password,
+                //         Domain = loginWindow.Domain
+                //     };
+                // }
+
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error requesting user credentials");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Логирование результата аутентификации
+        /// </summary>
+        private async Task LogAuthenticationAsync(AuthenticationResult result)
+        {
+            try
+            {
+                var logEntry = new AuditLog
+                {
+                    UserId = result.User?.Id ?? Guid.Empty,
+                    Action = result.IsSuccess ? "Login_Success" : "Login_Failed",
+                    Details = result.IsSuccess
+                        ? $"User {result.User?.Username} authenticated via {result.AuthType}"
+                        : $"Authentication failed: {result.ErrorMessage}",
+                    IpAddress = GetLocalIpAddress(),
+                    UserAgent = Environment.MachineName,
+                    Timestamp = DateTime.Now
+                };
+
+                // Добавляем метаданные
+                if (result.Metadata?.Count > 0)
+                {
+                    logEntry.Details += $" | Metadata: {string.Join(", ", result.Metadata.Select(kv => $"{kv.Key}={kv.Value}"))}";
+                }
+
+                await _auditService.LogAsync(logEntry);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to log authentication result");
+            }
+        }
+
+        /// <summary>
+        /// Генерация соли для хеширования
+        /// </summary>
+        private static string GenerateSalt()
+        {
+            var saltBytes = new byte[32];
+            using var rng = RandomNumberGenerator.Create();
+            rng.GetBytes(saltBytes);
+            return Convert.ToBase64String(saltBytes);
+        }
+
+        /// <summary>
+        /// Хеширование пароля с солью
+        /// </summary>
+        private static string HashPassword(string password, string salt)
+        {
+            using var pbkdf2 = new Rfc2898DeriveBytes(
+                password,
+                Convert.FromBase64String(salt),
+                100000, // 100,000 итераций
+                HashAlgorithmName.SHA256
+            );
+
+            var hash = pbkdf2.GetBytes(32);
+            return Convert.ToBase64String(hash);
+        }
+
+        /// <summary>
+        /// Проверка пароля
+        /// </summary>
+        private static bool VerifyPassword(string password, string hash, string salt)
+        {
+            var computedHash = HashPassword(password, salt);
+            return computedHash == hash;
+        }
+
+        /// <summary>
+        /// Получение локального IP адреса
+        /// </summary>
+        private static string GetLocalIpAddress()
+        {
+            try
+            {
+                var host = System.Net.Dns.GetHostEntry(System.Net.Dns.GetHostName());
+                var localIp = host.AddressList
+                    .FirstOrDefault(ip => ip.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork
+                                         && !System.Net.IPAddress.IsLoopback(ip));
+                return localIp?.ToString() ?? "127.0.0.1";
+            }
+            catch
+            {
+                return "127.0.0.1";
+            }
         }
 
         #endregion

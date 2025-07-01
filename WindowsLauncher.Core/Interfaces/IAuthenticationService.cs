@@ -1,53 +1,159 @@
-﻿// WindowsLauncher.Core/Interfaces/IAuthenticationService.cs
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Threading.Tasks;
 using WindowsLauncher.Core.Models;
-using WindowsLauncher.Core.Enums;
 
 namespace WindowsLauncher.Core.Interfaces
 {
+    /// <summary>
+    /// Сервис аутентификации с поддержкой различных типов входа
+    /// </summary>
     public interface IAuthenticationService
     {
         /// <summary>
-        /// Аутентификация пользователя (автоматическая через Windows или с учетными данными)
+        /// Текущая сессия пользователя
         /// </summary>
-        Task<AuthenticationResult> AuthenticateAsync(string? username = null, string? password = null);
+        AuthenticationSession CurrentSession { get; }
 
         /// <summary>
-        /// Получить текущего аутентифицированного пользователя
+        /// Событие изменения статуса аутентификации
         /// </summary>
-        Task<User?> GetCurrentUserAsync();
+        event EventHandler<AuthenticationResult> AuthenticationChanged;
 
         /// <summary>
-        /// Получить список групп пользователя из AD
+        /// Автоматическая аутентификация (сначала Windows SSO, затем запрос учетных данных)
         /// </summary>
-        Task<List<string>> GetUserGroupsAsync(string username);
+        Task<AuthenticationResult> AuthenticateAsync();
 
         /// <summary>
-        /// Определить роль пользователя на основе его групп AD
+        /// Аутентификация с явными учетными данными
         /// </summary>
-        Task<UserRole> DetermineUserRoleAsync(List<string> groups);
+        Task<AuthenticationResult> AuthenticateAsync(AuthenticationCredentials credentials);
 
         /// <summary>
-        /// Проверить принадлежность пользователя к группе
+        /// Аутентификация Windows SSO (только для доменных компьютеров)
         /// </summary>
-        Task<bool> IsUserInGroupAsync(string username, string groupName);
+        Task<AuthenticationResult> AuthenticateWindowsAsync();
+
+        /// <summary>
+        /// Аутентификация через LDAP (для недоменных компьютеров)
+        /// </summary>
+        Task<AuthenticationResult> AuthenticateLdapAsync(AuthenticationCredentials credentials);
+
+        /// <summary>
+        /// Аутентификация сервисного администратора
+        /// </summary>
+        Task<AuthenticationResult> AuthenticateServiceAdminAsync(string username, string password);
+
+        /// <summary>
+        /// Проверка доступности домена
+        /// </summary>
+        Task<bool> IsDomainAvailableAsync(string domain = null);
+
+        /// <summary>
+        /// Проверка, находится ли компьютер в домене
+        /// </summary>
+        bool IsComputerInDomain();
 
         /// <summary>
         /// Выход из системы
         /// </summary>
-        void Logout();
+        Task LogoutAsync();
 
         /// <summary>
-        /// Проверка, аутентифицирован ли пользователь
+        /// Обновление текущей сессии
         /// </summary>
-        bool IsAuthenticated { get; }
+        Task RefreshSessionAsync();
 
         /// <summary>
-        /// Событие изменения состояния аутентификации
+        /// Проверка активности сессии
         /// </summary>
-        event EventHandler<User>? UserAuthenticated;
-        event EventHandler? UserLoggedOut;
+        bool IsSessionValid();
+
+        /// <summary>
+        /// Настройка пароля сервисного администратора (только при первом запуске)
+        /// </summary>
+        Task<bool> SetupServiceAdminPasswordAsync(string password);
+
+        /// <summary>
+        /// Проверка, настроен ли сервисный администратор
+        /// </summary>
+        bool IsServiceAdminConfigured();
+    }
+
+    /// <summary>
+    /// Сервис для работы с Active Directory
+    /// </summary>
+    public interface IActiveDirectoryService
+    {
+        /// <summary>
+        /// Получение пользователя из AD по имени
+        /// </summary>
+        Task<User> GetUserAsync(string username, string domain = null);
+
+        /// <summary>
+        /// Получение групп пользователя
+        /// </summary>
+        Task<string[]> GetUserGroupsAsync(string username, string domain = null);
+
+        /// <summary>
+        /// Проверка учетных данных в AD
+        /// </summary>
+        Task<bool> ValidateCredentialsAsync(string username, string password, string domain = null);
+
+        /// <summary>
+        /// Поиск пользователей в AD
+        /// </summary>
+        Task<User[]> SearchUsersAsync(string searchTerm, string domain = null);
+
+        /// <summary>
+        /// Проверка подключения к серверу AD
+        /// </summary>
+        Task<bool> TestConnectionAsync(string server, int port = 389);
+    }
+
+    /// <summary>
+    /// Сервис для работы с локальными настройками аутентификации
+    /// </summary>
+    public interface IAuthenticationConfigurationService
+    {
+        /// <summary>
+        /// Получение конфигурации AD
+        /// </summary>
+        ActiveDirectoryConfiguration GetConfiguration();
+
+        /// <summary>
+        /// Сохранение конфигурации AD
+        /// </summary>
+        Task SaveConfigurationAsync(ActiveDirectoryConfiguration config);
+
+        /// <summary>
+        /// Сброс конфигурации к настройкам по умолчанию
+        /// </summary>
+        Task ResetConfigurationAsync();
+
+        /// <summary>
+        /// Экспорт конфигурации (без паролей)
+        /// </summary>
+        string ExportConfiguration();
+
+        /// <summary>
+        /// Импорт конфигурации
+        /// </summary>
+        Task<bool> ImportConfigurationAsync(string configJson);
+
+        /// <summary>
+        /// Валидация конфигурации
+        /// </summary>
+        ValidationResult ValidateConfiguration(ActiveDirectoryConfiguration config);
+    }
+
+    /// <summary>
+    /// Результат валидации конфигурации
+    /// </summary>
+    public class ValidationResult
+    {
+        public bool IsValid { get; set; }
+        public string[] Errors { get; set; } = Array.Empty<string>();
+        public string[] Warnings { get; set; } = Array.Empty<string>();
     }
 }

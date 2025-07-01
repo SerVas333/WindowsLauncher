@@ -1,169 +1,545 @@
-﻿// ===== WindowsLauncher.UI/LoginWindow.xaml.cs - ОБНОВЛЕННАЯ ВЕРСИЯ =====
-using System;
+﻿using System;
 using System.Threading.Tasks;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Input;
+using System.Windows.Media;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 
-namespace WindowsLauncher.UI
+namespace WindowsLauncher.UI.Views
 {
+    /// <summary>
+    /// Окно входа в систему с поддержкой доменной и сервисной аутентификации
+    /// </summary>
     public partial class LoginWindow : Window
     {
-        private readonly IServiceProvider _serviceProvider;
-        public User? AuthenticatedUser { get; private set; }
+        private readonly IAuthenticationService _authService;
+        private readonly ILogger<LoginWindow> _logger;
+        private bool _isAuthenticating = false;
+        private AuthenticationResult _lastResult;
 
-        public LoginWindow(IServiceProvider serviceProvider)
+        // Публичные свойства для доступа к введенным данным
+        public string Username { get; private set; }
+        public string Password { get; private set; }
+        public string Domain { get; private set; }
+        public bool IsServiceMode { get; private set; }
+        public AuthenticationResult AuthenticationResult { get; private set; }
+
+        public LoginWindow()
         {
             InitializeComponent();
-            _serviceProvider = serviceProvider;
-            LoadCurrentUser();
+
+            // Получаем сервисы из DI контейнера
+            var serviceProvider = ((App)Application.Current).ServiceProvider;
+            _authService = serviceProvider.GetRequiredService<IAuthenticationService>();
+            _logger = serviceProvider.GetRequiredService<ILogger<LoginWindow>>();
+
+            InitializeWindow();
         }
 
-        private async void LoadCurrentUser()
+        /// <summary>
+        /// Конструктор с передачей сообщения об ошибке
+        /// </summary>
+        public LoginWindow(string errorMessage) : this()
+        {
+            if (!string.IsNullOrEmpty(errorMessage))
+            {
+                ShowError(errorMessage);
+            }
+        }
+
+        /// <summary>
+        /// Инициализация окна
+        /// </summary>
+        private async void InitializeWindow()
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
+                // Устанавливаем фокус на первое поле
+                Loaded += (s, e) => UsernameTextBox.Focus();
 
-                var result = await authService.AuthenticateAsync();
-                if (result.IsSuccess && result.User != null)
-                {
-                    CurrentUserText.Text = $"{result.User.DisplayName} ({result.User.Username})";
-                }
-                else
-                {
-                    CurrentUserText.Text = "Ошибка аутентификации Windows";
-                    CurrentUserButton.IsEnabled = false;
-                }
+                // Загружаем сохраненные настройки
+                LoadSavedSettings();
+
+                // Проверяем доступность домена
+                await CheckDomainAvailabilityAsync();
+
+                // Проверяем, настроен ли сервисный администратор
+                CheckServiceAdminConfiguration();
             }
             catch (Exception ex)
             {
-                CurrentUserText.Text = $"Ошибка: {ex.Message}";
-                CurrentUserButton.IsEnabled = false;
+                _logger.LogError(ex, "Error initializing login window");
+                ShowError("Ошибка инициализации окна входа");
             }
         }
 
-        private async void CurrentUserButton_Click(object sender, RoutedEventArgs e)
-        {
-            await AuthenticateCurrentUser();
-        }
+        #region Event Handlers
 
+        /// <summary>
+        /// Обработчик нажатия кнопки входа
+        /// </summary>
         private async void LoginButton_Click(object sender, RoutedEventArgs e)
         {
-            await AuthenticateWithCredentials();
+            await PerformLoginAsync();
         }
 
+        /// <summary>
+        /// Обработчик нажатия кнопки отмены
+        /// </summary>
         private void CancelButton_Click(object sender, RoutedEventArgs e)
         {
             DialogResult = false;
             Close();
         }
 
-        private async Task AuthenticateCurrentUser()
+        /// <summary>
+        /// Обработчик нажатия кнопки настроек
+        /// </summary>
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                ShowLoading(true);
-                HideError();
+                // TODO: Открыть окно настроек подключения
+                MessageBox.Show(
+                    "Настройки подключения будут доступны в следующей версии.",
+                    "Информация",
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information
+                );
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error opening settings");
+                ShowError("Ошибка открытия настроек");
+            }
+        }
 
-                using var scope = _serviceProvider.CreateScope();
-                var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
+        /// <summary>
+        /// Обработчик изменения режима входа
+        /// </summary>
+        private void LoginMode_Changed(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var isDomainMode = DomainModeRadio.IsChecked == true;
 
-                var result = await authService.AuthenticateAsync();
+                DomainLoginPanel.Visibility = isDomainMode ? Visibility.Visible : Visibility.Collapsed;
+                ServiceLoginPanel.Visibility = isDomainMode ? Visibility.Collapsed : Visibility.Visible;
 
-                if (result.IsSuccess && result.User != null)
+                IsServiceMode = !isDomainMode;
+
+                // Устанавливаем фокус на первое видимое поле
+                if (isDomainMode)
                 {
-                    AuthenticatedUser = result.User;
+                    UsernameTextBox.Focus();
+                }
+                else
+                {
+                    ServiceUsernameTextBox.Focus();
+                }
+
+                HideError();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing login mode");
+            }
+        }
+
+        /// <summary>
+        /// Обработчик нажатия клавиш в полях ввода
+        /// </summary>
+        private async void Input_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && !_isAuthenticating)
+            {
+                await PerformLoginAsync();
+            }
+        }
+
+        #endregion
+
+        #region Private Methods
+
+        /// <summary>
+        /// Выполнение аутентификации
+        /// </summary>
+        private async Task PerformLoginAsync()
+        {
+            if (_isAuthenticating)
+                return;
+
+            try
+            {
+                HideError();
+                SetLoadingState(true);
+
+                AuthenticationCredentials credentials;
+
+                if (IsServiceMode)
+                {
+                    // Сервисная аутентификация
+                    credentials = new AuthenticationCredentials
+                    {
+                        Username = ServiceUsernameTextBox.Text.Trim(),
+                        Password = ServicePasswordBox.Password,
+                        IsServiceAccount = true
+                    };
+                }
+                else
+                {
+                    // Доменная аутентификация
+                    credentials = new AuthenticationCredentials
+                    {
+                        Username = UsernameTextBox.Text.Trim(),
+                        Password = PasswordBox.Password,
+                        Domain = DomainTextBox.Text.Trim()
+                    };
+                }
+
+                // Валидация введенных данных
+                if (!ValidateCredentials(credentials))
+                    return;
+
+                // Выполняем аутентификацию
+                var result = await _authService.AuthenticateAsync(credentials);
+
+                _lastResult = result;
+                AuthenticationResult = result;
+
+                if (result.IsSuccess)
+                {
+                    // Сохраняем введенные данные для внешнего доступа
+                    Username = credentials.Username;
+                    Password = credentials.Password;
+                    Domain = credentials.Domain;
+
+                    // Сохраняем настройки, если нужно
+                    if (RememberCredentialsCheckBox.IsChecked == true)
+                    {
+                        SaveSettings(credentials);
+                    }
+
+                    _logger.LogInformation("Login successful for user {Username}", credentials.Username);
+
                     DialogResult = true;
                     Close();
                 }
                 else
                 {
-                    ShowError($"Ошибка аутентификации: {result.ErrorMessage}");
+                    // Показываем ошибку аутентификации
+                    var errorMessage = GetUserFriendlyErrorMessage(result);
+                    ShowError(errorMessage);
+
+                    _logger.LogWarning("Login failed for user {Username}: {Error}",
+                        credentials.Username, result.ErrorMessage);
+
+                    // Очищаем поле пароля при ошибке
+                    if (IsServiceMode)
+                        ServicePasswordBox.Clear();
+                    else
+                        PasswordBox.Clear();
                 }
             }
             catch (Exception ex)
             {
-                ShowError($"Ошибка: {ex.Message}");
+                _logger.LogError(ex, "Unexpected error during login");
+                ShowError("Произошла непредвиденная ошибка. Попробуйте еще раз.");
             }
             finally
             {
-                ShowLoading(false);
+                SetLoadingState(false);
             }
         }
 
-        private async Task AuthenticateWithCredentials()
+        /// <summary>
+        /// Валидация учетных данных
+        /// </summary>
+        private bool ValidateCredentials(AuthenticationCredentials credentials)
         {
-            var username = UsernameTextBox.Text.Trim();
-            var password = PasswordBox.Password;
-
-            if (string.IsNullOrEmpty(username))
+            if (string.IsNullOrWhiteSpace(credentials.Username))
             {
-                ShowError("Пожалуйста, введите имя пользователя");
-                UsernameTextBox.Focus();
-                return;
+                ShowError("Введите имя пользователя");
+                return false;
             }
 
-            if (string.IsNullOrEmpty(password))
+            if (string.IsNullOrWhiteSpace(credentials.Password))
             {
-                ShowError("Пожалуйста, введите пароль");
-                PasswordBox.Focus();
-                return;
+                ShowError("Введите пароль");
+                return false;
             }
 
+            if (!IsServiceMode && string.IsNullOrWhiteSpace(credentials.Domain))
+            {
+                ShowError("Введите домен");
+                return false;
+            }
+
+            // Дополнительная валидация для доменных учетных данных
+            if (!IsServiceMode)
+            {
+                if (credentials.Username.Contains("\\") || credentials.Username.Contains("@"))
+                {
+                    ShowError("Введите только имя пользователя без домена");
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Загрузка сохраненных настроек
+        /// </summary>
+        private void LoadSavedSettings()
+        {
             try
             {
-                ShowLoading(true);
-                HideError();
+                // Загружаем настройки из реестра или конфигурационного файла
+                var settings = Properties.Settings.Default;
 
-                using var scope = _serviceProvider.CreateScope();
-                var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
-
-                var result = await authService.AuthenticateAsync(username, password);
-
-                if (result.IsSuccess && result.User != null)
+                if (!string.IsNullOrEmpty(settings.LastDomain))
                 {
-                    AuthenticatedUser = result.User;
-                    DialogResult = true;
-                    Close();
+                    DomainTextBox.Text = settings.LastDomain;
+                }
+
+                if (!string.IsNullOrEmpty(settings.LastUsername))
+                {
+                    UsernameTextBox.Text = settings.LastUsername;
+                    RememberCredentialsCheckBox.IsChecked = true;
+                }
+
+                // Восстанавливаем режим входа
+                if (settings.LastLoginMode == "Service")
+                {
+                    ServiceModeRadio.IsChecked = true;
+                    LoginMode_Changed(ServiceModeRadio, new RoutedEventArgs());
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("Could not load saved settings: {Error}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Сохранение настроек
+        /// </summary>
+        private void SaveSettings(AuthenticationCredentials credentials)
+        {
+            try
+            {
+                var settings = Properties.Settings.Default;
+
+                if (!IsServiceMode)
+                {
+                    settings.LastDomain = credentials.Domain;
+                    settings.LastUsername = credentials.Username;
+                    settings.LastLoginMode = "Domain";
                 }
                 else
                 {
-                    ShowError($"Ошибка аутентификации: {result.ErrorMessage}");
-                    PasswordBox.Clear();
-                    PasswordBox.Focus();
+                    settings.LastLoginMode = "Service";
+                }
+
+                settings.Save();
+
+                _logger.LogDebug("Settings saved successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Could not save settings: {Error}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Проверка доступности домена
+        /// </summary>
+        private async Task CheckDomainAvailabilityAsync()
+        {
+            try
+            {
+                var domain = DomainTextBox.Text.Trim();
+                if (string.IsNullOrEmpty(domain))
+                    return;
+
+                var isAvailable = await _authService.IsDomainAvailableAsync(domain);
+
+                UpdateConnectionStatus(isAvailable);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("Domain availability check failed: {Error}", ex.Message);
+                UpdateConnectionStatus(false);
+            }
+        }
+
+        /// <summary>
+        /// Проверка конфигурации сервисного администратора
+        /// </summary>
+        private void CheckServiceAdminConfiguration()
+        {
+            try
+            {
+                var isConfigured = _authService.IsServiceAdminConfigured();
+
+                if (!isConfigured)
+                {
+                    // Если сервисный администратор не настроен, скрываем эту опцию
+                    ServiceModeRadio.Visibility = Visibility.Collapsed;
+
+                    // Показываем предупреждение
+                    ShowError("Сервисный администратор не настроен. Обратитесь к системному администратору.");
                 }
             }
             catch (Exception ex)
             {
-                ShowError($"Ошибка: {ex.Message}");
-            }
-            finally
-            {
-                ShowLoading(false);
+                _logger.LogDebug("Service admin configuration check failed: {Error}", ex.Message);
             }
         }
 
+        /// <summary>
+        /// Обновление статуса подключения
+        /// </summary>
+        private void UpdateConnectionStatus(bool isAvailable)
+        {
+            try
+            {
+                if (isAvailable)
+                {
+                    ConnectionStatusIndicator.Fill = FindResource("SuccessBrush") as Brush;
+                    ConnectionStatusText.Text = "Домен доступен";
+                }
+                else
+                {
+                    ConnectionStatusIndicator.Fill = FindResource("ErrorBrush") as Brush;
+                    ConnectionStatusText.Text = "Домен недоступен";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("Error updating connection status: {Error}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Показ ошибки
+        /// </summary>
         private void ShowError(string message)
         {
-            ErrorMessage.Text = message;
-            ErrorBorder.Visibility = Visibility.Visible;
+            try
+            {
+                ErrorTextBlock.Text = message;
+                ErrorPanel.Visibility = Visibility.Visible;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error showing error message");
+            }
         }
 
+        /// <summary>
+        /// Скрытие ошибки
+        /// </summary>
         private void HideError()
         {
-            ErrorBorder.Visibility = Visibility.Collapsed;
+            try
+            {
+                ErrorPanel.Visibility = Visibility.Collapsed;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("Error hiding error panel: {Error}", ex.Message);
+            }
         }
 
-        private void ShowLoading(bool isLoading)
+        /// <summary>
+        /// Установка состояния загрузки
+        /// </summary>
+        private void SetLoadingState(bool isLoading)
         {
-            LoadingPanel.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
-            LoginButton.IsEnabled = !isLoading;
-            CurrentUserButton.IsEnabled = !isLoading;
-            UsernameTextBox.IsEnabled = !isLoading;
-            PasswordBox.IsEnabled = !isLoading;
+            try
+            {
+                _isAuthenticating = isLoading;
+
+                LoadingOverlay.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
+                LoginButton.IsEnabled = !isLoading;
+                CancelButton.IsEnabled = !isLoading;
+
+                // Отключаем поля ввода во время аутентификации
+                DomainTextBox.IsEnabled = !isLoading;
+                UsernameTextBox.IsEnabled = !isLoading;
+                PasswordBox.IsEnabled = !isLoading;
+                ServiceUsernameTextBox.IsEnabled = !isLoading;
+                ServicePasswordBox.IsEnabled = !isLoading;
+                DomainModeRadio.IsEnabled = !isLoading;
+                ServiceModeRadio.IsEnabled = !isLoading;
+
+                if (isLoading)
+                {
+                    LoadingText.Text = IsServiceMode ? "Аутентификация сервисного администратора..." : "Аутентификация в домене...";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting loading state");
+            }
         }
+
+        /// <summary>
+        /// Получение понятного пользователю сообщения об ошибке
+        /// </summary>
+        private string GetUserFriendlyErrorMessage(AuthenticationResult result)
+        {
+            return result.Status switch
+            {
+                AuthenticationStatus.InvalidCredentials => "Неверные учетные данные. Проверьте логин и пароль.",
+                AuthenticationStatus.UserNotFound => "Пользователь не найден в домене.",
+                AuthenticationStatus.DomainUnavailable => "Домен недоступен. Проверьте сетевое подключение.",
+                AuthenticationStatus.NetworkError => "Ошибка сети. Проверьте подключение к домену.",
+                AuthenticationStatus.ServiceModeRequired => "Домен недоступен. Используйте режим сервисного администратора.",
+                _ => result.ErrorMessage ?? "Произошла неизвестная ошибка."
+            };
+        }
+
+        #endregion
+
+        #region Public Methods
+
+        /// <summary>
+        /// Показ окна входа с возможностью предварительной настройки
+        /// </summary>
+        public static LoginWindow ShowLoginDialog(string domain = null, string username = null, bool serviceMode = false)
+        {
+            var loginWindow = new LoginWindow();
+
+            if (!string.IsNullOrEmpty(domain))
+                loginWindow.DomainTextBox.Text = domain;
+
+            if (!string.IsNullOrEmpty(username))
+                loginWindow.UsernameTextBox.Text = username;
+
+            if (serviceMode)
+            {
+                loginWindow.ServiceModeRadio.IsChecked = true;
+                loginWindow.LoginMode_Changed(loginWindow.ServiceModeRadio, new RoutedEventArgs());
+            }
+
+            return loginWindow;
+        }
+
+        /// <summary>
+        /// Показ окна с сообщением об ошибке
+        /// </summary>
+        public static LoginWindow ShowLoginDialogWithError(string errorMessage)
+        {
+            return new LoginWindow(errorMessage);
+        }
+
+        #endregion
     }
 }

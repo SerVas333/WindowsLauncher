@@ -1,0 +1,323 @@
+﻿<Window x:Class="WindowsLauncher.UI.Views.SetupWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="Первоначальная настройка - KDV Launcher"
+        Width="600" Height="500"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="NoResize"
+        Icon="/Resources/Icons/launcher.ico"
+        Background="{DynamicResource BackgroundBrush}">
+
+    <Window.Resources>
+        <Style x:Key="StepHeaderStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="18"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+            <Setter Property="Margin" Value="0,0,0,15"/>
+        </Style>
+
+        <Style x:Key="StepDescriptionStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="Foreground" Value="{DynamicResource OnSurfaceVariantBrush}"/>
+            <Setter Property="TextWrapping" Value="Wrap"/>
+            <Setter Property="Margin" Value="0,0,0,20"/>
+        </Style>
+
+        <Style x:Key="ValidationTextStyle" TargetType="TextBlock">
+            <Setter Property="FontSize" Value="12"/>
+            <Setter Property="Margin" Value="0,5,0,0"/>
+        </Style>
+    </Window.Resources>
+
+    <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Margin="20">
+        <Grid>
+            <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+
+            <!-- Заголовок -->
+            <Border Grid.Row="0" Background="{DynamicResource PrimaryBrush}" CornerRadius="8,8,0,0" Padding="30,20">
+                <StackPanel HorizontalAlignment="Center">
+                    <Image Source="/Resources/Icons/kdv-logo.png" Width="60" Height="60" Margin="0,0,0,10"/>
+                    <TextBlock Text="Добро пожаловать в KDV Launcher" 
+                               FontSize="24" FontWeight="Bold" 
+                               Foreground="{DynamicResource OnPrimaryBrush}"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock Text="Первоначальная настройка системы" 
+                               FontSize="14" 
+                               Foreground="{DynamicResource OnPrimaryBrush}"
+                               HorizontalAlignment="Center"
+                               Opacity="0.8"
+                               Margin="0,5,0,0"/>
+                </StackPanel>
+            </Border>
+
+            <!-- Содержимое -->
+            <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="40,30">
+                <StackPanel>
+                    <!-- Шаг 1: Конфигурация домена -->
+                    <Border Background="{DynamicResource SurfaceVariantBrush}" 
+                            CornerRadius="8" Padding="20" Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="1. Настройка подключения к домену" 
+                                       Style="{StaticResource StepHeaderStyle}"/>
+                            <TextBlock Text="Укажите параметры подключения к Active Directory для аутентификации пользователей."
+                                       Style="{StaticResource StepDescriptionStyle}"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Домен:" Grid.Row="0" Grid.Column="0" Margin="0,0,10,5"/>
+                                <TextBox x:Name="DomainTextBox" Grid.Row="1" Grid.Column="0" 
+                                         Margin="0,0,10,15" Height="35"
+                                         Text="company.local"
+                                         TextChanged="DomainSettings_Changed"/>
+
+                                <TextBlock Text="LDAP Сервер:" Grid.Row="0" Grid.Column="1" Margin="10,0,0,5"/>
+                                <TextBox x:Name="LdapServerTextBox" Grid.Row="1" Grid.Column="1" 
+                                         Margin="10,0,0,15" Height="35"
+                                         Text="dc.company.local"
+                                         TextChanged="DomainSettings_Changed"/>
+
+                                <TextBlock Text="Порт:" Grid.Row="2" Grid.Column="0" Margin="0,0,10,5"/>
+                                <TextBox x:Name="PortTextBox" Grid.Row="3" Grid.Column="0" 
+                                         Margin="0,0,10,15" Height="35"
+                                         Text="389"
+                                         TextChanged="DomainSettings_Changed"/>
+
+                                <CheckBox x:Name="UseTlsCheckBox" Grid.Row="3" Grid.Column="1" 
+                                          Content="Использовать TLS" 
+                                          IsChecked="True"
+                                          Margin="10,0,0,15"
+                                          VerticalAlignment="Center"
+                                          Checked="DomainSettings_Changed"
+                                          Unchecked="DomainSettings_Changed"/>
+                            </Grid>
+
+                            <Button x:Name="TestConnectionButton" 
+                                    Content="Проверить подключение"
+                                    Width="150" Height="35"
+                                    HorizontalAlignment="Left"
+                                    Click="TestConnectionButton_Click"/>
+
+                            <StackPanel x:Name="ConnectionStatusPanel" 
+                                        Orientation="Horizontal" 
+                                        Margin="0,10,0,0"
+                                        Visibility="Collapsed">
+                                <Ellipse x:Name="ConnectionStatusIndicator" 
+                                         Width="8" Height="8" 
+                                         Margin="0,0,8,0"
+                                         VerticalAlignment="Center"/>
+                                <TextBlock x:Name="ConnectionStatusText" 
+                                           FontSize="12"
+                                           VerticalAlignment="Center"/>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Шаг 2: Сервисный администратор -->
+                    <Border Background="{DynamicResource SurfaceVariantBrush}" 
+                            CornerRadius="8" Padding="20" Margin="0,0,0,20">
+                        <StackPanel>
+                            <TextBlock Text="2. Настройка сервисного администратора" 
+                                       Style="{StaticResource StepHeaderStyle}"/>
+                            <TextBlock Text="Создайте локальную учетную запись администратора для управления системой в случае недоступности домена."
+                                       Style="{StaticResource StepDescriptionStyle}"/>
+
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="*"/>
+                                </Grid.ColumnDefinitions>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <TextBlock Text="Имя пользователя:" Grid.Row="0" Grid.Column="0" Margin="0,0,10,5"/>
+                                <TextBox x:Name="ServiceUsernameTextBox" Grid.Row="1" Grid.Column="0" 
+                                         Margin="0,0,10,15" Height="35"
+                                         Text="serviceadmin"
+                                         TextChanged="ServiceAdmin_Changed"/>
+
+                                <TextBlock Text="Время сессии (мин):" Grid.Row="0" Grid.Column="1" Margin="10,0,0,5"/>
+                                <TextBox x:Name="SessionTimeoutTextBox" Grid.Row="1" Grid.Column="1" 
+                                         Margin="10,0,0,15" Height="35"
+                                         Text="60"
+                                         TextChanged="ServiceAdmin_Changed"/>
+
+                                <TextBlock Text="Пароль:" Grid.Row="2" Grid.Column="0" Margin="0,0,10,5"/>
+                                <PasswordBox x:Name="ServicePasswordBox" Grid.Row="3" Grid.Column="0" 
+                                             Margin="0,0,10,15" Height="35"
+                                             PasswordChanged="ServiceAdmin_Changed"/>
+
+                                <TextBlock Text="Подтверждение:" Grid.Row="2" Grid.Column="1" Margin="10,0,0,5"/>
+                                <PasswordBox x:Name="ServicePasswordConfirmBox" Grid.Row="3" Grid.Column="1" 
+                                             Margin="10,0,0,15" Height="35"
+                                             PasswordChanged="ServiceAdmin_Changed"/>
+                            </Grid>
+
+                            <!-- Требования к паролю -->
+                            <Border Background="{DynamicResource BackgroundBrush}" 
+                                    CornerRadius="4" Padding="15" Margin="0,0,0,10">
+                                <StackPanel>
+                                    <TextBlock Text="Требования к паролю:" FontWeight="Medium" Margin="0,0,0,5"/>
+                                    <StackPanel>
+                                        <TextBlock x:Name="PasswordLengthValidation" 
+                                                   Text="• Минимум 8 символов"
+                                                   Style="{StaticResource ValidationTextStyle}"/>
+                                        <TextBlock x:Name="PasswordUppercaseValidation" 
+                                                   Text="• Заглавные буквы (A-Z)"
+                                                   Style="{StaticResource ValidationTextStyle}"/>
+                                        <TextBlock x:Name="PasswordLowercaseValidation" 
+                                                   Text="• Строчные буквы (a-z)"
+                                                   Style="{StaticResource ValidationTextStyle}"/>
+                                        <TextBlock x:Name="PasswordDigitValidation" 
+                                                   Text="• Цифры (0-9)"
+                                                   Style="{StaticResource ValidationTextStyle}"/>
+                                        <TextBlock x:Name="PasswordSpecialValidation" 
+                                                   Text="• Специальные символы (!@#$%^&*)"
+                                                   Style="{StaticResource ValidationTextStyle}"/>
+                                        <TextBlock x:Name="PasswordMatchValidation" 
+                                                   Text="• Пароли должны совпадать"
+                                                   Style="{StaticResource ValidationTextStyle}"/>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Шаг 3: Дополнительные настройки -->
+                    <Border Background="{DynamicResource SurfaceVariantBrush}" 
+                            CornerRadius="8" Padding="20">
+                        <StackPanel>
+                            <TextBlock Text="3. Дополнительные настройки" 
+                                       Style="{StaticResource StepHeaderStyle}"/>
+                            <TextBlock Text="Настройте дополнительные параметры системы."
+                                       Style="{StaticResource StepDescriptionStyle}"/>
+
+                            <StackPanel>
+                                <CheckBox x:Name="EnableAuditingCheckBox" 
+                                          Content="Включить аудит действий пользователей"
+                                          IsChecked="True"
+                                          Margin="0,0,0,10"/>
+
+                                <CheckBox x:Name="AutoStartCheckBox" 
+                                          Content="Запускать с Windows"
+                                          IsChecked="False"
+                                          Margin="0,0,0,10"/>
+
+                                <CheckBox x:Name="CheckUpdatesCheckBox" 
+                                          Content="Проверять обновления автоматически"
+                                          IsChecked="True"
+                                          Margin="0,0,0,10"/>
+
+                                <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
+                                    <TextBlock Text="Язык интерфейса:" 
+                                               VerticalAlignment="Center" 
+                                               Margin="0,0,15,0"/>
+                                    <ComboBox x:Name="LanguageComboBox" 
+                                              Width="150" Height="35"
+                                              SelectedIndex="0">
+                                        <ComboBoxItem Content="Русский" Tag="ru-RU"/>
+                                        <ComboBoxItem Content="English" Tag="en-US"/>
+                                    </ComboBox>
+                                </StackPanel>
+                            </StackPanel>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Сообщение об ошибке -->
+                    <Border x:Name="ErrorPanel" 
+                            Background="{DynamicResource ErrorBrush}" 
+                            CornerRadius="4" 
+                            Padding="15,10" 
+                            Margin="0,20,0,0"
+                            Visibility="Collapsed">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="⚠" 
+                                       FontSize="16" 
+                                       Foreground="{DynamicResource OnErrorBrush}"
+                                       Margin="0,0,10,0"
+                                       VerticalAlignment="Center"/>
+                            <TextBlock x:Name="ErrorTextBlock" 
+                                       Foreground="{DynamicResource OnErrorBrush}"
+                                       TextWrapping="Wrap"
+                                       VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Border>
+                </StackPanel>
+            </ScrollViewer>
+
+            <!-- Кнопки действий -->
+            <Border Grid.Row="2" BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="0,1,0,0" Padding="40,20">
+                <Grid>
+                    <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+
+                    <!-- Индикатор прогресса -->
+                    <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
+                        <TextBlock x:Name="SetupProgressText" 
+                                   Text="Настройка: 0/3 шагов завершено"
+                                   FontSize="12"
+                                   Foreground="{DynamicResource OnSurfaceVariantBrush}"/>
+                    </StackPanel>
+
+                    <!-- Основные кнопки -->
+                    <Button x:Name="SkipButton" 
+                            Grid.Column="1"
+                            Content="Пропустить"
+                            Width="100" Height="40"
+                            Margin="0,0,15,0"
+                            Click="SkipButton_Click"/>
+
+                    <Button x:Name="CompleteSetupButton" 
+                            Grid.Column="2"
+                            Content="Завершить настройку"
+                            Width="150" Height="40"
+                            Style="{StaticResource MaterialButtonStyle}"
+                            IsEnabled="False"
+                            Click="CompleteSetupButton_Click"/>
+                </Grid>
+            </Border>
+
+            <!-- Индикатор загрузки -->
+            <Border x:Name="LoadingOverlay" 
+                    Grid.RowSpan="3"
+                    Background="#80000000" 
+                    Visibility="Collapsed">
+                <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <ProgressBar IsIndeterminate="True" 
+                                 Width="200" Height="4" 
+                                 Margin="0,0,0,15"/>
+                    <TextBlock x:Name="LoadingText" 
+                               Text="Сохранение настроек..."
+                               Foreground="White"
+                               HorizontalAlignment="Center"
+                               FontSize="14"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>
