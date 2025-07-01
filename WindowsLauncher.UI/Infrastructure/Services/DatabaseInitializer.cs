@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Data;
+using WindowsLauncher.Data.Extensions;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Core.Enums;
 

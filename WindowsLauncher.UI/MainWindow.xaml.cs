@@ -3,6 +3,7 @@ using System.IO;
 using System.Windows;
 using System.Windows.Controls;
 using WindowsLauncher.Data;
+using WindowsLauncher.Data.Extensions;
 using WindowsLauncher.Services;
 using WindowsLauncher.UI.ViewModels;
 using Microsoft.Extensions.DependencyInjection;

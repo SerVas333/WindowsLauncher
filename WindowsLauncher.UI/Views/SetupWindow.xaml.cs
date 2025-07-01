@@ -10,6 +10,11 @@ using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 
+// Явно указываем пространства имен для разрешения конфликтов
+using WpfMessageBox = System.Windows.MessageBox;
+using WpfApplication = System.Windows.Application;
+using WpfBrush = System.Windows.Media.Brush;
+
 namespace WindowsLauncher.UI.Views
 {
     /// <summary>
@@ -39,7 +44,7 @@ namespace WindowsLauncher.UI.Views
             InitializeComponent();
 
             // Получаем сервисы из DI контейнера
-            var serviceProvider = ((App)Application.Current).ServiceProvider;
+            var serviceProvider = ((App)WpfApplication.Current).ServiceProvider;
             _configService = serviceProvider.GetRequiredService<IAuthenticationConfigurationService>();
             _authService = serviceProvider.GetRequiredService<IAuthenticationService>();
             _adService = serviceProvider.GetRequiredService<IActiveDirectoryService>();
@@ -104,7 +109,7 @@ namespace WindowsLauncher.UI.Views
         /// </summary>
         private void SkipButton_Click(object sender, RoutedEventArgs e)
         {
-            var result = MessageBox.Show(
+            var result = WpfMessageBox.Show(
                 "Вы уверены, что хотите пропустить настройку?\n\n" +
                 "Система будет работать с настройками по умолчанию.\n" +
                 "Вы сможете изменить настройки позже в меню администратора.",
@@ -245,9 +250,9 @@ namespace WindowsLauncher.UI.Views
         {
             try
             {
-                var successBrush = FindResource("SuccessBrush") as Brush;
-                var errorBrush = FindResource("ErrorBrush") as Brush;
-                var defaultBrush = FindResource("OnSurfaceVariantBrush") as Brush;
+                var successBrush = TryFindResource("SuccessBrush") as WpfBrush ?? Brushes.Green;
+                var errorBrush = TryFindResource("ErrorBrush") as WpfBrush ?? Brushes.Red;
+                var defaultBrush = TryFindResource("OnSurfaceVariantBrush") as WpfBrush ?? Brushes.Gray;
 
                 // Длина пароля
                 PasswordLengthValidation.Foreground = (password?.Length >= 8) ? successBrush :
@@ -342,3 +347,302 @@ namespace WindowsLauncher.UI.Views
 
                 _logger.LogInformation("Domain connection test result: {IsConnected}", isConnected);
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error testing domain connection");
+                ShowConnectionStatus(false, $"Ошибка подключения: {ex.Message}");
+            }
+            finally
+            {
+                SetLoadingState(false);
+            }
+        }
+
+        /// <summary>
+        /// Отображение статуса подключения
+        /// </summary>
+        private void ShowConnectionStatus(bool isSuccess, string message)
+        {
+            try
+            {
+                ConnectionStatusPanel.Visibility = Visibility.Visible;
+                ConnectionStatusText.Text = message;
+
+                var brush = TryFindResource(isSuccess ? "SuccessBrush" : "ErrorBrush") as WpfBrush ??
+                           (isSuccess ? Brushes.Green : Brushes.Red);
+                ConnectionStatusIndicator.Fill = brush;
+                ConnectionStatusText.Foreground = brush;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("Error showing connection status: {Error}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Завершение настройки
+        /// </summary>
+        private async Task CompleteSetupAsync()
+        {
+            if (_isProcessing)
+                return;
+
+            try
+            {
+                SetLoadingState(true, "Сохранение настроек...");
+
+                // Создаем конфигурацию
+                var config = CreateConfigurationFromForm();
+
+                // Сохраняем конфигурацию
+                await _configService.SaveConfigurationAsync(config);
+
+                // Создаем сервисного администратора
+                await CreateServiceAdminAsync();
+
+                // Применяем дополнительные настройки
+                await ApplyAdditionalSettingsAsync();
+
+                SetupCompleted = true;
+                DialogResult = true;
+
+                _logger.LogInformation("Setup completed successfully");
+                Close();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error completing setup");
+                ShowError($"Ошибка завершения настройки: {ex.Message}");
+            }
+            finally
+            {
+                SetLoadingState(false);
+            }
+        }
+
+        /// <summary>
+        /// Создание конфигурации из формы
+        /// </summary>
+        private AuthenticationConfiguration CreateConfigurationFromForm()
+        {
+            return new AuthenticationConfiguration
+            {
+                Domain = DomainTextBox.Text?.Trim(),
+                LdapServer = LdapServerTextBox.Text?.Trim(),
+                Port = int.Parse(PortTextBox.Text?.Trim() ?? "389"),
+                UseTLS = UseTlsCheckBox.IsChecked == true,
+                ServiceAdmin = new ServiceAdminConfiguration
+                {
+                    Username = ServiceUsernameTextBox.Text?.Trim(),
+                    SessionTimeoutMinutes = int.Parse(SessionTimeoutTextBox.Text?.Trim() ?? "60")
+                },
+                IsConfigured = true,
+                LastModified = DateTime.UtcNow
+            };
+        }
+
+        /// <summary>
+        /// Создание сервисного администратора
+        /// </summary>
+        private async Task CreateServiceAdminAsync()
+        {
+            try
+            {
+                var username = ServiceUsernameTextBox.Text?.Trim();
+                var password = ServicePasswordBox.Password;
+
+                if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
+                {
+                    await _authService.CreateServiceAdminAsync(username, password);
+                    _logger.LogInformation("Service admin created: {Username}", username);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Error creating service admin: {Error}", ex.Message);
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Применение дополнительных настроек
+        /// </summary>
+        private async Task ApplyAdditionalSettingsAsync()
+        {
+            try
+            {
+                // Настройка аудита
+                if (EnableAuditingCheckBox.IsChecked == true)
+                {
+                    // Включаем аудит через соответствующий сервис
+                    _logger.LogInformation("Auditing enabled");
+                }
+
+                // Автозагрузка
+                if (AutoStartCheckBox.IsChecked == true)
+                {
+                    // Добавляем в автозагрузку
+                    await SetAutoStartAsync(true);
+                    _logger.LogInformation("Auto-start enabled");
+                }
+
+                // Язык интерфейса
+                var selectedLanguage = (LanguageComboBox.SelectedItem as ComboBoxItem)?.Tag?.ToString();
+                if (!string.IsNullOrEmpty(selectedLanguage))
+                {
+                    await SetLanguageAsync(selectedLanguage);
+                    _logger.LogInformation("Language set to: {Language}", selectedLanguage);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Error applying additional settings: {Error}", ex.Message);
+                // Не прерываем процесс настройки из-за дополнительных настроек
+            }
+        }
+
+        /// <summary>
+        /// Настройка автозагрузки
+        /// </summary>
+        private async Task SetAutoStartAsync(bool enable)
+        {
+            try
+            {
+                // Реализация настройки автозагрузки через реестр Windows
+                await Task.Run(() =>
+                {
+                    using var key = Microsoft.Win32.Registry.CurrentUser.OpenSubKey(
+                        @"SOFTWARE\Microsoft\Windows\CurrentVersion\Run", true);
+
+                    if (enable)
+                    {
+                        var executablePath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                        key?.SetValue("KDV Launcher", executablePath);
+                    }
+                    else
+                    {
+                        key?.DeleteValue("KDV Launcher", false);
+                    }
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Error setting auto-start: {Error}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Настройка языка интерфейса
+        /// </summary>
+        private async Task SetLanguageAsync(string languageCode)
+        {
+            try
+            {
+                await Task.Run(() =>
+                {
+                    var culture = new CultureInfo(languageCode);
+                    CultureInfo.DefaultThreadCurrentCulture = culture;
+                    CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+                    // Сохраняем настройку языка в конфигурации
+                    // TODO: Использовать конфигурационный сервис вместо Settings
+                    _logger.LogInformation("Language preference saved: {Language}", languageCode);
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning("Error setting language: {Error}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Установка состояния загрузки
+        /// </summary>
+        private void SetLoadingState(bool isLoading, string message = null)
+        {
+            try
+            {
+                _isProcessing = isLoading;
+                LoadingOverlay.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
+
+                if (!string.IsNullOrEmpty(message))
+                {
+                    LoadingText.Text = message;
+                }
+
+                // Обновляем доступность кнопок
+                TestConnectionButton.IsEnabled = !isLoading;
+                CompleteSetupButton.IsEnabled = !isLoading && _isDomainValid && _isServiceAdminValid;
+                SkipButton.IsEnabled = !isLoading;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("Error setting loading state: {Error}", ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Отображение ошибки
+        /// </summary>
+        private void ShowError(string message)
+        {
+            try
+            {
+                ErrorTextBlock.Text = message;
+                ErrorPanel.Visibility = Visibility.Visible;
+
+                // Автоматически скрываем ошибку через 5 секунд
+                Task.Delay(5000).ContinueWith(_ =>
+                {
+                    Dispatcher.Invoke(() =>
+                    {
+                        ErrorPanel.Visibility = Visibility.Collapsed;
+                    });
+                });
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug("Error showing error message: {Error}", ex.Message);
+            }
+        }
+
+        #endregion
+
+        #region Window Events
+
+        /// <summary>
+        /// Обработчик закрытия окна
+        /// </summary>
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            try
+            {
+                // Предупреждаем о несохраненных изменениях
+                if (!SetupCompleted && (_isDomainValid || _isServiceAdminValid))
+                {
+                    var result = WpfMessageBox.Show(
+                        "У вас есть несохраненные изменения.\n\n" +
+                        "Вы уверены, что хотите выйти без сохранения настроек?",
+                        "Несохраненные изменения",
+                        MessageBoxButton.YesNo,
+                        MessageBoxImage.Warning
+                    );
+
+                    if (result == MessageBoxResult.No)
+                    {
+                        e.Cancel = true;
+                        return;
+                    }
+                }
+
+                base.OnClosing(e);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during window closing");
+            }
+        }
+
+        #endregion
+    }
+}

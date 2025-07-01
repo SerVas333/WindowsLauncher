@@ -1,234 +1,363 @@
-﻿// WindowsLauncher.Services/Authorization/AuthorizationService.cs
+﻿// WindowsLauncher.Services/Authentication/AuthenticationConfigurationService.cs
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
 using System.Threading.Tasks;
-using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
-using WindowsLauncher.Core.Enums;
 
-namespace WindowsLauncher.Services.Authorization
+namespace WindowsLauncher.Services.Authentication
 {
-    public class AuthorizationService : IAuthorizationService
+    /// <summary>
+    /// Унифицированный сервис для управления конфигурацией аутентификации
+    /// </summary>
+    public class AuthenticationConfigurationService : IAuthenticationConfigurationService
     {
-        private readonly IApplicationRepository _applicationRepository;
-        private readonly IUserSettingsRepository _settingsRepository;
-        private readonly ILogger<AuthorizationService> _logger;
-        private readonly IMemoryCache _cache;
+        private readonly ILogger<AuthenticationConfigurationService> _logger;
+        private readonly string _configPath;
+        private AuthenticationConfiguration _currentConfig;
+        private readonly object _configLock = new();
 
-        private readonly TimeSpan _cacheExpiry = TimeSpan.FromMinutes(15);
-
-        public AuthorizationService(
-            IApplicationRepository applicationRepository,
-            IUserSettingsRepository settingsRepository,
-            ILogger<AuthorizationService> logger,
-            IMemoryCache cache)
+        public AuthenticationConfigurationService(ILogger<AuthenticationConfigurationService> logger)
         {
-            _applicationRepository = applicationRepository;
-            _settingsRepository = settingsRepository;
-            _logger = logger;
-            _cache = cache;
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
+            // Путь к файлу конфигурации в папке данных приложения
+            var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+            var appFolder = Path.Combine(appDataPath, "WindowsLauncher");
+            Directory.CreateDirectory(appFolder);
+            _configPath = Path.Combine(appFolder, "auth-config.json");
+
+            LoadConfiguration();
         }
 
-        public async Task<bool> CanAccessApplicationAsync(User user, Application application)
+        /// <summary>
+        /// Получение текущей конфигурации
+        /// </summary>
+        public AuthenticationConfiguration GetConfiguration()
         {
-            try
+            lock (_configLock)
             {
-                // Проверяем кэш
-                var cacheKey = $"access_{user.Username}_{application.Id}";
-                if (_cache.TryGetValue(cacheKey, out bool cachedResult))
-                {
-                    return cachedResult;
-                }
-
-                // Проверка активности приложения
-                if (!application.IsEnabled)
-                {
-                    _logger.LogDebug("Application {AppName} is disabled", application.Name);
-                    return false;
-                }
-
-                // Проверка минимальной роли
-                if (user.Role < application.MinimumRole)
-                {
-                    _logger.LogDebug("User {Username} role {UserRole} is below minimum required {MinRole} for app {AppName}",
-                        user.Username, user.Role, application.MinimumRole, application.Name);
-                    return false;
-                }
-
-                // Если группы не указаны - доступно всем с подходящей ролью
-                if (!application.RequiredGroups.Any())
-                {
-                    _cache.Set(cacheKey, true, _cacheExpiry);
-                    return true;
-                }
-
-                // Проверка пересечения групп пользователя и требуемых групп
-                var hasAccess = application.RequiredGroups.Any(reqGroup =>
-                    user.Groups.Contains(reqGroup, StringComparer.OrdinalIgnoreCase));
-
-                _logger.LogDebug("User {Username} access to {AppName}: {HasAccess} (Required: {Required}, User: {UserGroups})",
-                    user.Username, application.Name, hasAccess,
-                    string.Join(",", application.RequiredGroups),
-                    string.Join(",", user.Groups));
-
-                // Кэшируем результат
-                _cache.Set(cacheKey, hasAccess, _cacheExpiry);
-
-                return hasAccess;
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error checking access for user {Username} to application {AppName}",
-                    user.Username, application.Name);
-                return false;
+                return _currentConfig ?? CreateDefaultConfiguration();
             }
         }
 
-        public async Task<List<Application>> GetAuthorizedApplicationsAsync(User user)
+        /// <summary>
+        /// Сохранение конфигурации
+        /// </summary>
+        public async Task SaveConfigurationAsync(AuthenticationConfiguration config)
         {
+            if (config == null)
+                throw new ArgumentNullException(nameof(config));
+
+            var validation = await ValidateConfigurationAsync(config);
+            if (!validation.IsValid)
+            {
+                var errors = string.Join(", ", validation.Errors);
+                throw new ArgumentException($"Invalid configuration: {errors}");
+            }
+
             try
             {
-                var allApplications = await _applicationRepository.GetActiveApplicationsAsync();
-                var authorizedApps = new List<Application>();
-
-                foreach (var app in allApplications)
+                lock (_configLock)
                 {
-                    if (await CanAccessApplicationAsync(user, app))
-                    {
-                        authorizedApps.Add(app);
-                    }
+                    _currentConfig = config;
                 }
 
-                _logger.LogInformation("User {Username} has access to {AppCount} applications",
-                    user.Username, authorizedApps.Count);
-
-                return authorizedApps.OrderBy(a => a.SortOrder).ThenBy(a => a.Name).ToList();
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error getting authorized applications for user {Username}", user.Username);
-                return new List<Application>();
-            }
-        }
-
-        public async Task<UserSettings> GetUserSettingsAsync(User user)
-        {
-            try
-            {
-                var settings = await _settingsRepository.GetByUsernameAsync(user.Username);
-
-                if (settings == null)
+                var json = JsonSerializer.Serialize(config, new JsonSerializerOptions
                 {
-                    _logger.LogInformation("Creating default settings for user {Username}", user.Username);
-                    settings = CreateDefaultSettings(user);
-                    await _settingsRepository.AddAsync(settings);
-                    await _settingsRepository.SaveChangesAsync();
-                }
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
 
-                return settings;
+                await File.WriteAllTextAsync(_configPath, json);
+
+                _logger.LogInformation("Authentication configuration saved successfully");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error getting settings for user {Username}", user.Username);
-                return CreateDefaultSettings(user);
-            }
-        }
-
-        public async Task SaveUserSettingsAsync(UserSettings settings)
-        {
-            try
-            {
-                settings.LastModified = DateTime.Now;
-                await _settingsRepository.UpdateAsync(settings);
-                await _settingsRepository.SaveChangesAsync();
-
-                _logger.LogInformation("Settings saved for user {Username}", settings.Username);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error saving settings for user {Username}", settings.Username);
+                _logger.LogError(ex, "Failed to save authentication configuration");
                 throw;
             }
         }
 
-        public bool CanManageApplications(User user)
+        /// <summary>
+        /// Проверить, настроена ли система
+        /// </summary>
+        public bool IsConfigured()
         {
-            return user.Role >= UserRole.PowerUser;
+            var config = GetConfiguration();
+            return config.IsConfigured &&
+                   !string.IsNullOrEmpty(config.Domain) &&
+                   !string.IsNullOrEmpty(config.LdapServer);
         }
 
-        public bool CanViewSystemInfo(User user)
-        {
-            return user.Role >= UserRole.PowerUser;
-        }
-
-        public bool CanViewAuditLogs(User user)
-        {
-            return user.Role >= UserRole.Administrator;
-        }
-
-        public async Task RefreshUserPermissionsAsync(string username)
+        /// <summary>
+        /// Сброс конфигурации к настройкам по умолчанию
+        /// </summary>
+        public async Task ResetToDefaultsAsync()
         {
             try
             {
-                // Очищаем кэш прав для пользователя
-                var keysToRemove = new List<object>();
+                var defaultConfig = CreateDefaultConfiguration();
+                await SaveConfigurationAsync(defaultConfig);
 
-                // В реальном приложении здесь бы был более эффективный способ очистки кэша
-                // Для простоты просто очищаем весь кэш
-                if (_cache is MemoryCache memCache)
-                {
-                    memCache.Clear();
-                }
-
-                _logger.LogInformation("Permissions cache refreshed for user {Username}", username);
+                _logger.LogInformation("Configuration reset to defaults");
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error refreshing permissions for user {Username}", username);
+                _logger.LogError(ex, "Error resetting configuration to defaults");
+                throw;
             }
         }
 
-        private UserSettings CreateDefaultSettings(User user)
+        /// <summary>
+        /// Валидировать конфигурацию
+        /// </summary>
+        public async Task<ValidationResult> ValidateConfigurationAsync(AuthenticationConfiguration configuration)
         {
-            var settings = new UserSettings
+            var result = new ValidationResult();
+
+            try
             {
-                Username = user.Username,
-                Theme = "Light",
-                AccentColor = "Blue",
-                TileSize = 150,
-                ShowCategories = true,
-                DefaultCategory = "All",
-                AutoRefresh = true,
-                RefreshIntervalMinutes = 30,
-                ShowDescriptions = true,
-                LastModified = DateTime.Now
-            };
+                // Валидация домена
+                if (string.IsNullOrWhiteSpace(configuration.Domain))
+                {
+                    result.Errors.Add("Доменное имя не может быть пустым");
+                }
 
-            // Настройки по ролям
-            switch (user.Role)
+                // Валидация LDAP сервера
+                if (string.IsNullOrWhiteSpace(configuration.LdapServer))
+                {
+                    result.Errors.Add("LDAP сервер не может быть пустым");
+                }
+
+                // Валидация порта
+                if (configuration.Port <= 0 || configuration.Port > 65535)
+                {
+                    result.Errors.Add("Порт должен быть в диапазоне 1-65535");
+                }
+
+                // Валидация сервисного администратора
+                if (string.IsNullOrWhiteSpace(configuration.ServiceAdmin.Username))
+                {
+                    result.Errors.Add("Имя пользователя сервисного администратора не может быть пустым");
+                }
+
+                if (configuration.ServiceAdmin.SessionTimeoutMinutes <= 0 ||
+                    configuration.ServiceAdmin.SessionTimeoutMinutes > 1440)
+                {
+                    result.Errors.Add("Время сессии должно быть в диапазоне 1-1440 минут");
+                }
+
+                // Предупреждения
+                if (configuration.Port == 389 && configuration.UseTLS)
+                {
+                    result.Warnings.Add("Порт 389 обычно используется без TLS. Рассмотрите использование порта 636 для LDAPS");
+                }
+
+                if (configuration.CacheLifetimeMinutes < 5)
+                {
+                    result.Warnings.Add("Короткое время жизни кэша может повлиять на производительность");
+                }
+
+                result.IsValid = result.Errors.Count == 0;
+
+                _logger.LogDebug("Configuration validation completed. Valid: {IsValid}, Errors: {ErrorCount}, Warnings: {WarningCount}",
+                    result.IsValid, result.Errors.Count, result.Warnings.Count);
+            }
+            catch (Exception ex)
             {
-                case UserRole.Administrator:
-                    settings.Theme = "Dark";
-                    settings.AccentColor = "Red";
-                    settings.TileSize = 180;
-                    break;
-
-                case UserRole.PowerUser:
-                    settings.AccentColor = "Orange";
-                    settings.TileSize = 165;
-                    break;
-
-                case UserRole.Standard:
-                    settings.HiddenCategories.Add("System");
-                    settings.HiddenCategories.Add("Admin");
-                    settings.ShowDescriptions = false;
-                    break;
+                _logger.LogError(ex, "Error validating configuration");
+                result.Errors.Add($"Ошибка валидации: {ex.Message}");
             }
 
-            return settings;
+            return await Task.FromResult(result);
         }
+
+        /// <summary>
+        /// Экспортировать конфигурацию
+        /// </summary>
+        public async Task<string> ExportConfigurationAsync()
+        {
+            try
+            {
+                var config = GetConfiguration();
+
+                // Создаем копию без чувствительных данных
+                var exportConfig = new
+                {
+                    config.Domain,
+                    config.LdapServer,
+                    config.Port,
+                    config.UseTLS,
+                    config.ConnectionTimeoutSeconds,
+                    config.BaseDN,
+                    config.DefaultUserGroups,
+                    config.AdminGroups,
+                    config.PowerUserGroups,
+                    config.EnableCaching,
+                    config.CacheLifetimeMinutes,
+                    config.EnableFallbackMode,
+                    ServiceAdmin = new
+                    {
+                        config.ServiceAdmin.Username,
+                        config.ServiceAdmin.SessionTimeoutMinutes,
+                        config.ServiceAdmin.MaxLoginAttempts,
+                        config.ServiceAdmin.LockoutDurationMinutes,
+                        config.ServiceAdmin.RequirePasswordChange
+                    },
+                    ExportedAt = DateTime.UtcNow,
+                    Version = "1.0"
+                };
+
+                var json = JsonSerializer.Serialize(exportConfig, new JsonSerializerOptions
+                {
+                    WriteIndented = true,
+                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                });
+
+                _logger.LogInformation("Configuration exported successfully");
+                return await Task.FromResult(json);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error exporting configuration");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Импортировать конфигурацию
+        /// </summary>
+        public async Task ImportConfigurationAsync(string configurationJson)
+        {
+            try
+            {
+                var importedData = JsonSerializer.Deserialize<JsonElement>(configurationJson);
+
+                var config = GetConfiguration(); // Начинаем с текущей конфигурации
+
+                // Импортируем только безопасные настройки
+                if (importedData.TryGetProperty("domain", out var domain))
+                    config.Domain = domain.GetString();
+
+                if (importedData.TryGetProperty("ldapServer", out var ldapServer))
+                    config.LdapServer = ldapServer.GetString();
+
+                if (importedData.TryGetProperty("port", out var port))
+                    config.Port = port.GetInt32();
+
+                if (importedData.TryGetProperty("useTLS", out var useTLS))
+                    config.UseTLS = useTLS.GetBoolean();
+
+                if (importedData.TryGetProperty("connectionTimeoutSeconds", out var timeout))
+                    config.ConnectionTimeoutSeconds = timeout.GetInt32();
+
+                if (importedData.TryGetProperty("baseDN", out var baseDN))
+                    config.BaseDN = baseDN.GetString() ?? string.Empty;
+
+                if (importedData.TryGetProperty("defaultUserGroups", out var userGroups))
+                    config.DefaultUserGroups = userGroups.GetString() ?? string.Empty;
+
+                if (importedData.TryGetProperty("adminGroups", out var adminGroups))
+                    config.AdminGroups = adminGroups.GetString() ?? string.Empty;
+
+                if (importedData.TryGetProperty("powerUserGroups", out var powerUserGroups))
+                    config.PowerUserGroups = powerUserGroups.GetString() ?? string.Empty;
+
+                // Валидируем импортированную конфигурацию
+                var validationResult = await ValidateConfigurationAsync(config);
+                if (!validationResult.IsValid)
+                {
+                    throw new InvalidOperationException($"Импортированная конфигурация некорректна: {string.Join(", ", validationResult.Errors)}");
+                }
+
+                await SaveConfigurationAsync(config);
+
+                _logger.LogInformation("Configuration imported successfully");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error importing configuration");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Загрузить конфигурацию из файла
+        /// </summary>
+        private void LoadConfiguration()
+        {
+            try
+            {
+                if (File.Exists(_configPath))
+                {
+                    var json = File.ReadAllText(_configPath);
+                    _currentConfig = JsonSerializer.Deserialize<AuthenticationConfiguration>(json, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                    });
+
+                    _logger.LogDebug("Configuration loaded from file");
+                }
+                else
+                {
+                    _currentConfig = CreateDefaultConfiguration();
+                    _logger.LogDebug("Using default configuration");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error loading configuration, using defaults");
+                _currentConfig = CreateDefaultConfiguration();
+            }
+        }
+
+        /// <summary>
+        /// Получить конфигурацию по умолчанию
+        /// </summary>
+        private AuthenticationConfiguration CreateDefaultConfiguration()
+        {
+            return new AuthenticationConfiguration
+            {
+                Domain = "company.local",
+                LdapServer = "dc.company.local",
+                Port = 389,
+                UseTLS = true,
+                ConnectionTimeoutSeconds = 30,
+                BaseDN = string.Empty,
+                DefaultUserGroups = "LauncherUsers",
+                AdminGroups = "LauncherAdmins",
+                PowerUserGroups = "LauncherPowerUsers",
+                EnableCaching = true,
+                CacheLifetimeMinutes = 60,
+                EnableFallbackMode = true,
+                ServiceAdmin = new ServiceAdminConfiguration
+                {
+                    Username = "serviceadmin",
+                    SessionTimeoutMinutes = 60,
+                    MaxLoginAttempts = 5,
+                    LockoutDurationMinutes = 15,
+                    RequirePasswordChange = true
+                },
+                IsConfigured = false,
+                CreatedAt = DateTime.UtcNow,
+                LastModified = DateTime.UtcNow
+            };
+        }
+    }
+
+    /// <summary>
+    /// Результат валидации конфигурации
+    /// </summary>
+    public class ValidationResult
+    {
+        public bool IsValid { get; set; }
+        public List<string> Errors { get; set; } = new();
+        public List<string> Warnings { get; set; } = new();
     }
 }
