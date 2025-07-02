@@ -11,8 +11,8 @@ using WindowsLauncher.Data;
 namespace WindowsLauncher.Data.Migrations
 {
     [DbContext(typeof(LauncherDbContext))]
-    [Migration("20250623085625_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250702060639_AddUserAuthenticationFields")]
+    partial class AddUserAuthenticationFields
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -130,10 +130,21 @@ namespace WindowsLauncher.Data.Migrations
                         .HasMaxLength(50)
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
                     b.Property<bool>("Success")
                         .HasColumnType("INTEGER");
 
                     b.Property<DateTime>("Timestamp")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("UserAgent")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Username")
@@ -160,6 +171,9 @@ namespace WindowsLauncher.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
+                    b.Property<DateTime>("CreatedDate")
+                        .HasColumnType("TEXT");
+
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
@@ -170,6 +184,9 @@ namespace WindowsLauncher.Data.Migrations
                         .HasMaxLength(300)
                         .HasColumnType("TEXT");
 
+                    b.Property<int>("FailedLoginAttempts")
+                        .HasColumnType("INTEGER");
+
                     b.Property<string>("Groups")
                         .IsRequired()
                         .HasColumnType("TEXT");
@@ -177,11 +194,36 @@ namespace WindowsLauncher.Data.Migrations
                     b.Property<bool>("IsActive")
                         .HasColumnType("INTEGER");
 
+                    b.Property<bool>("IsLocked")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<bool>("IsServiceAccount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("LastActivityAt")
+                        .HasColumnType("TEXT");
+
                     b.Property<DateTime>("LastLogin")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("LockoutEnd")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(500)
                         .HasColumnType("TEXT");
 
                     b.Property<int>("Role")
                         .HasColumnType("INTEGER");
+
+                    b.Property<string>("Salt")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("UserId")
+                        .HasColumnType("TEXT");
 
                     b.Property<string>("Username")
                         .IsRequired()
@@ -189,6 +231,10 @@ namespace WindowsLauncher.Data.Migrations
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("IsActive");
+
+                    b.HasIndex("IsServiceAccount");
 
                     b.HasIndex("Username")
                         .IsUnique();

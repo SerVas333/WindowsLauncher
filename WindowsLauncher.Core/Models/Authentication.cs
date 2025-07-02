@@ -36,7 +36,8 @@ namespace WindowsLauncher.Core.Models
         DomainUnavailable,
         NetworkError,
         Cancelled,
-        ServiceModeRequired
+        ServiceModeRequired,
+        AccountLocked
     }
 
     /// <summary>

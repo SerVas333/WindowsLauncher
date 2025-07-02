@@ -1,4 +1,4 @@
-﻿// WindowsLauncher.Services/Authentication/AuthenticationService.cs - ПОЛНЫЙ ИСПРАВЛЕННЫЙ КОД
+﻿// WindowsLauncher.Services/Authentication/AuthenticationService.cs - ПОЛНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -43,7 +43,7 @@ namespace WindowsLauncher.Services.Authentication
         {
             try
             {
-                var user = await AuthenticateWindowsUserAsync();
+                var user = await AuthenticateWindowsUserInternalAsync();
                 return AuthenticationResult.Success(user, AuthenticationType.WindowsSSO);
             }
             catch (Exception ex)
@@ -63,20 +63,14 @@ namespace WindowsLauncher.Services.Authentication
                 if (credentials == null)
                     throw new ArgumentNullException(nameof(credentials));
 
-                User user;
-
                 if (credentials.IsServiceAccount)
                 {
-                    user = await AuthenticateServiceAdminAsync(credentials.Username, credentials.Password);
+                    return await AuthenticateServiceAdminInternalAsync(credentials.Username, credentials.Password);
                 }
                 else
                 {
-                    user = await AuthenticateAsync(credentials.Username, credentials.Password);
+                    return await AuthenticateAsync(credentials.Username, credentials.Password);
                 }
-
-                return AuthenticationResult.Success(user,
-                    credentials.IsServiceAccount ? AuthenticationType.LocalService : AuthenticationType.DomainLDAP,
-                    credentials.Domain);
             }
             catch (Exception ex)
             {
@@ -86,64 +80,9 @@ namespace WindowsLauncher.Services.Authentication
         }
 
         /// <summary>
-        /// Аутентифицировать пользователя Windows
+        /// Аутентифицировать пользователя по логину/паролю - ИСПРАВЛЕНО: возвращает AuthenticationResult
         /// </summary>
-        public async Task<User> AuthenticateWindowsUserAsync()
-        {
-            try
-            {
-                var windowsIdentity = WindowsIdentity.GetCurrent();
-                var username = windowsIdentity.Name;
-
-                if (string.IsNullOrEmpty(username))
-                {
-                    throw new UnauthorizedAccessException("Не удалось получить данные пользователя Windows");
-                }
-
-                _logger.LogDebug("Authenticating Windows user: {Username}", username);
-
-                // Проверяем доступность домена
-                var isDomainAvailable = await _adService.IsDomainAvailableAsync();
-                if (!isDomainAvailable)
-                {
-                    _logger.LogWarning("Domain is not available, using fallback authentication");
-                    return await AuthenticateWithFallback(username);
-                }
-
-                // Извлекаем имя пользователя из доменного формата
-                var cleanUsername = ExtractUsernameFromDomain(username);
-
-                // Получаем информацию пользователя из AD
-                var adUserInfo = await _adService.GetUserInfoAsync(cleanUsername);
-                if (adUserInfo == null || !adUserInfo.IsEnabled)
-                {
-                    throw new UnauthorizedAccessException("Пользователь не найден или отключен в Active Directory");
-                }
-
-                // Получаем или создаем пользователя в локальной базе
-                var user = await GetOrCreateUserFromAD(adUserInfo);
-
-                user.LastLoginAt = DateTime.UtcNow;
-                await _userRepository.UpdateAsync(user);
-
-                await _auditService.LogLoginAsync(user.Username, true);
-                _logger.LogInformation("Windows user {Username} authenticated successfully", username);
-
-                return user;
-            }
-            catch (Exception ex)
-            {
-                var username = WindowsIdentity.GetCurrent()?.Name ?? "Unknown";
-                await _auditService.LogLoginAsync(username, false, ex.Message);
-                _logger.LogError(ex, "Error authenticating Windows user");
-                throw;
-            }
-        }
-
-        /// <summary>
-        /// Аутентифицировать пользователя по логину/паролю
-        /// </summary>
-        public async Task<User> AuthenticateAsync(string username, string password)
+        public async Task<AuthenticationResult> AuthenticateAsync(string username, string password)
         {
             try
             {
@@ -154,7 +93,7 @@ namespace WindowsLauncher.Services.Authentication
                 if (!isDomainAvailable)
                 {
                     _logger.LogWarning("Domain is not available, checking local authentication");
-                    return await AuthenticateLocalUser(username, password);
+                    return await AuthenticateLocalUserInternal(username, password);
                 }
 
                 // Аутентификация через AD
@@ -162,11 +101,17 @@ namespace WindowsLauncher.Services.Authentication
                 if (!authResult.IsSuccessful)
                 {
                     await _auditService.LogLoginAsync(username, false, authResult.ErrorMessage);
-                    throw new UnauthorizedAccessException(authResult.ErrorMessage);
+                    return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials, authResult.ErrorMessage);
                 }
 
                 // Получаем или создаем пользователя в локальной базе
                 var userInfo = await _adService.GetUserInfoAsync(username);
+                if (userInfo == null)
+                {
+                    await _auditService.LogLoginAsync(username, false, "User not found in AD");
+                    return AuthenticationResult.Failure(AuthenticationStatus.UserNotFound, "Пользователь не найден в Active Directory");
+                }
+
                 var user = await GetOrCreateUserFromAD(userInfo);
 
                 user.LastLoginAt = DateTime.UtcNow;
@@ -175,96 +120,38 @@ namespace WindowsLauncher.Services.Authentication
                 await _auditService.LogLoginAsync(user.Username, true);
                 _logger.LogInformation("User {Username} authenticated successfully", username);
 
-                return user;
+                return AuthenticationResult.Success(user, AuthenticationType.DomainLDAP, authResult.Domain);
             }
             catch (Exception ex)
             {
                 await _auditService.LogLoginAsync(username, false, ex.Message);
                 _logger.LogError(ex, "Error authenticating user {Username}", username);
-                throw;
+                return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
             }
         }
 
         /// <summary>
-        /// Аутентифицировать сервисного администратора
+        /// Аутентифицировать пользователя Windows - ДОБАВЛЕН: для обратной совместимости
+        /// </summary>
+        public async Task<User> AuthenticateWindowsUserAsync()
+        {
+            var result = await AuthenticateAsync();
+            if (result.IsSuccess)
+                return result.User;
+
+            throw new UnauthorizedAccessException(result.ErrorMessage);
+        }
+
+        /// <summary>
+        /// Аутентифицировать сервисного администратора - ДОБАВЛЕН: для обратной совместимости
         /// </summary>
         public async Task<User> AuthenticateServiceAdminAsync(string username, string password)
         {
-            try
-            {
-                var config = _configService.GetConfiguration();
+            var result = await AuthenticateServiceAdminInternalAsync(username, password);
+            if (result.IsSuccess)
+                return result.User;
 
-                // Проверяем блокировку
-                if (config.ServiceAdmin.IsLocked &&
-                    config.ServiceAdmin.UnlockTime.HasValue &&
-                    DateTime.UtcNow < config.ServiceAdmin.UnlockTime.Value)
-                {
-                    var remainingTime = config.ServiceAdmin.UnlockTime.Value - DateTime.UtcNow;
-                    throw new UnauthorizedAccessException($"Учетная запись заблокирована. Разблокировка через {remainingTime.Minutes} минут");
-                }
-
-                // Сбрасываем блокировку если время истекло
-                if (config.ServiceAdmin.IsLocked &&
-                    config.ServiceAdmin.UnlockTime.HasValue &&
-                    DateTime.UtcNow >= config.ServiceAdmin.UnlockTime.Value)
-                {
-                    config.ServiceAdmin.IsLocked = false;
-                    config.ServiceAdmin.FailedLoginAttempts = 0;
-                    config.ServiceAdmin.UnlockTime = null;
-                    await _configService.SaveConfigurationAsync(config);
-                }
-
-                // Проверяем учетные данные
-                if (config.ServiceAdmin.Username != username)
-                {
-                    await RecordFailedServiceAdminLogin(config);
-                    throw new UnauthorizedAccessException("Неверные учетные данные");
-                }
-
-                // Проверяем пароль
-                var isPasswordValid = VerifyPassword(password, config.ServiceAdmin.PasswordHash, config.ServiceAdmin.Salt);
-                if (!isPasswordValid)
-                {
-                    await RecordFailedServiceAdminLogin(config);
-                    throw new UnauthorizedAccessException("Неверные учетные данные");
-                }
-
-                // Успешная аутентификация
-                config.ServiceAdmin.LastSuccessfulLogin = DateTime.UtcNow;
-                config.ServiceAdmin.FailedLoginAttempts = 0;
-                await _configService.SaveConfigurationAsync(config);
-
-                // Получаем или создаем пользователя в базе данных
-                var user = await _userRepository.GetByUsernameAsync(username);
-                if (user == null)
-                {
-                    user = new User
-                    {
-                        Username = username,
-                        DisplayName = "Сервисный администратор",
-                        Email = string.Empty,
-                        Role = UserRole.Administrator,
-                        IsActive = true,
-                        IsServiceAccount = true,
-                        CreatedAt = DateTime.UtcNow
-                    };
-                    await _userRepository.AddAsync(user);
-                }
-
-                user.LastLoginAt = DateTime.UtcNow;
-                await _userRepository.UpdateAsync(user);
-
-                await _auditService.LogLoginAsync(username, true);
-                _logger.LogInformation("Service admin {Username} authenticated successfully", username);
-
-                return user;
-            }
-            catch (Exception ex)
-            {
-                await _auditService.LogLoginAsync(username, false, ex.Message);
-                _logger.LogError(ex, "Error authenticating service admin {Username}", username);
-                throw;
-            }
+            throw new UnauthorizedAccessException(result.ErrorMessage);
         }
 
         /// <summary>
@@ -559,6 +446,203 @@ namespace WindowsLauncher.Services.Authentication
         #region Private Methods
 
         /// <summary>
+        /// Внутренний метод аутентификации Windows пользователя
+        /// </summary>
+        private async Task<User> AuthenticateWindowsUserInternalAsync()
+        {
+            try
+            {
+                var windowsIdentity = WindowsIdentity.GetCurrent();
+                var username = windowsIdentity.Name;
+
+                if (string.IsNullOrEmpty(username))
+                {
+                    throw new UnauthorizedAccessException("Не удалось получить данные пользователя Windows");
+                }
+
+                _logger.LogDebug("Authenticating Windows user: {Username}", username);
+
+                // Проверяем доступность домена
+                var isDomainAvailable = await _adService.IsDomainAvailableAsync();
+                if (!isDomainAvailable)
+                {
+                    _logger.LogWarning("Domain is not available, using fallback authentication");
+                    return await AuthenticateWithFallback(username);
+                }
+
+                // Извлекаем имя пользователя из доменного формата
+                var cleanUsername = ExtractUsernameFromDomain(username);
+
+                // Получаем информацию пользователя из AD
+                var adUserInfo = await _adService.GetUserInfoAsync(cleanUsername);
+                if (adUserInfo == null || !adUserInfo.IsEnabled)
+                {
+                    throw new UnauthorizedAccessException("Пользователь не найден или отключен в Active Directory");
+                }
+
+                // Получаем или создаем пользователя в локальной базе
+                var user = await GetOrCreateUserFromAD(adUserInfo);
+
+                user.LastLoginAt = DateTime.UtcNow;
+                await _userRepository.UpdateAsync(user);
+
+                await _auditService.LogLoginAsync(user.Username, true);
+                _logger.LogInformation("Windows user {Username} authenticated successfully", username);
+
+                return user;
+            }
+            catch (Exception ex)
+            {
+                var username = WindowsIdentity.GetCurrent()?.Name ?? "Unknown";
+                await _auditService.LogLoginAsync(username, false, ex.Message);
+                _logger.LogError(ex, "Error authenticating Windows user");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Внутренний метод аутентификации сервисного администратора
+        /// </summary>
+        private async Task<AuthenticationResult> AuthenticateServiceAdminInternalAsync(string username, string password)
+        {
+            try
+            {
+                var config = _configService.GetConfiguration();
+
+                // Проверяем блокировку
+                if (config.ServiceAdmin.IsLocked &&
+                    config.ServiceAdmin.UnlockTime.HasValue &&
+                    DateTime.UtcNow < config.ServiceAdmin.UnlockTime.Value)
+                {
+                    var remainingTime = config.ServiceAdmin.UnlockTime.Value - DateTime.UtcNow;
+                    var errorMsg = $"Учетная запись заблокирована. Разблокировка через {remainingTime.Minutes} минут";
+                    return AuthenticationResult.Failure(AuthenticationStatus.AccountLocked, errorMsg);
+                }
+
+                // Сбрасываем блокировку если время истекло
+                if (config.ServiceAdmin.IsLocked &&
+                    config.ServiceAdmin.UnlockTime.HasValue &&
+                    DateTime.UtcNow >= config.ServiceAdmin.UnlockTime.Value)
+                {
+                    config.ServiceAdmin.IsLocked = false;
+                    config.ServiceAdmin.FailedLoginAttempts = 0;
+                    config.ServiceAdmin.UnlockTime = null;
+                    await _configService.SaveConfigurationAsync(config);
+                }
+
+                // Проверяем учетные данные
+                if (config.ServiceAdmin.Username != username)
+                {
+                    await RecordFailedServiceAdminLogin(config);
+                    return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials, "Неверные учетные данные");
+                }
+
+                // Проверяем пароль
+                var isPasswordValid = VerifyPassword(password, config.ServiceAdmin.PasswordHash, config.ServiceAdmin.Salt);
+                if (!isPasswordValid)
+                {
+                    await RecordFailedServiceAdminLogin(config);
+                    return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials, "Неверные учетные данные");
+                }
+
+                // Успешная аутентификация
+                config.ServiceAdmin.LastSuccessfulLogin = DateTime.UtcNow;
+                config.ServiceAdmin.FailedLoginAttempts = 0;
+                await _configService.SaveConfigurationAsync(config);
+
+                // Получаем или создаем пользователя в базе данных
+                var user = await _userRepository.GetByUsernameAsync(username);
+                if (user == null)
+                {
+                    user = new User
+                    {
+                        Username = username,
+                        DisplayName = "Сервисный администратор",
+                        Email = string.Empty,
+                        Role = UserRole.Administrator,
+                        IsActive = true,
+                        IsServiceAccount = true,
+                        CreatedAt = DateTime.UtcNow
+                    };
+                    await _userRepository.AddAsync(user);
+                }
+
+                user.LastLoginAt = DateTime.UtcNow;
+                await _userRepository.UpdateAsync(user);
+
+                await _auditService.LogLoginAsync(username, true);
+                _logger.LogInformation("Service admin {Username} authenticated successfully", username);
+
+                return AuthenticationResult.Success(user, AuthenticationType.LocalService);
+            }
+            catch (Exception ex)
+            {
+                await _auditService.LogLoginAsync(username, false, ex.Message);
+                _logger.LogError(ex, "Error authenticating service admin {Username}", username);
+                return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Внутренний метод аутентификации локального пользователя
+        /// </summary>
+        private async Task<AuthenticationResult> AuthenticateLocalUserInternal(string username, string password)
+        {
+            try
+            {
+                var user = await _userRepository.GetByUsernameAsync(username);
+                if (user == null || !user.IsServiceAccount)
+                {
+                    return AuthenticationResult.Failure(AuthenticationStatus.ServiceModeRequired,
+                        "Домен недоступен. Используйте режим сервисного администратора.");
+                }
+
+                if (!VerifyPassword(password, user.PasswordHash, user.Salt))
+                {
+                    user.FailedLoginAttempts++;
+
+                    if (user.FailedLoginAttempts >= 5)
+                    {
+                        user.IsLocked = true;
+                        user.LockoutEnd = DateTime.UtcNow.AddMinutes(15);
+                    }
+
+                    await _userRepository.UpdateAsync(user);
+                    return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials, "Неверные учетные данные");
+                }
+
+                // Проверяем блокировку
+                if (user.IsLocked && user.LockoutEnd.HasValue && DateTime.UtcNow < user.LockoutEnd.Value)
+                {
+                    var remainingTime = user.LockoutEnd.Value - DateTime.UtcNow;
+                    var errorMsg = $"Учетная запись заблокирована. Разблокировка через {remainingTime.Minutes} минут";
+                    return AuthenticationResult.Failure(AuthenticationStatus.AccountLocked, errorMsg);
+                }
+
+                // Сбрасываем блокировку если время истекло
+                if (user.IsLocked && user.LockoutEnd.HasValue && DateTime.UtcNow >= user.LockoutEnd.Value)
+                {
+                    user.IsLocked = false;
+                    user.FailedLoginAttempts = 0;
+                    user.LockoutEnd = null;
+                }
+
+                user.FailedLoginAttempts = 0;
+                user.LastLoginAt = DateTime.UtcNow;
+                await _userRepository.UpdateAsync(user);
+
+                await _auditService.LogLoginAsync(username, true);
+                return AuthenticationResult.Success(user, AuthenticationType.LocalService);
+            }
+            catch (Exception ex)
+            {
+                await _auditService.LogLoginAsync(username, false, ex.Message);
+                _logger.LogError(ex, "Error authenticating local user {Username}", username);
+                return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
+            }
+        }
+
+        /// <summary>
         /// Генерация хэша пароля с солью
         /// </summary>
         private (string salt, string hash) GeneratePasswordHash(string password)
@@ -643,50 +727,6 @@ namespace WindowsLauncher.Services.Authentication
             }
 
             _logger.LogInformation("User {Username} authenticated using fallback mode", username);
-            return user;
-        }
-
-        /// <summary>
-        /// Аутентификация локального пользователя
-        /// </summary>
-        private async Task<User> AuthenticateLocalUser(string username, string password)
-        {
-            var user = await _userRepository.GetByUsernameAsync(username);
-            if (user == null || !user.IsServiceAccount)
-            {
-                throw new UnauthorizedAccessException("Локальная аутентификация доступна только для сервисных учетных записей");
-            }
-
-            if (!VerifyPassword(password, user.PasswordHash, user.Salt))
-            {
-                user.FailedLoginAttempts++;
-
-                if (user.FailedLoginAttempts >= 5)
-                {
-                    user.IsLocked = true;
-                    user.LockoutEnd = DateTime.UtcNow.AddMinutes(15);
-                }
-
-                await _userRepository.UpdateAsync(user);
-                throw new UnauthorizedAccessException("Неверные учетные данные");
-            }
-
-            // Проверяем блокировку
-            if (user.IsLocked && user.LockoutEnd.HasValue && DateTime.UtcNow < user.LockoutEnd.Value)
-            {
-                var remainingTime = user.LockoutEnd.Value - DateTime.UtcNow;
-                throw new UnauthorizedAccessException($"Учетная запись заблокирована. Разблокировка через {remainingTime.Minutes} минут");
-            }
-
-            // Сбрасываем блокировку если время истекло
-            if (user.IsLocked && user.LockoutEnd.HasValue && DateTime.UtcNow >= user.LockoutEnd.Value)
-            {
-                user.IsLocked = false;
-                user.FailedLoginAttempts = 0;
-                user.LockoutEnd = null;
-            }
-
-            user.FailedLoginAttempts = 0;
             return user;
         }
 
