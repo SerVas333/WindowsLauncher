@@ -12,19 +12,28 @@ namespace WindowsLauncher.UI
 {
     public partial class MainWindow : Window
     {
+        private bool _isViewModelInitialized = false;
+
         public MainWindow()
         {
-            InitializeComponent();            
+            InitializeComponent();
             InitializeViewModel();
         }
 
         private void InitializeViewModel()
         {
             try
-            { 
+            {
+                // Предотвращаем дублирование инициализации
+                if (_isViewModelInitialized)
+                    return;
+
                 // Получаем ViewModel через DI
                 var serviceProvider = ((App)Application.Current).ServiceProvider;
-                DataContext = serviceProvider.GetRequiredService<MainViewModel>();
+                var viewModel = serviceProvider.GetRequiredService<MainViewModel>();
+
+                DataContext = viewModel;
+                _isViewModelInitialized = true;
             }
             catch (Exception ex)
             {
@@ -35,7 +44,7 @@ namespace WindowsLauncher.UI
             }
         }
 
-               private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             if (e.AddedItems.Count > 0 && e.AddedItems[0] is ComboBoxItem item)
             {
@@ -46,7 +55,5 @@ namespace WindowsLauncher.UI
                 }
             }
         }
-
-       
     }
 }

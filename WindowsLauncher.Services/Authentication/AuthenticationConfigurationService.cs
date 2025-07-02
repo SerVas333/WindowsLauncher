@@ -3,6 +3,8 @@ using System.IO;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Options;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 using System.Linq;
@@ -11,18 +13,22 @@ using System.Collections.Generic;
 namespace WindowsLauncher.Services.Authentication
 {
     /// <summary>
-    /// Сервис для управления конфигурацией аутентификации
+    /// Исправленный сервис для управления конфигурацией аутентификации
     /// </summary>
     public class AuthenticationConfigurationService : IAuthenticationConfigurationService
     {
         private readonly ILogger<AuthenticationConfigurationService> _logger;
+        private readonly IConfiguration _configuration;
         private readonly string _configPath;
-        private AuthenticationConfiguration? _currentConfig; // ИСПРАВЛЕНО: правильный тип
+        private AuthenticationConfiguration? _currentConfig;
         private readonly object _configLock = new();
 
-        public AuthenticationConfigurationService(ILogger<AuthenticationConfigurationService> logger)
+        public AuthenticationConfigurationService(
+            ILogger<AuthenticationConfigurationService> logger,
+            IConfiguration configuration)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _configuration = configuration ?? throw new ArgumentNullException(nameof(configuration));
 
             // Путь к файлу конфигурации в папке данных приложения
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
@@ -36,7 +42,7 @@ namespace WindowsLauncher.Services.Authentication
         /// <summary>
         /// Получение текущей конфигурации AD
         /// </summary>
-        public AuthenticationConfiguration GetConfiguration() // ИСПРАВЛЕНО: правильный тип возврата
+        public AuthenticationConfiguration GetConfiguration()
         {
             lock (_configLock)
             {
@@ -47,7 +53,7 @@ namespace WindowsLauncher.Services.Authentication
         /// <summary>
         /// Сохранение конфигурации AD
         /// </summary>
-        public async Task SaveConfigurationAsync(AuthenticationConfiguration config) // ИСПРАВЛЕНО: правильный тип параметра
+        public async Task SaveConfigurationAsync(AuthenticationConfiguration config)
         {
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
@@ -64,6 +70,7 @@ namespace WindowsLauncher.Services.Authentication
                 lock (_configLock)
                 {
                     _currentConfig = config;
+                    _currentConfig.LastModified = DateTime.UtcNow;
                 }
 
                 var json = JsonSerializer.Serialize(config, new JsonSerializerOptions
@@ -88,10 +95,30 @@ namespace WindowsLauncher.Services.Authentication
         /// </summary>
         public bool IsConfigured()
         {
-            var config = GetConfiguration();
-            return !string.IsNullOrEmpty(config.Domain) &&
-                   !string.IsNullOrEmpty(config.LdapServer) &&
-                   config.ServiceAdmin.IsPasswordSet;
+            try
+            {
+                var config = GetConfiguration();
+
+                // Проверяем базовые настройки
+                var hasBasicConfig = !string.IsNullOrEmpty(config.Domain) &&
+                                   !string.IsNullOrEmpty(config.LdapServer) &&
+                                   config.Port > 0;
+
+                // Проверяем настройки сервисного администратора
+                var hasServiceAdmin = !string.IsNullOrEmpty(config.ServiceAdmin?.Username) &&
+                                    config.ServiceAdmin.IsPasswordSet;
+
+                _logger.LogDebug("Configuration check: Basic={Basic}, ServiceAdmin={ServiceAdmin}, IsConfigured={IsConfigured}",
+                    hasBasicConfig, hasServiceAdmin, config.IsConfigured);
+
+                // Система считается настроенной если есть базовая конфигурация ИЛИ сервисный администратор
+                return config.IsConfigured || hasBasicConfig || hasServiceAdmin;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if system is configured");
+                return false;
+            }
         }
 
         /// <summary>
@@ -116,7 +143,7 @@ namespace WindowsLauncher.Services.Authentication
         /// <summary>
         /// Валидировать конфигурацию
         /// </summary>
-        public async Task<ValidationResult> ValidateConfigurationAsync(AuthenticationConfiguration config) // ИСПРАВЛЕНО: правильный тип параметра
+        public async Task<ValidationResult> ValidateConfigurationAsync(AuthenticationConfiguration config)
         {
             return await Task.FromResult(ValidateConfiguration(config));
         }
@@ -144,34 +171,43 @@ namespace WindowsLauncher.Services.Authentication
         #region Private Methods
 
         /// <summary>
-        /// Загрузка конфигурации из файла
+        /// Загрузка конфигурации из файла или appsettings.json
         /// </summary>
         private void LoadConfiguration()
         {
             try
             {
-                if (!File.Exists(_configPath))
+                // Сначала пытаемся загрузить из пользовательского файла
+                if (File.Exists(_configPath))
                 {
-                    _logger.LogInformation("Configuration file not found, creating default configuration");
-                    _currentConfig = CreateDefaultConfiguration();
-                    return;
+                    _logger.LogInformation("Loading configuration from user file: {ConfigPath}", _configPath);
+                    var json = File.ReadAllText(_configPath);
+                    _currentConfig = JsonSerializer.Deserialize<AuthenticationConfiguration>(json, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                    if (_currentConfig != null)
+                    {
+                        _logger.LogInformation("User configuration loaded successfully");
+                        return;
+                    }
                 }
 
-                var json = File.ReadAllText(_configPath);
-                _currentConfig = JsonSerializer.Deserialize<AuthenticationConfiguration>(json, new JsonSerializerOptions
-                {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                    PropertyNameCaseInsensitive = true
-                });
+                // Если пользовательского файла нет, загружаем из appsettings.json
+                _logger.LogInformation("Loading configuration from appsettings.json");
+                _currentConfig = LoadFromAppSettings();
 
                 if (_currentConfig == null)
                 {
-                    _logger.LogWarning("Failed to deserialize configuration, using defaults");
+                    _logger.LogWarning("Failed to load configuration from appsettings.json, using defaults");
                     _currentConfig = CreateDefaultConfiguration();
-                    return;
                 }
-
-                _logger.LogInformation("Authentication configuration loaded successfully");
+                else
+                {
+                    _logger.LogInformation("Configuration loaded from appsettings.json successfully");
+                }
             }
             catch (Exception ex)
             {
@@ -181,14 +217,58 @@ namespace WindowsLauncher.Services.Authentication
         }
 
         /// <summary>
+        /// Загрузка конфигурации из appsettings.json
+        /// </summary>
+        private AuthenticationConfiguration? LoadFromAppSettings()
+        {
+            try
+            {
+                var adSection = _configuration.GetSection("ActiveDirectory");
+                if (!adSection.Exists())
+                {
+                    _logger.LogWarning("ActiveDirectory section not found in configuration");
+                    return null;
+                }
+
+                var config = new AuthenticationConfiguration();
+                adSection.Bind(config);
+
+                // Дополнительная обработка списков
+                var trustedDomains = adSection.GetSection("TrustedDomains").Get<List<string>>();
+                if (trustedDomains != null)
+                {
+                    config.TrustedDomains = trustedDomains;
+                }
+
+                // Обработка ServiceAdmin секции
+                var serviceAdminSection = adSection.GetSection("ServiceAdmin");
+                if (serviceAdminSection.Exists())
+                {
+                    config.ServiceAdmin = new ServiceAdminConfiguration();
+                    serviceAdminSection.Bind(config.ServiceAdmin);
+                }
+
+                _logger.LogDebug("Loaded configuration: Domain={Domain}, LdapServer={LdapServer}, Port={Port}",
+                    config.Domain, config.LdapServer, config.Port);
+
+                return config;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error loading configuration from appsettings.json");
+                return null;
+            }
+        }
+
+        /// <summary>
         /// Создание конфигурации по умолчанию
         /// </summary>
-        private AuthenticationConfiguration CreateDefaultConfiguration() // ИСПРАВЛЕНО: правильный тип возврата
+        private AuthenticationConfiguration CreateDefaultConfiguration()
         {
             // Пытаемся определить домен автоматически
             var defaultDomain = GetDefaultDomain();
 
-            return new AuthenticationConfiguration
+            var config = new AuthenticationConfiguration
             {
                 Domain = defaultDomain,
                 LdapServer = string.IsNullOrEmpty(defaultDomain) ? "dc.company.local" : $"dc.{defaultDomain}",
@@ -196,17 +276,25 @@ namespace WindowsLauncher.Services.Authentication
                 UseTLS = true,
                 TimeoutSeconds = 30,
                 RequireDomainMembership = false,
-                AdminGroups = "LauncherAdmins",
+                AdminGroups = "LauncherAdmins,Domain Admins",
                 PowerUserGroups = "LauncherPowerUsers",
                 EnableFallbackMode = true,
-                TrustedDomains = new List<string>(),
+                TrustedDomains = new List<string> { defaultDomain ?? "company.local" },
                 ServiceAdmin = new ServiceAdminConfiguration
                 {
                     Username = "serviceadmin",
                     IsEnabled = true,
-                    SessionTimeoutMinutes = 60
-                }
+                    SessionTimeoutMinutes = 60,
+                    MaxLoginAttempts = 5,
+                    LockoutDurationMinutes = 15,
+                    IsPasswordSet = false
+                },
+                IsConfigured = false,
+                LastModified = DateTime.UtcNow
             };
+
+            _logger.LogInformation("Created default configuration with domain: {Domain}", config.Domain);
+            return config;
         }
 
         /// <summary>
@@ -223,6 +311,7 @@ namespace WindowsLauncher.Services.Authentication
                 // Если домен не равен имени компьютера, то компьютер в домене
                 if (!string.Equals(userDomain, computerName, StringComparison.OrdinalIgnoreCase))
                 {
+                    _logger.LogDebug("Detected domain from environment: {Domain}", userDomain);
                     return userDomain.ToLower();
                 }
 
@@ -230,21 +319,23 @@ namespace WindowsLauncher.Services.Authentication
                 var dnsDomain = System.Net.NetworkInformation.IPGlobalProperties.GetIPGlobalProperties().DomainName;
                 if (!string.IsNullOrEmpty(dnsDomain))
                 {
+                    _logger.LogDebug("Detected domain from DNS: {Domain}", dnsDomain);
                     return dnsDomain.ToLower();
                 }
             }
             catch (Exception ex)
             {
-                _logger.LogDebug("Failed to determine default domain: {Error}", ex.Message);
+                _logger.LogDebug(ex, "Failed to determine default domain");
             }
 
+            _logger.LogDebug("Using fallback domain: company.local");
             return "company.local"; // Fallback значение
         }
 
         /// <summary>
         /// Валидация конфигурации
         /// </summary>
-        private ValidationResult ValidateConfiguration(AuthenticationConfiguration config) // ИСПРАВЛЕНО: правильный тип параметра
+        private ValidationResult ValidateConfiguration(AuthenticationConfiguration config)
         {
             var errors = new List<string>();
             var warnings = new List<string>();
@@ -255,23 +346,31 @@ namespace WindowsLauncher.Services.Authentication
                 return new ValidationResult { IsValid = false, Errors = errors.ToArray() };
             }
 
-            // Валидация основных настроек домена
-            if (string.IsNullOrWhiteSpace(config.Domain))
-                errors.Add("Domain is required");
-            else if (!IsValidDomainName(config.Domain))
-                errors.Add("Domain name format is invalid");
+            // Валидация основных настроек домена (опциональна для fallback режима)
+            if (!string.IsNullOrWhiteSpace(config.Domain) && !IsValidDomainName(config.Domain))
+                warnings.Add("Domain name format may be invalid");
 
-            // Валидация LDAP сервера
+            // Валидация LDAP сервера (опциональна)
             if (!string.IsNullOrWhiteSpace(config.LdapServer) && !IsValidServerName(config.LdapServer))
                 warnings.Add("LDAP server name format may be invalid");
 
             // Валидация порта
             if (config.Port <= 0 || config.Port > 65535)
-                errors.Add("Port must be between 1 and 65535");
+                warnings.Add("Port should be between 1 and 65535");
 
             // Валидация таймаута
             if (config.TimeoutSeconds <= 0 || config.TimeoutSeconds > 300)
                 warnings.Add("Timeout should be between 1 and 300 seconds");
+
+            // Валидация сервисного администратора (опциональна)
+            if (config.ServiceAdmin != null)
+            {
+                if (string.IsNullOrWhiteSpace(config.ServiceAdmin.Username))
+                    warnings.Add("Service admin username is empty");
+
+                if (config.ServiceAdmin.SessionTimeoutMinutes <= 0)
+                    warnings.Add("Service admin session timeout should be greater than 0");
+            }
 
             return new ValidationResult
             {
@@ -291,7 +390,7 @@ namespace WindowsLauncher.Services.Authentication
                 var config = GetConfiguration();
 
                 // Создаем копию конфигурации без чувствительных данных
-                var exportConfig = new AuthenticationConfiguration // ИСПРАВЛЕНО: правильный тип
+                var exportConfig = new AuthenticationConfiguration
                 {
                     Domain = config.Domain,
                     LdapServer = config.LdapServer,
@@ -307,12 +406,14 @@ namespace WindowsLauncher.Services.Authentication
                     TrustedDomains = config.TrustedDomains?.ToList() ?? new List<string>(),
                     ServiceAdmin = new ServiceAdminConfiguration
                     {
-                        Username = config.ServiceAdmin.Username,
-                        IsEnabled = config.ServiceAdmin.IsEnabled,
-                        SessionTimeoutMinutes = config.ServiceAdmin.SessionTimeoutMinutes,
-                        PasswordHash = string.IsNullOrEmpty(config.ServiceAdmin.PasswordHash) ? string.Empty : "***HIDDEN***",
-                        Salt = string.IsNullOrEmpty(config.ServiceAdmin.Salt) ? string.Empty : "***HIDDEN***"
-                    }
+                        Username = config.ServiceAdmin?.Username ?? string.Empty,
+                        IsEnabled = config.ServiceAdmin?.IsEnabled ?? false,
+                        SessionTimeoutMinutes = config.ServiceAdmin?.SessionTimeoutMinutes ?? 60,
+                        PasswordHash = string.IsNullOrEmpty(config.ServiceAdmin?.PasswordHash) ? string.Empty : "***HIDDEN***",
+                        Salt = string.IsNullOrEmpty(config.ServiceAdmin?.Salt) ? string.Empty : "***HIDDEN***"
+                    },
+                    IsConfigured = config.IsConfigured,
+                    LastModified = config.LastModified
                 };
 
                 return JsonSerializer.Serialize(exportConfig, new JsonSerializerOptions
@@ -338,7 +439,7 @@ namespace WindowsLauncher.Services.Authentication
 
             try
             {
-                var importedConfig = JsonSerializer.Deserialize<AuthenticationConfiguration>(configJson, new JsonSerializerOptions // ИСПРАВЛЕНО: правильный тип
+                var importedConfig = JsonSerializer.Deserialize<AuthenticationConfiguration>(configJson, new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                     PropertyNameCaseInsensitive = true

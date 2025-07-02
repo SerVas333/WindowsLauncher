@@ -172,9 +172,9 @@ namespace WindowsLauncher.UI.Views
         {
             try
             {
-                var domain = DomainTextBox.Text?.Trim();
-                var ldapServer = LdapServerTextBox.Text?.Trim();
-                var portText = PortTextBox.Text?.Trim();
+                var domain = DomainTextBox?.Text?.Trim() ?? "";
+                var ldapServer = LdapServerTextBox?.Text?.Trim() ?? "";
+                var portText = PortTextBox?.Text?.Trim() ?? "389";
 
                 _isDomainValid = !string.IsNullOrEmpty(domain) &&
                                  !string.IsNullOrEmpty(ldapServer) &&
@@ -185,7 +185,7 @@ namespace WindowsLauncher.UI.Views
             }
             catch (Exception ex)
             {
-                _logger.LogDebug("Error validating domain settings: {Error}", ex.Message);
+                _logger.LogDebug(ex, "Error validating domain settings");
                 _isDomainValid = false;
             }
         }

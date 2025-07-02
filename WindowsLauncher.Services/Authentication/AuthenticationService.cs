@@ -1,4 +1,4 @@
-﻿// WindowsLauncher.Services/Authentication/AuthenticationService.cs - ПОЛНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ
+﻿// WindowsLauncher.Services/Authentication/AuthenticationService.cs - ИСПРАВЛЕННАЯ ВЕРСИЯ
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -12,7 +12,7 @@ using WindowsLauncher.Core.Models;
 namespace WindowsLauncher.Services.Authentication
 {
     /// <summary>
-    /// Унифицированный сервис аутентификации с поддержкой Windows SSO, AD и сервисного администратора
+    /// Исправленный сервис аутентификации с улучшенной обработкой fallback режима
     /// </summary>
     public class AuthenticationService : IAuthenticationService
     {
@@ -37,18 +37,64 @@ namespace WindowsLauncher.Services.Authentication
         }
 
         /// <summary>
-        /// Аутентифицировать пользователя Windows (без параметров - для интерфейса)
+        /// Аутентифицировать текущего пользователя Windows (для интерфейса)
         /// </summary>
         public async Task<AuthenticationResult> AuthenticateAsync()
         {
             try
             {
-                var user = await AuthenticateWindowsUserInternalAsync();
-                return AuthenticationResult.Success(user, AuthenticationType.WindowsSSO);
+                _logger.LogInformation("=== STARTING WINDOWS USER AUTHENTICATION ===");
+
+                // Получаем текущего пользователя Windows
+                var windowsIdentity = WindowsIdentity.GetCurrent();
+                var fullUsername = windowsIdentity.Name;
+
+                if (string.IsNullOrEmpty(fullUsername))
+                {
+                    _logger.LogError("Failed to get current Windows user identity");
+                    return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials,
+                        "Не удалось получить данные пользователя Windows");
+                }
+
+                _logger.LogInformation("Windows user detected: {FullUsername}", fullUsername);
+
+                // Извлекаем чистое имя пользователя
+                var username = ExtractUsernameFromDomain(fullUsername);
+                _logger.LogInformation("Extracted username: {Username}", username);
+
+                // Проверяем доступность домена
+                var isDomainAvailable = await IsDomainAvailableAsync();
+                _logger.LogInformation("Domain availability check: {IsAvailable}", isDomainAvailable);
+
+                if (isDomainAvailable)
+                {
+                    // Пытаемся аутентифицироваться через AD
+                    _logger.LogInformation("Attempting AD authentication for user: {Username}", username);
+                    var adResult = await AuthenticateViaDomainAsync(username);
+                    if (adResult.IsSuccess)
+                    {
+                        _logger.LogInformation("AD authentication successful for user: {Username}", username);
+                        return adResult;
+                    }
+
+                    _logger.LogWarning("AD authentication failed for user {Username}: {Error}",
+                        username, adResult.ErrorMessage);
+                }
+
+                // Fallback режим - создаем временного пользователя
+                _logger.LogInformation("Using fallback authentication for user: {Username}", username);
+                var fallbackUser = await CreateFallbackUserAsync(username, fullUsername);
+
+                await _auditService.LogLoginAsync(username, true, "Fallback authentication");
+                _logger.LogInformation("Fallback authentication successful for user: {Username}", username);
+
+                return AuthenticationResult.Success(fallbackUser, AuthenticationType.WindowsSSO);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error authenticating current Windows user");
+                var username = WindowsIdentity.GetCurrent()?.Name ?? "Unknown";
+                _logger.LogError(ex, "Error during Windows user authentication");
+                await _auditService.LogLoginAsync(username, false, ex.Message);
                 return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
             }
         }
@@ -62,6 +108,9 @@ namespace WindowsLauncher.Services.Authentication
             {
                 if (credentials == null)
                     throw new ArgumentNullException(nameof(credentials));
+
+                _logger.LogInformation("Authenticating with credentials. IsServiceAccount: {IsService}, Username: {Username}",
+                    credentials.IsServiceAccount, credentials.Username);
 
                 if (credentials.IsServiceAccount)
                 {
@@ -80,13 +129,13 @@ namespace WindowsLauncher.Services.Authentication
         }
 
         /// <summary>
-        /// Аутентифицировать пользователя по логину/паролю - ИСПРАВЛЕНО: возвращает AuthenticationResult
+        /// Аутентифицировать пользователя по логину/паролю
         /// </summary>
         public async Task<AuthenticationResult> AuthenticateAsync(string username, string password)
         {
             try
             {
-                _logger.LogDebug("Authenticating user: {Username}", username);
+                _logger.LogInformation("Authenticating user with credentials: {Username}", username);
 
                 // Проверяем доступность домена
                 var isDomainAvailable = await IsDomainAvailableAsync();
@@ -104,7 +153,7 @@ namespace WindowsLauncher.Services.Authentication
                     return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials, authResult.ErrorMessage);
                 }
 
-                // Получаем или создаем пользователя в локальной базе
+                // Получаем информацию пользователя из AD
                 var userInfo = await _adService.GetUserInfoAsync(username);
                 if (userInfo == null)
                 {
@@ -113,12 +162,11 @@ namespace WindowsLauncher.Services.Authentication
                 }
 
                 var user = await GetOrCreateUserFromAD(userInfo);
-
                 user.LastLoginAt = DateTime.UtcNow;
                 await _userRepository.UpdateAsync(user);
 
                 await _auditService.LogLoginAsync(user.Username, true);
-                _logger.LogInformation("User {Username} authenticated successfully", username);
+                _logger.LogInformation("User {Username} authenticated successfully via AD", username);
 
                 return AuthenticationResult.Success(user, AuthenticationType.DomainLDAP, authResult.Domain);
             }
@@ -131,7 +179,7 @@ namespace WindowsLauncher.Services.Authentication
         }
 
         /// <summary>
-        /// Аутентифицировать пользователя Windows - ДОБАВЛЕН: для обратной совместимости
+        /// Аутентифицировать пользователя Windows (обратная совместимость)
         /// </summary>
         public async Task<User> AuthenticateWindowsUserAsync()
         {
@@ -143,7 +191,7 @@ namespace WindowsLauncher.Services.Authentication
         }
 
         /// <summary>
-        /// Аутентифицировать сервисного администратора - ДОБАВЛЕН: для обратной совместимости
+        /// Аутентифицировать сервисного администратора (обратная совместимость)
         /// </summary>
         public async Task<User> AuthenticateServiceAdminAsync(string username, string password)
         {
@@ -153,6 +201,8 @@ namespace WindowsLauncher.Services.Authentication
 
             throw new UnauthorizedAccessException(result.ErrorMessage);
         }
+
+        #region Service Admin Methods
 
         /// <summary>
         /// Создать сервисного администратора
@@ -190,14 +240,12 @@ namespace WindowsLauncher.Services.Authentication
                     LockoutEnd = null
                 };
 
-                // Сохраняем в базе данных
                 await _userRepository.AddAsync(serviceAdmin);
 
                 // Обновляем конфигурацию
                 var config = _configService.GetConfiguration();
                 config.ServiceAdmin.Username = username;
-                config.ServiceAdmin.PasswordHash = passwordHash;
-                config.ServiceAdmin.Salt = salt;
+                config.ServiceAdmin.SetPassword(passwordHash, salt);
                 config.ServiceAdmin.RequirePasswordChange = true;
                 config.ServiceAdmin.CreatedAt = DateTime.UtcNow;
 
@@ -226,17 +274,14 @@ namespace WindowsLauncher.Services.Authentication
                     throw new UnauthorizedAccessException("Неверные учетные данные");
                 }
 
-                // Проверяем старый пароль
                 var isOldPasswordValid = VerifyPassword(oldPassword, config.ServiceAdmin.PasswordHash, config.ServiceAdmin.Salt);
                 if (!isOldPasswordValid)
                 {
                     throw new UnauthorizedAccessException("Неверный текущий пароль");
                 }
 
-                // Генерируем новый хэш пароля
                 var (salt, passwordHash) = GeneratePasswordHash(newPassword);
 
-                // Обновляем конфигурацию
                 config.ServiceAdmin.PasswordHash = passwordHash;
                 config.ServiceAdmin.Salt = salt;
                 config.ServiceAdmin.LastPasswordChange = DateTime.UtcNow;
@@ -253,9 +298,10 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
-        /// <summary>
-        /// Проверить права пользователя
-        /// </summary>
+        #endregion
+
+        #region Utility Methods
+
         public async Task<bool> HasPermissionAsync(int userId, string permission)
         {
             try
@@ -266,10 +312,9 @@ namespace WindowsLauncher.Services.Authentication
                     return false;
                 }
 
-                // Логика проверки прав на основе роли пользователя
                 return user.Role switch
                 {
-                    UserRole.Administrator => true, // Администратор имеет все права
+                    UserRole.Administrator => true,
                     UserRole.PowerUser => IsPermissionAllowedForPowerUser(permission),
                     UserRole.Standard => IsPermissionAllowedForStandardUser(permission),
                     _ => false
@@ -282,9 +327,6 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
-        /// <summary>
-        /// Получить роль пользователя
-        /// </summary>
         public async Task<UserRole> GetUserRoleAsync(string username)
         {
             try
@@ -295,7 +337,6 @@ namespace WindowsLauncher.Services.Authentication
                     return user.Role;
                 }
 
-                // Если пользователя нет в локальной базе, проверяем AD
                 var userInfo = await _adService.GetUserInfoAsync(username);
                 if (userInfo != null)
                 {
@@ -312,9 +353,6 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
-        /// <summary>
-        /// Выход из системы (по ID)
-        /// </summary>
         public async Task LogoutAsync(int userId)
         {
             try
@@ -333,15 +371,11 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
-        /// <summary>
-        /// Выход из системы (простой)
-        /// </summary>
         public void Logout()
         {
             try
             {
                 _logger.LogInformation("User logged out (simple logout)");
-                // Простая реализация - в WPF приложении обычно просто закрываем сессию
             }
             catch (Exception ex)
             {
@@ -349,9 +383,6 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
-        /// <summary>
-        /// Обновить сессию пользователя
-        /// </summary>
         public async Task RefreshSessionAsync(int userId)
         {
             try
@@ -369,9 +400,6 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
-        /// <summary>
-        /// Проверить валидность сессии
-        /// </summary>
         public async Task<bool> IsSessionValidAsync(int userId)
         {
             try
@@ -399,21 +427,16 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
-        /// <summary>
-        /// Проверить доступность домена
-        /// </summary>
         public async Task<bool> IsDomainAvailableAsync(string domain = null)
         {
             try
             {
                 if (string.IsNullOrEmpty(domain))
                 {
-                    // Используем домен из конфигурации
                     return await _adService.IsDomainAvailableAsync();
                 }
                 else
                 {
-                    // Проверяем конкретный домен
                     var config = _configService.GetConfiguration();
                     return await _adService.TestConnectionAsync(domain, config.Port);
                 }
@@ -425,9 +448,6 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
-        /// <summary>
-        /// Проверить, настроен ли сервисный администратор
-        /// </summary>
         public bool IsServiceAdminConfigured()
         {
             try
@@ -443,59 +463,83 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
+        #endregion
+
         #region Private Methods
 
         /// <summary>
-        /// Внутренний метод аутентификации Windows пользователя
+        /// Аутентификация через домен
         /// </summary>
-        private async Task<User> AuthenticateWindowsUserInternalAsync()
+        private async Task<AuthenticationResult> AuthenticateViaDomainAsync(string username)
         {
             try
             {
-                var windowsIdentity = WindowsIdentity.GetCurrent();
-                var username = windowsIdentity.Name;
-
-                if (string.IsNullOrEmpty(username))
-                {
-                    throw new UnauthorizedAccessException("Не удалось получить данные пользователя Windows");
-                }
-
-                _logger.LogDebug("Authenticating Windows user: {Username}", username);
-
-                // Проверяем доступность домена
-                var isDomainAvailable = await _adService.IsDomainAvailableAsync();
-                if (!isDomainAvailable)
-                {
-                    _logger.LogWarning("Domain is not available, using fallback authentication");
-                    return await AuthenticateWithFallback(username);
-                }
-
-                // Извлекаем имя пользователя из доменного формата
-                var cleanUsername = ExtractUsernameFromDomain(username);
-
                 // Получаем информацию пользователя из AD
-                var adUserInfo = await _adService.GetUserInfoAsync(cleanUsername);
-                if (adUserInfo == null || !adUserInfo.IsEnabled)
+                var userInfo = await _adService.GetUserInfoAsync(username);
+                if (userInfo == null || !userInfo.IsEnabled)
                 {
-                    throw new UnauthorizedAccessException("Пользователь не найден или отключен в Active Directory");
+                    _logger.LogWarning("User {Username} not found or disabled in AD", username);
+                    return AuthenticationResult.Failure(AuthenticationStatus.UserNotFound,
+                        "Пользователь не найден или отключен в Active Directory");
                 }
 
                 // Получаем или создаем пользователя в локальной базе
-                var user = await GetOrCreateUserFromAD(adUserInfo);
-
+                var user = await GetOrCreateUserFromAD(userInfo);
                 user.LastLoginAt = DateTime.UtcNow;
                 await _userRepository.UpdateAsync(user);
 
                 await _auditService.LogLoginAsync(user.Username, true);
-                _logger.LogInformation("Windows user {Username} authenticated successfully", username);
 
-                return user;
+                return AuthenticationResult.Success(user, AuthenticationType.DomainLDAP);
             }
             catch (Exception ex)
             {
-                var username = WindowsIdentity.GetCurrent()?.Name ?? "Unknown";
-                await _auditService.LogLoginAsync(username, false, ex.Message);
-                _logger.LogError(ex, "Error authenticating Windows user");
+                _logger.LogError(ex, "Error during domain authentication for user {Username}", username);
+                return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Создание fallback пользователя
+        /// </summary>
+        private async Task<User> CreateFallbackUserAsync(string username, string fullUsername)
+        {
+            try
+            {
+                // Ищем пользователя в локальной базе
+                var existingUser = await _userRepository.GetByUsernameAsync(username);
+                if (existingUser != null && existingUser.IsActive)
+                {
+                    _logger.LogInformation("Found existing user in local database: {Username}", username);
+                    existingUser.LastLoginAt = DateTime.UtcNow;
+                    await _userRepository.UpdateAsync(existingUser);
+                    return existingUser;
+                }
+
+                // Создаем нового fallback пользователя
+                _logger.LogInformation("Creating fallback user: {Username}", username);
+
+                var fallbackUser = new User
+                {
+                    Username = username,
+                    DisplayName = GetDisplayNameFromIdentity(fullUsername),
+                    Email = $"{username}@local",
+                    Role = DetermineFallbackUserRole(username),
+                    IsActive = true,
+                    IsServiceAccount = false,
+                    CreatedAt = DateTime.UtcNow,
+                    LastLoginAt = DateTime.UtcNow,
+                    Groups = GetFallbackUserGroups(username)
+                };
+
+                await _userRepository.AddAsync(fallbackUser);
+
+                _logger.LogInformation("Created fallback user {Username} with role {Role}", username, fallbackUser.Role);
+                return fallbackUser;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating fallback user for {Username}", username);
                 throw;
             }
         }
@@ -520,13 +564,9 @@ namespace WindowsLauncher.Services.Authentication
                 }
 
                 // Сбрасываем блокировку если время истекло
-                if (config.ServiceAdmin.IsLocked &&
-                    config.ServiceAdmin.UnlockTime.HasValue &&
-                    DateTime.UtcNow >= config.ServiceAdmin.UnlockTime.Value)
+                if (config.ServiceAdmin.IsLockExpired)
                 {
-                    config.ServiceAdmin.IsLocked = false;
-                    config.ServiceAdmin.FailedLoginAttempts = 0;
-                    config.ServiceAdmin.UnlockTime = null;
+                    config.ServiceAdmin.ResetLockout();
                     await _configService.SaveConfigurationAsync(config);
                 }
 
@@ -546,8 +586,7 @@ namespace WindowsLauncher.Services.Authentication
                 }
 
                 // Успешная аутентификация
-                config.ServiceAdmin.LastSuccessfulLogin = DateTime.UtcNow;
-                config.ServiceAdmin.FailedLoginAttempts = 0;
+                config.ServiceAdmin.RecordSuccessfulLogin();
                 await _configService.SaveConfigurationAsync(config);
 
                 // Получаем или создаем пользователя в базе данных
@@ -643,11 +682,95 @@ namespace WindowsLauncher.Services.Authentication
         }
 
         /// <summary>
+        /// Определение роли fallback пользователя
+        /// </summary>
+        private UserRole DetermineFallbackUserRole(string username)
+        {
+            // Простая логика определения роли по имени пользователя
+            var lowerUsername = username.ToLower();
+
+            if (lowerUsername.Contains("admin") || lowerUsername.Contains("administrator"))
+            {
+                return UserRole.Administrator;
+            }
+
+            if (lowerUsername.Contains("power") || lowerUsername.Contains("advanced"))
+            {
+                return UserRole.PowerUser;
+            }
+
+            // Проверяем, является ли пользователь членом локальной группы администраторов
+            try
+            {
+                var currentPrincipal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+                if (currentPrincipal.IsInRole(WindowsBuiltInRole.Administrator))
+                {
+                    return UserRole.Administrator;
+                }
+
+                if (currentPrincipal.IsInRole(WindowsBuiltInRole.PowerUser))
+                {
+                    return UserRole.PowerUser;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Error checking Windows roles for user {Username}", username);
+            }
+
+            return UserRole.Standard;
+        }
+
+        /// <summary>
+        /// Получение групп для fallback пользователя
+        /// </summary>
+        private System.Collections.Generic.List<string> GetFallbackUserGroups(string username)
+        {
+            var groups = new System.Collections.Generic.List<string> { "LauncherUsers" };
+
+            // Добавляем группы на основе роли
+            var role = DetermineFallbackUserRole(username);
+            switch (role)
+            {
+                case UserRole.Administrator:
+                    groups.Add("LauncherAdmins");
+                    groups.Add("LauncherPowerUsers");
+                    break;
+                case UserRole.PowerUser:
+                    groups.Add("LauncherPowerUsers");
+                    break;
+            }
+
+            return groups;
+        }
+
+        /// <summary>
+        /// Получение отображаемого имени из Windows Identity
+        /// </summary>
+        private string GetDisplayNameFromIdentity(string fullUsername)
+        {
+            try
+            {
+                // Пытаемся получить полное имя пользователя из Windows
+                var userName = ExtractUsernameFromDomain(fullUsername);
+
+                // Здесь можно добавить дополнительную логику для получения DisplayName
+                // например, через DirectoryServices или WMI
+
+                return userName; // Пока возвращаем просто имя пользователя
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Error getting display name for {FullUsername}", fullUsername);
+                return ExtractUsernameFromDomain(fullUsername);
+            }
+        }
+
+        /// <summary>
         /// Генерация хэша пароля с солью
         /// </summary>
         private (string salt, string hash) GeneratePasswordHash(string password)
         {
-            // Генерируем случайную соль
             var saltBytes = new byte[32];
             using (var rng = RandomNumberGenerator.Create())
             {
@@ -655,7 +778,6 @@ namespace WindowsLauncher.Services.Authentication
             }
             var salt = Convert.ToBase64String(saltBytes);
 
-            // Создаем хэш пароля с использованием PBKDF2
             using var pbkdf2 = new Rfc2898DeriveBytes(password, saltBytes, 100000, HashAlgorithmName.SHA256);
             var hashBytes = pbkdf2.GetBytes(32);
             var hash = Convert.ToBase64String(hashBytes);
@@ -689,45 +811,14 @@ namespace WindowsLauncher.Services.Authentication
         /// </summary>
         private async Task RecordFailedServiceAdminLogin(AuthenticationConfiguration config)
         {
-            config.ServiceAdmin.FailedLoginAttempts++;
-            config.ServiceAdmin.LastFailedLogin = DateTime.UtcNow;
+            config.ServiceAdmin.RecordFailedLogin();
 
-            if (config.ServiceAdmin.FailedLoginAttempts >= config.ServiceAdmin.MaxLoginAttempts)
+            if (config.ServiceAdmin.IsLocked)
             {
-                config.ServiceAdmin.IsLocked = true;
-                config.ServiceAdmin.UnlockTime = DateTime.UtcNow.AddMinutes(config.ServiceAdmin.LockoutDurationMinutes);
-
                 _logger.LogWarning("Service admin account locked due to too many failed attempts");
             }
 
             await _configService.SaveConfigurationAsync(config);
-        }
-
-        /// <summary>
-        /// Аутентификация с fallback режимом
-        /// </summary>
-        private async Task<User> AuthenticateWithFallback(string username)
-        {
-            var config = _configService.GetConfiguration();
-            if (!config.EnableFallbackMode)
-            {
-                throw new UnauthorizedAccessException("Домен недоступен, а fallback режим отключен");
-            }
-
-            // Ищем пользователя в локальной базе (кэш)
-            var user = await _userRepository.GetByUsernameAsync(ExtractUsernameFromDomain(username));
-            if (user == null)
-            {
-                throw new UnauthorizedAccessException("Пользователь не найден в локальном кэше");
-            }
-
-            if (!user.IsActive)
-            {
-                throw new UnauthorizedAccessException("Учетная запись пользователя отключена");
-            }
-
-            _logger.LogInformation("User {Username} authenticated using fallback mode", username);
-            return user;
         }
 
         /// <summary>
@@ -748,7 +839,8 @@ namespace WindowsLauncher.Services.Authentication
                     Role = DetermineUserRoleFromGroups(userInfo.Groups, config),
                     IsActive = userInfo.IsEnabled,
                     IsServiceAccount = false,
-                    CreatedAt = DateTime.UtcNow
+                    CreatedAt = DateTime.UtcNow,
+                    Groups = userInfo.Groups
                 };
 
                 await _userRepository.AddAsync(user);
@@ -759,6 +851,7 @@ namespace WindowsLauncher.Services.Authentication
                 user.DisplayName = userInfo.DisplayName;
                 user.Email = userInfo.Email;
                 user.IsActive = userInfo.IsEnabled;
+                user.Groups = userInfo.Groups;
 
                 var config = _configService.GetConfiguration();
                 user.Role = DetermineUserRoleFromGroups(userInfo.Groups, config);
@@ -774,8 +867,13 @@ namespace WindowsLauncher.Services.Authentication
         /// </summary>
         private UserRole DetermineUserRoleFromGroups(System.Collections.Generic.List<string> groups, AuthenticationConfiguration config)
         {
-            var adminGroups = config.AdminGroups.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
-            var powerUserGroups = config.PowerUserGroups.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
+            if (groups == null || groups.Count == 0)
+                return UserRole.Standard;
+
+            var adminGroups = config.AdminGroups?.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                ?? new System.Collections.Generic.List<string> { "LauncherAdmins", "Domain Admins" };
+            var powerUserGroups = config.PowerUserGroups?.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList()
+                ?? new System.Collections.Generic.List<string> { "LauncherPowerUsers" };
 
             if (groups.Any(g => adminGroups.Any(ag => ag.Trim().Equals(g, StringComparison.OrdinalIgnoreCase))))
             {
@@ -795,6 +893,9 @@ namespace WindowsLauncher.Services.Authentication
         /// </summary>
         private string ExtractUsernameFromDomain(string domainUsername)
         {
+            if (string.IsNullOrEmpty(domainUsername))
+                return string.Empty;
+
             if (domainUsername.Contains('\\'))
             {
                 return domainUsername.Split('\\')[1];

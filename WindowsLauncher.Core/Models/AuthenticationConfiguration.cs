@@ -1,5 +1,5 @@
 ﻿// WindowsLauncher.Core/Models/AuthenticationConfiguration.cs
-// ТОЛЬКО МОДЕЛИ - БЕЗ СЕРВИСОВ!
+// ОБНОВЛЕННАЯ ВЕРСИЯ С ИСПРАВЛЕННЫМ ServiceAdminConfiguration
 
 using System;
 using System.ComponentModel.DataAnnotations;
@@ -182,7 +182,7 @@ namespace WindowsLauncher.Core.Models
     }
 
     /// <summary>
-    /// Конфигурация сервисного администратора
+    /// Конфигурация сервисного администратора (ИСПРАВЛЕННАЯ ВЕРСИЯ)
     /// </summary>
     public class ServiceAdminConfiguration
     {
@@ -196,13 +196,11 @@ namespace WindowsLauncher.Core.Models
         /// <summary>
         /// Хэш пароля (BCrypt)
         /// </summary>
-        [Required]
         public string PasswordHash { get; set; } = string.Empty;
 
         /// <summary>
         /// Соль для хэширования
         /// </summary>
-        [Required]
         public string Salt { get; set; } = string.Empty;
 
         /// <summary>
@@ -269,8 +267,135 @@ namespace WindowsLauncher.Core.Models
         public bool IsEnabled { get; set; } = true;
 
         /// <summary>
-        /// Проверка, установлен ли пароль
+        /// Проверка, установлен ли пароль (с сеттером для JSON совместимости)
         /// </summary>
-        public bool IsPasswordSet => !string.IsNullOrEmpty(PasswordHash) && !string.IsNullOrEmpty(Salt);
+        public bool IsPasswordSet
+        {
+            get => !string.IsNullOrEmpty(PasswordHash) && !string.IsNullOrEmpty(Salt);
+            set
+            {
+                // Сеттер для совместимости с JSON десериализацией
+                // Фактическое значение определяется наличием PasswordHash и Salt
+                if (!value)
+                {
+                    PasswordHash = string.Empty;
+                    Salt = string.Empty;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Проверить, не истек ли срок действия блокировки
+        /// </summary>
+        public bool IsLockExpired => IsLocked && UnlockTime.HasValue && DateTime.UtcNow >= UnlockTime.Value;
+
+        /// <summary>
+        /// Проверить, требуется ли смена пароля
+        /// </summary>
+        public bool ShouldChangePassword => RequirePasswordChange ||
+            (LastPasswordChange.HasValue && DateTime.UtcNow - LastPasswordChange.Value > TimeSpan.FromDays(90));
+
+        /// <summary>
+        /// Сбросить блокировку аккаунта
+        /// </summary>
+        public void ResetLockout()
+        {
+            IsLocked = false;
+            FailedLoginAttempts = 0;
+            UnlockTime = null;
+        }
+
+        /// <summary>
+        /// Записать неудачную попытку входа
+        /// </summary>
+        public void RecordFailedLogin()
+        {
+            FailedLoginAttempts++;
+            LastFailedLogin = DateTime.UtcNow;
+
+            if (FailedLoginAttempts >= MaxLoginAttempts)
+            {
+                IsLocked = true;
+                UnlockTime = DateTime.UtcNow.AddMinutes(LockoutDurationMinutes);
+            }
+        }
+
+        /// <summary>
+        /// Записать успешный вход
+        /// </summary>
+        public void RecordSuccessfulLogin()
+        {
+            LastSuccessfulLogin = DateTime.UtcNow;
+            FailedLoginAttempts = 0;
+
+            if (IsLockExpired)
+            {
+                ResetLockout();
+            }
+        }
+
+        /// <summary>
+        /// Установить новый пароль
+        /// </summary>
+        public void SetPassword(string passwordHash, string salt)
+        {
+            PasswordHash = passwordHash ?? throw new ArgumentNullException(nameof(passwordHash));
+            Salt = salt ?? throw new ArgumentNullException(nameof(salt));
+            LastPasswordChange = DateTime.UtcNow;
+            RequirePasswordChange = false;
+        }
+
+        /// <summary>
+        /// Очистить пароль
+        /// </summary>
+        public void ClearPassword()
+        {
+            PasswordHash = string.Empty;
+            Salt = string.Empty;
+            LastPasswordChange = null;
+            RequirePasswordChange = true;
+        }
+
+        /// <summary>
+        /// Валидация конфигурации
+        /// </summary>
+        public bool IsValid()
+        {
+            return !string.IsNullOrWhiteSpace(Username) &&
+                   SessionTimeoutMinutes > 0 &&
+                   MaxLoginAttempts > 0 &&
+                   LockoutDurationMinutes > 0;
+        }
+
+        /// <summary>
+        /// Получить статус аккаунта
+        /// </summary>
+        public string GetAccountStatus()
+        {
+            if (!IsEnabled)
+                return "Отключен";
+
+            if (IsLocked)
+            {
+                if (IsLockExpired)
+                    return "Блокировка истекла";
+
+                var remaining = UnlockTime.HasValue ? UnlockTime.Value - DateTime.UtcNow : TimeSpan.Zero;
+                return $"Заблокирован ({remaining.Minutes} мин)";
+            }
+
+            if (!IsPasswordSet)
+                return "Пароль не установлен";
+
+            if (ShouldChangePassword)
+                return "Требуется смена пароля";
+
+            return "Активен";
+        }
+
+        public override string ToString()
+        {
+            return $"ServiceAdmin: {Username} ({GetAccountStatus()})";
+        }
     }
 }

@@ -1,4 +1,4 @@
-﻿// App.xaml.cs - Исправленная конфигурация DI
+﻿// ===== WindowsLauncher.UI/App.xaml.cs - ИСПРАВЛЕННАЯ ВЕРСИЯ БЕЗ ОШИБОК =====
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -18,14 +18,16 @@ using WindowsLauncher.Services.Authorization;
 using WindowsLauncher.Services.Authentication;
 using WindowsLauncher.UI.ViewModels;
 using WindowsLauncher.UI.Infrastructure.Services;
+using WindowsLauncher.UI.Infrastructure.Localization;
+using WindowsLauncher.UI.Views;
 
-// ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы для Application
+// ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы
 using WpfApplication = System.Windows.Application;
 using CoreApplication = WindowsLauncher.Core.Models.Application;
 
 namespace WindowsLauncher.UI
 {
-    public partial class App : WpfApplication // ✅ Явно указываем WpfApplication
+    public partial class App : WpfApplication
     {
         private IHost _host;
         public IServiceProvider ServiceProvider { get; private set; }
@@ -34,6 +36,9 @@ namespace WindowsLauncher.UI
         {
             try
             {
+                // ✅ ИНИЦИАЛИЗАЦИЯ ЛОКАЛИЗАЦИИ В ПЕРВУЮ ОЧЕРЕДЬ
+                InitializeLocalization();
+
                 // Настройка Host с конфигурацией и DI
                 _host = CreateHostBuilder(e.Args).Build();
                 ServiceProvider = _host.Services;
@@ -44,7 +49,7 @@ namespace WindowsLauncher.UI
                 // Настройка глобальной обработки исключений
                 SetupExceptionHandling();
 
-                // Запуск приложения
+                // ✅ ЗАПУСК ЧЕРЕЗ LoginWindow ВМЕСТО ПРЯМОГО ПОКАЗА MainWindow
                 await StartApplicationAsync();
 
                 await _host.StartAsync();
@@ -60,11 +65,23 @@ namespace WindowsLauncher.UI
 
         protected override async void OnExit(ExitEventArgs e)
         {
-            if (_host != null)
+            try
             {
-                await _host.StopAsync();
-                _host.Dispose();
+                // Сохраняем настройки локализации
+                LocalizationHelper.Instance.SaveLanguageSettings();
+
+                if (_host != null)
+                {
+                    await _host.StopAsync();
+                    _host.Dispose();
+                }
             }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider?.GetService<ILogger<App>>();
+                logger?.LogError(ex, "Error during application shutdown");
+            }
+
             base.OnExit(e);
         }
 
@@ -122,6 +139,9 @@ namespace WindowsLauncher.UI
             services.AddSingleton<IDialogService, WpfDialogService>();
             services.AddSingleton<INavigationService, WpfNavigationService>();
 
+            // ✅ ДОБАВЛЯЕМ ЛОКАЛИЗАЦИЮ КАК СИНГЛ
+            services.AddSingleton<LocalizationHelper>(_ => LocalizationHelper.Instance);
+
             // ViewModels
             services.AddTransient<MainViewModel>();
             services.AddTransient<AdminViewModel>();
@@ -136,6 +156,73 @@ namespace WindowsLauncher.UI
             var dbPath = Path.Combine(appDataPath, "WindowsLauncher", "launcher.db");
             Directory.CreateDirectory(Path.GetDirectoryName(dbPath));
             return $"Data Source={dbPath}";
+        }
+
+        /// <summary>
+        /// ✅ ИНИЦИАЛИЗАЦИЯ ЛОКАЛИЗАЦИИ
+        /// </summary>
+        private void InitializeLocalization()
+        {
+            try
+            {
+                // Загружаем настройки языка
+                LocalizationHelper.Instance.LoadLanguageSettings();
+
+                // Подписываемся на изменения языка для обновления UI
+                LocalizationHelper.Instance.LanguageChanged += OnLanguageChanged;
+            }
+            catch (Exception ex)
+            {
+                // При ошибке используем системный язык
+                LocalizationHelper.Instance.SetSystemLanguage();
+
+                // Логируем ошибку (если логгер доступен)
+                System.Diagnostics.Debug.WriteLine($"Localization initialization error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Обработчик изменения языка
+        /// </summary>
+        private void OnLanguageChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                // Обновляем заголовки окон и другие элементы UI
+                UpdateAllWindowTitles();
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider?.GetService<ILogger<App>>();
+                logger?.LogWarning(ex, "Error updating UI after language change");
+            }
+        }
+
+        /// <summary>
+        /// Обновление заголовков всех открытых окон
+        /// </summary>
+        private void UpdateAllWindowTitles()
+        {
+            foreach (Window window in Windows)
+            {
+                try
+                {
+                    // Обновляем заголовки через Binding или прямое обновление
+                    if (window is LoginWindow)
+                    {
+                        window.Title = LocalizationHelper.Instance.GetString("LoginWindow_Title");
+                    }
+                    else if (window is MainWindow)
+                    {
+                        window.Title = LocalizationHelper.Instance.GetString("MainWindow_Title");
+                    }
+                    // Добавьте другие окна по необходимости
+                }
+                catch
+                {
+                    // Игнорируем ошибки обновления отдельных окон
+                }
+            }
         }
 
         private async Task InitializeDatabaseAsync()
@@ -157,15 +244,18 @@ namespace WindowsLauncher.UI
             }
         }
 
+        /// <summary>
+        /// ✅ ЗАПУСК ЧЕРЕЗ LoginWindow
+        /// </summary>
         private async Task StartApplicationAsync()
         {
             try
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-                logger.LogInformation("Starting application");
+                logger.LogInformation("Starting application with login screen");
 
-                // Показываем главное окно
-                ShowMainWindow();
+                // Показываем окно входа вместо прямого показа главного окна
+                ShowLoginWindow();
             }
             catch (Exception ex)
             {
@@ -175,13 +265,58 @@ namespace WindowsLauncher.UI
             }
         }
 
-        private void ShowMainWindow()
+        /// <summary>
+        /// ✅ ПОКАЗ ОКНА ВХОДА
+        /// </summary>
+        private void ShowLoginWindow()
+        {
+            try
+            {
+                var loginWindow = new LoginWindow();
+
+                // Показываем модально
+                var result = loginWindow.ShowDialog();
+
+                if (result == true && loginWindow.AuthenticatedUser != null)
+                {
+                    // Успешная аутентификация - показываем главное окно
+                    ShowMainWindow(loginWindow.AuthenticatedUser);
+                }
+                else
+                {
+                    // Пользователь отменил вход или ошибка аутентификации
+                    Shutdown(0);
+                }
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogError(ex, "Failed to show login window");
+                ShowStartupError(ex);
+                Shutdown(1);
+            }
+        }
+
+        /// <summary>
+        /// ✅ ПОКАЗ ГЛАВНОГО ОКНА С ПЕРЕДАННЫМ ПОЛЬЗОВАТЕЛЕМ
+        /// </summary>
+        private void ShowMainWindow(User authenticatedUser)
         {
             try
             {
                 var mainWindow = new MainWindow();
+
+                // Передаем аутентифицированного пользователя в ViewModel
+                if (mainWindow.DataContext is MainViewModel mainViewModel)
+                {
+                    mainViewModel.CurrentUser = authenticatedUser;
+                }
+
                 MainWindow = mainWindow;
                 mainWindow.Show();
+
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogInformation("Main window shown for user {Username}", authenticatedUser.Username);
             }
             catch (Exception ex)
             {
@@ -198,9 +333,14 @@ namespace WindowsLauncher.UI
                 var logger = ServiceProvider?.GetService<ILogger<App>>();
                 logger?.LogError(e.Exception, "Unhandled dispatcher exception");
 
+                var errorMessage = LocalizationHelper.Instance.GetFormattedString(
+                    "Error_UnhandledException",
+                    e.Exception.Message
+                );
+
                 MessageBox.Show(
-                    $"Произошла непредвиденная ошибка:\n\n{e.Exception.Message}\n\nПриложение будет закрыто.",
-                    "Критическая ошибка",
+                    errorMessage,
+                    LocalizationHelper.Instance.GetString("Error_CriticalError"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Error
                 );
@@ -218,13 +358,58 @@ namespace WindowsLauncher.UI
 
         private void ShowStartupError(Exception ex)
         {
-            var message = $"Не удалось запустить приложение:\n\n{ex.Message}";
+            var locHelper = LocalizationHelper.Instance;
+
+            var message = locHelper.GetFormattedString("Error_StartupFailed", ex.Message);
             if (ex.InnerException != null)
             {
-                message += $"\n\nДетали: {ex.InnerException.Message}";
+                message += "\n\n" + locHelper.GetFormattedString("Error_Details", ex.InnerException.Message);
             }
 
-            MessageBox.Show(message, "Ошибка запуска", MessageBoxButton.OK, MessageBoxImage.Error);
+            MessageBox.Show(
+                message,
+                locHelper.GetString("Error_StartupError"),
+                MessageBoxButton.OK,
+                MessageBoxImage.Error
+            );
+        }
+
+        /// <summary>
+        /// ✅ ПУБЛИЧНЫЙ МЕТОД ДЛЯ СМЕНЫ ЯЗЫКА ИЗ UI
+        /// </summary>
+        public void ChangeLanguage(string languageCode)
+        {
+            try
+            {
+                LocalizationHelper.Instance.SetLanguage(languageCode);
+                LocalizationHelper.Instance.SaveLanguageSettings();
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider?.GetService<ILogger<App>>();
+                logger?.LogWarning(ex, "Failed to change language to {Language}", languageCode);
+            }
+        }
+
+        /// <summary>
+        /// ✅ МЕТОД ДЛЯ ВЫХОДА С ПОДТВЕРЖДЕНИЕМ
+        /// </summary>
+        public void LogoutAndShowLogin()
+        {
+            try
+            {
+                // Закрываем главное окно
+                MainWindow?.Close();
+
+                // Показываем окно входа снова
+                ShowLoginWindow();
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider?.GetService<ILogger<App>>();
+                logger?.LogError(ex, "Error during logout");
+                Shutdown(1);
+            }
         }
     }
 }

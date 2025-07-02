@@ -1,0 +1,134 @@
+<?xml version='1.0' encoding='utf-8'?>
+<SettingsFile xmlns="http://schemas.microsoft.com/VisualStudio/2004/01/settings" 
+              CurrentProfile="(Default)" 
+              GeneratedClassNamespace="WindowsLauncher.UI.Properties" 
+              GeneratedClassName="Settings">
+  <Profiles />
+  <Settings>
+    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÀÓÒÅÍÒÈÔÈÊÀÖÈÈ ========== -->
+    <Setting Name="LastDomain" Type="System.String" Scope="User">
+      <Value Profile="(Default)">company.local</Value>
+    </Setting>
+    <Setting Name="LastUsername" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="LastLoginMode" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Domain</Value>
+    </Setting>
+    <Setting Name="RememberCredentials" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    
+    <!-- ========== ÍÀÑÒÐÎÉÊÈ ËÎÊÀËÈÇÀÖÈÈ ========== -->
+    <Setting Name="Language" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="Culture" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    
+    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÎÊÍÀ ========== -->
+    <Setting Name="WindowSize" Type="System.String" Scope="User">
+      <Value Profile="(Default)">1200,800</Value>
+    </Setting>
+    <Setting Name="WindowPosition" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="WindowState" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Normal</Value>
+    </Setting>
+    <Setting Name="IsMaximized" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    
+    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÒÅÌÛ È UI ========== -->
+    <Setting Name="Theme" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Light</Value>
+    </Setting>
+    <Setting Name="AccentColor" Type="System.String" Scope="User">
+      <Value Profile="(Default)">#C41E3A</Value>
+    </Setting>
+    <Setting Name="FontSize" Type="System.Double" Scope="User">
+      <Value Profile="(Default)">14</Value>
+    </Setting>
+    <Setting Name="FontFamily" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Segoe UI</Value>
+    </Setting>
+    
+    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÏÐÈËÎÆÅÍÈÉ ========== -->
+    <Setting Name="ShowAllCategories" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="DefaultCategory" Type="System.String" Scope="User">
+      <Value Profile="(Default)">All</Value>
+    </Setting>
+    <Setting Name="SearchHistoryEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="RecentAppsCount" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">10</Value>
+    </Setting>
+    <Setting Name="GridViewMode" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Large</Value>
+    </Setting>
+    
+    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÏÐÎÈÇÂÎÄÈÒÅËÜÍÎÑÒÈ ========== -->
+    <Setting Name="EnableAnimations" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="CacheTimeout" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">300</Value>
+    </Setting>
+    <Setting Name="AutoRefreshInterval" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    
+    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÁÅÇÎÏÀÑÍÎÑÒÈ ========== -->
+    <Setting Name="LogoutTimeout" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">0</Value>
+    </Setting>
+    <Setting Name="RequireReauthentication" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="AuditEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    
+    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÎÒËÀÄÊÈ ========== -->
+    <Setting Name="EnableLogging" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="LogLevel" Type="System.String" Scope="User">
+      <Value Profile="(Default)">Information</Value>
+    </Setting>
+    <Setting Name="ShowDebugInfo" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    
+    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÓÂÅÄÎÌËÅÍÈÉ ========== -->
+    <Setting Name="ShowNotifications" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="NotificationTimeout" Type="System.Int32" Scope="User">
+      <Value Profile="(Default)">5000</Value>
+    </Setting>
+    <Setting Name="SoundEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Settings>
+    
+    <!-- ========== ÐÀÑØÈÐÅÍÍÛÅ ÍÀÑÒÐÎÉÊÈ ========== -->
+    <Setting Name="CustomStylesPath" Type="System.String" Scope="User">
+      <Value Profile="(Default)" />
+    </Setting>
+    <Setting Name="PluginsEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">False</Value>
+    </Setting>
+    <Setting Name="BackupEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    <Setting Name="UpdateCheckEnabled" Type="System.Boolean" Scope="User">
+      <Value Profile="(Default)">True</Value>
+    </Setting>
+    
+  </Settings>
+</SettingsFile>

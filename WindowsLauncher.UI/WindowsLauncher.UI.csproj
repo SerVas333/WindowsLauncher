@@ -13,6 +13,13 @@
 
 	<ItemGroup>
 		<None Remove="KDV.png" />
+		<None Remove="appsettings.json" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Content Include="appsettings.json">
+			<CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+		</Content>
 	</ItemGroup>
 
 	<ItemGroup>
@@ -47,11 +54,11 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Compile Update="Properties\Resources\Resources.Designer.cs">
-			<DesignTime>True</DesignTime>
-			<AutoGen>True</AutoGen>
-			<DependentUpon>Resources.resx</DependentUpon>
-		</Compile>
+	  <Compile Update="Properties\Resources\Resources.Designer.cs">
+	    <DesignTime>True</DesignTime>
+	    <AutoGen>True</AutoGen>
+	    <DependentUpon>Resources.resx</DependentUpon>
+	  </Compile>
 	</ItemGroup>
 
 </Project>
