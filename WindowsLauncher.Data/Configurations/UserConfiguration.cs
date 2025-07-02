@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 using WindowsLauncher.Core.Models;
-using Newtonsoft.Json;
 
 namespace WindowsLauncher.Data.Configurations
 {
@@ -27,20 +26,12 @@ namespace WindowsLauncher.Data.Configurations
             builder.Property(u => u.Salt)
                 .HasMaxLength(500);
 
-            // Сериализуем список групп в JSON с компаратором
-            builder.Property(u => u.Groups)
-                .HasConversion(
-                    v => JsonConvert.SerializeObject(v),
-                    v => JsonConvert.DeserializeObject<List<string>>(v) ?? new List<string>()
-                )
-                .Metadata.SetValueComparer(new Microsoft.EntityFrameworkCore.ChangeTracking.ValueComparer<List<string>>(
-                    (c1, c2) => c1!.SequenceEqual(c2!),
-                    c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
-                    c => c.ToList()));
+            // ✅ ИСПРАВЛЕНО: Убираем конфликтующие настройки
+            // Groups уже настроены в модели как NotMapped свойство
+            // которое работает с GroupsJson
 
-            // Игнорируем вычисляемые свойства
-            builder.Ignore(u => u.LastLoginAt);
-            builder.Ignore(u => u.CreatedAt);
+            // ✅ ИСПРАВЛЕНО: НЕ игнорируем свойства, которые существуют в модели
+            // Эти свойства уже правильно настроены в самой модели User
 
             // Индексы
             builder.HasIndex(u => u.Username).IsUnique();

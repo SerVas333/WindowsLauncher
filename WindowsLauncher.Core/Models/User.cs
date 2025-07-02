@@ -1,4 +1,4 @@
-﻿// WindowsLauncher.Core/Models/User.cs - ИСПРАВЛЕННАЯ ВЕРСИЯ БЕЗ ДУБЛИРОВАНИЯ
+﻿// WindowsLauncher.Core/Models/User.cs - МИНИМАЛЬНАЯ ИСПРАВЛЕННАЯ ВЕРСИЯ
 using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
@@ -21,7 +21,7 @@ namespace WindowsLauncher.Core.Models
         public int Id { get; set; }
 
         /// <summary>
-        /// Имя пользователя (логин) - ОСНОВНОЕ поле
+        /// Имя пользователя (логин)
         /// </summary>
         [Required]
         [MaxLength(100)]
@@ -76,13 +76,13 @@ namespace WindowsLauncher.Core.Models
         public string Salt { get; set; } = string.Empty;
 
         /// <summary>
-        /// Дата и время создания пользователя - ОСНОВНОЕ поле
+        /// Дата и время создания пользователя
         /// </summary>
         [Column("CreatedAt")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
-        /// Дата и время последнего входа - ОСНОВНОЕ поле
+        /// Дата и время последнего входа
         /// </summary>
         [Column("LastLoginAt")]
         public DateTime? LastLoginAt { get; set; }
@@ -141,7 +141,7 @@ namespace WindowsLauncher.Core.Models
         #region Свойства для совместимости (НЕ МАППЯТСЯ В БД)
 
         /// <summary>
-        /// Группы пользователя (не маппится в БД) - вычисляется из GroupsJson
+        /// Группы пользователя (вычисляется из GroupsJson)
         /// </summary>
         [NotMapped]
         public List<string> Groups
@@ -193,10 +193,20 @@ namespace WindowsLauncher.Core.Models
         }
 
         /// <summary>
-        /// GUID пользователя для совместимости (генерируется на основе Id)
+        /// GUID пользователя для совместимости с LoginWindow
         /// </summary>
         [NotMapped]
         public Guid UserId => new Guid($"{Id:D8}-0000-0000-0000-000000000000");
+
+        /// <summary>
+        /// Полное имя пользователя (алиас для DisplayName)
+        /// </summary>
+        [NotMapped]
+        public string FullName
+        {
+            get => DisplayName;
+            set => DisplayName = value;
+        }
 
         #endregion
 
@@ -214,7 +224,7 @@ namespace WindowsLauncher.Core.Models
 
         #endregion
 
-        #region Методы для работы с группами
+        #region Простые utility методы (только для удобства работы с моделью)
 
         /// <summary>
         /// Проверить, принадлежит ли пользователь к группе
@@ -223,33 +233,6 @@ namespace WindowsLauncher.Core.Models
         {
             return Groups.Any(g => g.Equals(groupName, StringComparison.OrdinalIgnoreCase));
         }
-
-        /// <summary>
-        /// Добавить пользователя в группу
-        /// </summary>
-        public void AddGroup(string groupName)
-        {
-            if (!IsInGroup(groupName))
-            {
-                var groups = Groups;
-                groups.Add(groupName);
-                Groups = groups;
-            }
-        }
-
-        /// <summary>
-        /// Удалить пользователя из группы
-        /// </summary>
-        public void RemoveGroup(string groupName)
-        {
-            var groups = Groups;
-            groups.RemoveAll(g => g.Equals(groupName, StringComparison.OrdinalIgnoreCase));
-            Groups = groups;
-        }
-
-        #endregion
-
-        #region Методы для проверки ролей и прав
 
         /// <summary>
         /// Проверить минимальную роль
@@ -261,98 +244,13 @@ namespace WindowsLauncher.Core.Models
 
         #endregion
 
-        #region Методы для управления активностью
-
-        /// <summary>
-        /// Обновить время последнего входа
-        /// </summary>
-        public void UpdateLastLogin()
-        {
-            LastLoginAt = DateTime.UtcNow;
-            LastActivityAt = DateTime.UtcNow;
-        }
-
-        /// <summary>
-        /// Обновить время последней активности
-        /// </summary>
-        public void UpdateActivity()
-        {
-            LastActivityAt = DateTime.UtcNow;
-        }
-
-        /// <summary>
-        /// Проверить активность сессии
-        /// </summary>
-        public bool IsSessionActive(TimeSpan sessionTimeout)
-        {
-            if (!IsActive || IsLocked)
-                return false;
-
-            if (!LastActivityAt.HasValue)
-                return false;
-
-            return DateTime.UtcNow - LastActivityAt.Value < sessionTimeout;
-        }
-
-        #endregion
-
-        #region Методы для управления блокировкой
-
-        /// <summary>
-        /// Проверить, истекла ли блокировка
-        /// </summary>
-        public bool IsLockoutExpired()
-        {
-            return IsLocked && LockoutEnd.HasValue && DateTime.UtcNow >= LockoutEnd.Value;
-        }
-
-        /// <summary>
-        /// Сбросить блокировку
-        /// </summary>
-        public void ResetLockout()
-        {
-            IsLocked = false;
-            LockoutEnd = null;
-            FailedLoginAttempts = 0;
-        }
-
-        /// <summary>
-        /// Записать неудачную попытку входа
-        /// </summary>
-        public void RecordFailedLogin(int maxAttempts = 5, int lockoutMinutes = 15)
-        {
-            FailedLoginAttempts++;
-
-            if (FailedLoginAttempts >= maxAttempts)
-            {
-                IsLocked = true;
-                LockoutEnd = DateTime.UtcNow.AddMinutes(lockoutMinutes);
-            }
-        }
-
-        /// <summary>
-        /// Проверить, можно ли разблокировать пользователя
-        /// </summary>
-        public bool CanUnlock()
-        {
-            return IsLockoutExpired();
-        }
-
-        #endregion
-
         #region Переопределения
 
-        /// <summary>
-        /// Строковое представление пользователя
-        /// </summary>
         public override string ToString()
         {
             return $"{DisplayName} ({Username}) - {Role}";
         }
 
-        /// <summary>
-        /// Проверка равенства
-        /// </summary>
         public override bool Equals(object obj)
         {
             if (obj is User other)
@@ -362,9 +260,6 @@ namespace WindowsLauncher.Core.Models
             return false;
         }
 
-        /// <summary>
-        /// Хэш-код объекта
-        /// </summary>
         public override int GetHashCode()
         {
             return HashCode.Combine(Id, Username);

@@ -1,64 +1,47 @@
-﻿// ===== WindowsLauncher.UI/Views/LoginWindow.xaml.cs - ИСПРАВЛЕННАЯ ВЕРСИЯ =====
+﻿// WindowsLauncher.UI/Views/LoginWindow.xaml.cs - ПОЛНОСТЬЮ ИСПРАВЛЕННАЯ ВЕРСИЯ
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Media;
+using System.Windows.Input;
 using WindowsLauncher.Core.Enums;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
-using WpfApplication = System.Windows.Application;
-// ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы для KeyEventArgs
-using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
+using WindowsLauncher.UI.Properties.Resources;
 
 namespace WindowsLauncher.UI.Views
 {
     /// <summary>
     /// Окно входа в систему с поддержкой доменной и сервисной аутентификации
-    /// ✅ ИСПРАВЛЕНО: Убрана зависимость от XAML файла при ошибках загрузки
     /// </summary>
     public partial class LoginWindow : Window
     {
         private readonly IAuthenticationService _authService;
         private readonly ILogger<LoginWindow> _logger;
         private bool _isAuthenticating = false;
-        private AuthenticationResult _lastResult;
 
-        // Публичные свойства для доступа к введенным данным
-        public string Username { get; private set; }
-        public string Password { get; private set; }
-        public string Domain { get; private set; }
-        public bool IsServiceMode { get; private set; }
+        // Публичные свойства для доступа к результату
         public AuthenticationResult AuthenticationResult { get; private set; }
-
-        // Совместимость с MainViewModel
-        public User? AuthenticatedUser => AuthenticationResult?.User;
+        public User AuthenticatedUser => AuthenticationResult?.User;
 
         public LoginWindow()
         {
             try
             {
                 InitializeComponent();
+                InitializeServices();
                 InitializeWindow();
             }
             catch (Exception ex)
             {
-                // ✅ ЕСЛИ НЕ УДАЕТСЯ ЗАГРУЗИТЬ XAML, СОЗДАЕМ ОКНО ПРОГРАММНО
-                CreateWindowProgrammatically();
-
-                // Логируем ошибку
-                System.Diagnostics.Debug.WriteLine($"Failed to load LoginWindow.xaml: {ex.Message}");
-                System.Diagnostics.Debug.WriteLine("Creating window programmatically as fallback.");
-
-                InitializeWindow();
+                // Fallback для случаев когда XAML не загружается
+                CreateFallbackWindow();
+                System.Diagnostics.Debug.WriteLine($"XAML loading failed: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Конструктор с передачей сообщения об ошибке
-        /// </summary>
         public LoginWindow(string errorMessage) : this()
         {
             if (!string.IsNullOrEmpty(errorMessage))
@@ -67,345 +50,449 @@ namespace WindowsLauncher.UI.Views
             }
         }
 
-        /// <summary>
-        /// ✅ СОЗДАНИЕ ОКНА ПРОГРАММНО (FALLBACK ДЛЯ ОТСУТСТВУЮЩЕГО XAML)
-        /// </summary>
-        private void CreateWindowProgrammatically()
-        {
-            // Базовые настройки окна
-            Title = "System Login";
-            Width = 450;
-            Height = 500;
-            WindowStartupLocation = WindowStartupLocation.CenterScreen;
-            ResizeMode = ResizeMode.NoResize;
-
-            // Создаем основную структуру
-            var mainGrid = new Grid();
-            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-            mainGrid.RowDefinitions.Add(new RowDefinition { Height = new GridLength(1, GridUnitType.Star) });
-            mainGrid.RowDefinitions.Add(new RowDefinition { Height = GridLength.Auto });
-
-            // Заголовок
-            var headerBorder = new Border
-            {
-                Background = new SolidColorBrush(Color.FromRgb(196, 30, 58)), // #C41E3A
-                Padding = new Thickness(30, 20),
-                CornerRadius = new CornerRadius(8, 8, 0, 0)
-            };
-            Grid.SetRow(headerBorder, 0);
-
-            var headerStack = new StackPanel
-            {
-                HorizontalAlignment = HorizontalAlignment.Center
-            };
-
-            var titleText = new TextBlock
-            {
-                Text = "System Login",
-                FontSize = 24,
-                FontWeight = FontWeights.Bold,
-                Foreground = Brushes.White,
-                HorizontalAlignment = HorizontalAlignment.Center
-            };
-
-            var subtitleText = new TextBlock
-            {
-                Text = "KDV Corporate Application Launcher",
-                FontSize = 14,
-                Foreground = Brushes.White,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Opacity = 0.8,
-                Margin = new Thickness(0, 5, 0, 0)
-            };
-
-            headerStack.Children.Add(titleText);
-            headerStack.Children.Add(subtitleText);
-            headerBorder.Child = headerStack;
-
-            // Форма входа
-            var formScrollViewer = new ScrollViewer
-            {
-                VerticalScrollBarVisibility = ScrollBarVisibility.Auto,
-                Padding = new Thickness(30, 20)
-            };
-            Grid.SetRow(formScrollViewer, 1);
-
-            var formStack = new StackPanel();
-
-            // Переключатель режимов
-            var modeStack = new StackPanel
-            {
-                Orientation = Orientation.Horizontal,
-                HorizontalAlignment = HorizontalAlignment.Center,
-                Margin = new Thickness(0, 0, 0, 20)
-            };
-
-            var domainRadio = new RadioButton
-            {
-                Content = "Domain Login",
-                IsChecked = true,
-                GroupName = "LoginMode",
-                Margin = new Thickness(0, 0, 20, 0)
-            };
-            domainRadio.Checked += (s, e) => IsServiceMode = false;
-
-            var serviceRadio = new RadioButton
-            {
-                Content = "Service Administrator",
-                GroupName = "LoginMode"
-            };
-            serviceRadio.Checked += (s, e) => IsServiceMode = true;
-
-            modeStack.Children.Add(domainRadio);
-            modeStack.Children.Add(serviceRadio);
-
-            // Поля ввода
-            var domainLabel = new TextBlock
-            {
-                Text = "Domain:",
-                Margin = new Thickness(0, 0, 0, 5),
-                FontWeight = FontWeights.Medium
-            };
-
-            var domainTextBox = new TextBox
-            {
-                Text = "company.local",
-                Margin = new Thickness(0, 0, 0, 15),
-                Height = 40,
-                Padding = new Thickness(12, 8),
-                FontSize = 14
-            };
-
-            var usernameLabel = new TextBlock
-            {
-                Text = "Username:",
-                Margin = new Thickness(0, 0, 0, 5),
-                FontWeight = FontWeights.Medium
-            };
-
-            var usernameTextBox = new TextBox
-            {
-                Margin = new Thickness(0, 0, 0, 15),
-                Height = 40,
-                Padding = new Thickness(12, 8),
-                FontSize = 14
-            };
-
-            var passwordLabel = new TextBlock
-            {
-                Text = "Password:",
-                Margin = new Thickness(0, 0, 0, 5),
-                FontWeight = FontWeights.Medium
-            };
-
-            var passwordBox = new PasswordBox
-            {
-                Margin = new Thickness(0, 0, 0, 15),
-                Height = 40,
-                Padding = new Thickness(12, 8),
-                FontSize = 14
-            };
-
-            // Собираем форму
-            formStack.Children.Add(modeStack);
-            formStack.Children.Add(domainLabel);
-            formStack.Children.Add(domainTextBox);
-            formStack.Children.Add(usernameLabel);
-            formStack.Children.Add(usernameTextBox);
-            formStack.Children.Add(passwordLabel);
-            formStack.Children.Add(passwordBox);
-
-            formScrollViewer.Content = formStack;
-
-            // Кнопки
-            var buttonBorder = new Border
-            {
-                BorderBrush = new SolidColorBrush(Color.FromRgb(221, 221, 221)),
-                BorderThickness = new Thickness(0, 1, 0, 0),
-                Padding = new Thickness(30, 20)
-            };
-            Grid.SetRow(buttonBorder, 2);
-
-            var buttonGrid = new Grid();
-            buttonGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = new GridLength(1, GridUnitType.Star) });
-            buttonGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-            buttonGrid.ColumnDefinitions.Add(new ColumnDefinition { Width = GridLength.Auto });
-
-            var cancelButton = new Button
-            {
-                Content = "Cancel",
-                Width = 100,
-                Height = 40,
-                Margin = new Thickness(0, 0, 15, 0)
-            };
-            Grid.SetColumn(cancelButton, 1);
-            cancelButton.Click += (s, e) => { DialogResult = false; Close(); };
-
-            var loginButton = new Button
-            {
-                Content = "Login",
-                Width = 120,
-                Height = 40,
-                Background = new SolidColorBrush(Color.FromRgb(196, 30, 58)),
-                Foreground = Brushes.White,
-                IsDefault = true
-            };
-            Grid.SetColumn(loginButton, 2);
-            loginButton.Click += async (s, e) => await PerformSimpleLoginAsync(usernameTextBox.Text, passwordBox.Password, domainTextBox.Text);
-
-            buttonGrid.Children.Add(cancelButton);
-            buttonGrid.Children.Add(loginButton);
-            buttonBorder.Child = buttonGrid;
-
-            // Собираем все вместе
-            mainGrid.Children.Add(headerBorder);
-            mainGrid.Children.Add(formScrollViewer);
-            mainGrid.Children.Add(buttonBorder);
-
-            // Обертка с отступами
-            var mainBorder = new Border
-            {
-                Background = Brushes.White,
-                CornerRadius = new CornerRadius(8),
-                Margin = new Thickness(20),
-                Child = mainGrid
-            };
-
-            Content = mainBorder;
-            Background = new SolidColorBrush(Color.FromRgb(250, 250, 250));
-        }
-
-        /// <summary>
-        /// Инициализация окна
-        /// </summary>
-        private async void InitializeWindow()
+        private void InitializeServices()
         {
             try
             {
-                // Получаем сервисы из DI контейнера
-                var serviceProvider = ((App)WpfApplication.Current).ServiceProvider;
-                var authService = serviceProvider.GetService<IAuthenticationService>();
-                var logger = serviceProvider.GetService<ILogger<LoginWindow>>();
-
-                if (authService != null && logger != null)
+                var app = Application.Current as App;
+                if (app?.ServiceProvider != null)
                 {
-                    // Инициализируем сервисы только если они доступны
-                    // В противном случае работаем в упрощенном режиме
+                    var authService = app.ServiceProvider.GetService<IAuthenticationService>();
+                    var logger = app.ServiceProvider.GetService<ILogger<LoginWindow>>();
+
+                    // Присваиваем только если сервисы доступны
+                    if (authService != null) _authService = authService;
+                    if (logger != null) _logger = logger;
                 }
-
-                // Устанавливаем фокус на первое поле (если доступно)
-                Loaded += (s, e) =>
-                {
-                    var firstTextBox = FindChild<TextBox>(this);
-                    firstTextBox?.Focus();
-                };
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error initializing login window: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Service initialization failed: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Упрощенная аутентификация для программно созданного окна
-        /// </summary>
-        private async Task PerformSimpleLoginAsync(string username, string password, string domain)
+        private void InitializeWindow()
         {
             try
             {
-                if (string.IsNullOrWhiteSpace(username))
+                Title = Resources.LoginWindow_Title;
+
+                // Устанавливаем фокус при загрузке
+                Loaded += (s, e) =>
                 {
-                    MessageBox.Show("Please enter username", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    if (DomainModeRadio?.IsChecked == true)
+                    {
+                        UsernameTextBox?.Focus();
+                    }
+                    else if (ServiceModeRadio?.IsChecked == true)
+                    {
+                        ServiceUsernameTextBox?.Focus();
+                    }
+                };
+
+                // Проверяем доступность домена при инициализации
+                CheckDomainAvailabilityAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error initializing login window");
+            }
+        }
+
+        #region Event Handlers
+
+        private void LoginMode_Changed(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (DomainLoginPanel == null || ServiceLoginPanel == null) return;
+
+                if (DomainModeRadio?.IsChecked == true)
+                {
+                    DomainLoginPanel.Visibility = Visibility.Visible;
+                    ServiceLoginPanel.Visibility = Visibility.Collapsed;
+                    UsernameTextBox?.Focus();
+                }
+                else if (ServiceModeRadio?.IsChecked == true)
+                {
+                    DomainLoginPanel.Visibility = Visibility.Collapsed;
+                    ServiceLoginPanel.Visibility = Visibility.Visible;
+                    ServiceUsernameTextBox?.Focus();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error changing login mode");
+            }
+        }
+
+        private void Input_KeyDown(object sender, KeyEventArgs e)
+        {
+            if (e.Key == Key.Enter && !_isAuthenticating)
+            {
+                _ = LoginButton_ClickAsync();
+            }
+        }
+
+        private void LoginButton_Click(object sender, RoutedEventArgs e)
+        {
+            _ = LoginButton_ClickAsync();
+        }
+
+        private async Task LoginButton_ClickAsync()
+        {
+            if (_isAuthenticating) return;
+
+            try
+            {
+                _isAuthenticating = true;
+                ShowLoadingState(true);
+                HideError();
+
+                // Валидация ввода
+                if (!ValidateInput())
+                {
                     return;
                 }
 
-                if (string.IsNullOrWhiteSpace(password))
+                AuthenticationResult result;
+
+                if (DomainModeRadio?.IsChecked == true)
                 {
-                    MessageBox.Show("Please enter password", "Validation Error", MessageBoxButton.OK, MessageBoxImage.Warning);
+                    // Доменная аутентификация
+                    var credentials = new AuthenticationCredentials
+                    {
+                        Username = UsernameTextBox?.Text?.Trim() ?? "",
+                        Password = PasswordBox?.Password ?? "",
+                        Domain = DomainTextBox?.Text?.Trim() ?? "",
+                        IsServiceAccount = false
+                    };
+
+                    result = await AuthenticateWithCredentialsAsync(credentials);
+                }
+                else
+                {
+                    // Сервисная аутентификация
+                    var credentials = new AuthenticationCredentials
+                    {
+                        Username = ServiceUsernameTextBox?.Text?.Trim() ?? "",
+                        Password = ServicePasswordBox?.Password ?? "",
+                        IsServiceAccount = true
+                    };
+
+                    result = await AuthenticateWithCredentialsAsync(credentials);
+                }
+
+                if (result.IsSuccess)
+                {
+                    AuthenticationResult = result;
+                    DialogResult = true;
+                    Close();
+                }
+                else
+                {
+                    ShowError(result.ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Login error");
+                ShowError(string.Format(Resources.Error_General + ": {0}", ex.Message));
+            }
+            finally
+            {
+                _isAuthenticating = false;
+                ShowLoadingState(false);
+            }
+        }
+
+        private void CancelButton_Click(object sender, RoutedEventArgs e)
+        {
+            DialogResult = false;
+            Close();
+        }
+
+        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Временная заглушка
+                MessageBox.Show(
+                    Resources.SettingsComingSoon,
+                    Resources.Common_Settings,
+                    MessageBoxButton.OK,
+                    MessageBoxImage.Information);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Settings button error");
+            }
+        }
+
+        #endregion
+
+        #region Authentication Methods
+
+        private async Task<AuthenticationResult> AuthenticateWithCredentialsAsync(AuthenticationCredentials credentials)
+        {
+            try
+            {
+                if (_authService == null)
+                {
+                    // Fallback аутентификация для тестирования
+                    return CreateFallbackAuthResult(credentials);
+                }
+
+                // Реальная аутентификация через сервис
+                LoadingText.Text = credentials.IsServiceAccount
+                    ? Resources.LoginWindow_AuthenticatingService
+                    : Resources.LoginWindow_AuthenticatingDomain;
+
+                return await _authService.AuthenticateAsync(credentials);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Authentication error");
+                return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
+            }
+        }
+
+        private AuthenticationResult CreateFallbackAuthResult(AuthenticationCredentials credentials)
+        {
+            // Простая fallback аутентификация для тестирования
+            var user = new User
+            {
+                Id = Guid.NewGuid(),
+                Username = credentials.Username,
+                DisplayName = $"Test User ({credentials.Username})",
+                Email = $"{credentials.Username}@{credentials.Domain}",
+                Role = credentials.IsServiceAccount ? UserRole.Administrator : UserRole.Standard,
+                IsActive = true,
+                CreatedAt = DateTime.UtcNow,
+                LastLoginAt = DateTime.UtcNow
+            };
+
+            return AuthenticationResult.Success(user,
+                credentials.IsServiceAccount ? AuthenticationType.LocalService : AuthenticationType.DomainLDAP,
+                credentials.Domain);
+        }
+
+        #endregion
+
+        #region Validation
+
+        private bool ValidateInput()
+        {
+            if (DomainModeRadio?.IsChecked == true)
+            {
+                if (string.IsNullOrWhiteSpace(UsernameTextBox?.Text))
+                {
+                    ShowError(Resources.PleaseEnterUsername);
+                    UsernameTextBox?.Focus();
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(PasswordBox?.Password))
+                {
+                    ShowError(Resources.PleaseEnterPassword);
+                    PasswordBox?.Focus();
+                    return false;
+                }
+            }
+            else if (ServiceModeRadio?.IsChecked == true)
+            {
+                if (string.IsNullOrWhiteSpace(ServiceUsernameTextBox?.Text))
+                {
+                    ShowError(Resources.PleaseEnterUsername);
+                    ServiceUsernameTextBox?.Focus();
+                    return false;
+                }
+
+                if (string.IsNullOrWhiteSpace(ServicePasswordBox?.Password))
+                {
+                    ShowError(Resources.PleaseEnterPassword);
+                    ServicePasswordBox?.Focus();
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        #endregion
+
+        #region UI State Management
+
+        private void ShowLoadingState(bool isLoading)
+        {
+            try
+            {
+                if (LoadingOverlay != null)
+                {
+                    LoadingOverlay.Visibility = isLoading ? Visibility.Visible : Visibility.Collapsed;
+                }
+
+                if (LoginButton != null)
+                {
+                    LoginButton.IsEnabled = !isLoading;
+                }
+
+                if (isLoading && LoadingText != null)
+                {
+                    LoadingText.Text = Resources.LoginWindow_Authenticating;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error updating loading state");
+            }
+        }
+
+        private void ShowError(string message)
+        {
+            try
+            {
+                if (ErrorPanel != null && ErrorTextBlock != null)
+                {
+                    ErrorTextBlock.Text = message;
+                    ErrorPanel.Visibility = Visibility.Visible;
+                }
+                else
+                {
+                    // Fallback к MessageBox
+                    MessageBox.Show(message, Resources.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error showing error message");
+            }
+        }
+
+        private void HideError()
+        {
+            try
+            {
+                if (ErrorPanel != null)
+                {
+                    ErrorPanel.Visibility = Visibility.Collapsed;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error hiding error message");
+            }
+        }
+
+        private async void CheckDomainAvailabilityAsync()
+        {
+            try
+            {
+                if (_authService == null || ConnectionStatusIndicator == null || ConnectionStatusText == null)
+                    return;
+
+                var isAvailable = await _authService.IsDomainAvailableAsync();
+
+                ConnectionStatusIndicator.Fill = isAvailable
+                    ? (System.Windows.Media.Brush)FindResource("SuccessBrush")
+                    : (System.Windows.Media.Brush)FindResource("ErrorBrush");
+
+                ConnectionStatusText.Text = isAvailable
+                    ? Resources.LoginWindow_DomainAvailable
+                    : Resources.LoginWindow_DomainUnavailable;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error checking domain availability");
+            }
+        }
+
+        #endregion
+
+        #region Fallback Window Creation
+
+        private void CreateFallbackWindow()
+        {
+            // Простое окно для случаев когда XAML не работает
+            Title = "System Login";
+            Width = 400;
+            Height = 300;
+            WindowStartupLocation = WindowStartupLocation.CenterScreen;
+
+            var panel = new StackPanel { Margin = new Thickness(20) };
+
+            panel.Children.Add(new TextBlock { Text = "Username:", Margin = new Thickness(0, 0, 0, 5) });
+            var usernameBox = new TextBox { Margin = new Thickness(0, 0, 0, 10) };
+            panel.Children.Add(usernameBox);
+
+            panel.Children.Add(new TextBlock { Text = "Password:", Margin = new Thickness(0, 0, 0, 5) });
+            var passwordBox = new PasswordBox { Margin = new Thickness(0, 0, 0, 10) };
+            panel.Children.Add(passwordBox);
+
+            var loginBtn = new Button { Content = "Login", Height = 30 };
+            loginBtn.Click += async (s, e) => await FallbackLogin(usernameBox.Text, passwordBox.Password);
+            panel.Children.Add(loginBtn);
+
+            Content = panel;
+        }
+
+        private async Task FallbackLogin(string username, string password)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(username) || string.IsNullOrEmpty(password))
+                {
+                    MessageBox.Show("Please enter username and password");
                     return;
                 }
 
-                // Создаем простого пользователя для тестирования
-                var testUser = new User
+                var credentials = new AuthenticationCredentials
                 {
-                    Id = Guid.NewGuid(),
                     Username = username,
-                    FullName = $"Test User ({username})",
-                    Role = UserRole.Standard,
-                    Email = $"{username}@{domain}",
-                    IsActive = true,
-                    CreatedAt = DateTime.Now
+                    Password = password,
+                    Domain = "local"
                 };
 
-                // Создаем результат аутентификации
-                AuthenticationResult = new AuthenticationResult
-                {
-                    IsSuccess = true,
-                    User = testUser,
-                    Status = AuthenticationStatus.Success,
-                    Message = "Login successful"
-                };
-
-                // Сохраняем данные
-                Username = username;
-                Password = password;
-                Domain = domain;
-
+                AuthenticationResult = CreateFallbackAuthResult(credentials);
                 DialogResult = true;
                 Close();
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"Login error: {ex.Message}", "Error", MessageBoxButton.OK, MessageBoxImage.Error);
+                MessageBox.Show($"Login error: {ex.Message}");
             }
         }
 
-        /// <summary>
-        /// Поиск дочернего элемента по типу
-        /// </summary>
-        private static T FindChild<T>(DependencyObject parent) where T : DependencyObject
-        {
-            if (parent == null) return null;
+        #endregion
 
-            for (int i = 0; i < System.Windows.Media.VisualTreeHelper.GetChildrenCount(parent); i++)
-            {
-                var child = System.Windows.Media.VisualTreeHelper.GetChild(parent, i);
-                if (child is T result)
-                    return result;
+        #region Static Methods
 
-                var childOfChild = FindChild<T>(child);
-                if (childOfChild != null)
-                    return childOfChild;
-            }
-
-            return null;
-        }
-
-        #region Методы-заглушки для совместимости
-
-        /// <summary>
-        /// Показ ошибки (заглушка)
-        /// </summary>
-        private void ShowError(string message)
-        {
-            MessageBox.Show(message, "Error", MessageBoxButton.OK, MessageBoxImage.Error);
-        }
-
-        /// <summary>
-        /// Статический метод для создания окна входа
-        /// </summary>
         public static LoginWindow ShowLoginDialog(string domain = null, string username = null, bool serviceMode = false)
         {
-            var loginWindow = new LoginWindow();
-            return loginWindow;
-        }
+            var window = new LoginWindow();
 
-        /// <summary>
-        /// Статический метод для показа окна с ошибкой
-        /// </summary>
-        public static LoginWindow ShowLoginDialogWithError(string errorMessage)
-        {
-            return new LoginWindow(errorMessage);
+            try
+            {
+                if (!string.IsNullOrEmpty(domain) && window.DomainTextBox != null)
+                    window.DomainTextBox.Text = domain;
+
+                if (!string.IsNullOrEmpty(username))
+                {
+                    if (serviceMode && window.ServiceUsernameTextBox != null)
+                        window.ServiceUsernameTextBox.Text = username;
+                    else if (window.UsernameTextBox != null)
+                        window.UsernameTextBox.Text = username;
+                }
+
+                if (serviceMode && window.ServiceModeRadio != null)
+                    window.ServiceModeRadio.IsChecked = true;
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error setting initial values: {ex.Message}");
+            }
+
+            return window;
         }
 
         #endregion

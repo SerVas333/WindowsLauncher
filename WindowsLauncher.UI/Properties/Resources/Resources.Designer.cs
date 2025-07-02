@@ -61,16 +61,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Доступ запрещен.
-        /// </summary>
-        public static string AccessDenied {
-            get {
-                return ResourceManager.GetString("AccessDenied", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Все категории.
+        ///   Ищет локализованную строку, похожую на All Categories.
         /// </summary>
         public static string AllCategories {
             get {
@@ -79,79 +70,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Успешно запущено {0}.
-        /// </summary>
-        public static string AppLaunchedSuccessfully {
-            get {
-                return ResourceManager.GetString("AppLaunchedSuccessfully", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка запуска {0}: {1}.
-        /// </summary>
-        public static string AppLaunchError {
-            get {
-                return ResourceManager.GetString("AppLaunchError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Не удалось запустить {0}: {1}.
-        /// </summary>
-        public static string AppLaunchFailed {
-            get {
-                return ResourceManager.GetString("AppLaunchFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Приложение запущено: {0}.
-        /// </summary>
-        public static string ApplicationLaunched {
-            get {
-                return ResourceManager.GetString("ApplicationLaunched", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на приложений.
-        /// </summary>
-        public static string Applications {
-            get {
-                return ResourceManager.GetString("Applications", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Приложения успешно загружены.
-        /// </summary>
-        public static string ApplicationsLoaded {
-            get {
-                return ResourceManager.GetString("ApplicationsLoaded", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Приложения обновлены.
-        /// </summary>
-        public static string ApplicationsRefreshed {
-            get {
-                return ResourceManager.GetString("ApplicationsRefreshed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на прил..
-        /// </summary>
-        public static string Apps {
-            get {
-                return ResourceManager.GetString("Apps", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Корпоративный лаунчер KDV.
+        ///   Ищет локализованную строку, похожую на KDV Corporate Launcher.
         /// </summary>
         public static string AppTitle {
             get {
@@ -160,7 +79,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Аутентификация....
+        ///   Ищет локализованную строку, похожую на Authenticating....
         /// </summary>
         public static string Authenticating {
             get {
@@ -169,16 +88,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка аутентификации: {0}.
-        /// </summary>
-        public static string AuthenticationFailed {
-            get {
-                return ResourceManager.GetString("AuthenticationFailed", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Калькулятор Windows.
+        ///   Ищет локализованную строку, похожую на Windows Calculator.
         /// </summary>
         public static string CalculatorDescription {
             get {
@@ -187,7 +97,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Отмена.
+        ///   Ищет локализованную строку, похожую на Cancel.
         /// </summary>
         public static string Cancel {
             get {
@@ -196,16 +106,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Категории загружены.
-        /// </summary>
-        public static string CategoriesLoaded {
-            get {
-                return ResourceManager.GetString("CategoriesLoaded", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Бизнес.
+        ///   Ищет локализованную строку, похожую на Business.
         /// </summary>
         public static string Category_Business {
             get {
@@ -214,7 +115,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Коммуникации.
+        ///   Ищет локализованную строку, похожую на Communication.
         /// </summary>
         public static string Category_Communication {
             get {
@@ -223,16 +124,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Разработка.
-        /// </summary>
-        public static string Category_Development {
-            get {
-                return ResourceManager.GetString("Category_Development", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Утилиты.
+        ///   Ищет локализованную строку, похожую на Utilities.
         /// </summary>
         public static string Category_Utilities {
             get {
@@ -241,7 +133,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Все.
+        ///   Ищет локализованную строку, похожую на All.
         /// </summary>
         public static string CategoryAll {
             get {
@@ -250,7 +142,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Разработка.
+        ///   Ищет локализованную строку, похожую на Development.
         /// </summary>
         public static string CategoryDevelopment {
             get {
@@ -259,34 +151,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Игры.
-        /// </summary>
-        public static string CategoryGames {
-            get {
-                return ResourceManager.GetString("CategoryGames", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Графика.
-        /// </summary>
-        public static string CategoryGraphics {
-            get {
-                return ResourceManager.GetString("CategoryGraphics", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Медиа.
-        /// </summary>
-        public static string CategoryMedia {
-            get {
-                return ResourceManager.GetString("CategoryMedia", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Офис.
+        ///   Ищет локализованную строку, похожую на Office.
         /// </summary>
         public static string CategoryOffice {
             get {
@@ -295,16 +160,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Безопасность.
-        /// </summary>
-        public static string CategorySecurity {
-            get {
-                return ResourceManager.GetString("CategorySecurity", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Система.
+        ///   Ищет локализованную строку, похожую на System.
         /// </summary>
         public static string CategorySystem {
             get {
@@ -313,7 +169,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Инструменты.
+        ///   Ищет локализованную строку, похожую на Tools.
         /// </summary>
         public static string CategoryTools {
             get {
@@ -322,7 +178,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Веб.
+        ///   Ищет локализованную строку, похожую на Web.
         /// </summary>
         public static string CategoryWeb {
             get {
@@ -331,7 +187,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Командная строка Windows.
+        ///   Ищет локализованную строку, похожую на Windows Command Line.
         /// </summary>
         public static string CommandPromptDescription {
             get {
@@ -340,7 +196,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на О программе.
+        ///   Ищет локализованную строку, похожую на About.
         /// </summary>
         public static string Common_About {
             get {
@@ -349,7 +205,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Добавить.
+        ///   Ищет локализованную строку, похожую на Add.
         /// </summary>
         public static string Common_Add {
             get {
@@ -358,7 +214,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Отмена.
+        ///   Ищет локализованную строку, похожую на Cancel.
         /// </summary>
         public static string Common_Cancel {
             get {
@@ -367,7 +223,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Закрыть.
+        ///   Ищет локализованную строку, похожую на Close.
         /// </summary>
         public static string Common_Close {
             get {
@@ -376,7 +232,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Удалить.
+        ///   Ищет локализованную строку, похожую на Delete.
         /// </summary>
         public static string Common_Delete {
             get {
@@ -385,7 +241,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Редактировать.
+        ///   Ищет локализованную строку, похожую на Edit.
         /// </summary>
         public static string Common_Edit {
             get {
@@ -394,7 +250,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Фильтр.
+        ///   Ищет локализованную строку, похожую на Filter.
         /// </summary>
         public static string Common_Filter {
             get {
@@ -403,7 +259,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Справка.
+        ///   Ищет локализованную строку, похожую на Help.
         /// </summary>
         public static string Common_Help {
             get {
@@ -412,7 +268,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Нет.
+        ///   Ищет локализованную строку, похожую на No.
         /// </summary>
         public static string Common_No {
             get {
@@ -421,7 +277,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на ОК.
+        ///   Ищет локализованную строку, похожую на OK.
         /// </summary>
         public static string Common_OK {
             get {
@@ -430,7 +286,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Сохранить.
+        ///   Ищет локализованную строку, похожую на Save.
         /// </summary>
         public static string Common_Save {
             get {
@@ -439,7 +295,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Поиск.
+        ///   Ищет локализованную строку, похожую на Search.
         /// </summary>
         public static string Common_Search {
             get {
@@ -448,7 +304,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Настройки.
+        ///   Ищет локализованную строку, похожую на Settings.
         /// </summary>
         public static string Common_Settings {
             get {
@@ -457,7 +313,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Да.
+        ///   Ищет локализованную строку, похожую на Yes.
         /// </summary>
         public static string Common_Yes {
             get {
@@ -466,16 +322,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка конфигурации: {0}.
-        /// </summary>
-        public static string ConfigurationError {
-            get {
-                return ResourceManager.GetString("ConfigurationError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Подтверждение.
+        ///   Ищет локализованную строку, похожую на Confirmation.
         /// </summary>
         public static string Confirmation {
             get {
@@ -484,7 +331,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Вы уверены, что хотите выйти?.
+        ///   Ищет локализованную строку, похожую на Are you sure you want to logout?.
         /// </summary>
         public static string ConfirmLogout {
             get {
@@ -493,7 +340,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Продолжить как текущий пользователь.
+        ///   Ищет локализованную строку, похожую на Continue as current user.
         /// </summary>
         public static string ContinueAsCurrentUser {
             get {
@@ -502,7 +349,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Панель управления Windows.
+        ///   Ищет локализованную строку, похожую на Windows Control Panel.
         /// </summary>
         public static string ControlPanelDescription {
             get {
@@ -511,7 +358,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Текущий пользователь Windows:.
+        ///   Ищет локализованную строку, похожую на Current Windows user:.
         /// </summary>
         public static string CurrentWindowsUser {
             get {
@@ -520,43 +367,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка базы данных: {0}.
-        /// </summary>
-        public static string DatabaseError {
-            get {
-                return ResourceManager.GetString("DatabaseError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на База данных успешно инициализирована.
-        /// </summary>
-        public static string DatabaseInitialized {
-            get {
-                return ResourceManager.GetString("DatabaseInitialized", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Инициализация базы данных....
-        /// </summary>
-        public static string DatabaseInitializing {
-            get {
-                return ResourceManager.GetString("DatabaseInitializing", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на База данных готова.
-        /// </summary>
-        public static string DatabaseReady {
-            get {
-                return ResourceManager.GetString("DatabaseReady", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка.
+        ///   Ищет локализованную строку, похожую на Error.
         /// </summary>
         public static string Error {
             get {
@@ -565,7 +376,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Доступ запрещен.
+        ///   Ищет локализованную строку, похожую на Access denied.
         /// </summary>
         public static string Error_AccessDenied {
             get {
@@ -574,7 +385,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Критическая ошибка.
+        ///   Ищет локализованную строку, похожую на Critical Error.
         /// </summary>
         public static string Error_CriticalError {
             get {
@@ -583,7 +394,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на База данных недоступна.
+        ///   Ищет локализованную строку, похожую на Database unavailable.
         /// </summary>
         public static string Error_DatabaseUnavailable {
             get {
@@ -592,7 +403,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Детали: {0}.
+        ///   Ищет локализованную строку, похожую на Details: {0}.
         /// </summary>
         public static string Error_Details {
             get {
@@ -601,7 +412,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Домен недоступен.
+        ///   Ищет локализованную строку, похожую на Domain unavailable.
         /// </summary>
         public static string Error_DomainUnavailable {
             get {
@@ -610,7 +421,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Произошла ошибка.
+        ///   Ищет локализованную строку, похожую на An error occurred.
         /// </summary>
         public static string Error_General {
             get {
@@ -619,7 +430,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Неверные учетные данные.
+        ///   Ищет локализованную строку, похожую на Invalid credentials.
         /// </summary>
         public static string Error_InvalidCredentials {
             get {
@@ -628,7 +439,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Сеть недоступна.
+        ///   Ищет локализованную строку, похожую на Network unavailable.
         /// </summary>
         public static string Error_NetworkUnavailable {
             get {
@@ -637,7 +448,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка запуска.
+        ///   Ищет локализованную строку, похожую на Startup Error.
         /// </summary>
         public static string Error_StartupError {
             get {
@@ -646,7 +457,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Не удалось запустить приложение:\n\n{0}.
+        ///   Ищет локализованную строку, похожую на Failed to start application:\n\n{0}.
         /// </summary>
         public static string Error_StartupFailed {
             get {
@@ -655,7 +466,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Произошла непредвиденная ошибка:\n\n{0}\n\nПриложение будет закрыто..
+        ///   Ищет локализованную строку, похожую на An unexpected error occurred:\n\n{0}\n\nThe application will be closed..
         /// </summary>
         public static string Error_UnhandledException {
             get {
@@ -664,7 +475,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Пользователь не найден.
+        ///   Ищет локализованную строку, похожую на User not found.
         /// </summary>
         public static string Error_UserNotFound {
             get {
@@ -673,88 +484,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Доступ запрещен. Проверьте ваши права доступа..
-        /// </summary>
-        public static string ErrorAccessDenied {
-            get {
-                return ResourceManager.GetString("ErrorAccessDenied", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Предоставлены недопустимые данные..
-        /// </summary>
-        public static string ErrorInvalidData {
-            get {
-                return ResourceManager.GetString("ErrorInvalidData", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Недопустимая операция..
-        /// </summary>
-        public static string ErrorInvalidOperation {
-            get {
-                return ResourceManager.GetString("ErrorInvalidOperation", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка загрузки приложений: {0}.
-        /// </summary>
-        public static string ErrorLoadingApplications {
-            get {
-                return ResourceManager.GetString("ErrorLoadingApplications", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Время ожидания операции истекло. Попробуйте снова..
-        /// </summary>
-        public static string ErrorTimeout {
-            get {
-                return ResourceManager.GetString("ErrorTimeout", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Произошла неизвестная ошибка.
-        /// </summary>
-        public static string ErrorUnknown {
-            get {
-                return ResourceManager.GetString("ErrorUnknown", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Не удалось запустить {0}: {1}.
-        /// </summary>
-        public static string FailedToLaunch {
-            get {
-                return ResourceManager.GetString("FailedToLaunch", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Проводник Windows.
-        /// </summary>
-        public static string FileExplorerDescription {
-            get {
-                return ResourceManager.GetString("FileExplorerDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Фильтрация приложений....
-        /// </summary>
-        public static string FilteringApplications {
-            get {
-                return ResourceManager.GetString("FilteringApplications", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Поиск Google.
+        ///   Ищет локализованную строку, похожую на Google Search.
         /// </summary>
         public static string GoogleDescription {
             get {
@@ -763,7 +493,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Подключение....
+        ///   Ищет локализованную строку, похожую на Connecting....
         /// </summary>
         public static string Info_Connecting {
             get {
@@ -772,7 +502,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Загрузка....
+        ///   Ищет локализованную строку, похожую на Loading....
         /// </summary>
         public static string Info_Loading {
             get {
@@ -781,7 +511,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Обработка....
+        ///   Ищет локализованную строку, похожую на Processing....
         /// </summary>
         public static string Info_Processing {
             get {
@@ -790,7 +520,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Сохранение....
+        ///   Ищет локализованную строку, похожую на Saving....
         /// </summary>
         public static string Info_Saving {
             get {
@@ -799,7 +529,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Информация.
+        ///   Ищет локализованную строку, похожую на Information.
         /// </summary>
         public static string Information {
             get {
@@ -808,16 +538,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка инициализации: {0}.
-        /// </summary>
-        public static string InitializationError {
-            get {
-                return ResourceManager.GetString("InitializationError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Инициализация....
+        ///   Ищет локализованную строку, похожую на Initializing....
         /// </summary>
         public static string Initializing {
             get {
@@ -826,34 +547,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка запуска.
-        /// </summary>
-        public static string LaunchError {
-            get {
-                return ResourceManager.GetString("LaunchError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Запуск {0}....
-        /// </summary>
-        public static string LaunchingApp {
-            get {
-                return ResourceManager.GetString("LaunchingApp", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Загружено {0} приложений.
-        /// </summary>
-        public static string LoadedApps {
-            get {
-                return ResourceManager.GetString("LoadedApps", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Загрузка....
+        ///   Ищет локализованную строку, похожую на Loading....
         /// </summary>
         public static string Loading {
             get {
@@ -862,7 +556,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Загрузка приложений....
+        ///   Ищет локализованную строку, похожую на Loading applications....
         /// </summary>
         public static string LoadingApplications {
             get {
@@ -871,16 +565,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Выход выполнен.
-        /// </summary>
-        public static string LoggedOut {
-            get {
-                return ResourceManager.GetString("LoggedOut", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Войти.
+        ///   Ищет локализованную строку, похожую на Login.
         /// </summary>
         public static string Login {
             get {
@@ -889,7 +574,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Выполняется аутентификация....
+        ///   Ищет локализованную строку, похожую на Authenticating....
         /// </summary>
         public static string LoginWindow_Authenticating {
             get {
@@ -898,7 +583,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Аутентификация в домене....
+        ///   Ищет локализованную строку, похожую на Domain authentication....
         /// </summary>
         public static string LoginWindow_AuthenticatingDomain {
             get {
@@ -907,7 +592,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Аутентификация сервисного администратора....
+        ///   Ищет локализованную строку, похожую на Service administrator authentication....
         /// </summary>
         public static string LoginWindow_AuthenticatingService {
             get {
@@ -916,7 +601,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Проверка домена....
+        ///   Ищет локализованную строку, похожую на Checking domain....
         /// </summary>
         public static string LoginWindow_CheckingDomain {
             get {
@@ -925,7 +610,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Домен.
+        ///   Ищет локализованную строку, похожую на Domain.
         /// </summary>
         public static string LoginWindow_Domain {
             get {
@@ -934,7 +619,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Домен доступен.
+        ///   Ищет локализованную строку, похожую на Domain available.
         /// </summary>
         public static string LoginWindow_DomainAvailable {
             get {
@@ -943,7 +628,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Доменный вход.
+        ///   Ищет локализованную строку, похожую на Domain Login.
         /// </summary>
         public static string LoginWindow_DomainMode {
             get {
@@ -952,7 +637,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Домен недоступен.
+        ///   Ищет локализованную строку, похожую на Domain unavailable.
         /// </summary>
         public static string LoginWindow_DomainUnavailable {
             get {
@@ -961,7 +646,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Войти.
+        ///   Ищет локализованную строку, похожую на Login.
         /// </summary>
         public static string LoginWindow_Login {
             get {
@@ -970,7 +655,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Пароль.
+        ///   Ищет локализованную строку, похожую на Password.
         /// </summary>
         public static string LoginWindow_Password {
             get {
@@ -979,7 +664,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Запомнить учетные данные.
+        ///   Ищет локализованную строку, похожую на Remember credentials.
         /// </summary>
         public static string LoginWindow_RememberCredentials {
             get {
@@ -988,7 +673,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Сервисный администратор.
+        ///   Ищет локализованную строку, похожую на Service Administrator.
         /// </summary>
         public static string LoginWindow_ServiceMode {
             get {
@@ -997,7 +682,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Пароль администратора.
+        ///   Ищет локализованную строку, похожую на Administrator Password.
         /// </summary>
         public static string LoginWindow_ServicePassword {
             get {
@@ -1006,7 +691,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Имя сервисного администратора.
+        ///   Ищет локализованную строку, похожую на Service Administrator Username.
         /// </summary>
         public static string LoginWindow_ServiceUsername {
             get {
@@ -1015,7 +700,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Настройки.
+        ///   Ищет локализованную строку, похожую на Settings.
         /// </summary>
         public static string LoginWindow_Settings {
             get {
@@ -1024,7 +709,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Корпоративный лаунчер приложений KDV.
+        ///   Ищет локализованную строку, похожую на KDV Corporate Application Launcher.
         /// </summary>
         public static string LoginWindow_Subtitle {
             get {
@@ -1033,7 +718,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Вход в систему.
+        ///   Ищет локализованную строку, похожую на System Login.
         /// </summary>
         public static string LoginWindow_Title {
             get {
@@ -1042,7 +727,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Имя пользователя.
+        ///   Ищет локализованную строку, похожую на Username.
         /// </summary>
         public static string LoginWindow_Username {
             get {
@@ -1051,7 +736,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Корпоративный лаунчер KDV - Вход.
+        ///   Ищет локализованную строку, похожую на KDV Corporate Launcher - Login.
         /// </summary>
         public static string LoginWindowTitle {
             get {
@@ -1060,7 +745,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Выйти.
+        ///   Ищет локализованную строку, похожую на Logout.
         /// </summary>
         public static string Logout {
             get {
@@ -1069,16 +754,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка выхода: {0}.
-        /// </summary>
-        public static string LogoutError {
-            get {
-                return ResourceManager.GetString("LogoutError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Выйти из приложения.
+        ///   Ищет локализованную строку, похожую на Logout from application.
         /// </summary>
         public static string LogoutTooltip {
             get {
@@ -1087,7 +763,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Корпоративный лаунчер KDV.
+        ///   Ищет локализованную строку, похожую на KDV Corporate Launcher.
         /// </summary>
         public static string MainWindow_Title {
             get {
@@ -1096,25 +772,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Приложения не найдены.
-        /// </summary>
-        public static string NoApplicationsFound {
-            get {
-                return ResourceManager.GetString("NoApplicationsFound", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Попробуйте изменить поиск или фильтр категории.
-        /// </summary>
-        public static string NoApplicationsHint {
-            get {
-                return ResourceManager.GetString("NoApplicationsHint", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Текстовый редактор.
+        ///   Ищет локализованную строку, похожую на Text Editor.
         /// </summary>
         public static string NotepadDescription {
             get {
@@ -1123,7 +781,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Или войти с другими учетными данными:.
+        ///   Ищет локализованную строку, похожую на Or sign in with different credentials:.
         /// </summary>
         public static string OrSignInDifferent {
             get {
@@ -1132,16 +790,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Редактор Paint.
-        /// </summary>
-        public static string PaintDescription {
-            get {
-                return ResourceManager.GetString("PaintDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Пароль:.
+        ///   Ищет локализованную строку, похожую на Password:.
         /// </summary>
         public static string Password {
             get {
@@ -1150,7 +799,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Пожалуйста, введите пароль.
+        ///   Ищет локализованную строку, похожую на Please enter password.
         /// </summary>
         public static string PleaseEnterPassword {
             get {
@@ -1159,7 +808,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Пожалуйста, введите имя пользователя.
+        ///   Ищет локализованную строку, похожую на Please enter username.
         /// </summary>
         public static string PleaseEnterUsername {
             get {
@@ -1168,7 +817,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Готов.
+        ///   Ищет локализованную строку, похожую на Ready.
         /// </summary>
         public static string Ready {
             get {
@@ -1177,7 +826,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Обновить.
+        ///   Ищет локализованную строку, похожую на Refresh.
         /// </summary>
         public static string Refresh {
             get {
@@ -1186,7 +835,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Обновить приложения.
+        ///   Ищет локализованную строку, похожую на Refresh applications.
         /// </summary>
         public static string RefreshTooltip {
             get {
@@ -1195,16 +844,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Редактор реестра Windows.
-        /// </summary>
-        public static string RegistryEditorDescription {
-            get {
-                return ResourceManager.GetString("RegistryEditorDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Администратор.
+        ///   Ищет локализованную строку, похожую на Administrator.
         /// </summary>
         public static string RoleAdministrator {
             get {
@@ -1213,7 +853,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Опытный пользователь.
+        ///   Ищет локализованную строку, похожую на Power User.
         /// </summary>
         public static string RolePowerUser {
             get {
@@ -1222,7 +862,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Стандартный.
+        ///   Ищет локализованную строку, похожую на Standard.
         /// </summary>
         public static string RoleStandard {
             get {
@@ -1231,7 +871,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Поиск приложений....
+        ///   Ищет локализованную строку, похожую на Search applications....
         /// </summary>
         public static string SearchPlaceholder {
             get {
@@ -1240,16 +880,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка сервиса: {0}.
-        /// </summary>
-        public static string ServiceError {
-            get {
-                return ResourceManager.GetString("ServiceError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Настройки.
+        ///   Ищет локализованную строку, похожую на Settings.
         /// </summary>
         public static string Settings {
             get {
@@ -1258,7 +889,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Функция настроек скоро будет доступна....
+        ///   Ищет локализованную строку, похожую на Settings feature coming soon....
         /// </summary>
         public static string SettingsComingSoon {
             get {
@@ -1267,7 +898,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Настройки.
+        ///   Ищет локализованную строку, похожую на Settings.
         /// </summary>
         public static string SettingsTooltip {
             get {
@@ -1276,7 +907,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Окно настроек будет реализовано в следующей итерации..
+        ///   Ищет локализованную строку, похожую на Settings window will be implemented in the next iteration..
         /// </summary>
         public static string SettingsWindowMessage {
             get {
@@ -1285,7 +916,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Приложение запущено.
+        ///   Ищет локализованную строку, похожую на Application launched.
         /// </summary>
         public static string Success_ApplicationLaunched {
             get {
@@ -1294,7 +925,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Вход выполнен успешно.
+        ///   Ищет локализованную строку, похожую на Login completed successfully.
         /// </summary>
         public static string Success_LoginCompleted {
             get {
@@ -1303,7 +934,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Настройки сохранены.
+        ///   Ищет локализованную строку, похожую на Settings saved.
         /// </summary>
         public static string Success_SettingsSaved {
             get {
@@ -1312,25 +943,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Успешно запущено {0}.
-        /// </summary>
-        public static string SuccessfullyLaunched {
-            get {
-                return ResourceManager.GetString("SuccessfullyLaunched", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Переключено на пользователя: {0}.
-        /// </summary>
-        public static string SwitchedToUser {
-            get {
-                return ResourceManager.GetString("SwitchedToUser", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Сменить пользователя.
+        ///   Ищет локализованную строку, похожую на Switch User.
         /// </summary>
         public static string SwitchUser {
             get {
@@ -1339,16 +952,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка смены пользователя: {0}.
-        /// </summary>
-        public static string SwitchUserError {
-            get {
-                return ResourceManager.GetString("SwitchUserError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Переключиться на другого пользователя.
+        ///   Ищет локализованную строку, похожую на Switch to another user.
         /// </summary>
         public static string SwitchUserTooltip {
             get {
@@ -1357,43 +961,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Диспетчер задач Windows.
-        /// </summary>
-        public static string TaskManagerDescription {
-            get {
-                return ResourceManager.GetString("TaskManagerDescription", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Ошибка времени ожидания.
-        /// </summary>
-        public static string TimeoutError {
-            get {
-                return ResourceManager.GetString("TimeoutError", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Пользователь успешно аутентифицирован.
-        /// </summary>
-        public static string UserAuthenticated {
-            get {
-                return ResourceManager.GetString("UserAuthenticated", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Загрузка данных пользователя....
-        /// </summary>
-        public static string UserDataLoading {
-            get {
-                return ResourceManager.GetString("UserDataLoading", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Имя пользователя:.
+        ///   Ищет локализованную строку, похожую на Username:.
         /// </summary>
         public static string Username {
             get {
@@ -1402,7 +970,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Предупреждение.
+        ///   Ищет локализованную строку, похожую на Warning.
         /// </summary>
         public static string Warning {
             get {
@@ -1411,7 +979,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Требуется режим сервисного администратора.
+        ///   Ищет локализованную строку, похожую на Service administrator mode required.
         /// </summary>
         public static string Warning_ServiceModeRequired {
             get {
@@ -1420,7 +988,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на У вас есть несохраненные изменения.
+        ///   Ищет локализованную строку, похожую на You have unsaved changes.
         /// </summary>
         public static string Warning_UnsavedChanges {
             get {
@@ -1429,7 +997,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Добро пожаловать, {0}!.
+        ///   Ищет локализованную строку, похожую на Welcome, {0}!.
         /// </summary>
         public static string Welcome {
             get {
@@ -1438,29 +1006,11 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Добро пожаловать, {0}!.
-        /// </summary>
-        public static string WelcomeMessage {
-            get {
-                return ResourceManager.GetString("WelcomeMessage", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Корпоративный лаунчер KDV - {0} ({1}).
+        ///   Ищет локализованную строку, похожую на KDV Corporate Launcher - {0} ({1}).
         /// </summary>
         public static string WindowTitle {
             get {
                 return ResourceManager.GetString("WindowTitle", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Редактор WordPad.
-        /// </summary>
-        public static string WordpadDescription {
-            get {
-                return ResourceManager.GetString("WordpadDescription", resourceCulture);
             }
         }
     }

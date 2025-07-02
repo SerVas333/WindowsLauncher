@@ -27,6 +27,7 @@ namespace WindowsLauncher.Core.Models
 
     /// <summary>
     /// Статус аутентификации
+    /// ✅ РАСШИРЕН для совместимости
     /// </summary>
     public enum AuthenticationStatus
     {
@@ -37,11 +38,17 @@ namespace WindowsLauncher.Core.Models
         NetworkError,
         Cancelled,
         ServiceModeRequired,
-        AccountLocked
+        AccountLocked,
+        // ✅ ДОБАВЛЕНЫ дополнительные статусы
+        Failed,
+        Error,
+        PasswordExpired,
+        Locked
     }
 
     /// <summary>
     /// Результат аутентификации
+    /// ✅ ИСПРАВЛЕНО: Добавлено свойство Message для совместимости
     /// </summary>
     public class AuthenticationResult
     {
@@ -51,6 +58,16 @@ namespace WindowsLauncher.Core.Models
         public User? User { get; set; }
         public AuthenticationType AuthType { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
+
+        /// <summary>
+        /// ✅ ДОБАВЛЕНО: Общее сообщение (алиас для ErrorMessage для совместимости)
+        /// </summary>
+        public string Message
+        {
+            get => string.IsNullOrEmpty(ErrorMessage) && IsSuccess ? "Authentication successful" : ErrorMessage;
+            set => ErrorMessage = value;
+        }
+
         public string Domain { get; set; } = string.Empty;
         public DateTime AuthenticatedAt { get; set; } = DateTime.Now;
 
@@ -66,6 +83,19 @@ namespace WindowsLauncher.Core.Models
         /// </summary>
         public Dictionary<string, object> Metadata { get; set; } = new();
 
+        /// <summary>
+        /// ✅ ДОБАВЛЕНЫ дополнительные свойства для полной совместимости
+        /// </summary>
+        public string? Token { get; set; }
+        public DateTime? TokenExpiration { get; set; }
+        public string? ClientIpAddress { get; set; }
+        public string? ClientUserAgent { get; set; }
+        public Dictionary<string, object> AdditionalData { get; set; } = new();
+        public int AttemptCount { get; set; } = 1;
+        public List<string> Warnings { get; set; } = new();
+        public bool RequiresPasswordChange { get; set; } = false;
+        public DateTime? LockedUntil { get; set; }
+
         public static AuthenticationResult Success(User user, AuthenticationType authType, string? domain = null)
         {
             return new AuthenticationResult
@@ -76,10 +106,11 @@ namespace WindowsLauncher.Core.Models
                 AuthType = authType,
                 Domain = domain ?? string.Empty,
                 Username = user.Username,
-                DisplayName = user.DisplayName,
+                DisplayName = user.FullName, // ✅ ИСПРАВЛЕНО: Используем FullName
                 Email = user.Email,
                 Groups = user.Groups,
-                Role = user.Role
+                Role = user.Role,
+                Message = "Authentication successful"
             };
         }
 
@@ -89,8 +120,118 @@ namespace WindowsLauncher.Core.Models
             {
                 IsSuccess = false,
                 Status = status,
-                ErrorMessage = error
+                ErrorMessage = error,
+                Message = error
             };
+        }
+
+        /// <summary>
+        /// ✅ ДОБАВЛЕНЫ дополнительные статические методы для удобства
+        /// </summary>
+        public static AuthenticationResult Error(string errorMessage, Exception? exception = null)
+        {
+            var result = new AuthenticationResult
+            {
+                IsSuccess = false,
+                Status = AuthenticationStatus.Error,
+                ErrorMessage = errorMessage,
+                Message = errorMessage
+            };
+
+            if (exception != null)
+            {
+                result.AdditionalData["Exception"] = exception.ToString();
+                result.AdditionalData["ExceptionType"] = exception.GetType().Name;
+            }
+
+            return result;
+        }
+
+        public static AuthenticationResult Locked(DateTime lockedUntil, string message = "Account is locked")
+        {
+            return new AuthenticationResult
+            {
+                IsSuccess = false,
+                Status = AuthenticationStatus.Locked,
+                ErrorMessage = message,
+                Message = message,
+                LockedUntil = lockedUntil
+            };
+        }
+
+        public static AuthenticationResult PasswordExpired(string message = "Password has expired")
+        {
+            return new AuthenticationResult
+            {
+                IsSuccess = false,
+                Status = AuthenticationStatus.PasswordExpired,
+                ErrorMessage = message,
+                Message = message,
+                RequiresPasswordChange = true
+            };
+        }
+
+        /// <summary>
+        /// Добавление предупреждения
+        /// </summary>
+        public void AddWarning(string warning)
+        {
+            if (!string.IsNullOrEmpty(warning) && !Warnings.Contains(warning))
+            {
+                Warnings.Add(warning);
+            }
+        }
+
+        /// <summary>
+        /// Проверка наличия предупреждений
+        /// </summary>
+        public bool HasWarnings => Warnings.Count > 0;
+
+        /// <summary>
+        /// Получение всех предупреждений как строки
+        /// </summary>
+        public string GetWarningsText()
+        {
+            return string.Join("; ", Warnings);
+        }
+
+        /// <summary>
+        /// Копирование результата
+        /// </summary>
+        public AuthenticationResult Clone()
+        {
+            return new AuthenticationResult
+            {
+                IsSuccess = IsSuccess,
+                User = User?.Clone(),
+                Status = Status,
+                AuthType = AuthType,
+                ErrorMessage = ErrorMessage,
+                Domain = Domain,
+                AuthenticatedAt = AuthenticatedAt,
+                Username = Username,
+                DisplayName = DisplayName,
+                Email = Email,
+                Groups = new List<string>(Groups),
+                Role = Role,
+                Metadata = new Dictionary<string, object>(Metadata),
+                Token = Token,
+                TokenExpiration = TokenExpiration,
+                ClientIpAddress = ClientIpAddress,
+                ClientUserAgent = ClientUserAgent,
+                AdditionalData = new Dictionary<string, object>(AdditionalData),
+                AttemptCount = AttemptCount,
+                Warnings = new List<string>(Warnings),
+                RequiresPasswordChange = RequiresPasswordChange,
+                LockedUntil = LockedUntil
+            };
+        }
+
+        public override string ToString()
+        {
+            var statusText = IsSuccess ? "Success" : $"Failed ({Status})";
+            var userText = User?.Username ?? Username ?? "No user";
+            return $"AuthResult: {statusText} - {userText} - {Message}";
         }
     }
 
@@ -205,5 +346,36 @@ namespace WindowsLauncher.Core.Models
         public bool IsEnabled { get; set; } = true;
         public DateTime? LastLogon { get; set; }
         public DateTime? PasswordLastSet { get; set; }
+    }
+
+    /// <summary>
+    /// ✅ ДОБАВЛЕНО: Методы аутентификации для совместимости
+    /// </summary>
+    public enum AuthenticationMethod
+    {
+        /// <summary>
+        /// Аутентификация через Active Directory
+        /// </summary>
+        Domain = 0,
+
+        /// <summary>
+        /// Локальная служебная учетная запись
+        /// </summary>
+        ServiceAccount = 1,
+
+        /// <summary>
+        /// Windows аутентификация
+        /// </summary>
+        Windows = 2,
+
+        /// <summary>
+        /// Токен аутентификации
+        /// </summary>
+        Token = 3,
+
+        /// <summary>
+        /// Тестовый режим
+        /// </summary>
+        Test = 99
     }
 }

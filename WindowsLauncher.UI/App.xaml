@@ -1,45 +1,52 @@
-﻿<!-- ===== WindowsLauncher.UI/App.xaml - ИСПРАВЛЕННАЯ ФИНАЛЬНАЯ ВЕРСИЯ ===== -->
+﻿<!-- WindowsLauncher.UI/App.xaml -->
 <Application x:Class="WindowsLauncher.UI.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
-    <!-- ✅ УБРАЛИ StartupUri - запуск управляется через App.xaml.cs -->
 
     <Application.Resources>
         <ResourceDictionary>
             <ResourceDictionary.MergedDictionaries>
-                <!-- ========== ПОДКЛЮЧЕНИЕ СТИЛЕВЫХ РЕСУРСОВ ========== -->
+                <!-- Подключаем все стилевые файлы в правильном порядке -->
 
-                <!-- 1. Базовые цвета Material Design -->
+                <!-- 1. Сначала цвета -->
                 <ResourceDictionary Source="Styles/MaterialColors.xaml"/>
 
-                <!-- 2. Стили элементов Material Design -->
+                <!-- 2. Потом базовые Material стили -->
                 <ResourceDictionary Source="Styles/MaterialStyles.xaml"/>
 
-                <!-- 3. Корпоративные стили KDV (расширяют Material) -->
+                <!-- 3. Затем корпоративные стили -->
                 <ResourceDictionary Source="Styles/CorporateStyles.xaml"/>
-
-                <!-- ✅ УБРАЛИ StringResources.xaml - используем .resx -->
 
             </ResourceDictionary.MergedDictionaries>
 
-            <!-- ========== FALLBACK ИКОНКИ ========== -->
+            <!-- Глобальные fallback ресурсы -->
 
-            <!-- Иконка лаунчера -->
-            <DrawingImage x:Key="LauncherIconFallback">
+            <!-- Логотип KDV (векторный fallback) -->
+            <DrawingImage x:Key="KdvLogoFallback">
                 <DrawingImage.Drawing>
                     <DrawingGroup>
-                        <GeometryDrawing Brush="{StaticResource PrimaryBrush}">
-                            <GeometryDrawing.Geometry>
-                                <RectangleGeometry Rect="0,0,48,48" RadiusX="8" RadiusY="8"/>
-                            </GeometryDrawing.Geometry>
-                        </GeometryDrawing>
-                        <GeometryDrawing Brush="{StaticResource OnPrimaryBrush}">
+                        <!-- Красный фон -->
+                        <GeometryDrawing Brush="#C41E3A" 
+                                       Geometry="M 5 5 L 85 5 A 5 5 0 0 1 90 10 L 90 40 A 5 5 0 0 1 85 45 L 5 45 A 5 5 0 0 1 0 40 L 0 10 A 5 5 0 0 1 5 5 Z"/>
+                        <!-- Текст KDV -->
+                        <GeometryDrawing Brush="White">
                             <GeometryDrawing.Geometry>
                                 <GeometryGroup>
-                                    <RectangleGeometry Rect="8,8,12,12"/>
-                                    <RectangleGeometry Rect="28,8,12,12"/>
-                                    <RectangleGeometry Rect="8,28,12,12"/>
-                                    <RectangleGeometry Rect="28,28,12,12"/>
+                                    <!-- K -->
+                                    <RectangleGeometry Rect="10,15 3,20"/>
+                                    <RectangleGeometry Rect="13,23 8,3"/>
+                                    <RectangleGeometry Rect="17,15 4,8"/>
+                                    <RectangleGeometry Rect="17,27 4,8"/>
+                                    <!-- D -->
+                                    <RectangleGeometry Rect="30,15 3,20"/>
+                                    <RectangleGeometry Rect="33,15 10,3"/>
+                                    <RectangleGeometry Rect="33,32 10,3"/>
+                                    <RectangleGeometry Rect="43,18 3,14"/>
+                                    <!-- V -->
+                                    <RectangleGeometry Rect="55,15 3,15"/>
+                                    <RectangleGeometry Rect="58,30 4,5"/>
+                                    <RectangleGeometry Rect="62,30 4,5"/>
+                                    <RectangleGeometry Rect="66,15 3,15"/>
                                 </GeometryGroup>
                             </GeometryDrawing.Geometry>
                         </GeometryDrawing>
@@ -47,144 +54,20 @@
                 </DrawingImage.Drawing>
             </DrawingImage>
 
-            <!-- Логотип KDV -->
-            <DrawingImage x:Key="KdvLogoFallback">
+            <!-- Иконка лаунчера -->
+            <DrawingImage x:Key="LauncherIconFallback">
                 <DrawingImage.Drawing>
                     <DrawingGroup>
-                        <GeometryDrawing Brush="{StaticResource PrimaryBrush}">
-                            <GeometryDrawing.Geometry>
-                                <EllipseGeometry Center="30,30" RadiusX="28" RadiusY="28"/>
-                            </GeometryDrawing.Geometry>
-                        </GeometryDrawing>
-                        <GeometryDrawing Brush="{StaticResource OnPrimaryBrush}">
-                            <GeometryDrawing.Geometry>
-                                <PathGeometry>
-                                    <PathFigure StartPoint="12,20">
-                                        <LineSegment Point="12,40"/>
-                                        <LineSegment Point="15,40"/>
-                                        <LineSegment Point="15,32"/>
-                                        <LineSegment Point="22,40"/>
-                                        <LineSegment Point="26,40"/>
-                                        <LineSegment Point="18,30"/>
-                                        <LineSegment Point="26,20"/>
-                                        <LineSegment Point="22,20"/>
-                                        <LineSegment Point="17,27"/>
-                                        <LineSegment Point="15,25"/>
-                                        <LineSegment Point="15,20"/>
-                                        <LineSegment Point="12,20"/>
-                                    </PathFigure>
-                                </PathGeometry>
-                            </GeometryDrawing.Geometry>
-                        </GeometryDrawing>
+                        <!-- Иконка ракеты -->
+                        <GeometryDrawing Brush="#C41E3A" 
+                                       Geometry="M 12 2 L 13 2 A 1 1 0 0 1 14 3 L 14 8 L 18 12 L 18 17 L 15 17 L 15 12 L 11 12 L 11 17 L 8 17 L 8 12 L 12 8 L 12 3 A 1 1 0 0 1 12 2 Z"/>
+                        <GeometryDrawing Brush="White" 
+                                       Geometry="M 12.5 4 A 0.5 0.5 0 1 1 12.5 5 A 0.5 0.5 0 1 1 12.5 4 Z"/>
                     </DrawingGroup>
                 </DrawingImage.Drawing>
             </DrawingImage>
-
-            <!-- Иконка приложения по умолчанию -->
-            <DrawingImage x:Key="DefaultAppIconFallback">
-                <DrawingImage.Drawing>
-                    <DrawingGroup>
-                        <GeometryDrawing Brush="{StaticResource SecondaryBrush}">
-                            <GeometryDrawing.Geometry>
-                                <RectangleGeometry Rect="0,0,32,32" RadiusX="4" RadiusY="4"/>
-                            </GeometryDrawing.Geometry>
-                        </GeometryDrawing>
-                        <GeometryDrawing Brush="{StaticResource OnSecondaryBrush}">
-                            <GeometryDrawing.Geometry>
-                                <EllipseGeometry Center="16,16" RadiusX="8" RadiusY="8"/>
-                            </GeometryDrawing.Geometry>
-                        </GeometryDrawing>
-                    </DrawingGroup>
-                </DrawingImage.Drawing>
-            </DrawingImage>
-
-            <!-- ========== ГЛОБАЛЬНЫЕ СТИЛИ ========== -->
-
-            <!-- Базовый стиль для всех окон -->
-            <Style TargetType="Window">
-                <Setter Property="FontFamily" Value="Segoe UI"/>
-                <Setter Property="FontSize" Value="14"/>
-                <Setter Property="Background" Value="{StaticResource BackgroundBrush}"/>
-                <Setter Property="Foreground" Value="{StaticResource OnBackgroundBrush}"/>
-                <Setter Property="Icon" Value="{StaticResource LauncherIconFallback}"/>
-            </Style>
-
-            <!-- Применяем Material стили как стили по умолчанию -->
-            <Style TargetType="TextBox" BasedOn="{StaticResource MaterialTextBoxStyle}"/>
-            <Style TargetType="PasswordBox" BasedOn="{StaticResource MaterialPasswordBoxStyle}"/>
-            <Style TargetType="Button" BasedOn="{StaticResource MaterialButtonStyle}"/>
-            <Style TargetType="CheckBox" BasedOn="{StaticResource MaterialCheckBoxStyle}"/>
-            <Style TargetType="RadioButton" BasedOn="{StaticResource MaterialRadioButtonStyle}"/>
-
-            <!-- Корпоративный стиль для TextBlock по умолчанию -->
-            <Style TargetType="TextBlock" BasedOn="{StaticResource CorporateBodyText}"/>
-
-            <!-- ========== ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ========== -->
-
-            <!-- Стиль для заголовков страниц -->
-            <Style x:Key="PageTitle" TargetType="TextBlock" BasedOn="{StaticResource CorporateTitle}">
-                <Setter Property="Margin" Value="0,0,0,20"/>
-                <Setter Property="HorizontalAlignment" Value="Left"/>
-            </Style>
-
-            <!-- Стиль для подзаголовков -->
-            <Style x:Key="SectionTitle" TargetType="TextBlock" BasedOn="{StaticResource CorporateSubtitle}">
-                <Setter Property="Margin" Value="0,15,0,10"/>
-                <Setter Property="FontWeight" Value="SemiBold"/>
-            </Style>
-
-            <!-- Стиль для контейнеров -->
-            <Style x:Key="ContentContainer" TargetType="Border">
-                <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
-                <Setter Property="CornerRadius" Value="8"/>
-                <Setter Property="Padding" Value="20"/>
-                <Setter Property="Margin" Value="10"/>
-                <Setter Property="BorderBrush" Value="{StaticResource OutlineBrush}"/>
-                <Setter Property="BorderThickness" Value="1"/>
-            </Style>
-
-            <!-- ========== ШАБЛОНЫ СООБЩЕНИЙ ========== -->
-
-            <!-- Шаблон для ошибок -->
-            <DataTemplate x:Key="ErrorTemplate">
-                <Border Background="{StaticResource ErrorLightBrush}" 
-                        CornerRadius="4" 
-                        Padding="15,10" 
-                        Margin="5">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="⚠" 
-                                   FontSize="16" 
-                                   Foreground="{StaticResource ErrorBrush}"
-                                   Margin="0,0,10,0"
-                                   VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding}" 
-                                   Foreground="{StaticResource ErrorBrush}"
-                                   TextWrapping="Wrap"
-                                   VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
-            </DataTemplate>
-
-            <!-- Шаблон для успешных сообщений -->
-            <DataTemplate x:Key="SuccessTemplate">
-                <Border Background="{StaticResource SuccessLightBrush}" 
-                        CornerRadius="4" 
-                        Padding="15,10" 
-                        Margin="5">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="✓" 
-                                   FontSize="16" 
-                                   Foreground="{StaticResource SuccessBrush}"
-                                   Margin="0,0,10,0"
-                                   VerticalAlignment="Center"/>
-                        <TextBlock Text="{Binding}" 
-                                   Foreground="{StaticResource SuccessBrush}"
-                                   TextWrapping="Wrap"
-                                   VerticalAlignment="Center"/>
-                    </StackPanel>
-                </Border>
-            </DataTemplate>
 
         </ResourceDictionary>
     </Application.Resources>
+
 </Application>
