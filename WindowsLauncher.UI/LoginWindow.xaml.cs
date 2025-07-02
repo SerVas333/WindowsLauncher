@@ -548,3 +548,5 @@ namespace WindowsLauncher.UI.Views
         }
 
         #endregion
+    }
+}

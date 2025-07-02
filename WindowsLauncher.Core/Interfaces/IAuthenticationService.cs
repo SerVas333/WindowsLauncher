@@ -1,24 +1,34 @@
-﻿// WindowsLauncher.Core/Interfaces/IAuthenticationService.cs
+﻿// WindowsLauncher.Core/Interfaces/IAuthenticationService.cs - ИСПРАВЛЕННАЯ ВЕРСИЯ
 using System.Threading.Tasks;
-using WindowsLauncher.Core.Enums;
 using WindowsLauncher.Core.Models;
+using WindowsLauncher.Core.Enums;
 
 namespace WindowsLauncher.Core.Interfaces
 {
     /// <summary>
-    /// Упрощенный интерфейс сервиса аутентификации
+    /// Интерфейс сервиса аутентификации с поддержкой всех методов
     /// </summary>
     public interface IAuthenticationService
     {
         /// <summary>
-        /// Аутентифицировать пользователя Windows
+        /// Аутентифицировать пользователя Windows (без параметров - использует текущего пользователя)
         /// </summary>
-        Task<User> AuthenticateWindowsUserAsync();
+        Task<AuthenticationResult> AuthenticateAsync();
 
         /// <summary>
         /// Аутентифицировать пользователя по логину/паролю
         /// </summary>
-        Task<User> AuthenticateAsync(string username, string password);
+        Task<AuthenticationResult> AuthenticateAsync(string username, string password);
+
+        /// <summary>
+        /// Аутентифицировать пользователя с учетными данными
+        /// </summary>
+        Task<AuthenticationResult> AuthenticateAsync(AuthenticationCredentials credentials);
+
+        /// <summary>
+        /// Аутентифицировать пользователя Windows (получить объект User)
+        /// </summary>
+        Task<User> AuthenticateWindowsUserAsync();
 
         /// <summary>
         /// Аутентифицировать сервисного администратора
@@ -51,6 +61,11 @@ namespace WindowsLauncher.Core.Interfaces
         Task LogoutAsync(int userId);
 
         /// <summary>
+        /// Выход из системы (перегрузка без параметров)
+        /// </summary>
+        void Logout();
+
+        /// <summary>
         /// Обновить сессию пользователя
         /// </summary>
         Task RefreshSessionAsync(int userId);
@@ -59,5 +74,15 @@ namespace WindowsLauncher.Core.Interfaces
         /// Проверить валидность сессии
         /// </summary>
         Task<bool> IsSessionValidAsync(int userId);
+
+        /// <summary>
+        /// Проверить доступность домена
+        /// </summary>
+        Task<bool> IsDomainAvailableAsync(string domain);
+
+        /// <summary>
+        /// Проверить, настроен ли сервисный администратор
+        /// </summary>
+        bool IsServiceAdminConfigured();
     }
 }

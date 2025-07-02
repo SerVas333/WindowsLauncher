@@ -1,4 +1,4 @@
-﻿// WindowsLauncher.Services/Authentication/AuthenticationService.cs
+﻿// WindowsLauncher.Services/Authentication/AuthenticationService.cs - ПОЛНЫЙ ИСПРАВЛЕННЫЙ КОД
 using Microsoft.Extensions.Logging;
 using System;
 using System.Linq;
@@ -34,6 +34,55 @@ namespace WindowsLauncher.Services.Authentication
             _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+        }
+
+        /// <summary>
+        /// Аутентифицировать пользователя Windows (без параметров - для интерфейса)
+        /// </summary>
+        public async Task<AuthenticationResult> AuthenticateAsync()
+        {
+            try
+            {
+                var user = await AuthenticateWindowsUserAsync();
+                return AuthenticationResult.Success(user, AuthenticationType.WindowsSSO);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error authenticating current Windows user");
+                return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Аутентифицировать с учетными данными (для интерфейса)
+        /// </summary>
+        public async Task<AuthenticationResult> AuthenticateAsync(AuthenticationCredentials credentials)
+        {
+            try
+            {
+                if (credentials == null)
+                    throw new ArgumentNullException(nameof(credentials));
+
+                User user;
+
+                if (credentials.IsServiceAccount)
+                {
+                    user = await AuthenticateServiceAdminAsync(credentials.Username, credentials.Password);
+                }
+                else
+                {
+                    user = await AuthenticateAsync(credentials.Username, credentials.Password);
+                }
+
+                return AuthenticationResult.Success(user,
+                    credentials.IsServiceAccount ? AuthenticationType.LocalService : AuthenticationType.DomainLDAP,
+                    credentials.Domain);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error authenticating with credentials");
+                return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
+            }
         }
 
         /// <summary>
@@ -101,7 +150,7 @@ namespace WindowsLauncher.Services.Authentication
                 _logger.LogDebug("Authenticating user: {Username}", username);
 
                 // Проверяем доступность домена
-                var isDomainAvailable = await _adService.IsDomainAvailableAsync();
+                var isDomainAvailable = await IsDomainAvailableAsync();
                 if (!isDomainAvailable)
                 {
                     _logger.LogWarning("Domain is not available, checking local authentication");
@@ -377,7 +426,7 @@ namespace WindowsLauncher.Services.Authentication
         }
 
         /// <summary>
-        /// Выход из системы
+        /// Выход из системы (по ID)
         /// </summary>
         public async Task LogoutAsync(int userId)
         {
@@ -394,6 +443,22 @@ namespace WindowsLauncher.Services.Authentication
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during logout for user {UserId}", userId);
+            }
+        }
+
+        /// <summary>
+        /// Выход из системы (простой)
+        /// </summary>
+        public void Logout()
+        {
+            try
+            {
+                _logger.LogInformation("User logged out (simple logout)");
+                // Простая реализация - в WPF приложении обычно просто закрываем сессию
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during simple logout");
             }
         }
 
@@ -443,6 +508,50 @@ namespace WindowsLauncher.Services.Authentication
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error checking session validity for user {UserId}", userId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Проверить доступность домена
+        /// </summary>
+        public async Task<bool> IsDomainAvailableAsync(string domain = null)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(domain))
+                {
+                    // Используем домен из конфигурации
+                    return await _adService.IsDomainAvailableAsync();
+                }
+                else
+                {
+                    // Проверяем конкретный домен
+                    var config = _configService.GetConfiguration();
+                    return await _adService.TestConnectionAsync(domain, config.Port);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking domain availability");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Проверить, настроен ли сервисный администратор
+        /// </summary>
+        public bool IsServiceAdminConfigured()
+        {
+            try
+            {
+                var config = _configService.GetConfiguration();
+                return !string.IsNullOrEmpty(config.ServiceAdmin.Username) &&
+                       !string.IsNullOrEmpty(config.ServiceAdmin.PasswordHash);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking service admin configuration");
                 return false;
             }
         }
@@ -623,7 +732,7 @@ namespace WindowsLauncher.Services.Authentication
         /// <summary>
         /// Определить роль пользователя по группам
         /// </summary>
-        private UserRole DetermineUserRoleFromGroups(List<string> groups, AuthenticationConfiguration config)
+        private UserRole DetermineUserRoleFromGroups(System.Collections.Generic.List<string> groups, AuthenticationConfiguration config)
         {
             var adminGroups = config.AdminGroups.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
             var powerUserGroups = config.PowerUserGroups.Split(',', StringSplitOptions.RemoveEmptyEntries).ToList();
