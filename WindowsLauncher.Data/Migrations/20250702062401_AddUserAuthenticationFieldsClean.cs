@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace WindowsLauncher.Data.Migrations
 {
     /// <inheritdoc />
-    public partial class AddUserAuthenticationFields : Migration
+    public partial class AddUserAuthenticationFieldsClean : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -38,58 +38,6 @@ namespace WindowsLauncher.Data.Migrations
                 });
 
             migrationBuilder.CreateTable(
-                name: "AuditLogs",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Username = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    Action = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    ApplicationName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Details = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
-                    Timestamp = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    Success = table.Column<bool>(type: "INTEGER", nullable: false),
-                    ErrorMessage = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
-                    ComputerName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    IPAddress = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
-                    UserAgent = table.Column<string>(type: "TEXT", nullable: false),
-                    IpAddress = table.Column<string>(type: "TEXT", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
-                name: "Users",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "INTEGER", nullable: false)
-                        .Annotation("Sqlite:Autoincrement", true),
-                    UserId = table.Column<Guid>(type: "TEXT", nullable: false),
-                    Username = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
-                    DisplayName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
-                    Email = table.Column<string>(type: "TEXT", maxLength: 300, nullable: false),
-                    Groups = table.Column<string>(type: "TEXT", nullable: false),
-                    Role = table.Column<int>(type: "INTEGER", nullable: false),
-                    LastLogin = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    LastActivityAt = table.Column<DateTime>(type: "TEXT", nullable: true),
-                    CreatedDate = table.Column<DateTime>(type: "TEXT", nullable: false),
-                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
-                    IsServiceAccount = table.Column<bool>(type: "INTEGER", nullable: false),
-                    PasswordHash = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    Salt = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
-                    FailedLoginAttempts = table.Column<int>(type: "INTEGER", nullable: false),
-                    IsLocked = table.Column<bool>(type: "INTEGER", nullable: false),
-                    LockoutEnd = table.Column<DateTime>(type: "TEXT", nullable: true)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Users", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "UserSettings",
                 columns: table => new
                 {
@@ -110,6 +58,70 @@ namespace WindowsLauncher.Data.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_UserSettings", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "Users",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    Username = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    DisplayName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Email = table.Column<string>(type: "TEXT", maxLength: 300, nullable: false),
+                    Role = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsActive = table.Column<bool>(type: "INTEGER", nullable: false),
+                    IsServiceAccount = table.Column<bool>(type: "INTEGER", nullable: false),
+                    PasswordHash = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    Salt = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    LastActivityAt = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    FailedLoginAttempts = table.Column<int>(type: "INTEGER", nullable: false),
+                    IsLocked = table.Column<bool>(type: "INTEGER", nullable: false),
+                    LockoutEnd = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    LastPasswordChange = table.Column<DateTime>(type: "TEXT", nullable: true),
+                    GroupsJson = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    SettingsJson = table.Column<string>(type: "TEXT", maxLength: 4000, nullable: false),
+                    MetadataJson = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false),
+                    Groups = table.Column<string>(type: "TEXT", nullable: false),
+                    UserSettingsId = table.Column<int>(type: "INTEGER", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Users", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_Users_UserSettings_UserSettingsId",
+                        column: x => x.UserSettingsId,
+                        principalTable: "UserSettings",
+                        principalColumn: "Id");
+                });
+
+            migrationBuilder.CreateTable(
+                name: "AuditLogs",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "INTEGER", nullable: false)
+                        .Annotation("Sqlite:Autoincrement", true),
+                    UserId = table.Column<int>(type: "INTEGER", nullable: true),
+                    Username = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    Action = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    ApplicationName = table.Column<string>(type: "TEXT", maxLength: 200, nullable: false),
+                    Details = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
+                    Timestamp = table.Column<DateTime>(type: "TEXT", nullable: false),
+                    Success = table.Column<bool>(type: "INTEGER", nullable: false),
+                    ErrorMessage = table.Column<string>(type: "TEXT", maxLength: 1000, nullable: false),
+                    ComputerName = table.Column<string>(type: "TEXT", maxLength: 100, nullable: false),
+                    IPAddress = table.Column<string>(type: "TEXT", maxLength: 50, nullable: false),
+                    UserAgent = table.Column<string>(type: "TEXT", maxLength: 500, nullable: false),
+                    MetadataJson = table.Column<string>(type: "TEXT", maxLength: 2000, nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_AuditLogs", x => x.Id);
+                    table.ForeignKey(
+                        name: "FK_AuditLogs_Users_UserId",
+                        column: x => x.UserId,
+                        principalTable: "Users",
+                        principalColumn: "Id");
                 });
 
             migrationBuilder.CreateIndex(
@@ -138,6 +150,11 @@ namespace WindowsLauncher.Data.Migrations
                 column: "Timestamp");
 
             migrationBuilder.CreateIndex(
+                name: "IX_AuditLogs_UserId",
+                table: "AuditLogs",
+                column: "UserId");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_AuditLogs_Username",
                 table: "AuditLogs",
                 column: "Username");
@@ -162,6 +179,11 @@ namespace WindowsLauncher.Data.Migrations
                 table: "Users",
                 column: "Username",
                 unique: true);
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Users_UserSettingsId",
+                table: "Users",
+                column: "UserSettingsId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_UserSettings_Username",

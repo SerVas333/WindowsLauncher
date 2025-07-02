@@ -100,60 +100,76 @@ namespace WindowsLauncher.Data.Migrations
                     b.Property<string>("Action")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("Action");
 
                     b.Property<string>("ApplicationName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ApplicationName");
 
                     b.Property<string>("ComputerName")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ComputerName");
 
                     b.Property<string>("Details")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("Details");
 
                     b.Property<string>("ErrorMessage")
                         .IsRequired()
                         .HasMaxLength(1000)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("ErrorMessage");
 
                     b.Property<string>("IPAddress")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("IPAddress");
 
-                    b.Property<string>("IpAddress")
+                    b.Property<string>("MetadataJson")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("MetadataJson");
 
                     b.Property<bool>("Success")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("Success");
 
                     b.Property<DateTime>("Timestamp")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("Timestamp");
 
                     b.Property<string>("UserAgent")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("UserAgent");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                    b.Property<int?>("UserId")
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("UserId");
 
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("Username");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Action");
 
                     b.HasIndex("Timestamp");
+
+                    b.HasIndex("UserId");
 
                     b.HasIndex("Username");
 
@@ -168,70 +184,100 @@ namespace WindowsLauncher.Data.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<DateTime>("CreatedDate")
-                        .HasColumnType("TEXT");
-
                     b.Property<string>("DisplayName")
                         .IsRequired()
                         .HasMaxLength(200)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("DisplayName");
 
                     b.Property<string>("Email")
                         .IsRequired()
                         .HasMaxLength(300)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("Email");
 
                     b.Property<int>("FailedLoginAttempts")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("FailedLoginAttempts");
 
                     b.Property<string>("Groups")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
+                    b.Property<string>("GroupsJson")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("GroupsJson");
+
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("IsActive");
 
                     b.Property<bool>("IsLocked")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("IsLocked");
 
                     b.Property<bool>("IsServiceAccount")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("IsServiceAccount");
 
                     b.Property<DateTime?>("LastActivityAt")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("LastActivityAt");
 
-                    b.Property<DateTime>("LastLogin")
-                        .HasColumnType("TEXT");
+                    b.Property<DateTime?>("LastPasswordChange")
+                        .HasColumnType("TEXT")
+                        .HasColumnName("LastPasswordChange");
 
                     b.Property<DateTime?>("LockoutEnd")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("LockoutEnd");
+
+                    b.Property<string>("MetadataJson")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("MetadataJson");
 
                     b.Property<string>("PasswordHash")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("PasswordHash");
 
                     b.Property<int>("Role")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("INTEGER")
+                        .HasColumnName("Role");
 
                     b.Property<string>("Salt")
                         .IsRequired()
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("Salt");
 
-                    b.Property<Guid>("UserId")
-                        .HasColumnType("TEXT");
+                    b.Property<string>("SettingsJson")
+                        .IsRequired()
+                        .HasMaxLength(4000)
+                        .HasColumnType("TEXT")
+                        .HasColumnName("SettingsJson");
+
+                    b.Property<int?>("UserSettingsId")
+                        .HasColumnType("INTEGER");
 
                     b.Property<string>("Username")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT");
+                        .HasColumnType("TEXT")
+                        .HasColumnName("Username");
 
                     b.HasKey("Id");
 
                     b.HasIndex("IsActive");
 
                     b.HasIndex("IsServiceAccount");
+
+                    b.HasIndex("UserSettingsId");
 
                     b.HasIndex("Username")
                         .IsUnique();
@@ -293,6 +339,29 @@ namespace WindowsLauncher.Data.Migrations
                         .IsUnique();
 
                     b.ToTable("UserSettings", (string)null);
+                });
+
+            modelBuilder.Entity("WindowsLauncher.Core.Models.AuditLog", b =>
+                {
+                    b.HasOne("WindowsLauncher.Core.Models.User", "User")
+                        .WithMany("AuditLogs")
+                        .HasForeignKey("UserId");
+
+                    b.Navigation("User");
+                });
+
+            modelBuilder.Entity("WindowsLauncher.Core.Models.User", b =>
+                {
+                    b.HasOne("WindowsLauncher.Core.Models.UserSettings", "UserSettings")
+                        .WithMany()
+                        .HasForeignKey("UserSettingsId");
+
+                    b.Navigation("UserSettings");
+                });
+
+            modelBuilder.Entity("WindowsLauncher.Core.Models.User", b =>
+                {
+                    b.Navigation("AuditLogs");
                 });
 #pragma warning restore 612, 618
         }
