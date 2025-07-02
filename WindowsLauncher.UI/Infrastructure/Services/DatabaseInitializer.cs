@@ -8,6 +8,7 @@ using WindowsLauncher.Data;
 using WindowsLauncher.Data.Extensions;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Core.Enums;
+using CoreApplication = WindowsLauncher.Core.Models.Application;
 
 namespace WindowsLauncher.UI.Infrastructure.Services
 {

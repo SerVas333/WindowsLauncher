@@ -1,12 +1,10 @@
 ﻿# Отчет по пространствам имен
-Дата: 2025-07-01 16:47:19
+Дата: 2025-07-02 09:27:09
 
-## Дублирующиеся классы (1)
-- AuthenticationConfigurationService
+## Дублирующиеся классы (0)
 
 
-## Проблемы с namespace (14)
-- D:\Launcher\WindowsLauncher.Core\Models\AuthenticationConfiguration.cs: WindowsLauncher.Services.Authentication → WindowsLauncher.Core.Models
+## Проблемы с namespace (13)
 - D:\Launcher\WindowsLauncher.UI\LoginWindow.xaml.cs: WindowsLauncher.UI.Views → WindowsLauncher.UI
 - D:\Launcher\WindowsLauncher.UI\obj\Debug\net8.0-windows\AdminWindow.g.cs: WindowsLauncher.UI → WindowsLauncher.UI.obj.Debug.net8.0-windows
 - D:\Launcher\WindowsLauncher.UI\obj\Debug\net8.0-windows\AdminWindow.g.i.cs: WindowsLauncher.UI → WindowsLauncher.UI.obj.Debug.net8.0-windows

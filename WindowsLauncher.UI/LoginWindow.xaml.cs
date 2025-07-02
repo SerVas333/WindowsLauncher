@@ -2,12 +2,15 @@
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
-using System.Windows.Input;
 using System.Windows.Media;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
+
+// ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы для KeyEventArgs
+using WpfKeyEventArgs = System.Windows.Input.KeyEventArgs;
+using WpfApplication = System.Windows.Application;
 
 namespace WindowsLauncher.UI.Views
 {
@@ -28,12 +31,15 @@ namespace WindowsLauncher.UI.Views
         public bool IsServiceMode { get; private set; }
         public AuthenticationResult AuthenticationResult { get; private set; }
 
+        // Совместимость с MainViewModel
+        public User? AuthenticatedUser => AuthenticationResult?.User;
+
         public LoginWindow()
         {
             InitializeComponent();
 
             // Получаем сервисы из DI контейнера
-            var serviceProvider = ((App)Application.Current).ServiceProvider;
+            var serviceProvider = ((App)WpfApplication.Current).ServiceProvider;
             _authService = serviceProvider.GetRequiredService<IAuthenticationService>();
             _logger = serviceProvider.GetRequiredService<ILogger<LoginWindow>>();
 
@@ -152,10 +158,11 @@ namespace WindowsLauncher.UI.Views
 
         /// <summary>
         /// Обработчик нажатия клавиш в полях ввода
+        /// ✅ ИСПРАВЛЕНО: Используем WpfKeyEventArgs
         /// </summary>
-        private async void Input_KeyDown(object sender, KeyEventArgs e)
+        private async void Input_KeyDown(object sender, WpfKeyEventArgs e)
         {
-            if (e.Key == Key.Enter && !_isAuthenticating)
+            if (e.Key == System.Windows.Input.Key.Enter && !_isAuthenticating)
             {
                 await PerformLoginAsync();
             }
@@ -541,5 +548,3 @@ namespace WindowsLauncher.UI.Views
         }
 
         #endregion
-    }
-}

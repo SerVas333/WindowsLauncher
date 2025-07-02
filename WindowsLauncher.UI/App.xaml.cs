@@ -11,20 +11,21 @@ using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Data;
 using WindowsLauncher.Data.Repositories;
-using WindowsLauncher.Services;
+using WindowsLauncher.Services.ActiveDirectory;
 using WindowsLauncher.Services.Applications;
 using WindowsLauncher.Services.Audit;
 using WindowsLauncher.Services.Authorization;
 using WindowsLauncher.Services.Authentication;
-
 using WindowsLauncher.UI.ViewModels;
 using WindowsLauncher.UI.Infrastructure.Services;
 
-
+// ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы для Application
+using WpfApplication = System.Windows.Application;
+using CoreApplication = WindowsLauncher.Core.Models.Application;
 
 namespace WindowsLauncher.UI
 {
-    public partial class App : Application
+    public partial class App : WpfApplication // ✅ Явно указываем WpfApplication
     {
         private IHost _host;
         public IServiceProvider ServiceProvider { get; private set; }

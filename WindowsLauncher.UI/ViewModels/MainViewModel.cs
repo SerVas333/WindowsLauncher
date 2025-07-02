@@ -689,15 +689,17 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                var loginWindow = new LoginWindow(_serviceProvider);
+                // Создаем окно входа с нужными сервисами
+                var serviceProvider = _serviceProvider;
+                var loginWindow = new Views.LoginWindow(); // Указываем полный путь к классу
                 loginWindow.Owner = WpfApplication.Current.MainWindow;
 
-                if (loginWindow.ShowDialog() == true && loginWindow.AuthenticatedUser != null)
+                if (loginWindow.ShowDialog() == true && loginWindow.AuthenticationResult?.User != null)
                 {
                     Logger.LogInformation("Switching from user {OldUser} to {NewUser}",
-                        CurrentUser?.Username, loginWindow.AuthenticatedUser.Username);
+                        CurrentUser?.Username, loginWindow.AuthenticationResult.User.Username);
 
-                    CurrentUser = loginWindow.AuthenticatedUser;
+                    CurrentUser = loginWindow.AuthenticationResult.User;
                     UserSettings = null;
 
                     _ = LoadUserDataAsync();

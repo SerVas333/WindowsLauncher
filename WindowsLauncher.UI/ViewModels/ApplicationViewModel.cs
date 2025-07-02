@@ -1,7 +1,10 @@
-﻿// ===== WindowsLauncher.UI/ViewModels/ApplicationViewModel.cs - КОРПОРАТИВНАЯ ВЕРСИЯ =====
+﻿// ===== WindowsLauncher.UI/ViewModels/ApplicationViewModel.cs - ИСПРАВЛЕННАЯ ВЕРСИЯ =====
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
-using WindowsLauncher.Core.Models;
+
+// ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы
+using CoreApplication = WindowsLauncher.Core.Models.Application;
 
 namespace WindowsLauncher.UI.ViewModels
 {
@@ -10,9 +13,9 @@ namespace WindowsLauncher.UI.ViewModels
     /// </summary>
     public class ApplicationViewModel : INotifyPropertyChanged
     {
-        private readonly Application _application;
+        private readonly CoreApplication _application; // ✅ Используем CoreApplication
 
-        public ApplicationViewModel(Application application)
+        public ApplicationViewModel(CoreApplication application) // ✅ Используем CoreApplication
         {
             _application = application ?? throw new ArgumentNullException(nameof(application));
 
@@ -173,7 +176,7 @@ namespace WindowsLauncher.UI.ViewModels
         /// <summary>
         /// Получить исходную модель Application
         /// </summary>
-        public Application GetApplication() => _application;
+        public CoreApplication GetApplication() => _application; // ✅ Используем CoreApplication
 
         /// <summary>
         /// Получить локализованное описание приложения
