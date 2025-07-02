@@ -28,7 +28,6 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="Authentication\" />
 		<Folder Include="ActiveDirectory\" />
 		<Folder Include="Applications\" />
 		<Folder Include="Authorization\" />

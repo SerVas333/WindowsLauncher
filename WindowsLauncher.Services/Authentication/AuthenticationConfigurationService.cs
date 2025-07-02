@@ -17,7 +17,7 @@ namespace WindowsLauncher.Services.Authentication
     {
         private readonly ILogger<AuthenticationConfigurationService> _logger;
         private readonly string _configPath;
-        private ActiveDirectoryConfiguration? _currentConfig;
+        private AuthenticationConfiguration? _currentConfig; // ИСПРАВЛЕНО: правильный тип
         private readonly object _configLock = new();
 
         public AuthenticationConfigurationService(ILogger<AuthenticationConfigurationService> logger)
@@ -36,7 +36,7 @@ namespace WindowsLauncher.Services.Authentication
         /// <summary>
         /// Получение текущей конфигурации AD
         /// </summary>
-        public ActiveDirectoryConfiguration GetConfiguration()
+        public AuthenticationConfiguration GetConfiguration() // ИСПРАВЛЕНО: правильный тип возврата
         {
             lock (_configLock)
             {
@@ -47,7 +47,7 @@ namespace WindowsLauncher.Services.Authentication
         /// <summary>
         /// Сохранение конфигурации AD
         /// </summary>
-        public async Task SaveConfigurationAsync(ActiveDirectoryConfiguration config)
+        public async Task SaveConfigurationAsync(AuthenticationConfiguration config) // ИСПРАВЛЕНО: правильный тип параметра
         {
             if (config == null)
                 throw new ArgumentNullException(nameof(config));
@@ -116,7 +116,7 @@ namespace WindowsLauncher.Services.Authentication
         /// <summary>
         /// Валидировать конфигурацию
         /// </summary>
-        public async Task<ValidationResult> ValidateConfigurationAsync(ActiveDirectoryConfiguration config)
+        public async Task<ValidationResult> ValidateConfigurationAsync(AuthenticationConfiguration config) // ИСПРАВЛЕНО: правильный тип параметра
         {
             return await Task.FromResult(ValidateConfiguration(config));
         }
@@ -158,7 +158,7 @@ namespace WindowsLauncher.Services.Authentication
                 }
 
                 var json = File.ReadAllText(_configPath);
-                _currentConfig = JsonSerializer.Deserialize<ActiveDirectoryConfiguration>(json, new JsonSerializerOptions
+                _currentConfig = JsonSerializer.Deserialize<AuthenticationConfiguration>(json, new JsonSerializerOptions
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                     PropertyNameCaseInsensitive = true
@@ -183,12 +183,12 @@ namespace WindowsLauncher.Services.Authentication
         /// <summary>
         /// Создание конфигурации по умолчанию
         /// </summary>
-        private ActiveDirectoryConfiguration CreateDefaultConfiguration()
+        private AuthenticationConfiguration CreateDefaultConfiguration() // ИСПРАВЛЕНО: правильный тип возврата
         {
             // Пытаемся определить домен автоматически
             var defaultDomain = GetDefaultDomain();
 
-            return new ActiveDirectoryConfiguration
+            return new AuthenticationConfiguration
             {
                 Domain = defaultDomain,
                 LdapServer = string.IsNullOrEmpty(defaultDomain) ? "dc.company.local" : $"dc.{defaultDomain}",
@@ -198,6 +198,7 @@ namespace WindowsLauncher.Services.Authentication
                 RequireDomainMembership = false,
                 AdminGroups = "LauncherAdmins",
                 PowerUserGroups = "LauncherPowerUsers",
+                EnableFallbackMode = true,
                 TrustedDomains = new List<string>(),
                 ServiceAdmin = new ServiceAdminConfiguration
                 {
@@ -243,7 +244,7 @@ namespace WindowsLauncher.Services.Authentication
         /// <summary>
         /// Валидация конфигурации
         /// </summary>
-        private ValidationResult ValidateConfiguration(ActiveDirectoryConfiguration config)
+        private ValidationResult ValidateConfiguration(AuthenticationConfiguration config) // ИСПРАВЛЕНО: правильный тип параметра
         {
             var errors = new List<string>();
             var warnings = new List<string>();
@@ -290,7 +291,7 @@ namespace WindowsLauncher.Services.Authentication
                 var config = GetConfiguration();
 
                 // Создаем копию конфигурации без чувствительных данных
-                var exportConfig = new ActiveDirectoryConfiguration
+                var exportConfig = new AuthenticationConfiguration // ИСПРАВЛЕНО: правильный тип
                 {
                     Domain = config.Domain,
                     LdapServer = config.LdapServer,
@@ -302,6 +303,7 @@ namespace WindowsLauncher.Services.Authentication
                     RequireDomainMembership = config.RequireDomainMembership,
                     AdminGroups = config.AdminGroups,
                     PowerUserGroups = config.PowerUserGroups,
+                    EnableFallbackMode = config.EnableFallbackMode,
                     TrustedDomains = config.TrustedDomains?.ToList() ?? new List<string>(),
                     ServiceAdmin = new ServiceAdminConfiguration
                     {
@@ -336,7 +338,7 @@ namespace WindowsLauncher.Services.Authentication
 
             try
             {
-                var importedConfig = JsonSerializer.Deserialize<ActiveDirectoryConfiguration>(configJson, new JsonSerializerOptions
+                var importedConfig = JsonSerializer.Deserialize<AuthenticationConfiguration>(configJson, new JsonSerializerOptions // ИСПРАВЛЕНО: правильный тип
                 {
                     PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
                     PropertyNameCaseInsensitive = true
