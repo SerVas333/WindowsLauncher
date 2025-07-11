@@ -39,17 +39,28 @@ namespace WindowsLauncher.UI.Views
 
         public bool SetupCompleted { get; private set; } = false;
 
-        public SetupWindow()
+        public SetupWindow(
+            IAuthenticationConfigurationService configService,
+            IAuthenticationService authService,
+            IActiveDirectoryService adService,
+            ILogger<SetupWindow> logger)
         {
+            _configService = configService ?? throw new ArgumentNullException(nameof(configService));
+            _authService = authService ?? throw new ArgumentNullException(nameof(authService));
+            _adService = adService ?? throw new ArgumentNullException(nameof(adService));
+            _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+
             InitializeComponent();
+            
+            // Переносим инициализацию в событие Loaded
+            Loaded += SetupWindow_Loaded;
+        }
 
-            // Получаем сервисы из DI контейнера
-            var serviceProvider = ((App)WpfApplication.Current).ServiceProvider;
-            _configService = serviceProvider.GetRequiredService<IAuthenticationConfigurationService>();
-            _authService = serviceProvider.GetRequiredService<IAuthenticationService>();
-            _adService = serviceProvider.GetRequiredService<IActiveDirectoryService>();
-            _logger = serviceProvider.GetRequiredService<ILogger<SetupWindow>>();
-
+        /// <summary>
+        /// Обработчик события загрузки окна
+        /// </summary>
+        private void SetupWindow_Loaded(object sender, RoutedEventArgs e)
+        {
             InitializeWindow();
         }
 
@@ -172,6 +183,12 @@ namespace WindowsLauncher.UI.Views
         {
             try
             {
+                // Проверяем, что все элементы UI доступны
+                if (DomainTextBox == null || LdapServerTextBox == null || PortTextBox == null)
+                {
+                    _isDomainValid = false;
+                    return;
+                }
                 var domain = DomainTextBox?.Text?.Trim() ?? "";
                 var ldapServer = LdapServerTextBox?.Text?.Trim() ?? "";
                 var portText = PortTextBox?.Text?.Trim() ?? "389";
@@ -197,10 +214,17 @@ namespace WindowsLauncher.UI.Views
         {
             try
             {
-                var username = ServiceUsernameTextBox.Text?.Trim();
-                var password = ServicePasswordBox.Password;
-                var confirmPassword = ServicePasswordConfirmBox.Password;
-                var sessionTimeoutText = SessionTimeoutTextBox.Text?.Trim();
+                // Проверяем, что все элементы UI доступны
+                if (ServiceUsernameTextBox == null || ServicePasswordBox == null || 
+                    ServicePasswordConfirmBox == null || SessionTimeoutTextBox == null)
+                {
+                    _isServiceAdminValid = false;
+                    return;
+                }
+                var username = ServiceUsernameTextBox?.Text?.Trim();
+                var password = ServicePasswordBox?.Password;
+                var confirmPassword = ServicePasswordConfirmBox?.Password;
+                var sessionTimeoutText = SessionTimeoutTextBox?.Text?.Trim();
 
                 // Валидация имени пользователя
                 var isUsernameValid = !string.IsNullOrEmpty(username) && username.Length >= 3;
@@ -307,10 +331,16 @@ namespace WindowsLauncher.UI.Views
                 if (_isServiceAdminValid) completedSteps++;
                 // Третий шаг (дополнительные настройки) всегда считается выполненным
 
-                SetupProgressText.Text = $"Настройка: {completedSteps}/{totalSteps} шагов завершено";
+                if (SetupProgressText != null)
+                {
+                    SetupProgressText.Text = $"Настройка: {completedSteps}/{totalSteps} шагов завершено";
+                }
 
                 // Кнопка "Завершить настройку" доступна только если выполнены критически важные шаги
-                CompleteSetupButton.IsEnabled = _isDomainValid && _isServiceAdminValid && !_isProcessing;
+                if (CompleteSetupButton != null)
+                {
+                    CompleteSetupButton.IsEnabled = _isDomainValid && _isServiceAdminValid && !_isProcessing;
+                }
             }
             catch (Exception ex)
             {

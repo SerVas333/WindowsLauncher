@@ -230,17 +230,29 @@ namespace WindowsLauncher.UI
             try
             {
                 using var scope = ServiceProvider.CreateScope();
+                var logger = scope.ServiceProvider.GetRequiredService<ILogger<App>>();
+                
+                logger.LogInformation("Starting database initialization...");
+                
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
                 await dbInitializer.InitializeAsync();
 
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<App>>();
                 logger.LogInformation("Database initialized successfully");
             }
             catch (Exception ex)
             {
                 var logger = ServiceProvider.GetService<ILogger<App>>();
-                logger?.LogError(ex, "Failed to initialize database");
+                logger?.LogError(ex, "Failed to initialize database: {Message}", ex.Message);
+                
+                // Показываем пользователю ошибку но не останавливаем приложение
+                System.Diagnostics.Debug.WriteLine($"Database initialization failed: {ex.Message}");
+                
+                // В debug режиме можно продолжить без БД
+                #if DEBUG
+                logger?.LogWarning("Continuing in debug mode without database");
+                #else
                 throw;
+                #endif
             }
         }
 
@@ -252,16 +264,65 @@ namespace WindowsLauncher.UI
             try
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-                logger.LogInformation("Starting application with login screen");
+                logger.LogInformation("Starting application");
 
-                // Показываем окно входа вместо прямого показа главного окна
-                ShowLoginWindow();
+                // Проверяем, настроен ли сервисный администратор
+                var configService = ServiceProvider.GetRequiredService<IAuthenticationConfigurationService>();
+                var config = configService.GetConfiguration();
+
+                if (!config.ServiceAdmin.IsPasswordSet)
+                {
+                    logger.LogInformation("Service admin not configured, showing setup window");
+                    ShowSetupWindow();
+                }
+                else
+                {
+                    logger.LogInformation("Service admin configured, showing login screen");
+                    ShowLoginWindow();
+                }
             }
             catch (Exception ex)
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
                 logger.LogError(ex, "Failed to start application");
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// ✅ ПОКАЗ ОКНА НАСТРОЙКИ (ПЕРВЫЙ ЗАПУСК)
+        /// </summary>
+        private void ShowSetupWindow()
+        {
+            try
+            {
+                var setupWindow = new SetupWindow(
+                    ServiceProvider.GetRequiredService<IAuthenticationConfigurationService>(),
+                    ServiceProvider.GetRequiredService<IAuthenticationService>(),
+                    ServiceProvider.GetRequiredService<IActiveDirectoryService>(),
+                    ServiceProvider.GetRequiredService<ILogger<SetupWindow>>()
+                );
+
+                // Показываем модально
+                var result = setupWindow.ShowDialog();
+
+                if (result == true)
+                {
+                    // Настройка завершена - показываем окно входа
+                    ShowLoginWindow();
+                }
+                else
+                {
+                    // Пользователь отменил настройку
+                    Shutdown(0);
+                }
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogError(ex, "Failed to show setup window");
+                ShowStartupError(ex);
+                Shutdown(1);
             }
         }
 

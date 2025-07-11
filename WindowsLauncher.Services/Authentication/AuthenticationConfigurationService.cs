@@ -287,7 +287,13 @@ namespace WindowsLauncher.Services.Authentication
                     SessionTimeoutMinutes = 60,
                     MaxLoginAttempts = 5,
                     LockoutDurationMinutes = 15,
-                    IsPasswordSet = false
+                    // ✅ ПАРОЛЬ НЕ УСТАНОВЛЕН - будет создан при первом запуске
+                    PasswordHash = "",
+                    Salt = "",
+                    IsPasswordSet = false,
+                    RequirePasswordChange = false,
+                    CreatedAt = DateTime.UtcNow,
+                    LastPasswordChange = null
                 },
                 IsConfigured = false,
                 LastModified = DateTime.UtcNow
@@ -295,6 +301,20 @@ namespace WindowsLauncher.Services.Authentication
 
             _logger.LogInformation("Created default configuration with domain: {Domain}", config.Domain);
             return config;
+        }
+
+        /// <summary>
+        /// Генерация хеша пароля для дефолтной конфигурации
+        /// </summary>
+        private static string GetDefaultPasswordHash()
+        {
+            // Фиксированная соль для воспроизводимости
+            var saltBytes = new byte[32]; // все нули
+            var salt = Convert.ToBase64String(saltBytes);
+
+            using var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes("admin", saltBytes, 100000, System.Security.Cryptography.HashAlgorithmName.SHA256);
+            var hashBytes = pbkdf2.GetBytes(32);
+            return Convert.ToBase64String(hashBytes);
         }
 
         /// <summary>
@@ -512,6 +532,7 @@ namespace WindowsLauncher.Services.Authentication
             // Или доменным именем
             return IsValidDomainName(serverName);
         }
+
 
         #endregion
     }

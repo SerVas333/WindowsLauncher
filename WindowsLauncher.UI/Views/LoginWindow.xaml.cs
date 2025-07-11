@@ -10,6 +10,11 @@ using WindowsLauncher.Core.Enums;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.UI.Properties.Resources;
+using WindowsLauncher.UI.Infrastructure.Localization;
+
+// Алиасы для разрешения конфликтов имен
+using WpfApplication = System.Windows.Application;
+using CoreApplication = WindowsLauncher.Core.Models.Application;
 
 namespace WindowsLauncher.UI.Views
 {
@@ -18,8 +23,8 @@ namespace WindowsLauncher.UI.Views
     /// </summary>
     public partial class LoginWindow : Window
     {
-        private readonly IAuthenticationService _authService;
-        private readonly ILogger<LoginWindow> _logger;
+        private readonly IAuthenticationService? _authService;
+        private readonly ILogger<LoginWindow>? _logger;
         private bool _isAuthenticating = false;
 
         // Публичные свойства для доступа к результату
@@ -30,12 +35,29 @@ namespace WindowsLauncher.UI.Views
         {
             try
             {
+                System.Diagnostics.Debug.WriteLine("LoginWindow: Starting InitializeComponent...");
                 InitializeComponent();
-                InitializeServices();
+                System.Diagnostics.Debug.WriteLine("LoginWindow: InitializeComponent completed successfully");
+                
+                // Инициализация readonly полей в конструкторе
+                System.Diagnostics.Debug.WriteLine("LoginWindow: Starting service initialization...");
+                var app = WpfApplication.Current as App;
+                if (app?.ServiceProvider != null)
+                {
+                    _authService = app.ServiceProvider.GetService<IAuthenticationService>();
+                    _logger = app.ServiceProvider.GetService<ILogger<LoginWindow>>();
+                    System.Diagnostics.Debug.WriteLine("LoginWindow: Services initialized successfully");
+                }
+                
+                System.Diagnostics.Debug.WriteLine("LoginWindow: Starting InitializeWindow...");
                 InitializeWindow();
+                System.Diagnostics.Debug.WriteLine("LoginWindow: InitializeWindow completed successfully");
             }
             catch (Exception ex)
             {
+                System.Diagnostics.Debug.WriteLine($"LoginWindow constructor failed at: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"StackTrace: {ex.StackTrace}");
+                
                 // Fallback для случаев когда XAML не загружается
                 CreateFallbackWindow();
                 System.Diagnostics.Debug.WriteLine($"XAML loading failed: {ex.Message}");
@@ -50,32 +72,12 @@ namespace WindowsLauncher.UI.Views
             }
         }
 
-        private void InitializeServices()
-        {
-            try
-            {
-                var app = Application.Current as App;
-                if (app?.ServiceProvider != null)
-                {
-                    var authService = app.ServiceProvider.GetService<IAuthenticationService>();
-                    var logger = app.ServiceProvider.GetService<ILogger<LoginWindow>>();
-
-                    // Присваиваем только если сервисы доступны
-                    if (authService != null) _authService = authService;
-                    if (logger != null) _logger = logger;
-                }
-            }
-            catch (Exception ex)
-            {
-                System.Diagnostics.Debug.WriteLine($"Service initialization failed: {ex.Message}");
-            }
-        }
 
         private void InitializeWindow()
         {
             try
             {
-                Title = Resources.LoginWindow_Title;
+                Title = LocalizationHelper.Instance.GetString("LoginWindow_Title");
 
                 // Устанавливаем фокус при загрузке
                 Loaded += (s, e) =>
@@ -197,7 +199,7 @@ namespace WindowsLauncher.UI.Views
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Login error");
-                ShowError(string.Format(Resources.Error_General + ": {0}", ex.Message));
+                ShowError(string.Format(LocalizationHelper.Instance.GetString("Error_General") + ": {0}", ex.Message));
             }
             finally
             {
@@ -218,8 +220,8 @@ namespace WindowsLauncher.UI.Views
             {
                 // Временная заглушка
                 MessageBox.Show(
-                    Resources.SettingsComingSoon,
-                    Resources.Common_Settings,
+                    LocalizationHelper.Instance.GetString("SettingsComingSoon"),
+                    LocalizationHelper.Instance.GetString("Common_Settings"),
                     MessageBoxButton.OK,
                     MessageBoxImage.Information);
             }
@@ -245,8 +247,8 @@ namespace WindowsLauncher.UI.Views
 
                 // Реальная аутентификация через сервис
                 LoadingText.Text = credentials.IsServiceAccount
-                    ? Resources.LoginWindow_AuthenticatingService
-                    : Resources.LoginWindow_AuthenticatingDomain;
+                    ? LocalizationHelper.Instance.GetString("LoginWindow_AuthenticatingService")
+                    : LocalizationHelper.Instance.GetString("LoginWindow_AuthenticatingDomain");
 
                 return await _authService.AuthenticateAsync(credentials);
             }
@@ -262,7 +264,7 @@ namespace WindowsLauncher.UI.Views
             // Простая fallback аутентификация для тестирования
             var user = new User
             {
-                Id = Guid.NewGuid(),
+                Id = new Random().Next(1000, 9999),
                 Username = credentials.Username,
                 DisplayName = $"Test User ({credentials.Username})",
                 Email = $"{credentials.Username}@{credentials.Domain}",
@@ -287,14 +289,14 @@ namespace WindowsLauncher.UI.Views
             {
                 if (string.IsNullOrWhiteSpace(UsernameTextBox?.Text))
                 {
-                    ShowError(Resources.PleaseEnterUsername);
+                    ShowError(LocalizationHelper.Instance.GetString("PleaseEnterUsername"));
                     UsernameTextBox?.Focus();
                     return false;
                 }
 
                 if (string.IsNullOrWhiteSpace(PasswordBox?.Password))
                 {
-                    ShowError(Resources.PleaseEnterPassword);
+                    ShowError(LocalizationHelper.Instance.GetString("PleaseEnterPassword"));
                     PasswordBox?.Focus();
                     return false;
                 }
@@ -303,14 +305,14 @@ namespace WindowsLauncher.UI.Views
             {
                 if (string.IsNullOrWhiteSpace(ServiceUsernameTextBox?.Text))
                 {
-                    ShowError(Resources.PleaseEnterUsername);
+                    ShowError(LocalizationHelper.Instance.GetString("PleaseEnterUsername"));
                     ServiceUsernameTextBox?.Focus();
                     return false;
                 }
 
                 if (string.IsNullOrWhiteSpace(ServicePasswordBox?.Password))
                 {
-                    ShowError(Resources.PleaseEnterPassword);
+                    ShowError(LocalizationHelper.Instance.GetString("PleaseEnterPassword"));
                     ServicePasswordBox?.Focus();
                     return false;
                 }
@@ -339,7 +341,7 @@ namespace WindowsLauncher.UI.Views
 
                 if (isLoading && LoadingText != null)
                 {
-                    LoadingText.Text = Resources.LoginWindow_Authenticating;
+                    LoadingText.Text = LocalizationHelper.Instance.GetString("LoginWindow_Authenticating");
                 }
             }
             catch (Exception ex)
@@ -360,7 +362,7 @@ namespace WindowsLauncher.UI.Views
                 else
                 {
                     // Fallback к MessageBox
-                    MessageBox.Show(message, Resources.Error, MessageBoxButton.OK, MessageBoxImage.Error);
+                    MessageBox.Show(message, LocalizationHelper.Instance.GetString("Error"), MessageBoxButton.OK, MessageBoxImage.Error);
                 }
             }
             catch (Exception ex)
@@ -391,15 +393,15 @@ namespace WindowsLauncher.UI.Views
                 if (_authService == null || ConnectionStatusIndicator == null || ConnectionStatusText == null)
                     return;
 
-                var isAvailable = await _authService.IsDomainAvailableAsync();
+                var isAvailable = await _authService.IsDomainAvailableAsync(null);
 
                 ConnectionStatusIndicator.Fill = isAvailable
                     ? (System.Windows.Media.Brush)FindResource("SuccessBrush")
                     : (System.Windows.Media.Brush)FindResource("ErrorBrush");
 
                 ConnectionStatusText.Text = isAvailable
-                    ? Resources.LoginWindow_DomainAvailable
-                    : Resources.LoginWindow_DomainUnavailable;
+                    ? LocalizationHelper.Instance.GetString("LoginWindow_DomainAvailable")
+                    : LocalizationHelper.Instance.GetString("LoginWindow_DomainUnavailable");
             }
             catch (Exception ex)
             {
@@ -496,5 +498,10 @@ namespace WindowsLauncher.UI.Views
         }
 
         #endregion
+
+        private void DomainTextBox_TextChanged(object sender, TextChangedEventArgs e)
+        {
+
+        }
     }
 }

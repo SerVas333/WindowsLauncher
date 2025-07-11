@@ -265,6 +265,35 @@ namespace WindowsLauncher.Core.Models
             return HashCode.Combine(Id, Username);
         }
 
+        /// <summary>
+        /// Создание копии пользователя
+        /// </summary>
+        public User Clone()
+        {
+            return new User
+            {
+                Id = Id,
+                Username = Username,
+                DisplayName = DisplayName,
+                Email = Email,
+                Role = Role,
+                IsActive = IsActive,
+                IsServiceAccount = IsServiceAccount,
+                PasswordHash = PasswordHash,
+                Salt = Salt,
+                CreatedAt = CreatedAt,
+                LastLoginAt = LastLoginAt,
+                LastActivityAt = LastActivityAt,
+                FailedLoginAttempts = FailedLoginAttempts,
+                IsLocked = IsLocked,
+                LockoutEnd = LockoutEnd,
+                LastPasswordChange = LastPasswordChange,
+                GroupsJson = GroupsJson,
+                SettingsJson = SettingsJson,
+                MetadataJson = MetadataJson
+            };
+        }
+
         #endregion
     }
 }

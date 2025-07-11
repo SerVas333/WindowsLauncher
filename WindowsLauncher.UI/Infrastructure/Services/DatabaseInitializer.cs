@@ -32,9 +32,29 @@ namespace WindowsLauncher.UI.Infrastructure.Services
             {
                 _logger.LogInformation("=== STARTING DATABASE INITIALIZATION ===");
 
-                // 🆕 ИСПОЛЬЗУЕМ МИГРАЦИИ ВМЕСТО EnsureCreated
-                await _context.Database.MigrateAsync();
-                _logger.LogInformation("Database migrations applied successfully");
+                // Сначала проверяем возможность подключения
+                var canConnect = await _context.Database.CanConnectAsync();
+                _logger.LogInformation($"Database connection check: {canConnect}");
+
+                if (!canConnect)
+                {
+                    _logger.LogInformation("Database does not exist, creating...");
+                    await _context.Database.EnsureCreatedAsync();
+                }
+                else
+                {
+                    try
+                    {
+                        // Пытаемся применить миграции если они есть
+                        await _context.Database.MigrateAsync();
+                        _logger.LogInformation("Database migrations applied successfully");
+                    }
+                    catch (Exception migrationEx)
+                    {
+                        _logger.LogWarning(migrationEx, "Migration failed, using EnsureCreated as fallback");
+                        await _context.Database.EnsureCreatedAsync();
+                    }
+                }
 
                 // Проверяем и добавляем seed данные если нужно
                 await SeedDataIfNeededAsync();

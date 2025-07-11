@@ -4,10 +4,10 @@
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
-        xmlns:res="clr-namespace:WindowsLauncher.UI.Properties"
+        xmlns:properties="clr-namespace:WindowsLauncher.UI.Properties.Resources"
         mc:Ignorable="d"
-        Title="{x:Static res:Resources.LoginWindow_Title}"
-        Width="450" Height="676"
+        Title="{x:Static properties:Resources.LoginWindow_Title}"
+        Width="546" Height="796"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}">
@@ -16,24 +16,22 @@
         <!-- Локальные стили -->
         <Style x:Key="LoginTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource MaterialTextBoxStyle}">
             <Setter Property="Margin" Value="0,0,0,15"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinHeight" Value="45"/>
         </Style>
 
         <Style x:Key="LoginPasswordBoxStyle" TargetType="PasswordBox" BasedOn="{StaticResource MaterialPasswordBoxStyle}">
             <Setter Property="Margin" Value="0,0,0,15"/>
-            <Setter Property="Height" Value="40"/>
-            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinHeight" Value="45"/>
         </Style>
 
         <Style x:Key="LoginButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialButtonStyle}">
-            <Setter Property="Height" Value="40"/>
+            <Setter Property="MinHeight" Value="45"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="FontWeight" Value="SemiBold"/>
         </Style>
 
         <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialOutlineButtonStyle}">
-            <Setter Property="Height" Value="40"/>
+            <Setter Property="MinHeight" Value="45"/>
             <Setter Property="FontSize" Value="14"/>
         </Style>
 
@@ -62,11 +60,11 @@
                     <!-- Логотип KDV -->
                     <TextBlock Style="{StaticResource LogoTextStyle}" Margin="0,0,0,10"/>
 
-                    <TextBlock Text="{x:Static res:Resources.LoginWindow_Title}" 
+                    <TextBlock Text="{x:Static properties:Resources.LoginWindow_Title}" 
                                FontSize="24" FontWeight="Bold" 
                                Foreground="{DynamicResource OnPrimaryBrush}"
                                HorizontalAlignment="Center"/>
-                    <TextBlock Text="{x:Static res:Resources.LoginWindow_Subtitle}" 
+                    <TextBlock Text="{x:Static properties:Resources.LoginWindow_Subtitle}" 
                                FontSize="14" 
                                Foreground="{DynamicResource OnPrimaryBrush}"
                                HorizontalAlignment="Center"
@@ -81,14 +79,14 @@
                     <!-- Переключатель режимов -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
                         <RadioButton x:Name="DomainModeRadio" 
-                                     Content="{x:Static res:Resources.LoginWindow_DomainMode}"
+                                     Content="{x:Static properties:Resources.LoginWindow_DomainMode}"
                                      IsChecked="True"
                                      GroupName="LoginMode"
                                      Style="{StaticResource MaterialRadioButtonStyle}"
                                      Margin="0,0,20,0"
                                      Checked="LoginMode_Changed"/>
                         <RadioButton x:Name="ServiceModeRadio" 
-                                     Content="{x:Static res:Resources.LoginWindow_ServiceMode}"
+                                     Content="{x:Static properties:Resources.LoginWindow_ServiceMode}"
                                      GroupName="LoginMode"
                                      Style="{StaticResource MaterialRadioButtonStyle}"
                                      Checked="LoginMode_Changed"/>
@@ -96,15 +94,15 @@
 
                     <!-- Панель доменного входа -->
                     <StackPanel x:Name="DomainLoginPanel">
-                        <TextBlock Text="{x:Static res:Resources.LoginWindow_Domain}" 
+                        <TextBlock Text="{x:Static properties:Resources.LoginWindow_Domain}" 
                                    Margin="0,0,0,5" 
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <TextBox x:Name="DomainTextBox" 
                                  Style="{StaticResource LoginTextBoxStyle}"
-                                 Text="company.local"/>
+                                 Text="company.local" TextChanged="DomainTextBox_TextChanged"/>
 
-                        <TextBlock Text="{x:Static res:Resources.LoginWindow_Username}" 
+                        <TextBlock Text="{x:Static properties:Resources.LoginWindow_Username}" 
                                    Margin="0,0,0,5" 
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
@@ -112,7 +110,7 @@
                                  Style="{StaticResource LoginTextBoxStyle}"
                                  KeyDown="Input_KeyDown"/>
 
-                        <TextBlock Text="{x:Static res:Resources.LoginWindow_Password}" 
+                        <TextBlock Text="{x:Static properties:Resources.LoginWindow_Password}" 
                                    Margin="0,0,0,5" 
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
@@ -123,7 +121,7 @@
 
                     <!-- Панель сервисного входа -->
                     <StackPanel x:Name="ServiceLoginPanel" Visibility="Collapsed">
-                        <TextBlock Text="{x:Static res:Resources.LoginWindow_ServiceUsername}" 
+                        <TextBlock Text="{x:Static properties:Resources.LoginWindow_ServiceUsername}" 
                                    Margin="0,0,0,5" 
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
@@ -132,7 +130,7 @@
                                  Text="serviceadmin"
                                  KeyDown="Input_KeyDown"/>
 
-                        <TextBlock Text="{x:Static res:Resources.LoginWindow_ServicePassword}" 
+                        <TextBlock Text="{x:Static properties:Resources.LoginWindow_ServicePassword}" 
                                    Margin="0,0,0,5" 
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
@@ -143,7 +141,7 @@
 
                     <!-- Дополнительные опции -->
                     <CheckBox x:Name="RememberCredentialsCheckBox" 
-                              Content="{x:Static res:Resources.LoginWindow_RememberCredentials}"
+                              Content="{x:Static properties:Resources.LoginWindow_RememberCredentials}"
                               Style="{StaticResource MaterialCheckBoxStyle}"
                               Margin="0,10,0,0"/>
 
@@ -178,7 +176,7 @@
                                  Margin="0,0,8,0"
                                  VerticalAlignment="Center"/>
                         <TextBlock x:Name="ConnectionStatusText" 
-                                   Text="{x:Static res:Resources.LoginWindow_DomainAvailable}"
+                                   Text="{x:Static properties:Resources.LoginWindow_DomainAvailable}"
                                    FontSize="12"
                                    Foreground="{DynamicResource OnSurfaceVariantBrush}"/>
                     </StackPanel>
@@ -197,24 +195,22 @@
                     <!-- Дополнительные действия -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <Button x:Name="SettingsButton" 
-                                Content="{x:Static res:Resources.Common_Settings}"
+                                Content="{x:Static properties:Resources.Common_Settings}"
                                 Style="{StaticResource SecondaryButtonStyle}"
-                                Width="100"
+                                Width="128"
                                 Click="SettingsButton_Click"/>
                     </StackPanel>
 
                     <!-- Основные кнопки -->
-                    <Button x:Name="CancelButton" 
-                            Grid.Column="1"
-                            Content="{x:Static res:Resources.Common_Cancel}"
+                    <Button x:Name="CancelButton"
+                            Content="{x:Static properties:Resources.Common_Cancel}"
                             Style="{StaticResource SecondaryButtonStyle}"
-                            Width="100"
-                            Margin="0,0,15,0"
+                            Margin="157,0,23,1"
                             Click="CancelButton_Click"/>
 
                     <Button x:Name="LoginButton" 
                             Grid.Column="2"
-                            Content="{x:Static res:Resources.LoginWindow_Login}"
+                            Content="{x:Static properties:Resources.LoginWindow_Login}"
                             Style="{StaticResource LoginButtonStyle}"
                             Width="120"
                             IsDefault="True"
@@ -233,7 +229,7 @@
                                  Margin="0,0,0,15"
                                  Foreground="{DynamicResource PrimaryBrush}"/>
                     <TextBlock x:Name="LoadingText" 
-                               Text="{x:Static res:Resources.LoginWindow_Authenticating}"
+                               Text="{x:Static properties:Resources.LoginWindow_Authenticating}"
                                Foreground="White"
                                HorizontalAlignment="Center"
                                FontSize="14"/>

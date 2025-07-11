@@ -163,7 +163,12 @@ namespace WindowsLauncher.Services.Authentication
 
                 var user = await GetOrCreateUserFromAD(userInfo);
                 user.LastLoginAt = DateTime.UtcNow;
-                await _userRepository.UpdateAsync(user);
+                
+                // Only update if user has a valid ID (not a newly created entity)
+                if (user.Id > 0)
+                {
+                    await _userRepository.UpdateAsync(user);
+                }
 
                 await _auditService.LogLoginAsync(user.Username, true);
                 _logger.LogInformation("User {Username} authenticated successfully via AD", username);
@@ -486,7 +491,12 @@ namespace WindowsLauncher.Services.Authentication
                 // Получаем или создаем пользователя в локальной базе
                 var user = await GetOrCreateUserFromAD(userInfo);
                 user.LastLoginAt = DateTime.UtcNow;
-                await _userRepository.UpdateAsync(user);
+                
+                // Обновляем только существующих пользователей
+                if (user.Id > 0)
+                {
+                    await _userRepository.UpdateAsync(user);
+                }
 
                 await _auditService.LogLoginAsync(user.Username, true);
 
@@ -601,13 +611,16 @@ namespace WindowsLauncher.Services.Authentication
                         Role = UserRole.Administrator,
                         IsActive = true,
                         IsServiceAccount = true,
-                        CreatedAt = DateTime.UtcNow
+                        CreatedAt = DateTime.UtcNow,
+                        LastLoginAt = DateTime.UtcNow
                     };
                     await _userRepository.AddAsync(user);
                 }
-
-                user.LastLoginAt = DateTime.UtcNow;
-                await _userRepository.UpdateAsync(user);
+                else
+                {
+                    user.LastLoginAt = DateTime.UtcNow;
+                    await _userRepository.UpdateAsync(user);
+                }
 
                 await _auditService.LogLoginAsync(username, true);
                 _logger.LogInformation("Service admin {Username} authenticated successfully", username);
@@ -840,6 +853,7 @@ namespace WindowsLauncher.Services.Authentication
                     IsActive = userInfo.IsEnabled,
                     IsServiceAccount = false,
                     CreatedAt = DateTime.UtcNow,
+                    LastLoginAt = DateTime.UtcNow,
                     Groups = userInfo.Groups
                 };
 

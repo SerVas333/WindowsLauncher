@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         mc:Ignorable="d"
         Title="Первоначальная настройка - KDV Launcher"
-        Width="600" Height="500"
+        Width="600" Height="687"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}">
@@ -13,9 +13,6 @@
     <Window.Resources>
         <!-- Подключаем корпоративные стили -->
         <ResourceDictionary>
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="../Styles/CorporateStyles.xaml"/>
-            </ResourceDictionary.MergedDictionaries>
 
             <!-- Локальные стили специфичные для SetupWindow -->
             <Style x:Key="SetupStepHeaderStyle" TargetType="TextBlock" BasedOn="{StaticResource {x:Type TextBlock}}">
@@ -43,6 +40,7 @@
                 <Setter Property="Padding" Value="20"/>
                 <Setter Property="Margin" Value="0,0,0,20"/>
             </Style>
+
         </ResourceDictionary>
     </Window.Resources>
 
@@ -105,21 +103,21 @@
 
                                 <TextBlock Text="Домен:" Grid.Row="0" Grid.Column="0" Margin="0,0,10,5"/>
                                 <TextBox x:Name="DomainTextBox" Grid.Row="1" Grid.Column="0" 
-                                         Margin="0,0,10,15" Height="35"
+                                         Margin="0,0,10,15"
                                          Text="company.local"
                                          Style="{DynamicResource MaterialTextBoxStyle}"
                                          TextChanged="DomainSettings_Changed"/>
 
                                 <TextBlock Text="LDAP Сервер:" Grid.Row="0" Grid.Column="1" Margin="10,0,0,5"/>
                                 <TextBox x:Name="LdapServerTextBox" Grid.Row="1" Grid.Column="1" 
-                                         Margin="10,0,0,15" Height="35"
+                                         Margin="10,0,0,15"
                                          Text="dc.company.local"
                                          Style="{DynamicResource MaterialTextBoxStyle}"
                                          TextChanged="DomainSettings_Changed"/>
 
                                 <TextBlock Text="Порт:" Grid.Row="2" Grid.Column="0" Margin="0,0,10,5"/>
                                 <TextBox x:Name="PortTextBox" Grid.Row="3" Grid.Column="0" 
-                                         Margin="0,0,10,15" Height="35"
+                                         Margin="0,0,10,15"
                                          Text="389"
                                          Style="{DynamicResource MaterialTextBoxStyle}"
                                          TextChanged="DomainSettings_Changed"/>
@@ -136,9 +134,9 @@
 
                             <Button x:Name="TestConnectionButton" 
                                     Content="Проверить подключение"
-                                    Width="150" Height="35"
+                                    Width="150" Height="45"
                                     HorizontalAlignment="Left"
-                                    Style="{DynamicResource SecondaryButtonStyle}"
+                                    Style="{DynamicResource MaterialOutlineButtonStyle}"
                                     Click="TestConnectionButton_Click"/>
 
                             <StackPanel x:Name="ConnectionStatusPanel" 
@@ -180,27 +178,27 @@
 
                                 <TextBlock Text="Имя пользователя:" Grid.Row="0" Grid.Column="0" Margin="0,0,10,5"/>
                                 <TextBox x:Name="ServiceUsernameTextBox" Grid.Row="1" Grid.Column="0" 
-                                         Margin="0,0,10,15" Height="35"
+                                         Margin="0,0,10,15"
                                          Text="serviceadmin"
                                          Style="{DynamicResource MaterialTextBoxStyle}"
                                          TextChanged="ServiceAdmin_Changed"/>
 
                                 <TextBlock Text="Время сессии (мин):" Grid.Row="0" Grid.Column="1" Margin="10,0,0,5"/>
                                 <TextBox x:Name="SessionTimeoutTextBox" Grid.Row="1" Grid.Column="1" 
-                                         Margin="10,0,0,15" Height="35"
+                                         Margin="10,0,0,15"
                                          Text="60"
                                          Style="{DynamicResource MaterialTextBoxStyle}"
                                          TextChanged="ServiceAdmin_Changed"/>
 
                                 <TextBlock Text="Пароль:" Grid.Row="2" Grid.Column="0" Margin="0,0,10,5"/>
                                 <PasswordBox x:Name="ServicePasswordBox" Grid.Row="3" Grid.Column="0" 
-                                             Margin="0,0,10,15" Height="35"
+                                             Margin="0,0,10,15"
                                              Style="{DynamicResource MaterialPasswordBoxStyle}"
                                              PasswordChanged="ServiceAdmin_Changed"/>
 
                                 <TextBlock Text="Подтверждение:" Grid.Row="2" Grid.Column="1" Margin="10,0,0,5"/>
                                 <PasswordBox x:Name="ServicePasswordConfirmBox" Grid.Row="3" Grid.Column="1" 
-                                             Margin="10,0,0,15" Height="35"
+                                             Margin="10,0,0,15"
                                              Style="{DynamicResource MaterialPasswordBoxStyle}"
                                              PasswordChanged="ServiceAdmin_Changed"/>
                             </Grid>
@@ -267,7 +265,7 @@
                                                VerticalAlignment="Center" 
                                                Margin="0,0,15,0"/>
                                     <ComboBox x:Name="LanguageComboBox" 
-                                              Width="150" Height="35"
+                                              Width="150" Height="45"
                                               SelectedIndex="0"
                                               Style="{DynamicResource MaterialComboBoxStyle}">
                                         <ComboBoxItem Content="Русский" Tag="ru-RU"/>
@@ -327,7 +325,7 @@
                             Content="Пропустить"
                             Width="100" Height="40"
                             Margin="0,0,15,0"
-                            Style="{DynamicResource SecondaryButtonStyle}"
+                            Style="{DynamicResource MaterialOutlineButtonStyle}"
                             Click="SkipButton_Click"/>
 
                     <Button x:Name="CompleteSetupButton" 
@@ -348,8 +346,7 @@
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ProgressBar IsIndeterminate="True" 
                                  Width="200" Height="4" 
-                                 Margin="0,0,0,15"
-                                 Style="{DynamicResource MaterialProgressBarStyle}"/>
+                                 Margin="0,0,0,15"/>
                     <TextBlock x:Name="LoadingText" 
                                Text="Сохранение настроек..."
                                Foreground="White"

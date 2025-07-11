@@ -5,7 +5,7 @@
               GeneratedClassName="Settings">
   <Profiles />
   <Settings>
-    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÀÓÒÅÍÒÈÔÈÊÀÖÈÈ ========== -->
+    <!-- ========== Authentication Settings ========== -->
     <Setting Name="LastDomain" Type="System.String" Scope="User">
       <Value Profile="(Default)">company.local</Value>
     </Setting>
@@ -19,7 +19,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     
-    <!-- ========== ÍÀÑÒÐÎÉÊÈ ËÎÊÀËÈÇÀÖÈÈ ========== -->
+    <!-- ========== Localization Settings ========== -->
     <Setting Name="Language" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
@@ -27,7 +27,7 @@
       <Value Profile="(Default)" />
     </Setting>
     
-    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÎÊÍÀ ========== -->
+    <!-- ========== Window Settings ========== -->
     <Setting Name="WindowSize" Type="System.String" Scope="User">
       <Value Profile="(Default)">1200,800</Value>
     </Setting>
@@ -41,7 +41,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     
-    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÒÅÌÛ È UI ========== -->
+    <!-- ========== Theme & UI Settings ========== -->
     <Setting Name="Theme" Type="System.String" Scope="User">
       <Value Profile="(Default)">Light</Value>
     </Setting>
@@ -55,7 +55,7 @@
       <Value Profile="(Default)">Segoe UI</Value>
     </Setting>
     
-    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÏÐÈËÎÆÅÍÈÉ ========== -->
+    <!-- ========== Application Settings ========== -->
     <Setting Name="ShowAllCategories" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -72,7 +72,7 @@
       <Value Profile="(Default)">Large</Value>
     </Setting>
     
-    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÏÐÎÈÇÂÎÄÈÒÅËÜÍÎÑÒÈ ========== -->
+    <!-- ========== Performance Settings ========== -->
     <Setting Name="EnableAnimations" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -83,7 +83,7 @@
       <Value Profile="(Default)">0</Value>
     </Setting>
     
-    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÁÅÇÎÏÀÑÍÎÑÒÈ ========== -->
+    <!-- ========== Security Settings ========== -->
     <Setting Name="LogoutTimeout" Type="System.Int32" Scope="User">
       <Value Profile="(Default)">0</Value>
     </Setting>
@@ -94,7 +94,7 @@
       <Value Profile="(Default)">True</Value>
     </Setting>
     
-    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÎÒËÀÄÊÈ ========== -->
+    <!-- ========== Logging Settings ========== -->
     <Setting Name="EnableLogging" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -105,7 +105,7 @@
       <Value Profile="(Default)">False</Value>
     </Setting>
     
-    <!-- ========== ÍÀÑÒÐÎÉÊÈ ÓÂÅÄÎÌËÅÍÈÉ ========== -->
+    <!-- ========== Notification Settings ========== -->
     <Setting Name="ShowNotifications" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">True</Value>
     </Setting>
@@ -114,9 +114,9 @@
     </Setting>
     <Setting Name="SoundEnabled" Type="System.Boolean" Scope="User">
       <Value Profile="(Default)">False</Value>
-    </Settings>
+    </Setting>
     
-    <!-- ========== ÐÀÑØÈÐÅÍÍÛÅ ÍÀÑÒÐÎÉÊÈ ========== -->
+    <!-- ========== Advanced Settings ========== -->
     <Setting Name="CustomStylesPath" Type="System.String" Scope="User">
       <Value Profile="(Default)" />
     </Setting>
