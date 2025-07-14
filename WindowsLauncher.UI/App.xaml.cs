@@ -365,24 +365,46 @@ namespace WindowsLauncher.UI
         {
             try
             {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogInformation("Creating main window for user {Username}", authenticatedUser.Username);
+
                 var mainWindow = new MainWindow();
+                logger.LogInformation("Main window created successfully");
 
                 // Передаем аутентифицированного пользователя в ViewModel
                 if (mainWindow.DataContext is MainViewModel mainViewModel)
                 {
                     mainViewModel.CurrentUser = authenticatedUser;
+                    logger.LogInformation("ViewModel configured successfully");
                 }
 
-                MainWindow = mainWindow;
-                mainWindow.Show();
 
-                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                // ShutdownMode уже настроен по умолчанию
+                
+                // Устанавливаем главное окно
+                MainWindow = mainWindow;
+                
+                // Добавляем обработчик закрытия главного окна для завершения приложения
+                mainWindow.Closed += (s, e) => 
+                {
+                    logger.LogInformation("MainWindow closed, shutting down application");
+                    Shutdown(0);
+                };
+                
+                logger.LogInformation("About to show main window, ShutdownMode: {ShutdownMode}", ShutdownMode);
+                
+                mainWindow.Show();
                 logger.LogInformation("Main window shown for user {Username}", authenticatedUser.Username);
+                
+                // Проверяем что окно действительно открыто
+                logger.LogInformation("MainWindow state - IsVisible: {IsVisible}, IsLoaded: {IsLoaded}", 
+                                    mainWindow.IsVisible, mainWindow.IsLoaded);
             }
             catch (Exception ex)
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-                logger.LogError(ex, "Failed to show main window");
+                logger.LogError(ex, "Failed to show main window: {Message}", ex.Message);
+                logger.LogError(ex, "Stack trace: {StackTrace}", ex.StackTrace);
                 ShowStartupError(ex);
             }
         }
@@ -392,19 +414,11 @@ namespace WindowsLauncher.UI
             DispatcherUnhandledException += (sender, e) =>
             {
                 var logger = ServiceProvider?.GetService<ILogger<App>>();
-                logger?.LogError(e.Exception, "Unhandled dispatcher exception");
+                logger?.LogError(e.Exception, "Unhandled dispatcher exception: {Message}", e.Exception.Message);
+                logger?.LogError(e.Exception, "Stack trace: {StackTrace}", e.Exception.StackTrace);
 
-                var errorMessage = LocalizationHelper.Instance.GetFormattedString(
-                    "Error_UnhandledException",
-                    e.Exception.Message
-                );
-
-                MessageBox.Show(
-                    errorMessage,
-                    LocalizationHelper.Instance.GetString("Error_CriticalError"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Error
-                );
+                MessageBox.Show($"Unhandled exception: {e.Exception.Message}\n\nStack trace:\n{e.Exception.StackTrace}", 
+                               "Critical Error", MessageBoxButton.OK, MessageBoxImage.Error);
 
                 e.Handled = true;
                 Shutdown(1);
@@ -413,7 +427,11 @@ namespace WindowsLauncher.UI
             AppDomain.CurrentDomain.UnhandledException += (sender, e) =>
             {
                 var logger = ServiceProvider?.GetService<ILogger<App>>();
-                logger?.LogError(e.ExceptionObject as Exception, "Unhandled domain exception");
+                var exception = e.ExceptionObject as Exception;
+                logger?.LogError(exception, "Unhandled domain exception: {Message}", exception?.Message);
+                
+                MessageBox.Show($"Unhandled domain exception: {exception?.Message}", 
+                               "Critical Error", MessageBoxButton.OK, MessageBoxImage.Error);
             };
         }
 

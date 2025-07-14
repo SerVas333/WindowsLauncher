@@ -34,9 +34,9 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
 
         private LocalizationHelper()
         {
-            // ✅ ИСПРАВЛЕНО: Правильная ссылка на Resources
+            // ✅ ИСПРАВЛЕНО: Правильная ссылка на Resources с подпапкой
             _resourceManager = new ResourceManager(
-                "WindowsLauncher.UI.Properties.Resources",
+                "WindowsLauncher.UI.Properties.Resources.Resources",
                 typeof(LocalizationHelper).Assembly
             );
         }

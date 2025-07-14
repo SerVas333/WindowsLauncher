@@ -411,4 +411,297 @@
     <value>Windows Command Line</value>
   </data>
 
+	<!-- ========== ADMIN WINDOW ========== -->
+	<data name="AdminWindow_Title" xml:space="preserve">
+    <value>Application Management - Administrator</value>
+  </data>
+	<data name="AdminWindow_TotalCount" xml:space="preserve">
+    <value>Total: </value>
+  </data>
+	<data name="AdminWindow_ActiveCount" xml:space="preserve">
+    <value>Active: </value>
+  </data>
+	<data name="AdminWindow_DisabledCount" xml:space="preserve">
+    <value>Disabled: </value>
+  </data>
+	<data name="AdminWindow_AddApplication" xml:space="preserve">
+    <value>Add Application</value>
+  </data>
+	<data name="AdminWindow_Update" xml:space="preserve">
+    <value>Update</value>
+  </data>
+	<data name="AdminWindow_Import" xml:space="preserve">
+    <value>Import</value>
+  </data>
+	<data name="AdminWindow_Export" xml:space="preserve">
+    <value>Export</value>
+  </data>
+	<data name="AdminWindow_Save" xml:space="preserve">
+    <value>Save</value>
+  </data>
+	<data name="AdminWindow_Cancel" xml:space="preserve">
+    <value>Cancel</value>
+  </data>
+	<data name="AdminWindow_TestLaunch" xml:space="preserve">
+    <value>Test Launch</value>
+  </data>
+	<data name="AdminWindow_ApplicationList" xml:space="preserve">
+    <value>Application List</value>
+  </data>
+	<data name="AdminWindow_NameColumn" xml:space="preserve">
+    <value>Name</value>
+  </data>
+	<data name="AdminWindow_CategoryColumn" xml:space="preserve">
+    <value>Category</value>
+  </data>
+	<data name="AdminWindow_TypeColumn" xml:space="preserve">
+    <value>Type</value>
+  </data>
+	<data name="AdminWindow_EditTooltip" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+	<data name="AdminWindow_DuplicateTooltip" xml:space="preserve">
+    <value>Duplicate</value>
+  </data>
+	<data name="AdminWindow_DeleteTooltip" xml:space="preserve">
+    <value>Delete</value>
+  </data>
+	<data name="AdminWindow_ApplicationDetails" xml:space="preserve">
+    <value>Application Details</value>
+  </data>
+	<data name="AdminWindow_EditingApplication" xml:space="preserve">
+    <value>Editing Application</value>
+  </data>
+	<data name="AdminWindow_NewApplication" xml:space="preserve">
+    <value>Creating New Application</value>
+  </data>
+	<data name="AdminWindow_BasicInformation" xml:space="preserve">
+    <value>Basic Information</value>
+  </data>
+	<data name="AdminWindow_Name" xml:space="preserve">
+    <value>Name:</value>
+  </data>
+	<data name="AdminWindow_Description" xml:space="preserve">
+    <value>Description:</value>
+  </data>
+	<data name="AdminWindow_Category" xml:space="preserve">
+    <value>Category:</value>
+  </data>
+	<data name="AdminWindow_Type" xml:space="preserve">
+    <value>Type:</value>
+  </data>
+	<data name="AdminWindow_TypeApplication" xml:space="preserve">
+    <value>Application</value>
+  </data>
+	<data name="AdminWindow_TypeWebLink" xml:space="preserve">
+    <value>Web Link</value>
+  </data>
+	<data name="AdminWindow_TypeFolder" xml:space="preserve">
+    <value>Folder</value>
+  </data>
+	<data name="AdminWindow_Path" xml:space="preserve">
+    <value>Path:</value>
+  </data>
+	<data name="AdminWindow_Arguments" xml:space="preserve">
+    <value>Arguments:</value>
+  </data>
+	<data name="AdminWindow_SecuritySettings" xml:space="preserve">
+    <value>Security Settings</value>
+  </data>
+	<data name="AdminWindow_MinimumRole" xml:space="preserve">
+    <value>Minimum Role:</value>
+  </data>
+	<data name="AdminWindow_RoleStandard" xml:space="preserve">
+    <value>Standard</value>
+  </data>
+	<data name="AdminWindow_RolePowerUser" xml:space="preserve">
+    <value>Power User</value>
+  </data>
+	<data name="AdminWindow_RoleAdministrator" xml:space="preserve">
+    <value>Administrator</value>
+  </data>
+	<data name="AdminWindow_RequiredGroups" xml:space="preserve">
+    <value>Required Groups:</value>
+  </data>
+	<data name="AdminWindow_AddGroup" xml:space="preserve">
+    <value>➕ Add</value>
+  </data>
+	<data name="AdminWindow_Status" xml:space="preserve">
+    <value>Status:</value>
+  </data>
+	<data name="AdminWindow_ApplicationActive" xml:space="preserve">
+    <value>Application Active</value>
+  </data>
+	<data name="AdminWindow_SelectApplicationHint" xml:space="preserve">
+    <value>Select application to view details</value>
+  </data>
+	<data name="AdminWindow_UnsavedChanges" xml:space="preserve">
+    <value>Unsaved Changes</value>
+  </data>
+	<data name="AdminWindow_EditMode" xml:space="preserve">
+    <value>Edit Mode</value>
+  </data>
+	<data name="AdminWindow_ViewMode" xml:space="preserve">
+    <value>View Mode</value>
+  </data>
+
+	<!-- ========== MAIN WINDOW ADDITIONS ========== -->
+	<data name="MainWindow_CorporateLauncher" xml:space="preserve">
+    <value>Corporate Launcher</value>
+  </data>
+	<data name="MainWindow_SwitchUserTooltip" xml:space="preserve">
+    <value>Switch User</value>
+  </data>
+	<data name="MainWindow_ManageApplicationsTooltip" xml:space="preserve">
+    <value>Manage Applications</value>
+  </data>
+	<data name="MainWindow_SettingsTooltip" xml:space="preserve">
+    <value>Settings</value>
+  </data>
+	<data name="MainWindow_UpdateTooltip" xml:space="preserve">
+    <value>Update</value>
+  </data>
+	<data name="MainWindow_ExitTooltip" xml:space="preserve">
+    <value>Exit</value>
+  </data>
+	<data name="MainWindow_LoadingApplications" xml:space="preserve">
+    <value>Loading applications...</value>
+  </data>
+	<data name="MainWindow_NoApplicationsFound" xml:space="preserve">
+    <value>No applications found</value>
+  </data>
+	<data name="MainWindow_NoApplicationsHint" xml:space="preserve">
+    <value>Try changing search or category filter</value>
+  </data>
+	<data name="MainWindow_ApplicationsCount" xml:space="preserve">
+    <value> applications</value>
+  </data>
+
+	<!-- ========== SETUP WINDOW ========== -->
+	<data name="SetupWindow_Title" xml:space="preserve">
+    <value>Initial Setup - KDV Launcher</value>
+  </data>
+	<data name="SetupWindow_Welcome" xml:space="preserve">
+    <value>Welcome to KDV Launcher</value>
+  </data>
+	<data name="SetupWindow_Subtitle" xml:space="preserve">
+    <value>Initial System Setup</value>
+  </data>
+	<data name="SetupWindow_Step1Title" xml:space="preserve">
+    <value>1. Domain Connection Setup</value>
+  </data>
+	<data name="SetupWindow_Step1Description" xml:space="preserve">
+    <value>Specify Active Directory connection parameters for user authentication.</value>
+  </data>
+	<data name="SetupWindow_Domain" xml:space="preserve">
+    <value>Domain:</value>
+  </data>
+	<data name="SetupWindow_DomainDefault" xml:space="preserve">
+    <value>company.local</value>
+  </data>
+	<data name="SetupWindow_LdapServer" xml:space="preserve">
+    <value>LDAP Server:</value>
+  </data>
+	<data name="SetupWindow_LdapServerDefault" xml:space="preserve">
+    <value>dc.company.local</value>
+  </data>
+	<data name="SetupWindow_Port" xml:space="preserve">
+    <value>Port:</value>
+  </data>
+	<data name="SetupWindow_PortDefault" xml:space="preserve">
+    <value>389</value>
+  </data>
+	<data name="SetupWindow_UseTLS" xml:space="preserve">
+    <value>Use TLS</value>
+  </data>
+	<data name="SetupWindow_TestConnection" xml:space="preserve">
+    <value>Test Connection</value>
+  </data>
+	<data name="SetupWindow_Step2Title" xml:space="preserve">
+    <value>2. Service Administrator Setup</value>
+  </data>
+	<data name="SetupWindow_Step2Description" xml:space="preserve">
+    <value>Create a local administrator account for system management when domain is unavailable.</value>
+  </data>
+	<data name="SetupWindow_Username" xml:space="preserve">
+    <value>Username:</value>
+  </data>
+	<data name="SetupWindow_UsernameDefault" xml:space="preserve">
+    <value>serviceadmin</value>
+  </data>
+	<data name="SetupWindow_SessionTime" xml:space="preserve">
+    <value>Session Time (min):</value>
+  </data>
+	<data name="SetupWindow_SessionTimeDefault" xml:space="preserve">
+    <value>60</value>
+  </data>
+	<data name="SetupWindow_Password" xml:space="preserve">
+    <value>Password:</value>
+  </data>
+	<data name="SetupWindow_PasswordConfirm" xml:space="preserve">
+    <value>Confirm:</value>
+  </data>
+	<data name="SetupWindow_PasswordRequirements" xml:space="preserve">
+    <value>Password Requirements:</value>
+  </data>
+	<data name="SetupWindow_PasswordLength" xml:space="preserve">
+    <value>• Minimum 8 characters</value>
+  </data>
+	<data name="SetupWindow_PasswordUpper" xml:space="preserve">
+    <value>• Upper case letters (A-Z)</value>
+  </data>
+	<data name="SetupWindow_PasswordLower" xml:space="preserve">
+    <value>• Lower case letters (a-z)</value>
+  </data>
+	<data name="SetupWindow_PasswordNumbers" xml:space="preserve">
+    <value>• Numbers (0-9)</value>
+  </data>
+	<data name="SetupWindow_PasswordSpecial" xml:space="preserve">
+    <value>• Special characters (!@#$%^*)</value>
+  </data>
+	<data name="SetupWindow_PasswordMatch" xml:space="preserve">
+    <value>• Passwords must match</value>
+  </data>
+	<data name="SetupWindow_Step3Title" xml:space="preserve">
+    <value>3. Additional Settings</value>
+  </data>
+	<data name="SetupWindow_Step3Description" xml:space="preserve">
+    <value>Configure additional system parameters.</value>
+  </data>
+	<data name="SetupWindow_EnableAudit" xml:space="preserve">
+    <value>Enable user action audit</value>
+  </data>
+	<data name="SetupWindow_StartWithWindows" xml:space="preserve">
+    <value>Start with Windows</value>
+  </data>
+	<data name="SetupWindow_CheckUpdates" xml:space="preserve">
+    <value>Check for updates automatically</value>
+  </data>
+	<data name="SetupWindow_InterfaceLanguage" xml:space="preserve">
+    <value>Interface Language:</value>
+  </data>
+	<data name="SetupWindow_Russian" xml:space="preserve">
+    <value>Russian</value>
+  </data>
+	<data name="SetupWindow_English" xml:space="preserve">
+    <value>English</value>
+  </data>
+	<data name="SetupWindow_Progress" xml:space="preserve">
+    <value>Setup: 0/3 steps completed</value>
+  </data>
+	<data name="SetupWindow_Skip" xml:space="preserve">
+    <value>Skip</value>
+  </data>
+	<data name="SetupWindow_Complete" xml:space="preserve">
+    <value>Complete Setup</value>
+  </data>
+	<data name="SetupWindow_SavingSettings" xml:space="preserve">
+    <value>Saving settings...</value>
+  </data>
+
+	<!-- ========== CORPORATE STYLES ========== -->
+	<data name="CorporateStyles_SearchPlaceholder" xml:space="preserve">
+    <value>Search applications...</value>
+  </data>
+
 </root>

@@ -41,6 +41,9 @@
     <!-- Disabled/Hint Colors -->
     <SolidColorBrush x:Key="DisabledBrush" Color="#CCCCCC"/>
     <SolidColorBrush x:Key="HintBrush" Color="#999999"/>
+    
+    <!-- Overlay Colors -->
+    <SolidColorBrush x:Key="OverlayBrush" Color="#80000000"/>
 
     <!-- ==========  ========== -->
     

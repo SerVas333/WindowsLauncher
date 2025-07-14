@@ -13,37 +13,7 @@
         Background="{DynamicResource BackgroundBrush}">
 
     <Window.Resources>
-        <!-- Локальные стили -->
-        <Style x:Key="LoginTextBoxStyle" TargetType="TextBox" BasedOn="{StaticResource MaterialTextBoxStyle}">
-            <Setter Property="Margin" Value="0,0,0,15"/>
-            <Setter Property="MinHeight" Value="45"/>
-        </Style>
-
-        <Style x:Key="LoginPasswordBoxStyle" TargetType="PasswordBox" BasedOn="{StaticResource MaterialPasswordBoxStyle}">
-            <Setter Property="Margin" Value="0,0,0,15"/>
-            <Setter Property="MinHeight" Value="45"/>
-        </Style>
-
-        <Style x:Key="LoginButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialButtonStyle}">
-            <Setter Property="MinHeight" Value="45"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="FontWeight" Value="SemiBold"/>
-        </Style>
-
-        <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource MaterialOutlineButtonStyle}">
-            <Setter Property="MinHeight" Value="45"/>
-            <Setter Property="FontSize" Value="14"/>
-        </Style>
-
-        <!-- Локальный логотип KDV -->
-        <Style x:Key="LogoTextStyle" TargetType="TextBlock">
-            <Setter Property="Text" Value="KDV"/>
-            <Setter Property="FontSize" Value="36"/>
-            <Setter Property="FontWeight" Value="Bold"/>
-            <Setter Property="Foreground" Value="{DynamicResource OnPrimaryBrush}"/>
-            <Setter Property="HorizontalAlignment" Value="Center"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-        </Style>
+        <!-- Ресурсы удалены - используем глобальные стили -->
     </Window.Resources>
 
     <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Margin="20">
@@ -58,7 +28,13 @@
             <Border Grid.Row="0" Background="{DynamicResource PrimaryBrush}" CornerRadius="8,8,0,0" Padding="30,20">
                 <StackPanel HorizontalAlignment="Center">
                     <!-- Логотип KDV -->
-                    <TextBlock Style="{StaticResource LogoTextStyle}" Margin="0,0,0,10"/>
+                    <TextBlock Text="KDV" 
+                              FontSize="36"
+                              FontWeight="Bold"
+                              Foreground="{DynamicResource OnPrimaryBrush}"
+                              HorizontalAlignment="Center"
+                              VerticalAlignment="Center"
+                              Margin="0,0,0,10"/>
 
                     <TextBlock Text="{x:Static properties:Resources.LoginWindow_Title}" 
                                FontSize="24" FontWeight="Bold" 
@@ -99,7 +75,9 @@
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <TextBox x:Name="DomainTextBox" 
-                                 Style="{StaticResource LoginTextBoxStyle}"
+                                 Style="{StaticResource MaterialTextBoxStyle}"
+                                 Margin="0,0,0,15"
+                                 MinHeight="45"
                                  Text="company.local" TextChanged="DomainTextBox_TextChanged"/>
 
                         <TextBlock Text="{x:Static properties:Resources.LoginWindow_Username}" 
@@ -107,7 +85,9 @@
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <TextBox x:Name="UsernameTextBox" 
-                                 Style="{StaticResource LoginTextBoxStyle}"
+                                 Style="{StaticResource MaterialTextBoxStyle}"
+                                 Margin="0,0,0,15"
+                                 MinHeight="45"
                                  KeyDown="Input_KeyDown"/>
 
                         <TextBlock Text="{x:Static properties:Resources.LoginWindow_Password}" 
@@ -115,7 +95,9 @@
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <PasswordBox x:Name="PasswordBox" 
-                                     Style="{StaticResource LoginPasswordBoxStyle}"
+                                     Style="{StaticResource MaterialPasswordBoxStyle}"
+                                     Margin="0,0,0,15"
+                                     MinHeight="45"
                                      KeyDown="Input_KeyDown"/>
                     </StackPanel>
 
@@ -126,7 +108,9 @@
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <TextBox x:Name="ServiceUsernameTextBox" 
-                                 Style="{StaticResource LoginTextBoxStyle}"
+                                 Style="{StaticResource MaterialTextBoxStyle}"
+                                 Margin="0,0,0,15"
+                                 MinHeight="45"
                                  Text="serviceadmin"
                                  KeyDown="Input_KeyDown"/>
 
@@ -135,7 +119,9 @@
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <PasswordBox x:Name="ServicePasswordBox" 
-                                     Style="{StaticResource LoginPasswordBoxStyle}"
+                                     Style="{StaticResource MaterialPasswordBoxStyle}"
+                                     Margin="0,0,0,15"
+                                     MinHeight="45"
                                      KeyDown="Input_KeyDown"/>
                     </StackPanel>
 
@@ -196,7 +182,9 @@
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <Button x:Name="SettingsButton" 
                                 Content="{x:Static properties:Resources.Common_Settings}"
-                                Style="{StaticResource SecondaryButtonStyle}"
+                                Style="{StaticResource MaterialOutlineButtonStyle}"
+                                MinHeight="45"
+                                FontSize="14"
                                 Width="128"
                                 Click="SettingsButton_Click"/>
                     </StackPanel>
@@ -204,14 +192,17 @@
                     <!-- Основные кнопки -->
                     <Button x:Name="CancelButton"
                             Content="{x:Static properties:Resources.Common_Cancel}"
-                            Style="{StaticResource SecondaryButtonStyle}"
+                            Style="{StaticResource MaterialOutlineButtonStyle}"
                             Margin="157,0,23,1"
                             Click="CancelButton_Click"/>
 
                     <Button x:Name="LoginButton" 
                             Grid.Column="2"
                             Content="{x:Static properties:Resources.LoginWindow_Login}"
-                            Style="{StaticResource LoginButtonStyle}"
+                            Style="{StaticResource MaterialButtonStyle}"
+                            MinHeight="45"
+                            FontSize="14"
+                            FontWeight="SemiBold"
                             Width="120"
                             IsDefault="True"
                             Click="LoginButton_Click"/>
@@ -221,7 +212,7 @@
             <!-- Индикатор загрузки -->
             <Border x:Name="LoadingOverlay" 
                     Grid.RowSpan="3"
-                    Background="#80000000" 
+                    Background="{StaticResource OverlayBrush}" 
                     Visibility="Collapsed">
                 <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
                     <ProgressBar IsIndeterminate="True" 

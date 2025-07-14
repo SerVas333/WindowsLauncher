@@ -11,6 +11,7 @@ using WindowsLauncher.Core.Models;
 using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.ViewModels.Base;
 using WindowsLauncher.UI.Infrastructure.Commands;
+using WindowsLauncher.UI.Infrastructure.Localization;
 using System.ComponentModel;
 using WpfApplication = System.Windows.Application;
 using CoreApplication = WindowsLauncher.Core.Models.Application;
@@ -54,10 +55,9 @@ namespace WindowsLauncher.UI.ViewModels
             InitializeCommands();
 
             // Подписываемся на изменение языка
-            LocalizationManager.LanguageChanged += OnLanguageChanged;
+            LocalizationHelper.Instance.LanguageChanged += OnLanguageChanged;
 
-            // Запускаем инициализацию асинхронно
-            _ = InitializeAsync();
+            // Инициализация будет запущена вручную после установки CurrentUser
         }
 
         #endregion
@@ -78,6 +78,12 @@ namespace WindowsLauncher.UI.ViewModels
                     // Обновляем команды
                     OpenSettingsCommand.RaiseCanExecuteChanged();
                     OpenAdminCommand.RaiseCanExecuteChanged();
+
+                    // Запускаем инициализацию при первой установке пользователя
+                    if (value != null && !_isInitialized)
+                    {
+                        _ = InitializeAsync();
+                    }
                 }
             }
         }
@@ -144,9 +150,9 @@ namespace WindowsLauncher.UI.ViewModels
             get
             {
                 if (CurrentUser == null)
-                    return LocalizationManager.GetString("AppTitle");
+                    return LocalizationHelper.Instance.GetString("AppTitle");
 
-                return LocalizationManager.GetString("WindowTitle", CurrentUser.DisplayName, LocalizedRole);
+                return LocalizationHelper.Instance.GetFormattedString("WindowTitle", CurrentUser.DisplayName, LocalizedRole);
             }
         }
 
@@ -158,9 +164,9 @@ namespace WindowsLauncher.UI.ViewModels
 
                 return CurrentUser.Role switch
                 {
-                    Core.Enums.UserRole.Administrator => LocalizationManager.GetString("RoleAdministrator"),
-                    Core.Enums.UserRole.PowerUser => LocalizationManager.GetString("RolePowerUser"),
-                    Core.Enums.UserRole.Standard => LocalizationManager.GetString("RoleStandard"),
+                    Core.Enums.UserRole.Administrator => LocalizationHelper.Instance.GetString("RoleAdministrator"),
+                    Core.Enums.UserRole.PowerUser => LocalizationHelper.Instance.GetString("RolePowerUser"),
+                    Core.Enums.UserRole.Standard => LocalizationHelper.Instance.GetString("RoleStandard"),
                     _ => CurrentUser.Role.ToString()
                 };
             }
@@ -224,41 +230,48 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 Logger.LogInformation("=== STARTING MAINVIEWMODEL INITIALIZATION ===");
                 IsLoading = true;
-                StatusMessage = LocalizationManager.GetString("Initializing");
+                StatusMessage = LocalizationHelper.Instance.GetString("Initializing");
 
                 using var scope = _serviceProvider.CreateScope();
                 Logger.LogInformation("Created DI scope successfully");
 
                 // STEP 1: Database initialization
                 Logger.LogInformation("Step 1: Initializing database...");
-                StatusMessage = LocalizationManager.GetString("DatabaseInitializing");
+                StatusMessage = LocalizationHelper.Instance.GetString("DatabaseInitializing");
 
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
                 await dbInitializer.InitializeAsync();
                 Logger.LogInformation("Database initialization completed");
 
                 // STEP 2: Authentication
-                Logger.LogInformation("Step 2: Starting authentication...");
-                await AuthenticateUserAsync();
-
                 if (CurrentUser == null)
                 {
-                    Logger.LogWarning("Authentication failed, user is null");
-                    return;
+                    Logger.LogInformation("Step 2: Starting authentication...");
+                    await AuthenticateUserAsync();
+
+                    if (CurrentUser == null)
+                    {
+                        Logger.LogWarning("Authentication failed, user is null");
+                        return;
+                    }
+                }
+                else
+                {
+                    Logger.LogInformation("Step 2: Using existing authenticated user: {Username}", CurrentUser.Username);
                 }
 
                 // STEP 3: Load user data
                 Logger.LogInformation("Step 3: Loading user data...");
                 await LoadUserDataAsync();
 
-                StatusMessage = LocalizationManager.GetString("Ready");
+                StatusMessage = LocalizationHelper.Instance.GetString("Ready");
                 _isInitialized = true;
                 Logger.LogInformation("=== MAINVIEWMODEL INITIALIZATION COMPLETED ===");
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "=== MAINVIEWMODEL INITIALIZATION FAILED ===");
-                StatusMessage = LocalizationManager.GetString("InitializationError", ex.Message);
+                StatusMessage = LocalizationHelper.Instance.GetFormattedString("InitializationError", ex.Message);
                 await HandleErrorAsync(ex, "initialization");
             }
             finally
@@ -271,7 +284,7 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                StatusMessage = LocalizationManager.GetString("Authenticating");
+                StatusMessage = LocalizationHelper.Instance.GetString("Authenticating");
 
                 using var scope = _serviceProvider.CreateScope();
                 var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
@@ -284,11 +297,11 @@ namespace WindowsLauncher.UI.ViewModels
                     Logger.LogInformation("User authenticated: {User} ({Role})",
                         CurrentUser.Username, CurrentUser.Role);
 
-                    StatusMessage = LocalizationManager.GetString("Welcome", CurrentUser.DisplayName);
+                    StatusMessage = LocalizationHelper.Instance.GetFormattedString("Welcome", CurrentUser.DisplayName);
                 }
                 else
                 {
-                    var errorMessage = LocalizationManager.GetString("AuthenticationFailed",
+                    var errorMessage = LocalizationHelper.Instance.GetFormattedString("AuthenticationFailed",
                         authResult.ErrorMessage ?? "Unknown error");
 
                     Logger.LogError("Authentication failed: {Error}", authResult.ErrorMessage);
@@ -299,7 +312,7 @@ namespace WindowsLauncher.UI.ViewModels
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Authentication error");
-                var errorMessage = LocalizationManager.GetString("AuthenticationFailed", ex.Message);
+                var errorMessage = LocalizationHelper.Instance.GetFormattedString("AuthenticationFailed", ex.Message);
                 StatusMessage = errorMessage;
                 DialogService.ShowError(errorMessage);
             }
@@ -312,7 +325,7 @@ namespace WindowsLauncher.UI.ViewModels
             try
             {
                 Logger.LogInformation("Loading user data for: {User}", CurrentUser.Username);
-                StatusMessage = LocalizationManager.GetString("LoadingApplications");
+                StatusMessage = LocalizationHelper.Instance.GetString("LoadingApplications");
 
                 using var scope = _serviceProvider.CreateScope();
                 var authzService = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
@@ -348,13 +361,13 @@ namespace WindowsLauncher.UI.ViewModels
                 FilterApplications();
 
                 var appCount = Applications.Count;
-                StatusMessage = LocalizationManager.GetString("LoadedApps", appCount);
+                StatusMessage = LocalizationHelper.Instance.GetFormattedString("LoadedApps", appCount);
                 Logger.LogInformation("User data loaded: {AppCount} apps", appCount);
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Failed to load user data");
-                StatusMessage = LocalizationManager.GetString("ErrorLoadingApplications", ex.Message);
+                StatusMessage = LocalizationHelper.Instance.GetFormattedString("ErrorLoadingApplications", ex.Message);
 
                 // Load test data as fallback
                 await LoadTestDataAsync();
@@ -374,7 +387,7 @@ namespace WindowsLauncher.UI.ViewModels
                 LocalizedCategories.Add(new CategoryViewModel
                 {
                     Key = "All",
-                    DisplayName = LocalizationManager.GetString("CategoryAll"),
+                    DisplayName = LocalizationHelper.Instance.GetString("CategoryAll"),
                     IsSelected = SelectedCategory == "All"
                 });
 
@@ -403,7 +416,7 @@ namespace WindowsLauncher.UI.ViewModels
             if (string.IsNullOrEmpty(category)) return category;
 
             var key = $"Category{category}";
-            var localized = LocalizationManager.GetString(key);
+            var localized = LocalizationHelper.Instance.GetString(key);
 
             // Если локализация не найдена, возвращаем оригинальное название
             return !string.IsNullOrEmpty(localized) && localized != key ? localized : category;
@@ -438,7 +451,7 @@ namespace WindowsLauncher.UI.ViewModels
                 {
                     Id = 1,
                     Name = "Calculator",
-                    Description = LocalizationManager.GetString("CalculatorDescription"),
+                    Description = LocalizationHelper.Instance.GetString("CalculatorDescription"),
                     Category = "Utilities",
                     ExecutablePath = "calc.exe",
                     IsEnabled = true
@@ -447,7 +460,7 @@ namespace WindowsLauncher.UI.ViewModels
                 {
                     Id = 2,
                     Name = "Notepad",
-                    Description = LocalizationManager.GetString("NotepadDescription"),
+                    Description = LocalizationHelper.Instance.GetString("NotepadDescription"),
                     Category = "Utilities",
                     ExecutablePath = "notepad.exe",
                     IsEnabled = true
@@ -456,7 +469,7 @@ namespace WindowsLauncher.UI.ViewModels
                 {
                     Id = 3,
                     Name = "Control Panel",
-                    Description = LocalizationManager.GetString("ControlPanelDescription"),
+                    Description = LocalizationHelper.Instance.GetString("ControlPanelDescription"),
                     Category = "System",
                     ExecutablePath = "control.exe",
                     IsEnabled = true
@@ -465,7 +478,7 @@ namespace WindowsLauncher.UI.ViewModels
                 {
                     Id = 4,
                     Name = "Command Prompt",
-                    Description = LocalizationManager.GetString("CommandPromptDescription"),
+                    Description = LocalizationHelper.Instance.GetString("CommandPromptDescription"),
                     Category = "System",
                     ExecutablePath = "cmd.exe",
                     IsEnabled = true
@@ -474,7 +487,7 @@ namespace WindowsLauncher.UI.ViewModels
                 {
                     Id = 5,
                     Name = "Google",
-                    Description = LocalizationManager.GetString("GoogleDescription"),
+                    Description = LocalizationHelper.Instance.GetString("GoogleDescription"),
                     Category = "Web",
                     ExecutablePath = "https://www.google.com",
                     IsEnabled = true,
@@ -492,30 +505,30 @@ namespace WindowsLauncher.UI.ViewModels
             LocalizedCategories.Add(new CategoryViewModel
             {
                 Key = "All",
-                DisplayName = LocalizationManager.GetString("CategoryAll"),
+                DisplayName = LocalizationHelper.Instance.GetString("CategoryAll"),
                 IsSelected = true
             });
             LocalizedCategories.Add(new CategoryViewModel
             {
                 Key = "Utilities",
-                DisplayName = LocalizationManager.GetString("Category_Utilities"),
+                DisplayName = LocalizationHelper.Instance.GetString("Category_Utilities"),
                 IsSelected = false
             });
             LocalizedCategories.Add(new CategoryViewModel
             {
                 Key = "System",
-                DisplayName = LocalizationManager.GetString("CategorySystem"),
+                DisplayName = LocalizationHelper.Instance.GetString("CategorySystem"),
                 IsSelected = false
             });
             LocalizedCategories.Add(new CategoryViewModel
             {
                 Key = "Web",
-                DisplayName = LocalizationManager.GetString("CategoryWeb"),
+                DisplayName = LocalizationHelper.Instance.GetString("CategoryWeb"),
                 IsSelected = false
             });
 
             FilterApplications();
-            StatusMessage = LocalizationManager.GetString("LoadedApps", Applications.Count);
+            StatusMessage = LocalizationHelper.Instance.GetFormattedString("LoadedApps", Applications.Count);
         }
 
         #endregion
@@ -535,7 +548,7 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 if (category.Key == "All")
                 {
-                    category.DisplayName = LocalizationManager.GetString("CategoryAll");
+                    category.DisplayName = LocalizationHelper.Instance.GetString("CategoryAll");
                 }
                 else
                 {
@@ -546,7 +559,7 @@ namespace WindowsLauncher.UI.ViewModels
             // Обновляем статус если это стандартное сообщение
             if (StatusMessage == "Ready")
             {
-                StatusMessage = LocalizationManager.GetString("Ready");
+                StatusMessage = LocalizationHelper.Instance.GetString("Ready");
             }
         }
 
@@ -606,7 +619,7 @@ namespace WindowsLauncher.UI.ViewModels
             await ExecuteSafelyAsync(async () =>
             {
                 await LoadUserDataAsync();
-                StatusMessage = LocalizationManager.GetString("ApplicationsRefreshed");
+                StatusMessage = LocalizationHelper.Instance.GetString("ApplicationsRefreshed");
             }, "refresh applications");
         }
 
@@ -621,7 +634,7 @@ namespace WindowsLauncher.UI.ViewModels
             await ExecuteSafelyAsync(async () =>
             {
                 var app = appViewModel.GetApplication();
-                StatusMessage = LocalizationManager.GetString("LaunchingApp", app.Name);
+                StatusMessage = LocalizationHelper.Instance.GetFormattedString("LaunchingApp", app.Name);
 
                 using var scope = _serviceProvider.CreateScope();
                 var appService = scope.ServiceProvider.GetRequiredService<IApplicationService>();
@@ -630,14 +643,14 @@ namespace WindowsLauncher.UI.ViewModels
 
                 if (result.IsSuccess)
                 {
-                    StatusMessage = LocalizationManager.GetString("SuccessfullyLaunched", app.Name);
+                    StatusMessage = LocalizationHelper.Instance.GetFormattedString("SuccessfullyLaunched", app.Name);
                     Logger.LogInformation("Application launched: {App}", app.Name);
                 }
                 else
                 {
-                    var errorMessage = LocalizationManager.GetString("FailedToLaunch", app.Name, result.ErrorMessage);
+                    var errorMessage = LocalizationHelper.Instance.GetFormattedString("FailedToLaunch", app.Name, result.ErrorMessage);
                     StatusMessage = errorMessage;
-                    DialogService.ShowWarning(errorMessage, LocalizationManager.GetString("LaunchError"));
+                    DialogService.ShowWarning(errorMessage, LocalizationHelper.Instance.GetString("LaunchError"));
                 }
             }, $"launch application {appViewModel.Name}");
         }
@@ -654,8 +667,8 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                var confirmMessage = LocalizationManager.GetString("ConfirmLogout");
-                var confirmTitle = LocalizationManager.GetString("Confirmation");
+                var confirmMessage = LocalizationHelper.Instance.GetString("ConfirmLogout");
+                var confirmTitle = LocalizationHelper.Instance.GetString("Confirmation");
 
                 if (!DialogService.ShowConfirmation(confirmMessage, confirmTitle))
                     return;
@@ -666,12 +679,12 @@ namespace WindowsLauncher.UI.ViewModels
                 authService.Logout();
                 Logger.LogInformation("User logged out: {User}", CurrentUser?.Username);
 
-                StatusMessage = LocalizationManager.GetString("LoggedOut");
+                StatusMessage = LocalizationHelper.Instance.GetString("LoggedOut");
                 WpfApplication.Current.Shutdown();
             }
             catch (Exception ex)
             {
-                var errorMessage = LocalizationManager.GetString("LogoutError", ex.Message);
+                var errorMessage = LocalizationHelper.Instance.GetFormattedString("LogoutError", ex.Message);
                 StatusMessage = errorMessage;
                 DialogService.ShowError(errorMessage);
             }
@@ -679,10 +692,10 @@ namespace WindowsLauncher.UI.ViewModels
 
         private void OpenSettings()
         {
-            StatusMessage = LocalizationManager.GetString("SettingsComingSoon");
+            StatusMessage = LocalizationHelper.Instance.GetString("SettingsComingSoon");
             DialogService.ShowInfo(
-                LocalizationManager.GetString("SettingsWindowMessage"),
-                LocalizationManager.GetString("Settings"));
+                LocalizationHelper.Instance.GetString("SettingsWindowMessage"),
+                LocalizationHelper.Instance.GetString("Settings"));
         }
 
         private void SwitchUser()
@@ -703,12 +716,12 @@ namespace WindowsLauncher.UI.ViewModels
                     UserSettings = null;
 
                     _ = LoadUserDataAsync();
-                    StatusMessage = LocalizationManager.GetString("SwitchedToUser", CurrentUser.DisplayName);
+                    StatusMessage = LocalizationHelper.Instance.GetFormattedString("SwitchedToUser", CurrentUser.DisplayName);
                 }
             }
             catch (Exception ex)
             {
-                var errorMessage = LocalizationManager.GetString("SwitchUserError", ex.Message);
+                var errorMessage = LocalizationHelper.Instance.GetFormattedString("SwitchUserError", ex.Message);
                 StatusMessage = errorMessage;
                 DialogService.ShowError(errorMessage);
             }
@@ -741,7 +754,7 @@ namespace WindowsLauncher.UI.ViewModels
         {
             if (disposing)
             {
-                LocalizationManager.LanguageChanged -= OnLanguageChanged;
+                LocalizationHelper.Instance.LanguageChanged -= OnLanguageChanged;
 
                 // Очищаем коллекции
                 Applications.Clear();

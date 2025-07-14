@@ -7,7 +7,7 @@
         Title="Управление приложениями - Администратор" 
         Height="800" Width="1198"
         WindowStartupLocation="CenterScreen"
-        Background="#F5F5F5"
+        Background="{DynamicResource BackgroundBrush}"
         MinHeight="600" MinWidth="1000">
 
     <Window.Resources>
@@ -52,7 +52,7 @@
                 <!-- Statistics -->
                 <StackPanel Grid.Column="1" Orientation="Horizontal" 
                             HorizontalAlignment="Center" VerticalAlignment="Center">
-                    <Border Background="#80FFFFFF" CornerRadius="15" Padding="15,5,15,5" Margin="5,0,5,0">
+                    <Border Background="{StaticResource SurfaceVariantBrush}" CornerRadius="15" Padding="15,5,15,5" Margin="5,0,5,0">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="Всего: " Foreground="{StaticResource CorporateRedDark}" FontSize="12"/>
                             <TextBlock Text="{Binding TotalApplications}" 
@@ -60,18 +60,18 @@
                                        FontWeight="Bold" FontSize="12"/>
                         </StackPanel>
                     </Border>
-                    <Border Background="#80FFFFFF" CornerRadius="15" Padding="15,5,15,5" Margin="5,0,5,0">
+                    <Border Background="{StaticResource SurfaceVariantBrush}" CornerRadius="15" Padding="15,5,15,5" Margin="5,0,5,0">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Активных: " Foreground="#2E7D32" FontSize="12"/>
+                            <TextBlock Text="Активных: " Foreground="{StaticResource SuccessBrush}" FontSize="12"/>
                             <TextBlock Text="{Binding EnabledApplications}" 
-                                       Foreground="#2E7D32" FontWeight="Bold" FontSize="12"/>
+                                       Foreground="{StaticResource SuccessBrush}" FontWeight="Bold" FontSize="12"/>
                         </StackPanel>
                     </Border>
-                    <Border Background="#80FFFFFF" CornerRadius="15" Padding="15,5,15,5" Margin="5,0,5,0">
+                    <Border Background="{StaticResource SurfaceVariantBrush}" CornerRadius="15" Padding="15,5,15,5" Margin="5,0,5,0">
                         <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="Отключенных: " Foreground="#D32F2F" FontSize="12"/>
+                            <TextBlock Text="Отключенных: " Foreground="{StaticResource ErrorBrush}" FontSize="12"/>
                             <TextBlock Text="{Binding DisabledApplications}" 
-                                       Foreground="#D32F2F" FontWeight="Bold" FontSize="12"/>
+                                       Foreground="{StaticResource ErrorBrush}" FontWeight="Bold" FontSize="12"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
@@ -202,10 +202,10 @@
                                 <Setter Property="BorderBrush" Value="{StaticResource CorporateBorder}"/>
                                 <Style.Triggers>
                                     <Trigger Property="IsSelected" Value="True">
-                                        <Setter Property="Background" Value="#FFF5F5"/>
+                                        <Setter Property="Background" Value="{StaticResource SurfaceVariantBrush}"/>
                                     </Trigger>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="#FFFAFAFA"/>
+                                        <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
@@ -226,10 +226,10 @@
                                                 <Style TargetType="Border">
                                                     <Style.Triggers>
                                                         <DataTrigger Binding="{Binding IsEnabled}" Value="True">
-                                                            <Setter Property="Background" Value="#4CAF50"/>
+                                                            <Setter Property="Background" Value="{StaticResource SuccessBrush}"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding IsEnabled}" Value="False">
-                                                            <Setter Property="Background" Value="#F44336"/>
+                                                            <Setter Property="Background" Value="{StaticResource ErrorBrush}"/>
                                                         </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>

@@ -1,7 +1,9 @@
 ﻿<!-- WindowsLauncher.UI/App.xaml -->
 <Application x:Class="WindowsLauncher.UI.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:loc="clr-namespace:WindowsLauncher.UI.Infrastructure.Localization"
+             ShutdownMode="OnExplicitShutdown">
 
     <Application.Resources>
         <ResourceDictionary>
@@ -18,6 +20,9 @@
                 <ResourceDictionary Source="Styles/CorporateStyles.xaml"/>
 
             </ResourceDictionary.MergedDictionaries>
+
+            <!-- Глобальные конвертеры -->
+            <loc:LocalizedStringConverter x:Key="LocalizedStringConverter"/>
 
             <!-- Глобальные fallback ресурсы -->
 

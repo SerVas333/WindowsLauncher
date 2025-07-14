@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using System;
 using System.IO;
 using System.Windows;
 using System.Windows.Controls;
@@ -6,6 +7,7 @@ using WindowsLauncher.Data;
 using WindowsLauncher.Data.Extensions;
 using WindowsLauncher.Services;
 using WindowsLauncher.UI.ViewModels;
+using WindowsLauncher.UI.Infrastructure.Localization;
 using Microsoft.Extensions.DependencyInjection;
 
 namespace WindowsLauncher.UI
@@ -51,7 +53,7 @@ namespace WindowsLauncher.UI
                 var culture = item.Tag.ToString();
                 if (!string.IsNullOrEmpty(culture))
                 {
-                    LocalizationManager.SetLanguage(culture);
+                    LocalizationHelper.Instance.SetLanguage(culture);
                 }
             }
         }
