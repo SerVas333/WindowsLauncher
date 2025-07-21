@@ -320,11 +320,8 @@ namespace WindowsLauncher.Services.ActiveDirectory
                         userInfo.Title = GetPropertyValue(directoryEntry, "title");
                         userInfo.Phone = GetPropertyValue(directoryEntry, "telephoneNumber");
 
-                        if (directoryEntry.Properties["pwdLastSet"].Value != null)
-                        {
-                            var pwdLastSetValue = (long)directoryEntry.Properties["pwdLastSet"].Value;
-                            userInfo.PasswordLastSet = DateTime.FromFileTime(pwdLastSetValue);
-                        }
+                        // Безопасное извлечение даты последней смены пароля
+                        userInfo.PasswordLastSet = GetFileTimeProperty(directoryEntry, "pwdLastSet");
                     }
 
                     return userInfo;
@@ -694,6 +691,65 @@ namespace WindowsLauncher.Services.ActiveDirectory
             catch
             {
                 return false;
+            }
+        }
+
+        #endregion
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Безопасное извлечение long значения из AD Property
+        /// </summary>
+        private long? GetLongProperty(DirectoryEntry entry, string propertyName)
+        {
+            try
+            {
+                if (entry.Properties[propertyName].Value == null)
+                    return null;
+
+                var rawValue = entry.Properties[propertyName].Value;
+                
+                // Проверка на COM объект через тип
+                if (rawValue.GetType().IsCOMObject)
+                {
+                    if (long.TryParse(rawValue.ToString(), out var parsedValue))
+                        return parsedValue;
+                }
+                else if (rawValue is long longValue)
+                {
+                    return longValue;
+                }
+                else if (long.TryParse(rawValue?.ToString(), out var stringParsedValue))
+                {
+                    return stringParsedValue;
+                }
+
+                return null;
+            }
+            catch
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Безопасное извлечение DateTime из AD FileTime Property
+        /// </summary>
+        private DateTime? GetFileTimeProperty(DirectoryEntry entry, string propertyName)
+        {
+            try
+            {
+                var longValue = GetLongProperty(entry, propertyName);
+                if (longValue.HasValue && longValue.Value > 0)
+                {
+                    return DateTime.FromFileTime(longValue.Value);
+                }
+                return null;
+            }
+            catch
+            {
+                return null;
             }
         }
 
