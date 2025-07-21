@@ -235,10 +235,16 @@
                                       Margin="0,8,0,8"
                                       Style="{StaticResource CorporateCheckBox}"/>
                             
-                            <Button Content="Сбросить пароль"
-                                    Command="{Binding ResetPasswordCommand}"
-                                    Margin="0,8,0,0"
-                                    Style="{StaticResource CorporateButtonSecondary}"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,8,0,0">
+                                <Button Content="Сменить пароль"
+                                        Command="{Binding ChangePasswordCommand}"
+                                        Margin="0,0,8,0"
+                                        Style="{StaticResource CorporateButtonSecondary}"/>
+                                
+                                <Button Content="Сбросить пароль"
+                                        Command="{Binding ResetPasswordCommand}"
+                                        Style="{StaticResource CorporateButtonSecondary}"/>
+                            </StackPanel>
                         </StackPanel>
                     </GroupBox>
 

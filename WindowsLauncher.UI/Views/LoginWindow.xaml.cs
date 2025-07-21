@@ -28,7 +28,7 @@ namespace WindowsLauncher.UI.Views
         private bool _isAuthenticating = false;
 
         // Публичные свойства для доступа к результату
-        public AuthenticationResult AuthenticationResult { get; private set; }
+        public AuthenticationResult AuthenticationResult { get; private set; } = null!;
         public User AuthenticatedUser => AuthenticationResult?.User;
 
         public LoginWindow()

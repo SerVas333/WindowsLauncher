@@ -383,6 +383,131 @@ namespace WindowsLauncher.Services
             return Task.FromResult(result);
         }
 
+        /// <summary>
+        /// Смена пароля пользователем (с проверкой старого пароля)
+        /// </summary>
+        public async Task<PasswordChangeResult> ChangeLocalUserPasswordAsync(int userId, string currentPassword, string newPassword)
+        {
+            try
+            {
+                var user = await GetLocalUserByIdAsync(userId);
+                if (user == null)
+                    return new PasswordChangeResult { IsSuccess = false, ErrorMessage = "Пользователь не найден" };
+
+                // Проверяем текущий пароль
+                if (!VerifyPassword(currentPassword, user.PasswordHash, user.Salt))
+                {
+                    await _auditService.LogEventAsync(
+                        user.Username,
+                        "LocalUser.PasswordChangeFailed",
+                        $"Failed password change attempt for user: {user.Username} - incorrect current password",
+                        false,
+                        "Incorrect current password"
+                    );
+                    return new PasswordChangeResult { IsSuccess = false, ErrorMessage = "Неверный текущий пароль" };
+                }
+
+                // Валидируем новый пароль
+                var validation = await ValidatePasswordAsync(newPassword);
+                if (!validation.IsValid)
+                {
+                    return new PasswordChangeResult 
+                    { 
+                        IsSuccess = false, 
+                        ErrorMessage = $"Новый пароль не соответствует требованиям: {string.Join(", ", validation.Errors)}" 
+                    };
+                }
+
+                // Проверяем, что новый пароль отличается от текущего
+                if (VerifyPassword(newPassword, user.PasswordHash, user.Salt))
+                {
+                    return new PasswordChangeResult 
+                    { 
+                        IsSuccess = false, 
+                        ErrorMessage = "Новый пароль должен отличаться от текущего" 
+                    };
+                }
+
+                // Обновляем пароль
+                var (passwordHash, salt) = HashPassword(newPassword);
+                user.PasswordHash = passwordHash;
+                user.Salt = salt;
+                user.LastPasswordChange = DateTime.UtcNow;
+
+                // Сбрасываем блокировку и счетчики неудачных попыток
+                user.IsLocked = false;
+                user.LockoutEnd = null;
+                user.FailedLoginAttempts = 0;
+
+                await _userRepository.UpdateAsync(user);
+                await _userRepository.SaveChangesAsync();
+
+                await _auditService.LogEventAsync(
+                    user.Username,
+                    "LocalUser.PasswordChanged",
+                    $"Password successfully changed by user: {user.Username}",
+                    true
+                );
+
+                _logger.LogInformation("Password changed successfully for user: {Username} (ID: {UserId})", user.Username, userId);
+
+                return new PasswordChangeResult { IsSuccess = true, Message = "Пароль успешно изменен" };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error changing password for user ID: {UserId}", userId);
+                return new PasswordChangeResult { IsSuccess = false, ErrorMessage = "Произошла ошибка при смене пароля" };
+            }
+        }
+
+        /// <summary>
+        /// Проверка, требуется ли смена пароля
+        /// </summary>
+        public async Task<bool> IsPasswordChangeRequiredAsync(int userId)
+        {
+            var user = await GetLocalUserByIdAsync(userId);
+            if (user == null) return false;
+
+            // Проверяем истечение срока действия пароля
+            if (_config.PasswordExpiryDays > 0 && user.LastPasswordChange.HasValue)
+            {
+                var expiryDate = user.LastPasswordChange.Value.AddDays(_config.PasswordExpiryDays);
+                if (DateTime.UtcNow > expiryDate)
+                    return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Получение информации о пароле пользователя
+        /// </summary>
+        public async Task<PasswordInfo?> GetPasswordInfoAsync(int userId)
+        {
+            var user = await GetLocalUserByIdAsync(userId);
+            if (user == null)
+                return null;
+
+            var info = new PasswordInfo
+            {
+                UserId = userId,
+                Username = user.Username,
+                LastPasswordChange = user.LastPasswordChange,
+                IsExpired = await IsPasswordChangeRequiredAsync(userId),
+                DaysUntilExpiry = null
+            };
+
+            // Вычисляем дни до истечения срока действия
+            if (_config.PasswordExpiryDays > 0 && user.LastPasswordChange.HasValue)
+            {
+                var expiryDate = user.LastPasswordChange.Value.AddDays(_config.PasswordExpiryDays);
+                var daysUntilExpiry = (int)(expiryDate - DateTime.UtcNow).TotalDays;
+                info.DaysUntilExpiry = Math.Max(0, daysUntilExpiry);
+            }
+
+            return info;
+        }
+
         #endregion
 
         #region Управление ролями

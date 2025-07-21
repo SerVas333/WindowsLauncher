@@ -20,7 +20,7 @@ namespace WindowsLauncher.UI.ViewModels
     {
         private readonly ILocalUserService _localUserService;
         private readonly IAuditService _auditService;
-        private readonly User _originalUser;
+        private readonly User? _originalUser;
         private int _currentUserId;
 
         // Backing fields
@@ -195,17 +195,18 @@ namespace WindowsLauncher.UI.ViewModels
 
         #region Commands
 
-        public ICommand SaveCommand { get; private set; }
-        public ICommand CancelCommand { get; private set; }
-        public ICommand ResetPasswordCommand { get; private set; }
-        public ICommand ResetFailedAttemptsCommand { get; private set; }
+        public ICommand SaveCommand { get; private set; } = null!;
+        public ICommand CancelCommand { get; private set; } = null!;
+        public ICommand ResetPasswordCommand { get; private set; } = null!;
+        public ICommand ResetFailedAttemptsCommand { get; private set; } = null!;
+        public ICommand ChangePasswordCommand { get; private set; } = null!;
 
         #endregion
 
         #region Events
 
-        public event PropertyChangedEventHandler PropertyChanged;
-        public event EventHandler<bool> DialogClosed;
+        public event PropertyChangedEventHandler? PropertyChanged;
+        public event EventHandler<bool>? DialogClosed;
 
         #endregion
 
@@ -250,6 +251,7 @@ namespace WindowsLauncher.UI.ViewModels
             CancelCommand = new RelayCommand(() => OnDialogClosed(false));
             ResetPasswordCommand = new AsyncRelayCommand(ResetPasswordAsync, () => IsEditMode);
             ResetFailedAttemptsCommand = new AsyncRelayCommand(ResetFailedAttemptsAsync, () => IsEditMode && FailedLoginAttempts > 0);
+            ChangePasswordCommand = new RelayCommand(ChangePassword, () => IsEditMode);
         }
 
         private void LoadUserData()
@@ -484,6 +486,38 @@ namespace WindowsLauncher.UI.ViewModels
             finally
             {
                 SetLoading(false);
+            }
+        }
+
+        private void ChangePassword()
+        {
+            if (_originalUser == null) return;
+
+            try
+            {
+                // Создаем и показываем диалог смены пароля
+                var changePasswordDialog = new WindowsLauncher.UI.Views.ChangePasswordDialog(_originalUser.Id, _originalUser.Username);
+                changePasswordDialog.Owner = System.Windows.Application.Current.MainWindow;
+                
+                var result = changePasswordDialog.ShowDialog();
+                
+                // Если пароль был изменен, обновляем информацию о пользователе
+                if (result == true && changePasswordDialog.PasswordChanged)
+                {
+                    // Опционально можно обновить отображаемую информацию
+                    // например, дату последней смены пароля
+                    ModifiedAt = DateTime.Now;
+                    
+                    // Уведомляем об успешной смене пароля
+                    SetError(""); // Очищаем ошибки
+                    
+                    // Можно показать уведомление об успехе
+                    // MessageBox или Toast notification
+                }
+            }
+            catch (Exception ex)
+            {
+                SetError($"Ошибка при открытии диалога смены пароля: {ex.Message}");
             }
         }
 

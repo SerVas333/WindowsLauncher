@@ -103,6 +103,29 @@ namespace WindowsLauncher.Core.Interfaces
         /// <returns>Результат валидации</returns>
         Task<PasswordValidationResult> ValidatePasswordAsync(string password);
 
+        /// <summary>
+        /// Сменить пароль пользователем (с проверкой старого пароля)
+        /// </summary>
+        /// <param name="userId">ID пользователя</param>
+        /// <param name="currentPassword">Текущий пароль</param>
+        /// <param name="newPassword">Новый пароль</param>
+        /// <returns>Результат смены пароля</returns>
+        Task<PasswordChangeResult> ChangeLocalUserPasswordAsync(int userId, string currentPassword, string newPassword);
+
+        /// <summary>
+        /// Проверить, требуется ли смена пароля
+        /// </summary>
+        /// <param name="userId">ID пользователя</param>
+        /// <returns>True если требуется смена пароля</returns>
+        Task<bool> IsPasswordChangeRequiredAsync(int userId);
+
+        /// <summary>
+        /// Получить информацию о пароле пользователя
+        /// </summary>
+        /// <param name="userId">ID пользователя</param>
+        /// <returns>Информация о пароле</returns>
+        Task<PasswordInfo> GetPasswordInfoAsync(int userId);
+
         #endregion
 
         #region Управление ролями

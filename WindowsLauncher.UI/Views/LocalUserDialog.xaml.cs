@@ -11,7 +11,7 @@ namespace WindowsLauncher.UI.Views
     /// </summary>
     public partial class LocalUserDialog : Window
     {
-        private LocalUserDialogViewModel _viewModel;
+        private LocalUserDialogViewModel? _viewModel;
 
         public LocalUserDialog()
         {
@@ -47,7 +47,7 @@ namespace WindowsLauncher.UI.Views
             }
         }
 
-        private void OnDialogClosed(object sender, bool result)
+        private void OnDialogClosed(object? sender, bool result)
         {
             DialogResult = result;
             Close();

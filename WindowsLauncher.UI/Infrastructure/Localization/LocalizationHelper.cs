@@ -3,6 +3,7 @@ using System;
 using System.ComponentModel;
 using System.Globalization;
 using System.Resources;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace WindowsLauncher.UI.Infrastructure.Localization
@@ -12,7 +13,7 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
     /// </summary>
     public class LocalizationHelper : INotifyPropertyChanged
     {
-        private static LocalizationHelper _instance;
+        private static LocalizationHelper? _instance;
         private static readonly object _lock = new object();
         private readonly ResourceManager _resourceManager;
 
@@ -81,12 +82,12 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
         /// <summary>
         /// Событие изменения языка
         /// </summary>
-        public event EventHandler LanguageChanged;
+        public event EventHandler? LanguageChanged;
 
         /// <summary>
         /// Событие изменения свойства
         /// </summary>
-        public event PropertyChangedEventHandler PropertyChanged;
+        public event PropertyChangedEventHandler? PropertyChanged;
 
         /// <summary>
         /// Получение локализованной строки
@@ -263,7 +264,7 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
             return languages;
         }
 
-        private void OnPropertyChanged(string propertyName = null)
+        private void OnPropertyChanged([CallerMemberName] string? propertyName = null)
         {
             PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         }
@@ -286,8 +287,8 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
         {
             Key = key;
         }
-
-        public string Key { get; set; }
+        
+        public string Key { get; set; } = string.Empty;
 
         public override object ProvideValue(IServiceProvider serviceProvider)
         {

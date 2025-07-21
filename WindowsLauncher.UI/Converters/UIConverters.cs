@@ -278,7 +278,7 @@ namespace WindowsLauncher.UI.Converters
         {
             if (value == null) return string.Empty;
             
-            return value.ToString();
+            return value.ToString() ?? string.Empty;
         }
 
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
@@ -291,7 +291,7 @@ namespace WindowsLauncher.UI.Converters
                 }
                 catch
                 {
-                    return Enum.GetValues(targetType).GetValue(0);
+                    return Enum.GetValues(targetType).GetValue(0) ?? new object();
                 }
             }
             return value;

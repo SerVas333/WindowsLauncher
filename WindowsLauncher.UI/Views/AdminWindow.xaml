@@ -342,6 +342,19 @@
                                 </DataGridTextColumn.ElementStyle>
                             </DataGridTextColumn>
 
+                            <!-- Minimum Role -->
+                            <DataGridTextColumn Header="Мин. роль" 
+                                                Binding="{Binding RoleDisplay}" 
+                                                Width="100">
+                                <DataGridTextColumn.ElementStyle>
+                                    <Style TargetType="TextBlock">
+                                        <Setter Property="Foreground" Value="{StaticResource CorporateRed}"/>
+                                        <Setter Property="VerticalAlignment" Value="Center"/>
+                                        <Setter Property="FontWeight" Value="Medium"/>
+                                    </Style>
+                                </DataGridTextColumn.ElementStyle>
+                            </DataGridTextColumn>
+
                             <!-- Actions -->
                             <DataGridTemplateColumn Width="100">
                                 <DataGridTemplateColumn.CellTemplate>
@@ -568,6 +581,9 @@
                                             <TextBlock.Style>
                                                 <Style TargetType="TextBlock">
                                                     <Style.Triggers>
+                                                        <DataTrigger Binding="{Binding}" Value="Guest">
+                                                            <Setter Property="Text" Value="Гостевой пользователь"/>
+                                                        </DataTrigger>
                                                         <DataTrigger Binding="{Binding}" Value="Standard">
                                                             <Setter Property="Text" Value="Стандартный"/>
                                                         </DataTrigger>

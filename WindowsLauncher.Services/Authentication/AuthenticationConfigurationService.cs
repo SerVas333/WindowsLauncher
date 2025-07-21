@@ -322,7 +322,7 @@ namespace WindowsLauncher.Services.Authentication
             var saltBytes = new byte[32]; // все нули
             var salt = Convert.ToBase64String(saltBytes);
 
-            using var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes("admin", saltBytes, 100000, System.Security.Cryptography.HashAlgorithmName.SHA256);
+            using var pbkdf2 = new System.Security.Cryptography.Rfc2898DeriveBytes("vfc11Nth!", saltBytes, 100000, System.Security.Cryptography.HashAlgorithmName.SHA256);
             var hashBytes = pbkdf2.GetBytes(32);
             return Convert.ToBase64String(hashBytes);
         }

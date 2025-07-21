@@ -443,8 +443,7 @@ namespace WindowsLauncher.UI.ViewModels
                 "LauncherAdmins",
                 "Domain Users",
                 "Domain Admins",
-                "IT Department",
-                "Finance Department",
+                "IT Department",                
                 "HR Department"
             };
 
@@ -1357,6 +1356,7 @@ namespace WindowsLauncher.UI.ViewModels
 
         public string RoleDisplay => MinimumRole switch
         {
+            UserRole.Guest => "Гостевой",
             UserRole.Standard => "Стандартный",
             UserRole.PowerUser => "Опытный",
             UserRole.Administrator => "Администратор",

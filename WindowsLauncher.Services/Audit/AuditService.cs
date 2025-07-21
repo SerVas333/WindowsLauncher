@@ -128,7 +128,7 @@ namespace WindowsLauncher.Services.Audit
         /// <summary>
         /// Получение логов аудита за период
         /// </summary>
-        public async Task<List<AuditLog>> GetAuditLogsAsync(DateTime fromDate, DateTime toDate, string username = null)
+        public async Task<List<AuditLog>> GetAuditLogsAsync(DateTime fromDate, DateTime toDate, string? username = null)
         {
             try
             {

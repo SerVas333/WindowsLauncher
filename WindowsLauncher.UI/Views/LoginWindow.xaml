@@ -84,7 +84,7 @@
                                  Style="{StaticResource MaterialTextBoxStyle}"
                                  Margin="0,0,0,15"
                                  MinHeight="45"
-                                 Text="company.local" TextChanged="DomainTextBox_TextChanged"/>
+                                 Text="kdvm" TextChanged="DomainTextBox_TextChanged"/>
 
                         <TextBlock Text="{x:Static properties:Resources.LoginWindow_Username}" 
                                    Margin="0,0,0,5" 

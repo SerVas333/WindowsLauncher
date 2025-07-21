@@ -30,8 +30,8 @@ namespace WindowsLauncher.UI
 {
     public partial class App : WpfApplication
     {
-        private IHost _host;
-        public IServiceProvider ServiceProvider { get; private set; }
+        private IHost? _host;
+        public IServiceProvider ServiceProvider { get; private set; } = null!;
 
         protected override async void OnStartup(StartupEventArgs e)
         {
@@ -160,7 +160,7 @@ namespace WindowsLauncher.UI
         {
             var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
             var dbPath = Path.Combine(appDataPath, "WindowsLauncher", "launcher.db");
-            Directory.CreateDirectory(Path.GetDirectoryName(dbPath));
+            Directory.CreateDirectory(Path.GetDirectoryName(dbPath)!);
             return $"Data Source={dbPath}";
         }
 
@@ -190,7 +190,7 @@ namespace WindowsLauncher.UI
         /// <summary>
         /// Обработчик изменения языка
         /// </summary>
-        private void OnLanguageChanged(object sender, EventArgs e)
+        private void OnLanguageChanged(object? sender, EventArgs e)
         {
             try
             {
@@ -269,7 +269,7 @@ namespace WindowsLauncher.UI
         /// <summary>
         /// ✅ ЗАПУСК ЧЕРЕЗ LoginWindow
         /// </summary>
-        private async Task StartApplicationAsync()
+        private Task StartApplicationAsync()
         {
             try
             {
@@ -290,6 +290,8 @@ namespace WindowsLauncher.UI
                     logger.LogInformation("Service admin configured, showing login screen");
                     ShowLoginWindow();
                 }
+                
+                return Task.CompletedTask;
             }
             catch (Exception ex)
             {

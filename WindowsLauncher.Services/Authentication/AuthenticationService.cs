@@ -200,10 +200,10 @@ namespace WindowsLauncher.Services.Authentication
         public async Task<User> AuthenticateWindowsUserAsync()
         {
             var result = await AuthenticateAsync();
-            if (result.IsSuccess)
+            if (result.IsSuccess && result.User != null)
                 return result.User;
 
-            throw new UnauthorizedAccessException(result.ErrorMessage);
+            throw new UnauthorizedAccessException(result.ErrorMessage ?? "Authentication failed");
         }
 
         /// <summary>
@@ -212,10 +212,10 @@ namespace WindowsLauncher.Services.Authentication
         public async Task<User> AuthenticateServiceAdminAsync(string username, string password)
         {
             var result = await AuthenticateServiceAdminInternalAsync(username, password);
-            if (result.IsSuccess)
+            if (result.IsSuccess && result.User != null)
                 return result.User;
 
-            throw new UnauthorizedAccessException(result.ErrorMessage);
+            throw new UnauthorizedAccessException(result.ErrorMessage ?? "Authentication failed");
         }
 
         #region Service Admin Methods
@@ -444,7 +444,7 @@ namespace WindowsLauncher.Services.Authentication
             }
         }
 
-        public async Task<bool> IsDomainAvailableAsync(string domain = null)
+        public async Task<bool> IsDomainAvailableAsync(string? domain = null)
         {
             try
             {
@@ -574,9 +574,11 @@ namespace WindowsLauncher.Services.Authentication
             try
             {
                 var config = _configService.GetConfiguration();
+                _logger.LogDebug("ServiceAdmin config loaded: Username={Username}, IsPasswordSet={IsPasswordSet}, IsEnabled={IsEnabled}",
+                    config.ServiceAdmin?.Username, config.ServiceAdmin?.IsPasswordSet, config.ServiceAdmin?.IsEnabled);
 
                 // Проверяем блокировку
-                if (config.ServiceAdmin.IsLocked &&
+                if (config.ServiceAdmin?.IsLocked == true &&
                     config.ServiceAdmin.UnlockTime.HasValue &&
                     DateTime.UtcNow < config.ServiceAdmin.UnlockTime.Value)
                 {
@@ -586,7 +588,7 @@ namespace WindowsLauncher.Services.Authentication
                 }
 
                 // Сбрасываем блокировку если время истекло
-                if (config.ServiceAdmin.IsLockExpired)
+                if (config.ServiceAdmin?.IsLockExpired == true)
                 {
                     config.ServiceAdmin.ResetLockout();
                     await _configService.SaveConfigurationAsync(config);
@@ -600,9 +602,15 @@ namespace WindowsLauncher.Services.Authentication
                 }
 
                 // Проверяем пароль
+                _logger.LogDebug("Service admin password verification: Username={Username}, HasPasswordHash={HasHash}, HasSalt={HasSalt}", 
+                    username, !string.IsNullOrEmpty(config.ServiceAdmin.PasswordHash), !string.IsNullOrEmpty(config.ServiceAdmin.Salt));
+                
                 var isPasswordValid = VerifyPassword(password, config.ServiceAdmin.PasswordHash, config.ServiceAdmin.Salt);
+                _logger.LogDebug("Service admin password verification result: {IsValid}", isPasswordValid);
+                
                 if (!isPasswordValid)
                 {
+                    _logger.LogWarning("Service admin password verification failed for user: {Username}", username);
                     await RecordFailedServiceAdminLogin(config);
                     return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials, "Неверные учетные данные");
                 }
@@ -659,7 +667,7 @@ namespace WindowsLauncher.Services.Authentication
                 var authResult = await _localUserService.AuthenticateLocalUserAsync(username, password);
                 if (authResult.IsSuccess)
                 {
-                    return AuthenticationResult.Success(authResult.User, AuthenticationType.LocalUsers);
+                    return AuthenticationResult.Success(authResult.User!, AuthenticationType.LocalUsers);
                 }
                 else
                 {
@@ -952,16 +960,28 @@ namespace WindowsLauncher.Services.Authentication
         {
             try
             {
+                if (string.IsNullOrEmpty(password) || string.IsNullOrEmpty(storedHash) || string.IsNullOrEmpty(storedSalt))
+                {
+                    _logger.LogDebug("Password verification failed: missing required data. Password={HasPassword}, Hash={HasHash}, Salt={HasSalt}",
+                        !string.IsNullOrEmpty(password), !string.IsNullOrEmpty(storedHash), !string.IsNullOrEmpty(storedSalt));
+                    return false;
+                }
+
                 var saltBytes = Convert.FromBase64String(storedSalt);
 
                 using var pbkdf2 = new Rfc2898DeriveBytes(password, saltBytes, 100000, HashAlgorithmName.SHA256);
                 var hashBytes = pbkdf2.GetBytes(32);
                 var computedHash = Convert.ToBase64String(hashBytes);
 
-                return computedHash == storedHash;
+                var isMatch = computedHash == storedHash;
+                _logger.LogDebug("Password hash comparison: StoredHash={StoredHashLength}, ComputedHash={ComputedHashLength}, Match={Match}",
+                    storedHash?.Length ?? 0, computedHash?.Length ?? 0, isMatch);
+
+                return isMatch;
             }
-            catch
+            catch (Exception ex)
             {
+                _logger.LogError(ex, "Error during password verification");
                 return false;
             }
         }

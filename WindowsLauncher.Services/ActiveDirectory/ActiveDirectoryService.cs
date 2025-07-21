@@ -622,7 +622,7 @@ namespace WindowsLauncher.Services.ActiveDirectory
             {
                 if (entry.Properties[propertyName].Value != null)
                 {
-                    return entry.Properties[propertyName].Value.ToString() ?? string.Empty;
+                    return entry.Properties[propertyName].Value?.ToString() ?? string.Empty;
                 }
             }
             catch (Exception ex)
@@ -711,7 +711,7 @@ namespace WindowsLauncher.Services.ActiveDirectory
                 var rawValue = entry.Properties[propertyName].Value;
                 
                 // Проверка на COM объект через тип
-                if (rawValue.GetType().IsCOMObject)
+                if (rawValue?.GetType().IsCOMObject == true)
                 {
                     if (long.TryParse(rawValue.ToString(), out var parsedValue))
                         return parsedValue;

@@ -44,6 +44,29 @@ namespace WindowsLauncher.Data.Repositories
 
         public virtual async Task<T> UpdateAsync(T entity)
         {
+            // Получаем ID сущности через рефлексию (предполагаем, что есть свойство Id)
+            var entityType = typeof(T);
+            var idProperty = entityType.GetProperty("Id");
+            
+            if (idProperty != null)
+            {
+                var entityId = idProperty.GetValue(entity);
+                
+                if (entityId != null && !entityId.Equals(0))
+                {
+                    // Ищем уже отслеживаемую сущность с таким же ID
+                    var trackedEntity = _context.ChangeTracker.Entries<T>()
+                        .FirstOrDefault(e => idProperty.GetValue(e.Entity)?.Equals(entityId) == true);
+                    
+                    if (trackedEntity != null && !ReferenceEquals(trackedEntity.Entity, entity))
+                    {
+                        // Отключаем старую сущность от отслеживания
+                        trackedEntity.State = EntityState.Detached;
+                    }
+                }
+            }
+            
+            // Теперь безопасно обновляем сущность
             _dbSet.Update(entity);
             return entity;
         }
