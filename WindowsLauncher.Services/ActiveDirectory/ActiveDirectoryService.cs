@@ -38,38 +38,50 @@ namespace WindowsLauncher.Services.ActiveDirectory
         {
             try
             {
-                _logger.LogDebug("Testing connection to {Server}:{Port}", server, port);
+                _logger.LogInformation("Testing connection to {Server}:{Port}", server, port);
 
                 // Проверяем доступность сервера через ping
                 using var ping = new Ping();
                 var reply = await ping.SendPingAsync(server, 5000);
 
+                _logger.LogInformation("Ping result for {Server}: Status={Status}, RoundtripTime={Time}ms", 
+                    server, reply.Status, reply.RoundtripTime);
+
                 if (reply.Status != IPStatus.Success)
                 {
-                    _logger.LogWarning("Server {Server} is not reachable via ping", server);
+                    _logger.LogWarning("Server {Server} is not reachable via ping: {Status}", server, reply.Status);
                     return false;
                 }
 
-                // Пытаемся подключиться к LDAP
-                using var connection = new LdapConnection(new LdapDirectoryIdentifier(server, port));
-                connection.SessionOptions.ProtocolVersion = 3;
-                connection.Timeout = TimeSpan.FromSeconds(10);
+                _logger.LogInformation("Ping successful, now testing TCP connection to {Server}:{Port}", server, port);
 
-                var config = _configService.GetConfiguration();
-                if (config.UseTLS)
+                // Проверяем доступность TCP порта вместо LDAP bind
+                using var tcpClient = new System.Net.Sockets.TcpClient();
+                var connectTask = tcpClient.ConnectAsync(server, port);
+                var timeoutTask = Task.Delay(5000); // 5 секунд таймаут
+
+                var completedTask = await Task.WhenAny(connectTask, timeoutTask);
+                
+                if (completedTask == timeoutTask)
                 {
-                    connection.SessionOptions.SecureSocketLayer = true;
+                    _logger.LogWarning("TCP connection to {Server}:{Port} timed out", server, port);
+                    return false;
                 }
 
-                // Пробуем анонимное подключение для проверки доступности
-                await Task.Run(() => connection.Bind());
+                if (connectTask.IsFaulted)
+                {
+                    _logger.LogWarning("TCP connection to {Server}:{Port} failed: {Error}", server, port, connectTask.Exception?.GetBaseException().Message);
+                    return false;
+                }
 
-                _logger.LogDebug("Connection test successful for {Server}:{Port}", server, port);
+                _logger.LogInformation("TCP connection to {Server}:{Port} successful", server, port);
+
+                _logger.LogInformation("Connection test successful for {Server}:{Port}", server, port);
                 return true;
             }
             catch (Exception ex)
             {
-                _logger.LogDebug("Connection test failed for {Server}:{Port}: {Error}", server, port, ex.Message);
+                _logger.LogError(ex, "Connection test failed for {Server}:{Port}: {Error}", server, port, ex.Message);
                 return false;
             }
         }
@@ -249,6 +261,14 @@ namespace WindowsLauncher.Services.ActiveDirectory
             try
             {
                 var config = _configService.GetConfiguration();
+                
+                // В тестовом режиме всегда возвращаем true
+                if (config.TestMode)
+                {
+                    _logger.LogInformation("Domain availability check skipped (Test Mode enabled)");
+                    return true;
+                }
+                
                 return await TestConnectionAsync(config.LdapServer, config.Port);
             }
             catch (Exception ex)

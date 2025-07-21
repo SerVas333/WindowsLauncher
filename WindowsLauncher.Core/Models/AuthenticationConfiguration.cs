@@ -99,6 +99,11 @@ namespace WindowsLauncher.Core.Models
         public bool EnableFallbackMode { get; set; } = true;
 
         /// <summary>
+        /// Тестовый режим - пропускать проверку доступности домена
+        /// </summary>
+        public bool TestMode { get; set; } = false;
+
+        /// <summary>
         /// Список доверенных доменов
         /// </summary>
         public List<string> TrustedDomains { get; set; } = new();
@@ -152,6 +157,7 @@ namespace WindowsLauncher.Core.Models
                 AdminGroups = config.AdminGroups,
                 PowerUserGroups = config.PowerUserGroups,
                 EnableFallbackMode = config.EnableFallbackMode,
+                TestMode = config.TestMode,
                 TrustedDomains = config.TrustedDomains,
                 ServiceAdmin = config.ServiceAdmin
             };
@@ -175,6 +181,7 @@ namespace WindowsLauncher.Core.Models
                 AdminGroups = config.AdminGroups,
                 PowerUserGroups = config.PowerUserGroups,
                 EnableFallbackMode = config.EnableFallbackMode,
+                TestMode = config.TestMode,
                 TrustedDomains = config.TrustedDomains,
                 ServiceAdmin = config.ServiceAdmin
             };

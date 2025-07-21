@@ -307,6 +307,11 @@ namespace WindowsLauncher.Core.Models
         public bool EnableFallbackMode { get; set; } = true;
 
         /// <summary>
+        /// Тестовый режим - пропускать проверку доступности домена
+        /// </summary>
+        public bool TestMode { get; set; } = false;
+
+        /// <summary>
         /// Список доверенных доменов
         /// </summary>
         public List<string> TrustedDomains { get; set; } = new();

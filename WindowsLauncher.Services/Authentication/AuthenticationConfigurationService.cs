@@ -206,7 +206,8 @@ namespace WindowsLauncher.Services.Authentication
                 }
                 else
                 {
-                    _logger.LogInformation("Configuration loaded from appsettings.json successfully");
+                    _logger.LogInformation("Configuration loaded from appsettings.json successfully: LdapServer={LdapServer}, Domain={Domain}", 
+                        _currentConfig.LdapServer, _currentConfig.Domain);
                 }
             }
             catch (Exception ex)
@@ -230,8 +231,13 @@ namespace WindowsLauncher.Services.Authentication
                     return null;
                 }
 
+                _logger.LogInformation("ActiveDirectory section found, binding configuration...");
+
                 var config = new AuthenticationConfiguration();
                 adSection.Bind(config);
+
+                _logger.LogInformation("After binding: Domain={Domain}, LdapServer={LdapServer}, Port={Port}, TestMode={TestMode}",
+                    config.Domain, config.LdapServer, config.Port, config.TestMode);
 
                 // Дополнительная обработка списков
                 var trustedDomains = adSection.GetSection("TrustedDomains").Get<List<string>>();
@@ -248,8 +254,8 @@ namespace WindowsLauncher.Services.Authentication
                     serviceAdminSection.Bind(config.ServiceAdmin);
                 }
 
-                _logger.LogDebug("Loaded configuration: Domain={Domain}, LdapServer={LdapServer}, Port={Port}",
-                    config.Domain, config.LdapServer, config.Port);
+                _logger.LogInformation("Final loaded configuration: Domain={Domain}, LdapServer={LdapServer}, Port={Port}, TestMode={TestMode}",
+                    config.Domain, config.LdapServer, config.Port, config.TestMode);
 
                 return config;
             }
@@ -267,11 +273,15 @@ namespace WindowsLauncher.Services.Authentication
         {
             // Пытаемся определить домен автоматически
             var defaultDomain = GetDefaultDomain();
+            var defaultLdapServer = string.IsNullOrEmpty(defaultDomain) ? "dc.company.local" : $"dc.{defaultDomain}";
+
+            _logger.LogWarning("Creating default configuration: Domain={Domain}, LdapServer={LdapServer}", 
+                defaultDomain, defaultLdapServer);
 
             var config = new AuthenticationConfiguration
             {
                 Domain = defaultDomain,
-                LdapServer = string.IsNullOrEmpty(defaultDomain) ? "dc.company.local" : $"dc.{defaultDomain}",
+                LdapServer = defaultLdapServer,
                 Port = 389,
                 UseTLS = true,
                 TimeoutSeconds = 30,
