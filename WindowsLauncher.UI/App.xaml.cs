@@ -16,6 +16,7 @@ using WindowsLauncher.Services.Applications;
 using WindowsLauncher.Services.Audit;
 using WindowsLauncher.Services.Authorization;
 using WindowsLauncher.Services.Authentication;
+using WindowsLauncher.Services;
 using WindowsLauncher.UI.ViewModels;
 using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.Infrastructure.Localization;
@@ -111,6 +112,8 @@ namespace WindowsLauncher.UI
             // Конфигурация
             services.Configure<ActiveDirectoryConfiguration>(
                 configuration.GetSection("ActiveDirectory"));
+            services.Configure<LocalUserConfiguration>(
+                configuration.GetSection("LocalUsers"));
 
             // База данных
             services.AddDbContext<LauncherDbContext>(options =>
@@ -133,6 +136,9 @@ namespace WindowsLauncher.UI
             services.AddScoped<IAuthorizationService, AuthorizationService>();
             services.AddScoped<IApplicationService, ApplicationService>();
             services.AddScoped<IAuditService, AuditService>();
+            
+            // Новый сервис локальных пользователей
+            services.AddScoped<ILocalUserService, LocalUserService>();
 
             // Infrastructure сервисы
             services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
@@ -236,6 +242,10 @@ namespace WindowsLauncher.UI
                 
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
                 await dbInitializer.InitializeAsync();
+
+                // Обновляем роль существующего пользователя guest если нужно
+                var dbContext = scope.ServiceProvider.GetRequiredService<LauncherDbContext>();
+                await UpdateGuestUserRole.UpdateGuestUserIfNeededAsync(dbContext);
 
                 logger.LogInformation("Database initialized successfully");
             }

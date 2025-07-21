@@ -86,10 +86,11 @@ namespace WindowsLauncher.UI.Views
                     {
                         UsernameTextBox?.Focus();
                     }
-                    else if (ServiceModeRadio?.IsChecked == true)
+                    else if (LocalModeRadio?.IsChecked == true)
                     {
-                        ServiceUsernameTextBox?.Focus();
+                        LocalUsernameTextBox?.Focus();
                     }
+                    // Для гостевого режима фокус не нужен
                 };
 
                 // Проверяем доступность домена при инициализации
@@ -107,19 +108,28 @@ namespace WindowsLauncher.UI.Views
         {
             try
             {
-                if (DomainLoginPanel == null || ServiceLoginPanel == null) return;
+                if (DomainLoginPanel == null || LocalLoginPanel == null || GuestLoginPanel == null) return;
 
                 if (DomainModeRadio?.IsChecked == true)
                 {
                     DomainLoginPanel.Visibility = Visibility.Visible;
-                    ServiceLoginPanel.Visibility = Visibility.Collapsed;
+                    LocalLoginPanel.Visibility = Visibility.Collapsed;
+                    GuestLoginPanel.Visibility = Visibility.Collapsed;
                     UsernameTextBox?.Focus();
                 }
-                else if (ServiceModeRadio?.IsChecked == true)
+                else if (LocalModeRadio?.IsChecked == true)
                 {
                     DomainLoginPanel.Visibility = Visibility.Collapsed;
-                    ServiceLoginPanel.Visibility = Visibility.Visible;
-                    ServiceUsernameTextBox?.Focus();
+                    LocalLoginPanel.Visibility = Visibility.Visible;
+                    GuestLoginPanel.Visibility = Visibility.Collapsed;
+                    LocalUsernameTextBox?.Focus();
+                }
+                else if (GuestModeRadio?.IsChecked == true)
+                {
+                    DomainLoginPanel.Visibility = Visibility.Collapsed;
+                    LocalLoginPanel.Visibility = Visibility.Collapsed;
+                    GuestLoginPanel.Visibility = Visibility.Visible;
+                    // Для гостевого режима фокус устанавливать не нужно
                 }
             }
             catch (Exception ex)
@@ -172,14 +182,34 @@ namespace WindowsLauncher.UI.Views
 
                     result = await AuthenticateWithCredentialsAsync(credentials);
                 }
-                else
+                else if (LocalModeRadio?.IsChecked == true)
                 {
-                    // Сервисная аутентификация
+                    // Локальная аутентификация
+                    var username = LocalUsernameTextBox?.Text?.Trim() ?? "";
+                    var password = LocalPasswordBox?.Password ?? "";
+                    
+                    // Определяем тип аутентификации: serviceadmin через LocalService, остальные через LocalUsers
+                    var isServiceAdmin = username.Equals("serviceadmin", StringComparison.OrdinalIgnoreCase);
+                    
                     var credentials = new AuthenticationCredentials
                     {
-                        Username = ServiceUsernameTextBox?.Text?.Trim() ?? "",
-                        Password = ServicePasswordBox?.Password ?? "",
-                        IsServiceAccount = true
+                        Username = username,
+                        Password = password,
+                        IsServiceAccount = isServiceAdmin,
+                        AuthenticationType = isServiceAdmin ? AuthenticationType.LocalService : AuthenticationType.LocalUsers
+                    };
+
+                    result = await AuthenticateWithCredentialsAsync(credentials);
+                }
+                else
+                {
+                    // Гостевая аутентификация
+                    var credentials = new AuthenticationCredentials
+                    {
+                        Username = "guest",
+                        Password = "", // Пароль не нужен для гостевого режима
+                        IsServiceAccount = false,
+                        AuthenticationType = AuthenticationType.Guest
                     };
 
                     result = await AuthenticateWithCredentialsAsync(credentials);
@@ -246,8 +276,8 @@ namespace WindowsLauncher.UI.Views
                 }
 
                 // Реальная аутентификация через сервис
-                LoadingText.Text = credentials.IsServiceAccount
-                    ? LocalizationHelper.Instance.GetString("LoginWindow_AuthenticatingService")
+                LoadingText.Text = credentials.AuthenticationType == AuthenticationType.LocalUsers
+                    ? "Аутентификация локального пользователя..."
                     : LocalizationHelper.Instance.GetString("LoginWindow_AuthenticatingDomain");
 
                 return await _authService.AuthenticateAsync(credentials);
@@ -301,21 +331,26 @@ namespace WindowsLauncher.UI.Views
                     return false;
                 }
             }
-            else if (ServiceModeRadio?.IsChecked == true)
+            else if (LocalModeRadio?.IsChecked == true)
             {
-                if (string.IsNullOrWhiteSpace(ServiceUsernameTextBox?.Text))
+                if (string.IsNullOrWhiteSpace(LocalUsernameTextBox?.Text))
                 {
                     ShowError(LocalizationHelper.Instance.GetString("PleaseEnterUsername"));
-                    ServiceUsernameTextBox?.Focus();
+                    LocalUsernameTextBox?.Focus();
                     return false;
                 }
 
-                if (string.IsNullOrWhiteSpace(ServicePasswordBox?.Password))
+                if (string.IsNullOrWhiteSpace(LocalPasswordBox?.Password))
                 {
                     ShowError(LocalizationHelper.Instance.GetString("PleaseEnterPassword"));
-                    ServicePasswordBox?.Focus();
+                    LocalPasswordBox?.Focus();
                     return false;
                 }
+            }
+            else if (GuestModeRadio?.IsChecked == true)
+            {
+                // Для гостевого режима валидация не нужна
+                return true;
             }
 
             return true;
@@ -480,14 +515,14 @@ namespace WindowsLauncher.UI.Views
 
                 if (!string.IsNullOrEmpty(username))
                 {
-                    if (serviceMode && window.ServiceUsernameTextBox != null)
-                        window.ServiceUsernameTextBox.Text = username;
+                    if (serviceMode && window.LocalUsernameTextBox != null)
+                        window.LocalUsernameTextBox.Text = username;
                     else if (window.UsernameTextBox != null)
                         window.UsernameTextBox.Text = username;
                 }
 
-                if (serviceMode && window.ServiceModeRadio != null)
-                    window.ServiceModeRadio.IsChecked = true;
+                if (serviceMode && window.LocalModeRadio != null)
+                    window.LocalModeRadio.IsChecked = true;
             }
             catch (Exception ex)
             {

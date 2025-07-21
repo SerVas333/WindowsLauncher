@@ -7,7 +7,7 @@
         xmlns:properties="clr-namespace:WindowsLauncher.UI.Properties.Resources"
         mc:Ignorable="d"
         Title="{x:Static properties:Resources.LoginWindow_Title}"
-        Width="546" Height="796"
+        Width="585" Height="796"
         WindowStartupLocation="CenterScreen"
         ResizeMode="NoResize"
         Background="{DynamicResource BackgroundBrush}">
@@ -59,10 +59,16 @@
                                      IsChecked="True"
                                      GroupName="LoginMode"
                                      Style="{StaticResource MaterialRadioButtonStyle}"
-                                     Margin="0,0,20,0"
+                                     Margin="0,0,15,0"
                                      Checked="LoginMode_Changed"/>
-                        <RadioButton x:Name="ServiceModeRadio" 
-                                     Content="{x:Static properties:Resources.LoginWindow_ServiceMode}"
+                        <RadioButton x:Name="LocalModeRadio" 
+                                     Content="Локальные пользователи"
+                                     GroupName="LoginMode"
+                                     Style="{StaticResource MaterialRadioButtonStyle}"
+                                     Margin="0,0,15,0"
+                                     Checked="LoginMode_Changed"/>
+                        <RadioButton x:Name="GuestModeRadio" 
+                                     Content="Гостевой вход"
                                      GroupName="LoginMode"
                                      Style="{StaticResource MaterialRadioButtonStyle}"
                                      Checked="LoginMode_Changed"/>
@@ -101,28 +107,60 @@
                                      KeyDown="Input_KeyDown"/>
                     </StackPanel>
 
-                    <!-- Панель сервисного входа -->
-                    <StackPanel x:Name="ServiceLoginPanel" Visibility="Collapsed">
-                        <TextBlock Text="{x:Static properties:Resources.LoginWindow_ServiceUsername}" 
+                    <!-- Панель локальных пользователей -->
+                    <StackPanel x:Name="LocalLoginPanel" Visibility="Collapsed">
+                        <TextBlock Text="Имя пользователя" 
                                    Margin="0,0,0,5" 
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
-                        <TextBox x:Name="ServiceUsernameTextBox" 
+                        <TextBox x:Name="LocalUsernameTextBox" 
                                  Style="{StaticResource MaterialTextBoxStyle}"
                                  Margin="0,0,0,15"
                                  MinHeight="45"
-                                 Text="serviceadmin"
                                  KeyDown="Input_KeyDown"/>
 
-                        <TextBlock Text="{x:Static properties:Resources.LoginWindow_ServicePassword}" 
+                        <TextBlock Text="Пароль" 
                                    Margin="0,0,0,5" 
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
-                        <PasswordBox x:Name="ServicePasswordBox" 
+                        <PasswordBox x:Name="LocalPasswordBox" 
                                      Style="{StaticResource MaterialPasswordBoxStyle}"
                                      Margin="0,0,0,15"
                                      MinHeight="45"
                                      KeyDown="Input_KeyDown"/>
+                    </StackPanel>
+
+                    <!-- Панель гостевого входа -->
+                    <StackPanel x:Name="GuestLoginPanel" Visibility="Collapsed">
+                        <Border Background="{DynamicResource SurfaceVariantBrush}" 
+                                CornerRadius="8" 
+                                Padding="20" 
+                                Margin="0,0,0,20">
+                            <StackPanel HorizontalAlignment="Center">
+                                <TextBlock Text="👤" 
+                                          FontSize="48" 
+                                          HorizontalAlignment="Center" 
+                                          Margin="0,0,0,10"/>
+                                <TextBlock Text="Гостевой вход" 
+                                          FontSize="18" 
+                                          FontWeight="Bold" 
+                                          HorizontalAlignment="Center"
+                                          Foreground="{DynamicResource OnSurfaceBrush}"
+                                          Margin="0,0,0,5"/>
+                                <TextBlock Text="Нажмите 'Войти' для входа в гостевом режиме" 
+                                          FontSize="14" 
+                                          HorizontalAlignment="Center"
+                                          Foreground="{DynamicResource OnSurfaceVariantBrush}"
+                                          TextWrapping="Wrap"
+                                          TextAlignment="Center"/>
+                                <TextBlock Text="⚠️ Ограниченный доступ к приложениям" 
+                                          FontSize="12" 
+                                          HorizontalAlignment="Center"
+                                          Foreground="{DynamicResource OnSurfaceVariantBrush}"
+                                          Margin="0,10,0,0"
+                                          TextAlignment="Center"/>
+                            </StackPanel>
+                        </Border>
                     </StackPanel>
 
                     <!-- Дополнительные опции -->

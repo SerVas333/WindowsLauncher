@@ -143,6 +143,7 @@ namespace WindowsLauncher.UI.Converters
         }
     }
 
+
     /// <summary>
     /// Конвертер bool в строку с параметром
     /// </summary>
@@ -187,6 +188,113 @@ namespace WindowsLauncher.UI.Converters
         public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
         {
             throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Класс с статическими конвертерами для использования в XAML
+    /// </summary>
+    public static class UIConverters
+    {
+        /// <summary>
+        /// Конвертер первой буквы строки для аватара
+        /// </summary>
+        public static IValueConverter FirstLetterConverter => new FirstLetterValueConverter();
+
+        /// <summary>
+        /// Конвертер проверки что строка не пустая
+        /// </summary>
+        public static IValueConverter IsNotNullOrEmptyConverter => new IsNotNullOrEmptyValueConverter();
+
+        /// <summary>
+        /// Конвертер проверки неравенства
+        /// </summary>
+        public static IValueConverter NotEqualsConverter => new NotEqualsValueConverter();
+
+        /// <summary>
+        /// Конвертер строки в видимость
+        /// </summary>
+        public static IValueConverter StringToVisibilityConverter => new StringToVisibilityConverter();
+    }
+
+    /// <summary>
+    /// Конвертер для получения первой буквы строки (для аватара)
+    /// </summary>
+    public class FirstLetterValueConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string str && !string.IsNullOrEmpty(str))
+            {
+                return str[0].ToString().ToUpper();
+            }
+            return "?";
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Конвертер проверки что строка не пустая
+    /// </summary>
+    public class IsNotNullOrEmptyValueConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return !string.IsNullOrEmpty(value as string);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Конвертер проверки неравенства с параметром
+    /// </summary>
+    public class NotEqualsValueConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            return !Equals(value, parameter);
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            throw new NotImplementedException();
+        }
+    }
+
+    /// <summary>
+    /// Конвертер enum в строку
+    /// </summary>
+    public class EnumToStringConverter : IValueConverter
+    {
+        public object Convert(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value == null) return string.Empty;
+            
+            return value.ToString();
+        }
+
+        public object ConvertBack(object value, Type targetType, object parameter, CultureInfo culture)
+        {
+            if (value is string stringValue && targetType.IsEnum)
+            {
+                try
+                {
+                    return Enum.Parse(targetType, stringValue);
+                }
+                catch
+                {
+                    return Enum.GetValues(targetType).GetValue(0);
+                }
+            }
+            return value;
         }
     }
 }

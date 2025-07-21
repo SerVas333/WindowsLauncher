@@ -6,6 +6,7 @@ using System.ComponentModel;
 using System.Linq;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
@@ -13,6 +14,7 @@ using WindowsLauncher.Core.Enums;
 using WindowsLauncher.UI.Infrastructure.Commands;
 using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.ViewModels.Base;
+using WindowsLauncher.UI.Views;
 using WpfApplication = System.Windows.Application;
 using CoreApplication = WindowsLauncher.Core.Models.Application;
 
@@ -27,14 +29,20 @@ namespace WindowsLauncher.UI.ViewModels
 
         private readonly IApplicationService _applicationService;
         private readonly IAuthorizationService _authorizationService;
+        private readonly ILocalUserService _localUserService;
         private readonly IServiceProvider _serviceProvider;
 
         private ApplicationEditViewModel? _selectedApplication;
         private ApplicationEditViewModel? _editingApplication;
         private string _searchText = "";
-        private string _statusMessage = "";
         private bool _isEditMode;
         private bool _hasUnsavedChanges;
+
+        // Поля для управления локальными пользователями
+        private User? _selectedUser;
+        private bool _isUserManagementMode = false;
+        private string _userSearchText = "";
+        private string _statusMessage = "";
 
         #endregion
 
@@ -43,6 +51,7 @@ namespace WindowsLauncher.UI.ViewModels
         public AdminViewModel(
             IApplicationService applicationService,
             IAuthorizationService authorizationService,
+            ILocalUserService localUserService,
             IServiceProvider serviceProvider,
             ILogger<AdminViewModel> logger,
             IDialogService dialogService)
@@ -50,11 +59,15 @@ namespace WindowsLauncher.UI.ViewModels
         {
             _applicationService = applicationService;
             _authorizationService = authorizationService;
+            _localUserService = localUserService;
             _serviceProvider = serviceProvider;
 
             Applications = new ObservableCollection<ApplicationEditViewModel>();
             AvailableCategories = new ObservableCollection<string>();
             AvailableGroups = new ObservableCollection<string>();
+            
+            // Инициализация коллекции локальных пользователей
+            LocalUsers = new ObservableCollection<User>();
             AvailableTypes = Enum.GetValues<ApplicationType>().ToList();
             AvailableRoles = Enum.GetValues<UserRole>().ToList();
 
@@ -66,6 +79,7 @@ namespace WindowsLauncher.UI.ViewModels
             _ = InitializeAsync();
         }
 
+
         #endregion
 
         #region Properties
@@ -76,6 +90,12 @@ namespace WindowsLauncher.UI.ViewModels
         public List<ApplicationType> AvailableTypes { get; }
         public List<UserRole> AvailableRoles { get; }
         public ICollectionView ApplicationsView { get; }
+
+        // Свойства для управления локальными пользователями
+        public ObservableCollection<User> LocalUsers { get; }
+
+        #endregion
+
 
         public ApplicationEditViewModel? SelectedApplication
         {
@@ -196,6 +216,69 @@ namespace WindowsLauncher.UI.ViewModels
         public int EnabledApplications => Applications.Count(a => a.IsEnabled);
         public int DisabledApplications => Applications.Count(a => !a.IsEnabled);
 
+        // Свойства для управления локальными пользователями
+        public User? SelectedUser
+        {
+            get => _selectedUser;
+            set => SetProperty(ref _selectedUser, value);
+        }
+
+        public bool IsUserManagementMode
+        {
+            get => _isUserManagementMode;
+            set => SetProperty(ref _isUserManagementMode, value);
+        }
+
+        public string UserSearchText
+        {
+            get => _userSearchText;
+            set
+            {
+                if (SetProperty(ref _userSearchText, value))
+                {
+                    // TODO: Добавить фильтрацию пользователей
+                }
+            }
+        }
+
+     
+
+        #region Helper Methods
+
+        /// <summary>
+        /// Установить состояние загрузки с сообщением
+        /// </summary>
+        private void SetLoading(bool isLoading, string? message = null)
+        {
+            IsLoading = isLoading;
+            if (!string.IsNullOrEmpty(message))
+            {
+                StatusMessage = message;
+            }
+        }
+
+        /// <summary>
+        /// Установить статусное сообщение с флагом ошибки
+        /// </summary>
+        private void SetStatusMessage(string message, bool isError = false)
+        {
+            StatusMessage = message;
+            if (isError)
+            {
+                Logger.LogWarning("Status error: {Message}", message);
+            }
+        }
+
+        /// <summary>
+        /// Получить ID текущего пользователя
+        /// </summary>
+        private int GetCurrentUserId()
+        {
+            // TODO: Реализовать получение ID текущего пользователя из контекста/сессии
+            // Временное значение для тестирования
+            return 1;
+        }
+
         #endregion
 
         #region Commands
@@ -213,6 +296,20 @@ namespace WindowsLauncher.UI.ViewModels
         public RelayCommand AddGroupCommand { get; private set; } = null!;
         public RelayCommand<string> RemoveGroupCommand { get; private set; } = null!;
         public AsyncRelayCommand TestApplicationCommand { get; private set; } = null!;
+
+        // Команды для управления локальными пользователями
+        public AsyncRelayCommand LoadLocalUsersCommand { get; private set; } = null!;
+        public RelayCommand AddLocalUserCommand { get; private set; } = null!;
+        public RelayCommand<User> EditLocalUserCommand { get; private set; } = null!;
+        public AsyncRelayCommand<User> DeleteLocalUserCommand { get; private set; } = null!;
+        public AsyncRelayCommand<User> ToggleUserActiveCommand { get; private set; } = null!;
+        public AsyncRelayCommand<User> ToggleUserStatusCommand { get; private set; } = null!;
+        public AsyncRelayCommand<User> ResetUserPasswordCommand { get; private set; } = null!;
+        public RelayCommand ToggleUserManagementModeCommand { get; private set; } = null!;
+        
+        // Команды переключения между разделами
+        public RelayCommand SwitchToApplicationsCommand { get; private set; } = null!;
+        public RelayCommand SwitchToUsersCommand { get; private set; } = null!;
 
         private void InitializeCommands()
         {
@@ -257,6 +354,24 @@ namespace WindowsLauncher.UI.ViewModels
                 TestApplicationAsync,
                 () => EditingApplication != null && IsEditMode,
                 Logger);
+
+            // Инициализация команд для управления пользователями
+            LoadLocalUsersCommand = new AsyncRelayCommand(LoadLocalUsersAsync, () => !IsLoading, Logger);
+            AddLocalUserCommand = new RelayCommand(ShowAddUserDialog, () => !IsLoading);
+            EditLocalUserCommand = new RelayCommand<User>(ShowEditUserDialog, user => user != null && !IsLoading);
+            DeleteLocalUserCommand = new AsyncRelayCommand<User>(DeleteUserAsync, user => user != null && !IsLoading, Logger);
+            ToggleUserActiveCommand = new AsyncRelayCommand<User>(ToggleUserActiveAsync, user => user != null && !IsLoading, Logger);
+            ToggleUserStatusCommand = new AsyncRelayCommand<User>(ToggleUserActiveAsync, user => user != null && !IsLoading, Logger);
+            ResetUserPasswordCommand = new AsyncRelayCommand<User>(ResetUserPasswordAsync, user => user != null && !IsLoading, Logger);
+            ToggleUserManagementModeCommand = new RelayCommand(() => IsUserManagementMode = !IsUserManagementMode);
+            
+            // Инициализация команд переключения между разделами
+            SwitchToApplicationsCommand = new RelayCommand(() => IsUserManagementMode = false);
+            SwitchToUsersCommand = new RelayCommand(() => 
+            {
+                IsUserManagementMode = true;
+                _ = LoadLocalUsersAsync(); // Загружаем пользователей при переключении
+            });
         }
 
         private void UpdateCommandStates()
@@ -830,6 +945,275 @@ namespace WindowsLauncher.UI.ViewModels
                 DisplayName = Environment.UserName,
                 Role = UserRole.Administrator
             };
+        }
+
+        #endregion
+
+        #region User Management
+
+        private async Task LoadLocalUsersAsync()
+        {
+            await ExecuteSafelyAsync(async () =>
+            {
+                var users = await _localUserService.GetLocalUsersAsync();
+                
+                LocalUsers.Clear();
+                foreach (var user in users.OrderBy(u => u.Username))
+                {
+                    LocalUsers.Add(user);
+                }
+
+                StatusMessage = $"Загружено {users.Count} локальных пользователей";
+                Logger.LogInformation("Loaded {Count} local users", users.Count);
+            }, "load local users");
+        }
+
+        private void ShowAddUserDialog()
+        {
+            try
+            {
+                var auditService = _serviceProvider.GetService(typeof(IAuditService)) as IAuditService;
+                if (auditService == null)
+                {
+                    DialogService.ShowError("Не удалось получить сервис аудита", "Ошибка");
+                    return;
+                }
+
+                var dialogViewModel = new LocalUserDialogViewModel(_localUserService, auditService, GetCurrentUserId());
+                var dialog = new LocalUserDialog(dialogViewModel);
+                
+                var result = dialog.ShowDialog();
+                if (result == true)
+                {
+                    // Обновляем список пользователей
+                    _ = LoadLocalUsersAsync();
+                    SetStatusMessage("Пользователь успешно создан", false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error showing add user dialog");
+                DialogService.ShowError($"Ошибка при создании пользователя: {ex.Message}", "Ошибка");
+            }
+        }
+
+        private void ShowEditUserDialog(User user)
+        {
+            if (user == null) return;
+
+            try
+            {
+                var auditService = _serviceProvider.GetService(typeof(IAuditService)) as IAuditService;
+                if (auditService == null)
+                {
+                    DialogService.ShowError("Не удалось получить сервис аудита", "Ошибка");
+                    return;
+                }
+
+                var dialogViewModel = new LocalUserDialogViewModel(_localUserService, auditService, user, GetCurrentUserId());
+                var dialog = new LocalUserDialog(dialogViewModel);
+                
+                var result = dialog.ShowDialog();
+                if (result == true)
+                {
+                    // Обновляем список пользователей
+                    _ = LoadLocalUsersAsync();
+                    SetStatusMessage($"Пользователь '{user.Username}' успешно обновлен", false);
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error showing edit user dialog for user {Username}", user.Username);
+                DialogService.ShowError($"Ошибка при редактировании пользователя: {ex.Message}", "Ошибка");
+            }
+        }
+
+        private async Task DeleteUserAsync(User user)
+        {
+            if (user == null) return;
+
+            // Проверяем, можно ли удалить пользователя
+            if (user.Username == "serviceadmin")
+            {
+                DialogService.ShowWarning("Нельзя удалить системного администратора", "Предупреждение");
+                return;
+            }
+
+            var result = DialogService.ShowConfirmation(
+                $"Вы уверены, что хотите удалить пользователя '{user.Username}'?\n\nЭто действие нельзя будет отменить.",
+                "Подтверждение удаления");
+
+            if (result != true) return;
+
+            try
+            {
+                SetLoading(true, $"Удаление пользователя {user.Username}...");
+
+                var deleteResult = await _localUserService.DeleteLocalUserAsync(user.Id);
+                if (deleteResult)
+                {
+                    LocalUsers.Remove(user);
+                    SetStatusMessage($"Пользователь '{user.Username}' успешно удален", false);
+                    Logger.LogInformation("Deleted local user: {Username}", user.Username);
+                }
+                else
+                {
+                    SetStatusMessage($"Не удалось удалить пользователя '{user.Username}'", true);
+                    DialogService.ShowError("Ошибка удаления пользователя", "Ошибка");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to delete user {Username}", user.Username);
+                SetStatusMessage($"Ошибка удаления пользователя: {ex.Message}", true);
+                DialogService.ShowError($"Ошибка удаления пользователя: {ex.Message}", "Ошибка");
+            }
+            finally
+            {
+                SetLoading(false);
+            }
+        }
+
+        private async Task ToggleUserActiveAsync(User user)
+        {
+            try
+            {
+                if (user == null) return;
+
+                SetLoading(true, $"Изменение статуса пользователя {user.Username}...");
+
+                // Проверяем, можно ли изменить статус пользователя
+                if (user.Username == "serviceadmin")
+                {
+                    DialogService.ShowWarning("Нельзя изменить статус системного администратора", "Предупреждение");
+                    return;
+                }
+
+                bool success;
+                if (user.IsActive)
+                {
+                    success = await _localUserService.DeactivateLocalUserAsync(user.Id, GetCurrentUserId());
+                }
+                else
+                {
+                    success = await _localUserService.ActivateLocalUserAsync(user.Id, GetCurrentUserId());
+                }
+
+                if (success)
+                {
+                    user.IsActive = !user.IsActive;
+                    SetStatusMessage($"Статус пользователя '{user.Username}' изменен", false);
+                    Logger.LogInformation("Toggled user active status: {Username} -> {IsActive}", user.Username, user.IsActive);
+                }
+                else
+                {
+                    SetStatusMessage($"Не удалось изменить статус пользователя '{user.Username}'", true);
+                    DialogService.ShowError("Ошибка изменения статуса", "Ошибка");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to toggle user active status for {Username}", user?.Username);
+                SetStatusMessage($"Ошибка изменения статуса: {ex.Message}", true);
+                DialogService.ShowError($"Ошибка изменения статуса: {ex.Message}", "Ошибка");
+            }
+            finally
+            {
+                SetLoading(false);
+            }
+        }
+
+        private async Task ResetUserPasswordAsync(User user)
+        {
+            try
+            {
+                if (user == null) return;
+
+                // Проверяем, можно ли сбросить пароль пользователя
+                if (user.Username == "serviceadmin")
+                {
+                    DialogService.ShowWarning("Для сброса пароля системного администратора используйте функцию редактирования пользователя", "Предупреждение");
+                    return;
+                }
+
+                var result = DialogService.ShowConfirmation(
+                    $"Вы уверены, что хотите сбросить пароль пользователя '{user.Username}'?\n\nБудет сгенерирован новый временный пароль.",
+                    "Подтверждение сброса пароля");
+
+                if (result != true) return;
+
+                SetLoading(true, $"Сброс пароля для {user.Username}...");
+
+                // Генерируем временный пароль
+                var tempPassword = GenerateTemporaryPassword();
+                var resetResult = await _localUserService.ResetLocalUserPasswordAsync(user.Id, tempPassword, GetCurrentUserId());
+                
+                if (resetResult)
+                {
+                    SetStatusMessage($"Пароль пользователя '{user.Username}' успешно сброшен", false);
+                    Logger.LogInformation("Reset password for user: {Username}", user.Username);
+                    
+                    // Показываем новый пароль администратору с возможностью копирования
+                    var passwordDialog = new WindowsLauncher.UI.Views.PasswordDisplayDialog(tempPassword);
+                    passwordDialog.Owner = System.Windows.Application.Current.MainWindow;
+                    passwordDialog.ShowDialog();
+                }
+                else
+                {
+                    SetStatusMessage($"Не удалось сбросить пароль пользователя '{user.Username}'", true);
+                    DialogService.ShowError("Ошибка сброса пароля", "Ошибка");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to reset password for user {Username}", user?.Username);
+                SetStatusMessage($"Ошибка сброса пароля: {ex.Message}", true);
+                DialogService.ShowError($"Ошибка сброса пароля: {ex.Message}", "Ошибка");
+            }
+            finally
+            {
+                SetLoading(false);
+            }
+        }
+
+        private string GenerateTemporaryPassword()
+        {
+            var random = new Random();
+            
+            // Определяем наборы символов для обеспечения требований безопасности
+            const string uppercase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            const string lowercase = "abcdefghijklmnopqrstuvwxyz";
+            const string digits = "0123456789";
+            const string special = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+            
+            // Начинаем с пустого пароля
+            var password = new List<char>();
+            
+            // Гарантируем наличие хотя бы одного символа каждого типа
+            password.Add(uppercase[random.Next(uppercase.Length)]);
+            password.Add(lowercase[random.Next(lowercase.Length)]);
+            password.Add(digits[random.Next(digits.Length)]);
+            password.Add(special[random.Next(special.Length)]);
+            
+            // Создаем объединенный набор символов
+            const string allChars = uppercase + lowercase + digits + special;
+            
+            // Добавляем оставшиеся символы до длины 12
+            for (int i = 4; i < 12; i++)
+            {
+                password.Add(allChars[random.Next(allChars.Length)]);
+            }
+            
+            // Перемешиваем символы для случайного порядка
+            for (int i = password.Count - 1; i > 0; i--)
+            {
+                int j = random.Next(i + 1);
+                var temp = password[i];
+                password[i] = password[j];
+                password[j] = temp;
+            }
+            
+            return new string(password.ToArray());
         }
 
         #endregion

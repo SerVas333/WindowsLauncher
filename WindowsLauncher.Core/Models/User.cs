@@ -138,6 +138,41 @@ namespace WindowsLauncher.Core.Models
         [MaxLength(2000)]
         public string MetadataJson { get; set; } = "{}";
 
+        #region Новые поля для гибридной системы авторизации
+
+        /// <summary>
+        /// Тип аутентификации пользователя
+        /// </summary>
+        [Column("AuthenticationType")]
+        public AuthenticationType AuthenticationType { get; set; } = AuthenticationType.LocalService;
+
+        /// <summary>
+        /// Доменное имя пользователя (для кэшированных доменных пользователей)
+        /// </summary>
+        [MaxLength(100)]
+        [Column("DomainUsername")]
+        public string DomainUsername { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Время последней синхронизации с доменом
+        /// </summary>
+        [Column("LastDomainSync")]
+        public DateTime? LastDomainSync { get; set; }
+
+        /// <summary>
+        /// Является ли пользователь локальным (не доменным)
+        /// </summary>
+        [Column("IsLocalUser")]
+        public bool IsLocalUser { get; set; } = true;
+
+        /// <summary>
+        /// Разрешить локальный вход для доменного пользователя (offline режим)
+        /// </summary>
+        [Column("AllowLocalLogin")]
+        public bool AllowLocalLogin { get; set; } = false;
+
+        #endregion
+
         #region Свойства для совместимости (НЕ МАППЯТСЯ В БД)
 
         /// <summary>
@@ -242,6 +277,46 @@ namespace WindowsLauncher.Core.Models
             return Role >= minRole;
         }
 
+        /// <summary>
+        /// Является ли пользователь доменным (живым или кэшированным)
+        /// </summary>
+        public bool IsDomainUser()
+        {
+            return AuthenticationType == AuthenticationType.DomainLDAP || 
+                   AuthenticationType == AuthenticationType.WindowsSSO ||
+                   AuthenticationType == AuthenticationType.CachedDomain;
+        }
+
+        /// <summary>
+        /// Можно ли использовать для offline входа
+        /// </summary>
+        public bool CanLoginOffline()
+        {
+            return IsLocalUser || 
+                   (IsDomainUser() && AllowLocalLogin && !string.IsNullOrEmpty(PasswordHash));
+        }
+
+        /// <summary>
+        /// Нужна ли синхронизация с доменом
+        /// </summary>
+        public bool RequiresDomainSync(TimeSpan maxAge)
+        {
+            if (!IsDomainUser()) return false;
+            if (LastDomainSync == null) return true;
+            return DateTime.UtcNow - LastDomainSync.Value > maxAge;
+        }
+
+        /// <summary>
+        /// Обновить время синхронизации с доменом
+        /// </summary>
+        public void UpdateDomainSync()
+        {
+            if (IsDomainUser())
+            {
+                LastDomainSync = DateTime.UtcNow;
+            }
+        }
+
         #endregion
 
         #region Переопределения
@@ -251,7 +326,7 @@ namespace WindowsLauncher.Core.Models
             return $"{DisplayName} ({Username}) - {Role}";
         }
 
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is User other)
             {
@@ -290,7 +365,13 @@ namespace WindowsLauncher.Core.Models
                 LastPasswordChange = LastPasswordChange,
                 GroupsJson = GroupsJson,
                 SettingsJson = SettingsJson,
-                MetadataJson = MetadataJson
+                MetadataJson = MetadataJson,
+                // Новые поля для гибридной авторизации
+                AuthenticationType = AuthenticationType,
+                DomainUsername = DomainUsername,
+                LastDomainSync = LastDomainSync,
+                IsLocalUser = IsLocalUser,
+                AllowLocalLogin = AllowLocalLogin
             };
         }
 

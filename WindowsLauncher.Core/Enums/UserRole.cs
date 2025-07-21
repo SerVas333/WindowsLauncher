@@ -9,6 +9,7 @@ namespace WindowsLauncher.Core.Enums
 {
     public enum UserRole
     {
+        Guest = 0,          // Гостевой пользователь - ограниченный доступ
         Standard = 1,       // Обычный пользователь - базовые приложения
         PowerUser = 2,      // Расширенные права - больше приложений
         Administrator = 3   // Полные права - все приложения + настройки

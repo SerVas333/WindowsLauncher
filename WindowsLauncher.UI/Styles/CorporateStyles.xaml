@@ -103,12 +103,6 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
-        <Style.Triggers>
-            <DataTrigger Binding="{Binding IsSelected}" Value="True">
-                <Setter Property="Background" Value="{StaticResource CorporateRed}"/>
-                <Setter Property="Foreground" Value="White"/>
-            </DataTrigger>
-        </Style.Triggers>
     </Style>
 
     <!-- Поле поиска в корпоративном стиле -->
@@ -276,6 +270,59 @@
         <Setter Property="HorizontalAlignment" Value="Center"/>
         <Setter Property="VerticalAlignment" Value="Center"/>
         <Setter Property="Foreground" Value="{StaticResource CorporateWhite}"/>
+    </Style>
+
+    <!-- ProgressBar в корпоративном стиле -->
+    <Style x:Key="CorporateProgressBar" TargetType="ProgressBar">
+        <Setter Property="Background" Value="{StaticResource CorporateGray}"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateRed}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CorporateBorder}"/>
+        <Setter Property="Height" Value="20"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="ProgressBar">
+                    <Border Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="2"
+                            Padding="2">
+                        <Grid x:Name="PART_Track">
+                            <Border x:Name="PART_Indicator"
+                                    Background="{TemplateBinding Foreground}"
+                                    HorizontalAlignment="Left"
+                                    CornerRadius="1"/>
+                            <!-- Анимация для IsIndeterminate -->
+                            <Border x:Name="IndeterminateRoot"
+                                    Background="{TemplateBinding Foreground}"
+                                    Opacity="0.8"
+                                    CornerRadius="1"
+                                    Visibility="Collapsed">
+                                <Border.RenderTransform>
+                                    <TranslateTransform x:Name="IndeterminateTransform"/>
+                                </Border.RenderTransform>
+                            </Border>
+                        </Grid>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsIndeterminate" Value="True">
+                            <Setter TargetName="IndeterminateRoot" Property="Visibility" Value="Visible"/>
+                            <Setter TargetName="PART_Indicator" Property="Visibility" Value="Collapsed"/>
+                            <Trigger.EnterActions>
+                                <BeginStoryboard>
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation Storyboard.TargetName="IndeterminateTransform"
+                                                       Storyboard.TargetProperty="X"
+                                                       From="-50" To="200"
+                                                       Duration="0:0:2"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </Trigger.EnterActions>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
     </Style>
 
 </ResourceDictionary>

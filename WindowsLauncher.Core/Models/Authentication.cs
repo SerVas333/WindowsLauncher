@@ -20,9 +20,24 @@ namespace WindowsLauncher.Core.Models
         DomainLDAP,
 
         /// <summary>
-        /// Локальный сервисный администратор
+        /// Локальный сервисный администратор (устаревший)
         /// </summary>
-        LocalService
+        LocalService,
+
+        /// <summary>
+        /// Локальные пользователи (полноценные аккаунты)
+        /// </summary>
+        LocalUsers,
+
+        /// <summary>
+        /// Гостевой доступ без пароля
+        /// </summary>
+        Guest,
+
+        /// <summary>
+        /// Кэшированные доменные пользователи (offline режим)
+        /// </summary>
+        CachedDomain
     }
 
     /// <summary>
@@ -43,7 +58,8 @@ namespace WindowsLauncher.Core.Models
         Failed,
         Error,
         PasswordExpired,
-        Locked
+        Locked,
+        AccountDisabled
     }
 
     /// <summary>
@@ -244,6 +260,7 @@ namespace WindowsLauncher.Core.Models
         public string Password { get; set; } = string.Empty;
         public string Domain { get; set; } = string.Empty;
         public bool IsServiceAccount { get; set; }
+        public AuthenticationType AuthenticationType { get; set; } = AuthenticationType.DomainLDAP;
 
         /// <summary>
         /// Валидация учетных данных

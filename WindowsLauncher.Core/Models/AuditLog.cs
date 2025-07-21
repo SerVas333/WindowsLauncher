@@ -255,7 +255,7 @@ namespace WindowsLauncher.Core.Models
         /// <summary>
         /// Проверка равенства
         /// </summary>
-        public override bool Equals(object obj)
+        public override bool Equals(object? obj)
         {
             if (obj is AuditLog other)
             {

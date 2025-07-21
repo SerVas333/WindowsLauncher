@@ -3,6 +3,7 @@
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WindowsLauncher.UI"
+        xmlns:controls="clr-namespace:WindowsLauncher.UI.Controls"
         xmlns:converters="clr-namespace:WindowsLauncher.UI.Converters"
         Title="Управление приложениями - Администратор" 
         Height="800" Width="1198"
@@ -18,6 +19,7 @@
         <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
         <converters:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter"/>
         <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
+        <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -84,87 +86,152 @@
             </Grid>
         </Border>
 
-        <!-- Toolbar -->
+        <!-- Tab Navigation -->
         <Border Grid.Row="1" Background="White" BorderBrush="{StaticResource CorporateBorder}" 
                 BorderThickness="0,0,0,1">
-            <StackPanel Orientation="Horizontal" Margin="24,8,24,8">
-                <Button Command="{Binding AddApplicationCommand}"
-                        Style="{StaticResource CorporateButton}"
-                        Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="➕" Margin="0,0,8,0"/>
-                        <TextBlock Text="Добавить приложение"/>
-                    </StackPanel>
-                </Button>
+            <Grid Margin="24,8,24,8">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="*"/>
+                </Grid.ColumnDefinitions>
 
-                <Button Command="{Binding RefreshCommand}"
-                        Style="{StaticResource CorporateButtonSecondary}"
-                        Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="🔄" Margin="0,0,8,0"/>
-                        <TextBlock Text="Обновить"/>
-                    </StackPanel>
-                </Button>
+                <!-- Tab Buttons -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <Button Content="Приложения"
+                            Command="{Binding SwitchToApplicationsCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource CorporateCategoryButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsUserManagementMode}" Value="False">
+                                        <Setter Property="Background" Value="{StaticResource CorporateRed}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                    
+                    <Button Content="Пользователи"
+                            Command="{Binding SwitchToUsersCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource CorporateCategoryButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsUserManagementMode}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource CorporateRed}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
+                </StackPanel>
 
-                <Separator Width="1" Height="30" Margin="10,0,10,0" Background="{StaticResource CorporateBorder}"/>
+                <!-- Context-specific toolbar -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
+                    <!-- Application Management Toolbar -->
+                    <StackPanel Orientation="Horizontal" 
+                                Visibility="{Binding IsUserManagementMode, Converter={StaticResource InverseBoolToVisConverter}}">
+                        <Button Command="{Binding AddApplicationCommand}"
+                                Style="{StaticResource CorporateButton}"
+                                Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="➕" Margin="0,0,8,0"/>
+                                <TextBlock Text="Добавить приложение"/>
+                            </StackPanel>
+                        </Button>
 
-                <Button Command="{Binding ImportCommand}"
-                        Style="{StaticResource CorporateButtonSecondary}"
-                        Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📥" Margin="0,0,8,0"/>
-                        <TextBlock Text="Импорт"/>
-                    </StackPanel>
-                </Button>
+                        <Button Command="{Binding RefreshCommand}"
+                                Style="{StaticResource CorporateButtonSecondary}"
+                                Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔄" Margin="0,0,8,0"/>
+                                <TextBlock Text="Обновить"/>
+                            </StackPanel>
+                        </Button>
 
-                <Button Command="{Binding ExportCommand}"
-                        Style="{StaticResource CorporateButtonSecondary}"
-                        Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="📤" Margin="0,0,8,0"/>
-                        <TextBlock Text="Экспорт"/>
-                    </StackPanel>
-                </Button>
+                        <Separator Width="1" Height="30" Margin="10,0,10,0" Background="{StaticResource CorporateBorder}"/>
 
-                <!-- Edit mode buttons -->
-                <Button Command="{Binding SaveCommand}"
-                        Style="{StaticResource CorporateButton}"
-                        Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="💾" Margin="0,0,8,0"/>
-                        <TextBlock Text="Сохранить"/>
-                    </StackPanel>
-                </Button>
+                        <Button Command="{Binding ImportCommand}"
+                                Style="{StaticResource CorporateButtonSecondary}"
+                                Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📥" Margin="0,0,8,0"/>
+                                <TextBlock Text="Импорт"/>
+                            </StackPanel>
+                        </Button>
 
-                <Button Command="{Binding CancelEditCommand}"
-                        Style="{StaticResource CorporateButtonSecondary}"
-                        Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="❌" Margin="0,0,8,0"/>
-                        <TextBlock Text="Отмена"/>
+                        <Button Command="{Binding ExportCommand}"
+                                Style="{StaticResource CorporateButtonSecondary}"
+                                Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="📤" Margin="0,0,8,0"/>
+                                <TextBlock Text="Экспорт"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
-                </Button>
 
-                <Button Command="{Binding TestApplicationCommand}"
-                        Style="{StaticResource CorporateButtonSecondary}"
-                        Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisConverter}}">
-                    <StackPanel Orientation="Horizontal">
-                        <TextBlock Text="▶️" Margin="0,0,8,0"/>
-                        <TextBlock Text="Тест запуска"/>
+                    <!-- User Management Toolbar -->
+                    <StackPanel Orientation="Horizontal" 
+                                Visibility="{Binding IsUserManagementMode, Converter={StaticResource BoolToVisConverter}}">
+                        <Button Command="{Binding AddLocalUserCommand}"
+                                Style="{StaticResource CorporateButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="👤" Margin="0,0,8,0"/>
+                                <TextBlock Text="Добавить пользователя"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding LoadLocalUsersCommand}"
+                                Style="{StaticResource CorporateButtonSecondary}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🔄" Margin="0,0,8,0"/>
+                                <TextBlock Text="Обновить"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
-                </Button>
-            </StackPanel>
+
+                    <!-- Edit mode buttons (for applications) -->
+                    <StackPanel Orientation="Horizontal" 
+                                Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisConverter}}">
+                        <Button Command="{Binding SaveCommand}"
+                                Style="{StaticResource CorporateButton}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="💾" Margin="0,0,8,0"/>
+                                <TextBlock Text="Сохранить"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding CancelEditCommand}"
+                                Style="{StaticResource CorporateButtonSecondary}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="❌" Margin="0,0,8,0"/>
+                                <TextBlock Text="Отмена"/>
+                            </StackPanel>
+                        </Button>
+
+                        <Button Command="{Binding TestApplicationCommand}"
+                                Style="{StaticResource CorporateButtonSecondary}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="▶️" Margin="0,0,8,0"/>
+                                <TextBlock Text="Тест запуска"/>
+                            </StackPanel>
+                        </Button>
+                    </StackPanel>
+                </StackPanel>
+            </Grid>
         </Border>
 
         <!-- Main Content -->
         <Grid Grid.Row="2">
-            <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="500" MinWidth="400"/>
-                <ColumnDefinition Width="5"/>
-                <ColumnDefinition Width="*" MinWidth="400"/>
-            </Grid.ColumnDefinitions>
+            <!-- Applications Management Panel -->
+            <Grid Visibility="{Binding IsUserManagementMode, Converter={StaticResource InverseBoolToVisConverter}}">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="500" MinWidth="400"/>
+                    <ColumnDefinition Width="5"/>
+                    <ColumnDefinition Width="*" MinWidth="400"/>
+                </Grid.ColumnDefinitions>
 
-            <!-- Applications List -->
+                <!-- Applications List -->
             <Border Grid.Column="0" Background="White" Margin="24,24,0,24" 
                     CornerRadius="8" BorderThickness="1" 
                     BorderBrush="{StaticResource CorporateBorder}">
@@ -606,6 +673,127 @@
                     </StackPanel>
                 </Grid>
             </Border>
+            </Grid>
+
+            <!-- User Management Panel -->
+            <Grid Visibility="{Binding IsUserManagementMode, Converter={StaticResource BoolToVisConverter}}">
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+
+                <!-- User Search Bar -->
+                <Border Grid.Row="0" Background="White" Margin="24,24,24,12" 
+                        CornerRadius="8" BorderThickness="1" 
+                        BorderBrush="{StaticResource CorporateBorder}"
+                        Padding="16,12">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+
+                        <TextBox Grid.Column="0"
+                                 Text="{Binding UserSearchText, UpdateSourceTrigger=PropertyChanged}"
+                                 VerticalAlignment="Center">
+                            <TextBox.Style>
+                                <Style TargetType="TextBox" BasedOn="{StaticResource MaterialTextBoxStyle}">
+                                    <Setter Property="Background" Value="Transparent"/>
+                                    <Setter Property="BorderThickness" Value="0"/>
+                                    <Setter Property="FontSize" Value="14"/>
+                                </Style>
+                            </TextBox.Style>
+                        </TextBox>
+
+                        <TextBlock Grid.Column="0"
+                                   Text="🔍 Поиск пользователей..."
+                                   Foreground="{StaticResource HintBrush}"
+                                   Margin="12,0,0,0"
+                                   VerticalAlignment="Center"
+                                   IsHitTestVisible="False">
+                            <TextBlock.Style>
+                                <Style TargetType="TextBlock">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding UserSearchText}" Value="">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                        <DataTrigger Binding="{Binding UserSearchText}" Value="{x:Null}">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </TextBlock.Style>
+                        </TextBlock>
+
+                        <StackPanel Grid.Column="1" Orientation="Horizontal">
+                            <TextBlock Text="{Binding LocalUsers.Count, StringFormat='Найдено: {0}'}"
+                                       Foreground="{StaticResource OnSurfaceVariantBrush}"
+                                       VerticalAlignment="Center"
+                                       Margin="0,0,12,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+
+                <!-- Users List -->
+                <Border Grid.Row="1" Background="White" Margin="24,0,24,24" 
+                        CornerRadius="8" BorderThickness="1" 
+                        BorderBrush="{StaticResource CorporateBorder}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- List Header -->
+                        <Border Grid.Row="0" Background="{StaticResource CorporateGrayDark}" 
+                                CornerRadius="8,8,0,0" Padding="16,12,16,12">
+                            <TextBlock Text="Локальные пользователи" FontWeight="SemiBold" 
+                                       Foreground="{StaticResource CorporateText}"/>
+                        </Border>
+
+                        <!-- Users ScrollViewer -->
+                        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto">
+                            <ItemsControl ItemsSource="{Binding LocalUsers}" Margin="8">
+                                <ItemsControl.ItemTemplate>
+                                    <DataTemplate>
+                                        <controls:LocalUserCard Margin="0,2"/>
+                                    </DataTemplate>
+                                </ItemsControl.ItemTemplate>
+                            </ItemsControl>
+                        </ScrollViewer>
+
+                        <!-- No Users Message -->
+                        <StackPanel Grid.Row="1" 
+                                    VerticalAlignment="Center" 
+                                    HorizontalAlignment="Center">
+                            <StackPanel.Style>
+                                <Style TargetType="StackPanel">
+                                    <Setter Property="Visibility" Value="Collapsed"/>
+                                    <Style.Triggers>
+                                        <DataTrigger Binding="{Binding LocalUsers.Count}" Value="0">
+                                            <Setter Property="Visibility" Value="Visible"/>
+                                        </DataTrigger>
+                                    </Style.Triggers>
+                                </Style>
+                            </StackPanel.Style>
+                            <TextBlock Text="👥" FontSize="48" 
+                                       HorizontalAlignment="Center" 
+                                       Foreground="{StaticResource CorporateTextMuted}"
+                                       Margin="0,0,0,16"/>
+                            <TextBlock Text="Локальные пользователи не найдены" 
+                                       FontSize="14" 
+                                       Foreground="{StaticResource CorporateTextMuted}"
+                                       HorizontalAlignment="Center"/>
+                            <TextBlock Text="Нажмите &quot;Добавить пользователя&quot; для создания первого пользователя" 
+                                       FontSize="12" 
+                                       Foreground="{StaticResource HintBrush}"
+                                       HorizontalAlignment="Center"
+                                       Margin="0,8,0,0"/>
+                        </StackPanel>
+                    </Grid>
+                </Border>
+            </Grid>
         </Grid>
 
         <!-- Status Bar -->

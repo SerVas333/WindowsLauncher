@@ -37,6 +37,12 @@ namespace WindowsLauncher.Data.Configurations
             builder.HasIndex(u => u.Username).IsUnique();
             builder.HasIndex(u => u.IsActive);
             builder.HasIndex(u => u.IsServiceAccount);
+            
+            // Новые индексы для гибридной авторизации
+            builder.HasIndex(u => u.AuthenticationType);
+            builder.HasIndex(u => u.IsLocalUser);
+            builder.HasIndex(u => u.DomainUsername);
+            builder.HasIndex(u => u.LastDomainSync);
 
             builder.ToTable("Users");
         }

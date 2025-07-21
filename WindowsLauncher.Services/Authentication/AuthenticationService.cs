@@ -20,6 +20,7 @@ namespace WindowsLauncher.Services.Authentication
         private readonly IAuthenticationConfigurationService _configService;
         private readonly IAuditService _auditService;
         private readonly IUserRepository _userRepository;
+        private readonly ILocalUserService _localUserService;
         private readonly ILogger<AuthenticationService> _logger;
 
         public AuthenticationService(
@@ -27,12 +28,14 @@ namespace WindowsLauncher.Services.Authentication
             IAuthenticationConfigurationService configService,
             IAuditService auditService,
             IUserRepository userRepository,
+            ILocalUserService localUserService,
             ILogger<AuthenticationService> logger)
         {
             _adService = adService ?? throw new ArgumentNullException(nameof(adService));
             _configService = configService ?? throw new ArgumentNullException(nameof(configService));
             _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
             _userRepository = userRepository ?? throw new ArgumentNullException(nameof(userRepository));
+            _localUserService = localUserService ?? throw new ArgumentNullException(nameof(localUserService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
 
@@ -109,16 +112,24 @@ namespace WindowsLauncher.Services.Authentication
                 if (credentials == null)
                     throw new ArgumentNullException(nameof(credentials));
 
-                _logger.LogInformation("Authenticating with credentials. IsServiceAccount: {IsService}, Username: {Username}",
-                    credentials.IsServiceAccount, credentials.Username);
+                _logger.LogInformation("Authenticating with credentials. AuthType: {AuthType}, IsServiceAccount: {IsService}, Username: {Username}",
+                    credentials.AuthenticationType, credentials.IsServiceAccount, credentials.Username);
 
-                if (credentials.IsServiceAccount)
+                // Определяем тип аутентификации
+                switch (credentials.AuthenticationType)
                 {
-                    return await AuthenticateServiceAdminInternalAsync(credentials.Username, credentials.Password);
-                }
-                else
-                {
-                    return await AuthenticateAsync(credentials.Username, credentials.Password);
+                    case AuthenticationType.LocalUsers:
+                        return await AuthenticateLocalUserAsync(credentials.Username, credentials.Password);
+                    
+                    case AuthenticationType.LocalService:
+                        return await AuthenticateServiceAdminInternalAsync(credentials.Username, credentials.Password);
+                    
+                    case AuthenticationType.Guest:
+                        return await AuthenticateGuestAsync(credentials.Username);
+                    
+                    case AuthenticationType.DomainLDAP:
+                    default:
+                        return await AuthenticateAsync(credentials.Username, credentials.Password);
                 }
             }
             catch (Exception ex)
@@ -322,6 +333,7 @@ namespace WindowsLauncher.Services.Authentication
                     UserRole.Administrator => true,
                     UserRole.PowerUser => IsPermissionAllowedForPowerUser(permission),
                     UserRole.Standard => IsPermissionAllowedForStandardUser(permission),
+                    UserRole.Guest => IsPermissionAllowedForGuestUser(permission),
                     _ => false
                 };
             }
@@ -636,7 +648,142 @@ namespace WindowsLauncher.Services.Authentication
         }
 
         /// <summary>
-        /// Внутренний метод аутентификации локального пользователя
+        /// Аутентификация локального пользователя (новый метод)
+        /// </summary>
+        private async Task<AuthenticationResult> AuthenticateLocalUserAsync(string username, string password)
+        {
+            try
+            {
+                _logger.LogInformation("Authenticating local user: {Username}", username);
+
+                var authResult = await _localUserService.AuthenticateLocalUserAsync(username, password);
+                if (authResult.IsSuccess)
+                {
+                    return AuthenticationResult.Success(authResult.User, AuthenticationType.LocalUsers);
+                }
+                else
+                {
+                    var status = authResult.Status switch
+                    {
+                        AuthenticationStatus.UserNotFound => AuthenticationStatus.UserNotFound,
+                        AuthenticationStatus.InvalidCredentials => AuthenticationStatus.InvalidCredentials,
+                        AuthenticationStatus.AccountDisabled => AuthenticationStatus.AccountDisabled,
+                        AuthenticationStatus.AccountLocked => AuthenticationStatus.AccountLocked,
+                        _ => AuthenticationStatus.NetworkError
+                    };
+                    
+                    return AuthenticationResult.Failure(status, authResult.ErrorMessage);
+                }
+            }
+            catch (Exception ex)
+            {
+                await _auditService.LogLoginAsync(username, false, ex.Message);
+                _logger.LogError(ex, "Error authenticating local user {Username}", username);
+                return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Гостевая аутентификация без пароля
+        /// </summary>
+        private async Task<AuthenticationResult> AuthenticateGuestAsync(string username)
+        {
+            try
+            {
+                _logger.LogInformation("Authenticating guest user: {Username}", username);
+
+                // Проверяем, что это именно пользователь guest
+                if (!username.Equals("guest", StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogWarning("Guest authentication attempted with invalid username: {Username}", username);
+                    return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials, "Гостевой вход доступен только для пользователя 'guest'");
+                }
+
+                // Ищем или создаем пользователя guest в базе данных
+                var guestUser = await GetOrCreateGuestUserAsync();
+                if (guestUser == null)
+                {
+                    _logger.LogError("Failed to create or find guest user");
+                    return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, "Не удалось создать гостевого пользователя");
+                }
+
+                // Проверяем активность
+                if (!guestUser.IsActive)
+                {
+                    await _auditService.LogLoginAsync(username, false, "Guest account is inactive");
+                    return AuthenticationResult.Failure(AuthenticationStatus.UserNotFound, "Гостевой аккаунт отключен");
+                }
+
+                // Обновляем данные входа
+                guestUser.LastLoginAt = DateTime.UtcNow;
+                guestUser.LastActivityAt = DateTime.UtcNow;
+                await _userRepository.UpdateAsync(guestUser);
+
+                await _auditService.LogLoginAsync(username, true, "Guest login successful");
+                _logger.LogInformation("Guest authentication successful for user: {Username}", username);
+
+                return AuthenticationResult.Success(guestUser, AuthenticationType.Guest);
+            }
+            catch (Exception ex)
+            {
+                await _auditService.LogLoginAsync(username, false, ex.Message);
+                _logger.LogError(ex, "Error authenticating guest user {Username}", username);
+                return AuthenticationResult.Failure(AuthenticationStatus.NetworkError, ex.Message);
+            }
+        }
+
+        /// <summary>
+        /// Получить или создать пользователя guest
+        /// </summary>
+        private async Task<User> GetOrCreateGuestUserAsync()
+        {
+            try
+            {
+                // Ищем существующего пользователя guest
+                var existingUser = await _userRepository.GetByUsernameAsync("guest");
+                if (existingUser != null)
+                {
+                    _logger.LogInformation("Found existing guest user with ID: {UserId}", existingUser.Id);
+                    return existingUser;
+                }
+
+                // Создаем нового пользователя guest
+                _logger.LogInformation("Creating new guest user");
+
+                var guestUser = new User
+                {
+                    Username = "guest",
+                    DisplayName = "Гостевой пользователь",
+                    Email = "guest@local",
+                    Role = UserRole.Guest,
+                    AuthenticationType = AuthenticationType.Guest,
+                    IsActive = true,
+                    IsServiceAccount = false,
+                    IsLocalUser = false,
+                    AllowLocalLogin = false,
+                    CreatedAt = DateTime.UtcNow,
+                    LastLoginAt = DateTime.UtcNow,
+                    Groups = new List<string> { "GuestUsers" },
+                    // Для гостевого пользователя пароль не нужен
+                    PasswordHash = string.Empty,
+                    Salt = string.Empty
+                };
+
+                await _userRepository.AddAsync(guestUser);
+                await _auditService.LogEventAsync("system", "User.Create", $"Created guest user: {guestUser.Username}", true);
+
+                _logger.LogInformation("Created guest user with ID: {UserId}", guestUser.Id);
+                return guestUser;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error creating or finding guest user");
+                throw;
+            }
+        }
+
+        /// <summary>
+        /// Внутренний метод аутентификации локального пользователя (старый метод для fallback)
         /// </summary>
         private async Task<AuthenticationResult> AuthenticateLocalUserInternal(string username, string password)
         {
@@ -949,6 +1096,20 @@ namespace WindowsLauncher.Services.Authentication
             {
                 "LaunchApplication",
                 "ViewApplications"
+            };
+
+            return allowedPermissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Проверить разрешение для Guest пользователя
+        /// </summary>
+        private bool IsPermissionAllowedForGuestUser(string permission)
+        {
+            var allowedPermissions = new[]
+            {
+                "LaunchApplication", // Только запуск разрешенных для гостей приложений
+                "ViewApplications"   // Просмотр только гостевых приложений
             };
 
             return allowedPermissions.Contains(permission, StringComparer.OrdinalIgnoreCase);
