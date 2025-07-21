@@ -3,9 +3,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
+using System.IO;
 using System.Linq;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Data;
+using Microsoft.Win32;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
@@ -855,10 +859,115 @@ namespace WindowsLauncher.UI.ViewModels
         {
             await ExecuteSafelyAsync(async () =>
             {
-                // TODO: Реализовать импорт из CSV/JSON
-                DialogService.ShowInfo(
-                    "Функция импорта будет реализована в следующей версии",
-                    "В разработке");
+                var openFileDialog = new OpenFileDialog
+                {
+                    Title = "Импорт данных лаунчера",
+                    Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                    FilterIndex = 1
+                };
+
+                if (openFileDialog.ShowDialog() != true)
+                    return;
+
+                try
+                {
+                    StatusMessage = "Импорт данных...";
+                    
+                    var json = await File.ReadAllTextAsync(openFileDialog.FileName);
+                    var importData = JsonSerializer.Deserialize<LauncherExportData>(json, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        WriteIndented = true
+                    });
+
+                    if (importData == null)
+                    {
+                        DialogService.ShowError("Невозможно прочитать файл импорта", "Ошибка импорта");
+                        return;
+                    }
+
+                    var result = DialogService.ShowConfirmation(
+                        $"Импорт данных лаунчера:\n" +
+                        $"• Приложений: {importData.Applications.Count}\n" +
+                        $"• Локальных пользователей: {importData.LocalUsers.Count}\n" +
+                        $"• Версия: {importData.Version}\n" +
+                        $"• Экспортировано: {importData.ExportedAt:dd.MM.yyyy HH:mm}\n\n" +
+                        $"ВНИМАНИЕ: Это действие заменит существующие данные!\n" +
+                        $"Продолжить импорт?",
+                        "Подтверждение импорта");
+
+                    if (result != true) return;
+
+                    var currentUser = await GetCurrentUserAsync();
+                    int importedApps = 0, importedUsers = 0;
+
+                    // Импорт приложений
+                    foreach (var appData in importData.Applications)
+                    {
+                        var app = new CoreApplication
+                        {
+                            Name = appData.Name,
+                            Description = appData.Description,
+                            ExecutablePath = appData.ExecutablePath,
+                            Arguments = appData.Arguments,
+                            IconPath = appData.IconPath,
+                            Category = appData.Category,
+                            Type = appData.Type,
+                            RequiredGroups = appData.RequiredGroups,
+                            MinimumRole = appData.MinimumRole,
+                            IsEnabled = appData.IsEnabled,
+                            SortOrder = appData.SortOrder,
+                            CreatedDate = DateTime.Now,
+                            CreatedBy = currentUser.Username
+                        };
+
+                        await _applicationService.AddApplicationAsync(app, currentUser);
+                        importedApps++;
+                    }
+
+                    // Импорт локальных пользователей
+                    foreach (var userData in importData.LocalUsers)
+                    {
+                        // Используем CreateLocalUserAsync с паролем и затем обновляем хеш
+                        var user = await _localUserService.CreateLocalUserAsync(
+                            userData.Username, 
+                            "TempPassword123!", // Временный пароль
+                            userData.DisplayName,
+                            userData.Email,
+                            userData.Role);
+                            
+                        // Обновляем с правильным хешем пароля
+                        user.PasswordHash = userData.PasswordHash;
+                        user.Salt = userData.PasswordSalt;
+                        user.CreatedAt = userData.CreatedAt;
+                        user.LastLoginAt = userData.LastLoginAt;
+                        user.IsActive = userData.IsActive;
+
+                        await _localUserService.UpdateLocalUserAsync(user);
+                        importedUsers++;
+                    }
+
+                    // Обновляем UI
+                    await LoadApplicationsAsync();
+                    await LoadLocalUsersAsync();
+
+                    DialogService.ShowInfo(
+                        $"Импорт завершен успешно!\n" +
+                        $"• Импортировано приложений: {importedApps}\n" +
+                        $"• Импортировано пользователей: {importedUsers}",
+                        "Импорт завершен");
+
+                    Logger.LogInformation("Import completed: {Apps} applications, {Users} users", importedApps, importedUsers);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Error during import");
+                    DialogService.ShowError($"Ошибка при импорте: {ex.Message}", "Ошибка импорта");
+                }
+                finally
+                {
+                    StatusMessage = string.Empty;
+                }
             }, "import applications");
         }
 
@@ -866,10 +975,89 @@ namespace WindowsLauncher.UI.ViewModels
         {
             await ExecuteSafelyAsync(async () =>
             {
-                // TODO: Реализовать экспорт в CSV/JSON
-                DialogService.ShowInfo(
-                    "Функция экспорта будет реализована в следующей версии",
-                    "В разработке");
+                var saveFileDialog = new SaveFileDialog
+                {
+                    Title = "Экспорт данных лаунчера",
+                    Filter = "JSON files (*.json)|*.json|All files (*.*)|*.*",
+                    FilterIndex = 1,
+                    DefaultExt = "json",
+                    FileName = $"WindowsLauncher_Export_{DateTime.Now:yyyyMMdd_HHmmss}.json"
+                };
+
+                if (saveFileDialog.ShowDialog() != true)
+                    return;
+
+                try
+                {
+                    StatusMessage = "Экспорт данных...";
+                    
+                    var currentUser = await GetCurrentUserAsync();
+                    
+                    // Получаем все приложения из базы
+                    var allApplications = await _applicationService.GetAllApplicationsAsync();
+                    var allLocalUsers = await _localUserService.GetLocalUsersAsync();
+
+                    var exportData = new LauncherExportData
+                    {
+                        Version = "1.0",
+                        ExportedAt = DateTime.Now,
+                        ExportedBy = currentUser.Username,
+                        Applications = allApplications.Select(app => new ExportApplication
+                        {
+                            Name = app.Name,
+                            Description = app.Description,
+                            ExecutablePath = app.ExecutablePath,
+                            Arguments = app.Arguments,
+                            IconPath = app.IconPath,
+                            Category = app.Category,
+                            Type = app.Type,
+                            RequiredGroups = app.RequiredGroups,
+                            MinimumRole = app.MinimumRole,
+                            IsEnabled = app.IsEnabled,
+                            SortOrder = app.SortOrder
+                        }).ToList(),
+                        LocalUsers = allLocalUsers.Select(user => new ExportUser
+                        {
+                            Username = user.Username,
+                            DisplayName = user.DisplayName,
+                            Email = user.Email,
+                            Role = user.Role,
+                            IsActive = user.IsActive,
+                            PasswordHash = user.PasswordHash,
+                            PasswordSalt = user.Salt,
+                            CreatedAt = user.CreatedAt,
+                            LastLoginAt = user.LastLoginAt
+                        }).ToList()
+                    };
+
+                    var json = JsonSerializer.Serialize(exportData, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                        WriteIndented = true,
+                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    });
+
+                    await File.WriteAllTextAsync(saveFileDialog.FileName, json);
+
+                    DialogService.ShowInfo(
+                        $"Экспорт завершен успешно!\n" +
+                        $"• Экспортировано приложений: {exportData.Applications.Count}\n" +
+                        $"• Экспортировано пользователей: {exportData.LocalUsers.Count}\n" +
+                        $"• Файл: {saveFileDialog.FileName}",
+                        "Экспорт завершен");
+
+                    Logger.LogInformation("Export completed: {Apps} applications, {Users} users to {File}", 
+                        exportData.Applications.Count, exportData.LocalUsers.Count, saveFileDialog.FileName);
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogError(ex, "Error during export");
+                    DialogService.ShowError($"Ошибка при экспорте: {ex.Message}", "Ошибка экспорта");
+                }
+                finally
+                {
+                    StatusMessage = string.Empty;
+                }
             }, "export applications");
         }
 
@@ -1441,4 +1629,54 @@ namespace WindowsLauncher.UI.ViewModels
 
         #endregion
     }
+
+    #region Export/Import Models
+
+    /// <summary>
+    /// Модель для экспорта/импорта данных лаунчера
+    /// </summary>
+    public class LauncherExportData
+    {
+        public string Version { get; set; } = "1.0";
+        public DateTime ExportedAt { get; set; } = DateTime.Now;
+        public string ExportedBy { get; set; } = string.Empty;
+        public List<ExportApplication> Applications { get; set; } = new();
+        public List<ExportUser> LocalUsers { get; set; } = new();
+    }
+
+    /// <summary>
+    /// Модель приложения для экспорта
+    /// </summary>
+    public class ExportApplication
+    {
+        public string Name { get; set; } = string.Empty;
+        public string Description { get; set; } = string.Empty;
+        public string ExecutablePath { get; set; } = string.Empty;
+        public string Arguments { get; set; } = string.Empty;
+        public string IconPath { get; set; } = string.Empty;
+        public string Category { get; set; } = string.Empty;
+        public ApplicationType Type { get; set; }
+        public List<string> RequiredGroups { get; set; } = new();
+        public UserRole MinimumRole { get; set; }
+        public bool IsEnabled { get; set; }
+        public int SortOrder { get; set; }
+    }
+
+    /// <summary>
+    /// Модель пользователя для экспорта
+    /// </summary>
+    public class ExportUser
+    {
+        public string Username { get; set; } = string.Empty;
+        public string DisplayName { get; set; } = string.Empty;
+        public string Email { get; set; } = string.Empty;
+        public UserRole Role { get; set; }
+        public bool IsActive { get; set; }
+        public string PasswordHash { get; set; } = string.Empty;
+        public string PasswordSalt { get; set; } = string.Empty;
+        public DateTime CreatedAt { get; set; }
+        public DateTime? LastLoginAt { get; set; }
+    }
+
+    #endregion
 }
