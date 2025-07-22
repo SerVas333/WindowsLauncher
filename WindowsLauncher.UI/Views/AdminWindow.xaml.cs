@@ -5,6 +5,7 @@ using System;
 using System.Windows;
 using System.Windows.Controls;
 using WindowsLauncher.UI.ViewModels;
+using WindowsLauncher.Core.Interfaces;
 
 namespace WindowsLauncher.UI
 {
@@ -14,10 +15,13 @@ namespace WindowsLauncher.UI
     public partial class AdminWindow : Window
     {
         private readonly AdminViewModel _viewModel;
+        private readonly IServiceProvider _serviceProvider;
 
         public AdminWindow(IServiceProvider serviceProvider)
         {
             InitializeComponent();
+
+            _serviceProvider = serviceProvider;
 
             // Получаем ViewModel через DI
             _viewModel = serviceProvider.GetRequiredService<AdminViewModel>();
@@ -212,6 +216,20 @@ namespace WindowsLauncher.UI
         {
             // Здесь можно настроить дополнительные стили окна
             // Например, убрать стандартную рамку Windows и добавить свою
+        }
+
+        private async void VirtualKeyboardButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var virtualKeyboardService = _serviceProvider.GetRequiredService<IVirtualKeyboardService>();
+                await virtualKeyboardService.ToggleVirtualKeyboardAsync();
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка при переключении виртуальной клавиатуры: {ex.Message}", 
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
         }
 
         private void Button_Click(object sender, RoutedEventArgs e)

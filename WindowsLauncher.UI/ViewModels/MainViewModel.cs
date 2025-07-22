@@ -33,6 +33,7 @@ namespace WindowsLauncher.UI.ViewModels
         private string _statusMessage = "";
         private bool _isLoading = false;
         private bool _isInitialized = false;
+        private bool _isVirtualKeyboardVisible = false;
 
         #endregion
 
@@ -178,6 +179,12 @@ namespace WindowsLauncher.UI.ViewModels
         public bool CanManageSettings => CurrentUser?.Role >= Core.Enums.UserRole.PowerUser;
         public int ApplicationCount => FilteredApplications.Count;
         public bool HasNoApplications => !IsLoading && ApplicationCount == 0;
+        
+        public bool IsVirtualKeyboardVisible
+        {
+            get => _isVirtualKeyboardVisible;
+            set => SetProperty(ref _isVirtualKeyboardVisible, value);
+        }
 
         #endregion
 
@@ -190,6 +197,7 @@ namespace WindowsLauncher.UI.ViewModels
         public RelayCommand OpenSettingsCommand { get; private set; } = null!;
         public RelayCommand SwitchUserCommand { get; private set; } = null!;
         public RelayCommand OpenAdminCommand { get; private set; } = null!;
+        public AsyncRelayCommand ToggleVirtualKeyboardCommand { get; private set; } = null!;
 
         private void InitializeCommands()
         {
@@ -216,6 +224,11 @@ namespace WindowsLauncher.UI.ViewModels
             OpenAdminCommand = new RelayCommand(
                 OpenAdminWindow,
                 () => CurrentUser?.Role >= Core.Enums.UserRole.Administrator);
+
+            ToggleVirtualKeyboardCommand = new AsyncRelayCommand(
+                ToggleVirtualKeyboard,
+                () => !IsLoading,
+                Logger);
         }
 
         #endregion
@@ -744,6 +757,36 @@ namespace WindowsLauncher.UI.ViewModels
                 Logger.LogError(ex, errorMessage);
                 DialogService.ShowError($"{errorMessage}: {ex.Message}");
             }
+        }
+
+        private async Task ToggleVirtualKeyboard()
+        {
+            await ExecuteSafelyAsync(async () =>
+            {
+                using var scope = _serviceProvider.CreateScope();
+                var virtualKeyboardService = scope.ServiceProvider.GetRequiredService<IVirtualKeyboardService>();
+
+                StatusMessage = LocalizationHelper.Instance.GetString("TogglingVirtualKeyboard");
+
+                bool success = await virtualKeyboardService.ToggleVirtualKeyboardAsync();
+
+                if (success)
+                {
+                    var isRunning = virtualKeyboardService.IsVirtualKeyboardRunning();
+                    IsVirtualKeyboardVisible = isRunning;
+                    
+                    var messageKey = isRunning ? "VirtualKeyboardShown" : "VirtualKeyboardHidden";
+                    StatusMessage = LocalizationHelper.Instance.GetString(messageKey);
+                    Logger.LogInformation("Virtual keyboard toggled successfully, state: {IsRunning}", isRunning);
+                }
+                else
+                {
+                    StatusMessage = LocalizationHelper.Instance.GetString("VirtualKeyboardToggleFailed");
+                    DialogService.ShowWarning(
+                        LocalizationHelper.Instance.GetString("VirtualKeyboardError"), 
+                        LocalizationHelper.Instance.GetString("Error"));
+                }
+            }, "toggle virtual keyboard");
         }
 
         #endregion

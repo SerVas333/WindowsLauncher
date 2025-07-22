@@ -311,12 +311,21 @@
                         <ColumnDefinition Width="Auto"/>
                     </Grid.ColumnDefinitions>
 
-                    <!-- Индикатор прогресса -->
+                    <!-- Индикатор прогресса и дополнительные кнопки -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock x:Name="SetupProgressText" 
                                    Text="Настройка: 0/3 шагов завершено"
                                    FontSize="12"
                                    Foreground="{DynamicResource OnSurfaceVariantBrush}"/>
+                        
+                        <!-- Virtual Keyboard Button -->
+                        <Button x:Name="VirtualKeyboardButton" 
+                                Content="⌨️"
+                                ToolTip="Виртуальная клавиатура"
+                                Width="32" Height="28" FontSize="14" Padding="0"
+                                Margin="20,0,0,0"
+                                Style="{DynamicResource MaterialOutlineButtonStyle}"
+                                Click="VirtualKeyboardButton_Click"/>
                     </StackPanel>
 
                     <!-- Основные кнопки -->

@@ -139,6 +139,9 @@ namespace WindowsLauncher.UI
             
             // Новый сервис локальных пользователей
             services.AddScoped<ILocalUserService, LocalUserService>();
+            
+            // Сервис виртуальной клавиатуры
+            services.AddScoped<IVirtualKeyboardService, VirtualKeyboardService>();
 
             // Infrastructure сервисы
             services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
@@ -312,7 +315,8 @@ namespace WindowsLauncher.UI
                     ServiceProvider.GetRequiredService<IAuthenticationConfigurationService>(),
                     ServiceProvider.GetRequiredService<IAuthenticationService>(),
                     ServiceProvider.GetRequiredService<IActiveDirectoryService>(),
-                    ServiceProvider.GetRequiredService<ILogger<SetupWindow>>()
+                    ServiceProvider.GetRequiredService<ILogger<SetupWindow>>(),
+                    ServiceProvider
                 );
 
                 // Показываем модально

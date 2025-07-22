@@ -263,6 +263,22 @@ namespace WindowsLauncher.UI.Views
             Close();
         }
 
+        private async void VirtualKeyboardButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var serviceProvider = ((App)System.Windows.Application.Current).ServiceProvider;
+                var virtualKeyboardService = serviceProvider.GetRequiredService<IVirtualKeyboardService>();
+                await virtualKeyboardService.ToggleVirtualKeyboardAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling virtual keyboard");
+                MessageBox.Show($"Ошибка при переключении виртуальной клавиатуры: {ex.Message}", 
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
+
         protected override void OnSourceInitialized(EventArgs e)
         {
             base.OnSourceInitialized(e);

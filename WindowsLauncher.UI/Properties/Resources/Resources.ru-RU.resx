@@ -720,4 +720,22 @@
   <data name="CorporateStyles_SearchPlaceholder" xml:space="preserve">
     <value>Поиск приложений...</value>
   </data>
+  <data name="MainWindow_VirtualKeyboardTooltip" xml:space="preserve">
+    <value>Виртуальная клавиатура</value>
+  </data>
+  <data name="TogglingVirtualKeyboard" xml:space="preserve">
+    <value>Переключение виртуальной клавиатуры...</value>
+  </data>
+  <data name="VirtualKeyboardShown" xml:space="preserve">
+    <value>Виртуальная клавиатура показана</value>
+  </data>
+  <data name="VirtualKeyboardHidden" xml:space="preserve">
+    <value>Виртуальная клавиатура скрыта</value>
+  </data>
+  <data name="VirtualKeyboardToggleFailed" xml:space="preserve">
+    <value>Не удалось переключить виртуальную клавиатуру</value>
+  </data>
+  <data name="VirtualKeyboardError" xml:space="preserve">
+    <value>Виртуальная клавиатура недоступна в данной системе</value>
+  </data>
 </root>

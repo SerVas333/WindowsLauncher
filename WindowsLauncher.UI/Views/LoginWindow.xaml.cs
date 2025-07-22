@@ -538,5 +538,26 @@ namespace WindowsLauncher.UI.Views
         {
 
         }
+
+        private async void VirtualKeyboardButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var app = WpfApplication.Current as App;
+                if (app?.ServiceProvider != null)
+                {
+                    var virtualKeyboardService = app.ServiceProvider.GetService<IVirtualKeyboardService>();
+                    if (virtualKeyboardService != null)
+                    {
+                        await virtualKeyboardService.ToggleVirtualKeyboardAsync();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error toggling virtual keyboard");
+                MessageBox.Show("Ошибка при вызове виртуальной клавиатуры", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+            }
+        }
     }
 }

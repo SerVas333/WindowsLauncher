@@ -327,22 +327,38 @@
                 BorderBrush="{StaticResource CorporateBorder}"
                 BorderThickness="1,1,1,0"
                 Margin="0,16,0,0">
-            <StackPanel Orientation="Horizontal"
-                        HorizontalAlignment="Right"
-                        Margin="24,16">
-                
-                <Button Content="Отмена"
-                        Command="{Binding CancelCommand}"
+            <Grid Margin="24,16">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Virtual Keyboard Button -->
+                <Button Grid.Column="0" 
+                        x:Name="VirtualKeyboardButton" 
+                        Content="⌨️"
+                        ToolTip="Виртуальная клавиатура"
+                        Width="32" Height="28" FontSize="14" Padding="0"
+                        HorizontalAlignment="Left"
                         Style="{StaticResource CorporateButtonSecondary}"
-                        Margin="0,0,16,0"
-                        MinWidth="100"/>
-                
-                <Button Content="{Binding SaveButtonText}"
-                        Command="{Binding SaveCommand}"
-                        Style="{StaticResource CorporateButton}"
-                        IsDefault="True"
-                        MinWidth="100"/>
-            </StackPanel>
+                        Click="VirtualKeyboardButton_Click"/>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal"
+                            HorizontalAlignment="Right">
+                    
+                    <Button Content="Отмена"
+                            Command="{Binding CancelCommand}"
+                            Style="{StaticResource CorporateButtonSecondary}"
+                            Margin="0,0,16,0"
+                            MinWidth="100"/>
+                    
+                    <Button Content="{Binding SaveButtonText}"
+                            Command="{Binding SaveCommand}"
+                            Style="{StaticResource CorporateButton}"
+                            IsDefault="True"
+                            MinWidth="100"/>
+                </StackPanel>
+            </Grid>
         </Border>
     </Grid>
 </Window>

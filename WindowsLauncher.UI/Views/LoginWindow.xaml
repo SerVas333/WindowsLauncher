@@ -225,13 +225,23 @@
                                 FontSize="14"
                                 Width="128"
                                 Click="SettingsButton_Click"/>
+                        
+                        <Button x:Name="VirtualKeyboardButton" 
+                                Content="⌨️"
+                                Style="{StaticResource MaterialOutlineButtonStyle}"
+                                MinHeight="45"
+                                FontSize="18"
+                                Width="63"
+                                Margin="10,0,0,0"
+                                ToolTip="Виртуальная клавиатура"
+                                Click="VirtualKeyboardButton_Click"/>
                     </StackPanel>
 
                     <!-- Основные кнопки -->
                     <Button x:Name="CancelButton"
                             Content="{x:Static properties:Resources.Common_Cancel}"
                             Style="{StaticResource MaterialOutlineButtonStyle}"
-                            Margin="157,0,23,1"
+                            Margin="221,0,23,1"
                             Click="CancelButton_Click"/>
 
                     <Button x:Name="LoginButton" 

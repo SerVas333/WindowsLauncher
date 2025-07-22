@@ -817,11 +817,16 @@
                 BorderBrush="{StaticResource CorporateBorder}" 
                 BorderThickness="0,1,0,0">
             <Grid Margin="24,0,24,0">
-                <TextBlock Text="{Binding StatusMessage}" 
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" 
                            VerticalAlignment="Center" 
                            Foreground="{StaticResource CorporateText}"/>
 
-                <StackPanel Orientation="Horizontal" 
+                <StackPanel Grid.Column="1" Orientation="Horizontal" 
                             HorizontalAlignment="Right" 
                             VerticalAlignment="Center">
                     <TextBlock Text="Несохраненные изменения" 
@@ -833,7 +838,23 @@
                     <TextBlock Text="{Binding IsEditMode, 
                                     Converter={StaticResource BoolToStringConverter}, 
                                     ConverterParameter='Режим редактирования|Режим просмотра'}"
-                               Foreground="{StaticResource CorporateTextMuted}"/>
+                               Foreground="{StaticResource CorporateTextMuted}"
+                               Margin="0,0,12,0"/>
+
+                    <!-- Virtual Keyboard Button -->
+                    <Button x:Name="VirtualKeyboardButton" 
+                            Content="⌨️"
+                            ToolTip="Виртуальная клавиатура"
+                            Width="28" Height="24" FontSize="12" Padding="0"
+                            Click="VirtualKeyboardButton_Click">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource CorporateButtonSecondary}">
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource CorporateBorder}"/>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>

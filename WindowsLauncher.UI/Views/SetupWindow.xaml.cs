@@ -26,6 +26,7 @@ namespace WindowsLauncher.UI.Views
         private readonly IAuthenticationService _authService;
         private readonly IActiveDirectoryService _adService;
         private readonly ILogger<SetupWindow> _logger;
+        private readonly IServiceProvider _serviceProvider;
 
         private bool _isDomainValid = false;
         private bool _isServiceAdminValid = false;
@@ -43,12 +44,14 @@ namespace WindowsLauncher.UI.Views
             IAuthenticationConfigurationService configService,
             IAuthenticationService authService,
             IActiveDirectoryService adService,
-            ILogger<SetupWindow> logger)
+            ILogger<SetupWindow> logger,
+            IServiceProvider serviceProvider)
         {
             _configService = configService ?? throw new ArgumentNullException(nameof(configService));
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
             _adService = adService ?? throw new ArgumentNullException(nameof(adService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
             InitializeComponent();
             
@@ -143,6 +146,23 @@ namespace WindowsLauncher.UI.Views
         private async void CompleteSetupButton_Click(object sender, RoutedEventArgs e)
         {
             await CompleteSetupAsync();
+        }
+
+        /// <summary>
+        /// Обработчик переключения виртуальной клавиатуры
+        /// </summary>
+        private async void VirtualKeyboardButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var virtualKeyboardService = _serviceProvider.GetRequiredService<IVirtualKeyboardService>();
+                await virtualKeyboardService.ToggleVirtualKeyboardAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error toggling virtual keyboard");
+                ShowError($"Ошибка при переключении виртуальной клавиатуры: {ex.Message}");
+            }
         }
 
         #endregion
