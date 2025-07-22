@@ -1,0 +1,101 @@
+{
+  "version": "1.0",
+  "exportedAt": "2025-07-22T09:49:26.2033517+07:00",
+  "exportedBy": "YasAdmin",
+  "applications": [
+    {
+      "name": "Calculator",
+      "description": "Windows Calculator",
+      "executablePath": "calc.exe",
+      "arguments": "",
+      "iconPath": "",
+      "category": "Utilities",
+      "type": 1,
+      "requiredGroups": [],
+      "minimumRole": 1,
+      "isEnabled": true,
+      "sortOrder": 1
+    },
+    {
+      "name": "Notepad",
+      "description": "Text Editor",
+      "executablePath": "notepad.exe",
+      "arguments": "",
+      "iconPath": "",
+      "category": "Utilities",
+      "type": 1,
+      "requiredGroups": [],
+      "minimumRole": 1,
+      "isEnabled": true,
+      "sortOrder": 2
+    },
+    {
+      "name": "Google",
+      "description": "Google Search",
+      "executablePath": "https://www.google.com",
+      "arguments": "",
+      "iconPath": "",
+      "category": "Web",
+      "type": 2,
+      "requiredGroups": [],
+      "minimumRole": 1,
+      "isEnabled": true,
+      "sortOrder": 3
+    },
+    {
+      "name": "Control Panel",
+      "description": "Windows Control Panel",
+      "executablePath": "control.exe",
+      "arguments": "",
+      "iconPath": "",
+      "category": "System",
+      "type": 1,
+      "requiredGroups": [
+        "LauncherPowerUsers",
+        "LauncherAdmins"
+      ],
+      "minimumRole": 2,
+      "isEnabled": true,
+      "sortOrder": 4
+    },
+    {
+      "name": "Command Prompt",
+      "description": "Windows Command Line",
+      "executablePath": "cmd.exe",
+      "arguments": "",
+      "iconPath": "",
+      "category": "System",
+      "type": 1,
+      "requiredGroups": [],
+      "minimumRole": 1,
+      "isEnabled": true,
+      "sortOrder": 5
+    },
+    {
+      "name": "КДВ - Гостевой",
+      "description": "PDF печать",
+      "executablePath": "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "arguments": "--app=file:///C:/WindowsLauncher/PDF/1C_QR.pdf",
+      "iconPath": "",
+      "category": "Web",
+      "type": 1,
+      "requiredGroups": [],
+      "minimumRole": 0,
+      "isEnabled": true,
+      "sortOrder": 3
+    }
+  ],
+  "localUsers": [
+    {
+      "username": "serviceadmin",
+      "displayName": "Сервисный администратор",
+      "email": "",
+      "role": 3,
+      "isActive": true,
+      "passwordHash": "",
+      "passwordSalt": "",
+      "createdAt": "2025-07-22T02:49:06.4337202Z",
+      "lastLoginAt": "2025-07-22T02:49:06.4337783Z"
+    }
+  ]
+}

@@ -1,707 +1,723 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-		<xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-		<xsd:element name="root" msdata:IsDataSet="true">
-			<xsd:complexType>
-				<xsd:choice maxOccurs="unbounded">
-					<xsd:element name="metadata">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" />
-							</xsd:sequence>
-							<xsd:attribute name="name" use="required" type="xsd:string" />
-							<xsd:attribute name="type" type="xsd:string" />
-							<xsd:attribute name="mimetype" type="xsd:string" />
-							<xsd:attribute ref="xml:space" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="assembly">
-						<xsd:complexType>
-							<xsd:attribute name="alias" type="xsd:string" />
-							<xsd:attribute name="name" type="xsd:string" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="data">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-							<xsd:attribute ref="xml:space" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="resheader">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" use="required" />
-						</xsd:complexType>
-					</xsd:element>
-				</xsd:choice>
-			</xsd:complexType>
-		</xsd:element>
-	</xsd:schema>
-	<resheader name="resmimetype">
-		<value>text/microsoft-resx</value>
-	</resheader>
-	<resheader name="version">
-		<value>2.0</value>
-	</resheader>
-	<resheader name="reader">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-	<resheader name="writer">
-		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
 
-	<!-- ========== MAIN WINDOW ========== -->
-	<data name="AppTitle" xml:space="preserve">
-    <value>KDV Corporate Launcher</value>
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>KDV Corporate Portal</value>
   </data>
-	<data name="MainWindow_Title" xml:space="preserve">
-    <value>KDV Corporate Launcher</value>
+  <data name="MainWindow_Title" xml:space="preserve">
+    <value>KDV Corporate Portal</value>
   </data>
-	<data name="WindowTitle" xml:space="preserve">
-    <value>KDV Corporate Launcher - {0} ({1})</value>
+  <data name="WindowTitle" xml:space="preserve">
+    <value>KDV Corporate Portal - {0} ({1})</value>
   </data>
-	<data name="SearchPlaceholder" xml:space="preserve">
+  <data name="SearchPlaceholder" xml:space="preserve">
     <value>Search applications...</value>
   </data>
-
-	<!-- ========== LOGIN WINDOW ========== -->
-	<data name="LoginWindow_Title" xml:space="preserve">
+  <data name="LoginWindow_Title" xml:space="preserve">
     <value>System Login</value>
   </data>
-	<data name="LoginWindow_Subtitle" xml:space="preserve">
-    <value>KDV Corporate Application Launcher</value>
+  <data name="LoginWindow_Subtitle" xml:space="preserve">
+    <value>KDV Corporate Application Portal</value>
   </data>
-	<data name="LoginWindow_DomainMode" xml:space="preserve">
+  <data name="LoginWindow_DomainMode" xml:space="preserve">
     <value>Domain Login</value>
   </data>
-	<data name="LoginWindow_ServiceMode" xml:space="preserve">
+  <data name="LoginWindow_ServiceMode" xml:space="preserve">
     <value>Service Administrator</value>
   </data>
-	<data name="LoginWindow_Domain" xml:space="preserve">
+  <data name="LoginWindow_Domain" xml:space="preserve">
     <value>Domain</value>
   </data>
-	<data name="LoginWindow_Username" xml:space="preserve">
+  <data name="LoginWindow_Username" xml:space="preserve">
     <value>Username</value>
   </data>
-	<data name="LoginWindow_Password" xml:space="preserve">
+  <data name="LoginWindow_Password" xml:space="preserve">
     <value>Password</value>
   </data>
-	<data name="LoginWindow_ServiceUsername" xml:space="preserve">
+  <data name="LoginWindow_ServiceUsername" xml:space="preserve">
     <value>Service Administrator Username</value>
   </data>
-	<data name="LoginWindow_ServicePassword" xml:space="preserve">
+  <data name="LoginWindow_ServicePassword" xml:space="preserve">
     <value>Administrator Password</value>
   </data>
-	<data name="LoginWindow_RememberCredentials" xml:space="preserve">
+  <data name="LoginWindow_RememberCredentials" xml:space="preserve">
     <value>Remember credentials</value>
   </data>
-	<data name="LoginWindow_DomainAvailable" xml:space="preserve">
+  <data name="LoginWindow_DomainAvailable" xml:space="preserve">
     <value>Domain available</value>
   </data>
-	<data name="LoginWindow_DomainUnavailable" xml:space="preserve">
+  <data name="LoginWindow_DomainUnavailable" xml:space="preserve">
     <value>Domain unavailable</value>
   </data>
-	<data name="LoginWindow_CheckingDomain" xml:space="preserve">
+  <data name="LoginWindow_CheckingDomain" xml:space="preserve">
     <value>Checking domain...</value>
   </data>
-	<data name="LoginWindow_Login" xml:space="preserve">
+  <data name="LoginWindow_Login" xml:space="preserve">
     <value>Login</value>
   </data>
-	<data name="LoginWindow_Settings" xml:space="preserve">
+  <data name="LoginWindow_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
-	<data name="LoginWindow_Authenticating" xml:space="preserve">
+  <data name="LoginWindow_Authenticating" xml:space="preserve">
     <value>Authenticating...</value>
   </data>
-	<data name="LoginWindow_AuthenticatingDomain" xml:space="preserve">
+  <data name="LoginWindow_AuthenticatingDomain" xml:space="preserve">
     <value>Domain authentication...</value>
   </data>
-	<data name="LoginWindow_AuthenticatingService" xml:space="preserve">
+  <data name="LoginWindow_AuthenticatingService" xml:space="preserve">
     <value>Service administrator authentication...</value>
   </data>
-
-	<!-- Legacy login window entries (for compatibility) -->
-	<data name="LoginWindowTitle" xml:space="preserve">
-    <value>KDV Corporate Launcher - Login</value>
+  <data name="LoginWindowTitle" xml:space="preserve">
+    <value>KDV Corporate Portal- Login</value>
   </data>
-	<data name="CurrentWindowsUser" xml:space="preserve">
+  <data name="CurrentWindowsUser" xml:space="preserve">
     <value>Current Windows user:</value>
   </data>
-	<data name="ContinueAsCurrentUser" xml:space="preserve">
+  <data name="ContinueAsCurrentUser" xml:space="preserve">
     <value>Continue as current user</value>
   </data>
-	<data name="OrSignInDifferent" xml:space="preserve">
+  <data name="OrSignInDifferent" xml:space="preserve">
     <value>Or sign in with different credentials:</value>
   </data>
-	<data name="Username" xml:space="preserve">
+  <data name="Username" xml:space="preserve">
     <value>Username:</value>
   </data>
-	<data name="Password" xml:space="preserve">
+  <data name="Password" xml:space="preserve">
     <value>Password:</value>
   </data>
-	<data name="Authenticating" xml:space="preserve">
+  <data name="Authenticating" xml:space="preserve">
     <value>Authenticating...</value>
   </data>
-	<data name="PleaseEnterUsername" xml:space="preserve">
+  <data name="PleaseEnterUsername" xml:space="preserve">
     <value>Please enter username</value>
   </data>
-	<data name="PleaseEnterPassword" xml:space="preserve">
+  <data name="PleaseEnterPassword" xml:space="preserve">
     <value>Please enter password</value>
   </data>
-
-	<!-- ========== COMMON BUTTONS AND ACTIONS ========== -->
-	<data name="Common_Cancel" xml:space="preserve">
+  <data name="Common_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
-	<data name="Common_OK" xml:space="preserve">
+  <data name="Common_OK" xml:space="preserve">
     <value>OK</value>
   </data>
-	<data name="Common_Yes" xml:space="preserve">
+  <data name="Common_Yes" xml:space="preserve">
     <value>Yes</value>
   </data>
-	<data name="Common_No" xml:space="preserve">
+  <data name="Common_No" xml:space="preserve">
     <value>No</value>
   </data>
-	<data name="Common_Close" xml:space="preserve">
+  <data name="Common_Close" xml:space="preserve">
     <value>Close</value>
   </data>
-	<data name="Common_Save" xml:space="preserve">
+  <data name="Common_Save" xml:space="preserve">
     <value>Save</value>
   </data>
-	<data name="Common_Delete" xml:space="preserve">
+  <data name="Common_Delete" xml:space="preserve">
     <value>Delete</value>
   </data>
-	<data name="Common_Edit" xml:space="preserve">
+  <data name="Common_Edit" xml:space="preserve">
     <value>Edit</value>
   </data>
-	<data name="Common_Add" xml:space="preserve">
+  <data name="Common_Add" xml:space="preserve">
     <value>Add</value>
   </data>
-	<data name="Common_Search" xml:space="preserve">
+  <data name="Common_Search" xml:space="preserve">
     <value>Search</value>
   </data>
-	<data name="Common_Filter" xml:space="preserve">
+  <data name="Common_Filter" xml:space="preserve">
     <value>Filter</value>
   </data>
-	<data name="Common_Settings" xml:space="preserve">
+  <data name="Common_Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
-	<data name="Common_Help" xml:space="preserve">
+  <data name="Common_Help" xml:space="preserve">
     <value>Help</value>
   </data>
-	<data name="Common_About" xml:space="preserve">
+  <data name="Common_About" xml:space="preserve">
     <value>About</value>
   </data>
-
-	<!-- Legacy buttons (for compatibility) -->
-	<data name="Settings" xml:space="preserve">
+  <data name="Settings" xml:space="preserve">
     <value>Settings</value>
   </data>
-	<data name="Refresh" xml:space="preserve">
+  <data name="Refresh" xml:space="preserve">
     <value>Refresh</value>
   </data>
-	<data name="Logout" xml:space="preserve">
+  <data name="Logout" xml:space="preserve">
     <value>Logout</value>
   </data>
-	<data name="SwitchUser" xml:space="preserve">
+  <data name="SwitchUser" xml:space="preserve">
     <value>Switch User</value>
   </data>
-	<data name="Login" xml:space="preserve">
+  <data name="Login" xml:space="preserve">
     <value>Login</value>
   </data>
-	<data name="Cancel" xml:space="preserve">
+  <data name="Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
-
-	<!-- ========== ERROR MESSAGES ========== -->
-	<data name="Error_General" xml:space="preserve">
+  <data name="Error_General" xml:space="preserve">
     <value>An error occurred</value>
   </data>
-	<data name="Error_NetworkUnavailable" xml:space="preserve">
+  <data name="Error_NetworkUnavailable" xml:space="preserve">
     <value>Network unavailable</value>
   </data>
-	<data name="Error_DomainUnavailable" xml:space="preserve">
+  <data name="Error_DomainUnavailable" xml:space="preserve">
     <value>Domain unavailable</value>
   </data>
-	<data name="Error_InvalidCredentials" xml:space="preserve">
+  <data name="Error_InvalidCredentials" xml:space="preserve">
     <value>Invalid credentials</value>
   </data>
-	<data name="Error_UserNotFound" xml:space="preserve">
+  <data name="Error_UserNotFound" xml:space="preserve">
     <value>User not found</value>
   </data>
-	<data name="Error_AccessDenied" xml:space="preserve">
+  <data name="Error_AccessDenied" xml:space="preserve">
     <value>Access denied</value>
   </data>
-	<data name="Error_DatabaseUnavailable" xml:space="preserve">
+  <data name="Error_DatabaseUnavailable" xml:space="preserve">
     <value>Database unavailable</value>
   </data>
-	<data name="Error_UnhandledException" xml:space="preserve">
+  <data name="Error_UnhandledException" xml:space="preserve">
     <value>An unexpected error occurred:\n\n{0}\n\nThe application will be closed.</value>
   </data>
-	<data name="Error_CriticalError" xml:space="preserve">
+  <data name="Error_CriticalError" xml:space="preserve">
     <value>Critical Error</value>
   </data>
-	<data name="Error_StartupFailed" xml:space="preserve">
+  <data name="Error_StartupFailed" xml:space="preserve">
     <value>Failed to start application:\n\n{0}</value>
   </data>
-	<data name="Error_Details" xml:space="preserve">
+  <data name="Error_Details" xml:space="preserve">
     <value>Details: {0}</value>
   </data>
-	<data name="Error_StartupError" xml:space="preserve">
+  <data name="Error_StartupError" xml:space="preserve">
     <value>Startup Error</value>
   </data>
-
-	<!-- Legacy error messages (for compatibility) -->
-	<data name="Error" xml:space="preserve">
+  <data name="Error" xml:space="preserve">
     <value>Error</value>
   </data>
-	<data name="Warning" xml:space="preserve">
+  <data name="Warning" xml:space="preserve">
     <value>Warning</value>
   </data>
-	<data name="Information" xml:space="preserve">
+  <data name="Information" xml:space="preserve">
     <value>Information</value>
   </data>
-	<data name="Confirmation" xml:space="preserve">
+  <data name="Confirmation" xml:space="preserve">
     <value>Confirmation</value>
   </data>
-
-	<!-- ========== SUCCESS MESSAGES ========== -->
-	<data name="Success_LoginCompleted" xml:space="preserve">
+  <data name="Success_LoginCompleted" xml:space="preserve">
     <value>Login completed successfully</value>
   </data>
-	<data name="Success_SettingsSaved" xml:space="preserve">
+  <data name="Success_SettingsSaved" xml:space="preserve">
     <value>Settings saved</value>
   </data>
-	<data name="Success_ApplicationLaunched" xml:space="preserve">
+  <data name="Success_ApplicationLaunched" xml:space="preserve">
     <value>Application launched</value>
   </data>
-
-	<!-- ========== WARNINGS ========== -->
-	<data name="Warning_UnsavedChanges" xml:space="preserve">
+  <data name="Warning_UnsavedChanges" xml:space="preserve">
     <value>You have unsaved changes</value>
   </data>
-	<data name="Warning_ServiceModeRequired" xml:space="preserve">
+  <data name="Warning_ServiceModeRequired" xml:space="preserve">
     <value>Service administrator mode required</value>
   </data>
-
-	<!-- ========== INFORMATIONAL MESSAGES ========== -->
-	<data name="Info_Loading" xml:space="preserve">
+  <data name="Info_Loading" xml:space="preserve">
     <value>Loading...</value>
   </data>
-	<data name="Info_Processing" xml:space="preserve">
+  <data name="Info_Processing" xml:space="preserve">
     <value>Processing...</value>
   </data>
-	<data name="Info_Saving" xml:space="preserve">
+  <data name="Info_Saving" xml:space="preserve">
     <value>Saving...</value>
   </data>
-	<data name="Info_Connecting" xml:space="preserve">
+  <data name="Info_Connecting" xml:space="preserve">
     <value>Connecting...</value>
   </data>
-
-	<!-- ========== STATUS MESSAGES ========== -->
-	<data name="Ready" xml:space="preserve">
+  <data name="Ready" xml:space="preserve">
     <value>Ready</value>
   </data>
-	<data name="Loading" xml:space="preserve">
+  <data name="Loading" xml:space="preserve">
     <value>Loading...</value>
   </data>
-	<data name="LoadingApplications" xml:space="preserve">
+  <data name="LoadingApplications" xml:space="preserve">
     <value>Loading applications...</value>
   </data>
-	<data name="Initializing" xml:space="preserve">
+  <data name="Initializing" xml:space="preserve">
     <value>Initializing...</value>
   </data>
-	<data name="Welcome" xml:space="preserve">
+  <data name="Welcome" xml:space="preserve">
     <value>Welcome, {0}!</value>
   </data>
-
-	<!-- ========== CATEGORIES ========== -->
-	<data name="CategoryAll" xml:space="preserve">
+  <data name="CategoryAll" xml:space="preserve">
     <value>All</value>
   </data>
-	<data name="AllCategories" xml:space="preserve">
+  <data name="AllCategories" xml:space="preserve">
     <value>All Categories</value>
   </data>
-	<data name="CategoryTools" xml:space="preserve">
+  <data name="CategoryTools" xml:space="preserve">
     <value>Tools</value>
   </data>
-	<data name="CategoryWeb" xml:space="preserve">
+  <data name="CategoryWeb" xml:space="preserve">
     <value>Web</value>
   </data>
-	<data name="CategorySystem" xml:space="preserve">
+  <data name="CategorySystem" xml:space="preserve">
     <value>System</value>
   </data>
-	<data name="CategoryOffice" xml:space="preserve">
+  <data name="CategoryOffice" xml:space="preserve">
     <value>Office</value>
   </data>
-	<data name="CategoryDevelopment" xml:space="preserve">
+  <data name="CategoryDevelopment" xml:space="preserve">
     <value>Development</value>
   </data>
-	<data name="Category_Business" xml:space="preserve">
+  <data name="Category_Business" xml:space="preserve">
     <value>Business</value>
   </data>
-	<data name="Category_Communication" xml:space="preserve">
+  <data name="Category_Communication" xml:space="preserve">
     <value>Communication</value>
   </data>
-	<data name="Category_Utilities" xml:space="preserve">
+  <data name="Category_Utilities" xml:space="preserve">
     <value>Utilities</value>
   </data>
-
-	<!-- ========== CONFIRMATIONS ========== -->
-	<data name="ConfirmLogout" xml:space="preserve">
+  <data name="ConfirmLogout" xml:space="preserve">
     <value>Are you sure you want to logout?</value>
   </data>
-
-	<!-- ========== SETTINGS ========== -->
-	<data name="SettingsComingSoon" xml:space="preserve">
+  <data name="SettingsComingSoon" xml:space="preserve">
     <value>Settings feature coming soon...</value>
   </data>
-	<data name="SettingsWindowMessage" xml:space="preserve">
+  <data name="SettingsWindowMessage" xml:space="preserve">
     <value>Settings window will be implemented in the next iteration.</value>
   </data>
-
-	<!-- ========== TOOLTIPS ========== -->
-	<data name="SettingsTooltip" xml:space="preserve">
+  <data name="SettingsTooltip" xml:space="preserve">
     <value>Settings</value>
   </data>
-	<data name="RefreshTooltip" xml:space="preserve">
+  <data name="RefreshTooltip" xml:space="preserve">
     <value>Refresh applications</value>
   </data>
-	<data name="LogoutTooltip" xml:space="preserve">
+  <data name="LogoutTooltip" xml:space="preserve">
     <value>Logout from application</value>
   </data>
-	<data name="SwitchUserTooltip" xml:space="preserve">
+  <data name="SwitchUserTooltip" xml:space="preserve">
     <value>Switch to another user</value>
   </data>
-
-	<!-- ========== USER ROLES ========== -->
-	<data name="RoleStandard" xml:space="preserve">
+  <data name="RoleStandard" xml:space="preserve">
     <value>Standard</value>
   </data>
-	<data name="RolePowerUser" xml:space="preserve">
+  <data name="RolePowerUser" xml:space="preserve">
     <value>Power User</value>
   </data>
-	<data name="RoleAdministrator" xml:space="preserve">
+  <data name="RoleAdministrator" xml:space="preserve">
     <value>Administrator</value>
   </data>
-
-	<!-- ========== APPLICATION DESCRIPTIONS ========== -->
-	<data name="CalculatorDescription" xml:space="preserve">
+  <data name="CalculatorDescription" xml:space="preserve">
     <value>Windows Calculator</value>
   </data>
-	<data name="NotepadDescription" xml:space="preserve">
+  <data name="NotepadDescription" xml:space="preserve">
     <value>Text Editor</value>
   </data>
-	<data name="GoogleDescription" xml:space="preserve">
+  <data name="GoogleDescription" xml:space="preserve">
     <value>Google Search</value>
   </data>
-	<data name="ControlPanelDescription" xml:space="preserve">
+  <data name="ControlPanelDescription" xml:space="preserve">
     <value>Windows Control Panel</value>
   </data>
-	<data name="CommandPromptDescription" xml:space="preserve">
+  <data name="CommandPromptDescription" xml:space="preserve">
     <value>Windows Command Line</value>
   </data>
-
-	<!-- ========== ADMIN WINDOW ========== -->
-	<data name="AdminWindow_Title" xml:space="preserve">
+  <data name="AdminWindow_Title" xml:space="preserve">
     <value>Application Management - Administrator</value>
   </data>
-	<data name="AdminWindow_TotalCount" xml:space="preserve">
+  <data name="AdminWindow_TotalCount" xml:space="preserve">
     <value>Total: </value>
   </data>
-	<data name="AdminWindow_ActiveCount" xml:space="preserve">
+  <data name="AdminWindow_ActiveCount" xml:space="preserve">
     <value>Active: </value>
   </data>
-	<data name="AdminWindow_DisabledCount" xml:space="preserve">
+  <data name="AdminWindow_DisabledCount" xml:space="preserve">
     <value>Disabled: </value>
   </data>
-	<data name="AdminWindow_AddApplication" xml:space="preserve">
+  <data name="AdminWindow_AddApplication" xml:space="preserve">
     <value>Add Application</value>
   </data>
-	<data name="AdminWindow_Update" xml:space="preserve">
+  <data name="AdminWindow_Update" xml:space="preserve">
     <value>Update</value>
   </data>
-	<data name="AdminWindow_Import" xml:space="preserve">
+  <data name="AdminWindow_Import" xml:space="preserve">
     <value>Import</value>
   </data>
-	<data name="AdminWindow_Export" xml:space="preserve">
+  <data name="AdminWindow_Export" xml:space="preserve">
     <value>Export</value>
   </data>
-	<data name="AdminWindow_Save" xml:space="preserve">
+  <data name="AdminWindow_Save" xml:space="preserve">
     <value>Save</value>
   </data>
-	<data name="AdminWindow_Cancel" xml:space="preserve">
+  <data name="AdminWindow_Cancel" xml:space="preserve">
     <value>Cancel</value>
   </data>
-	<data name="AdminWindow_TestLaunch" xml:space="preserve">
+  <data name="AdminWindow_TestLaunch" xml:space="preserve">
     <value>Test Launch</value>
   </data>
-	<data name="AdminWindow_ApplicationList" xml:space="preserve">
+  <data name="AdminWindow_ApplicationList" xml:space="preserve">
     <value>Application List</value>
   </data>
-	<data name="AdminWindow_NameColumn" xml:space="preserve">
+  <data name="AdminWindow_NameColumn" xml:space="preserve">
     <value>Name</value>
   </data>
-	<data name="AdminWindow_CategoryColumn" xml:space="preserve">
+  <data name="AdminWindow_CategoryColumn" xml:space="preserve">
     <value>Category</value>
   </data>
-	<data name="AdminWindow_TypeColumn" xml:space="preserve">
+  <data name="AdminWindow_TypeColumn" xml:space="preserve">
     <value>Type</value>
   </data>
-	<data name="AdminWindow_EditTooltip" xml:space="preserve">
+  <data name="AdminWindow_EditTooltip" xml:space="preserve">
     <value>Edit</value>
   </data>
-	<data name="AdminWindow_DuplicateTooltip" xml:space="preserve">
+  <data name="AdminWindow_DuplicateTooltip" xml:space="preserve">
     <value>Duplicate</value>
   </data>
-	<data name="AdminWindow_DeleteTooltip" xml:space="preserve">
+  <data name="AdminWindow_DeleteTooltip" xml:space="preserve">
     <value>Delete</value>
   </data>
-	<data name="AdminWindow_ApplicationDetails" xml:space="preserve">
+  <data name="AdminWindow_ApplicationDetails" xml:space="preserve">
     <value>Application Details</value>
   </data>
-	<data name="AdminWindow_EditingApplication" xml:space="preserve">
+  <data name="AdminWindow_EditingApplication" xml:space="preserve">
     <value>Editing Application</value>
   </data>
-	<data name="AdminWindow_NewApplication" xml:space="preserve">
+  <data name="AdminWindow_NewApplication" xml:space="preserve">
     <value>Creating New Application</value>
   </data>
-	<data name="AdminWindow_BasicInformation" xml:space="preserve">
+  <data name="AdminWindow_BasicInformation" xml:space="preserve">
     <value>Basic Information</value>
   </data>
-	<data name="AdminWindow_Name" xml:space="preserve">
+  <data name="AdminWindow_Name" xml:space="preserve">
     <value>Name:</value>
   </data>
-	<data name="AdminWindow_Description" xml:space="preserve">
+  <data name="AdminWindow_Description" xml:space="preserve">
     <value>Description:</value>
   </data>
-	<data name="AdminWindow_Category" xml:space="preserve">
+  <data name="AdminWindow_Category" xml:space="preserve">
     <value>Category:</value>
   </data>
-	<data name="AdminWindow_Type" xml:space="preserve">
+  <data name="AdminWindow_Type" xml:space="preserve">
     <value>Type:</value>
   </data>
-	<data name="AdminWindow_TypeApplication" xml:space="preserve">
+  <data name="AdminWindow_TypeApplication" xml:space="preserve">
     <value>Application</value>
   </data>
-	<data name="AdminWindow_TypeWebLink" xml:space="preserve">
+  <data name="AdminWindow_TypeWebLink" xml:space="preserve">
     <value>Web Link</value>
   </data>
-	<data name="AdminWindow_TypeFolder" xml:space="preserve">
+  <data name="AdminWindow_TypeFolder" xml:space="preserve">
     <value>Folder</value>
   </data>
-	<data name="AdminWindow_Path" xml:space="preserve">
+  <data name="AdminWindow_Path" xml:space="preserve">
     <value>Path:</value>
   </data>
-	<data name="AdminWindow_Arguments" xml:space="preserve">
+  <data name="AdminWindow_Arguments" xml:space="preserve">
     <value>Arguments:</value>
   </data>
-	<data name="AdminWindow_SecuritySettings" xml:space="preserve">
+  <data name="AdminWindow_SecuritySettings" xml:space="preserve">
     <value>Security Settings</value>
   </data>
-	<data name="AdminWindow_MinimumRole" xml:space="preserve">
+  <data name="AdminWindow_MinimumRole" xml:space="preserve">
     <value>Minimum Role:</value>
   </data>
-	<data name="AdminWindow_RoleStandard" xml:space="preserve">
+  <data name="AdminWindow_RoleStandard" xml:space="preserve">
     <value>Standard</value>
   </data>
-	<data name="AdminWindow_RolePowerUser" xml:space="preserve">
+  <data name="AdminWindow_RolePowerUser" xml:space="preserve">
     <value>Power User</value>
   </data>
-	<data name="AdminWindow_RoleAdministrator" xml:space="preserve">
+  <data name="AdminWindow_RoleAdministrator" xml:space="preserve">
     <value>Administrator</value>
   </data>
-	<data name="AdminWindow_RequiredGroups" xml:space="preserve">
+  <data name="AdminWindow_RequiredGroups" xml:space="preserve">
     <value>Required Groups:</value>
   </data>
-	<data name="AdminWindow_AddGroup" xml:space="preserve">
+  <data name="AdminWindow_AddGroup" xml:space="preserve">
     <value>➕ Add</value>
   </data>
-	<data name="AdminWindow_Status" xml:space="preserve">
+  <data name="AdminWindow_Status" xml:space="preserve">
     <value>Status:</value>
   </data>
-	<data name="AdminWindow_ApplicationActive" xml:space="preserve">
+  <data name="AdminWindow_ApplicationActive" xml:space="preserve">
     <value>Application Active</value>
   </data>
-	<data name="AdminWindow_SelectApplicationHint" xml:space="preserve">
+  <data name="AdminWindow_SelectApplicationHint" xml:space="preserve">
     <value>Select application to view details</value>
   </data>
-	<data name="AdminWindow_UnsavedChanges" xml:space="preserve">
+  <data name="AdminWindow_UnsavedChanges" xml:space="preserve">
     <value>Unsaved Changes</value>
   </data>
-	<data name="AdminWindow_EditMode" xml:space="preserve">
+  <data name="AdminWindow_EditMode" xml:space="preserve">
     <value>Edit Mode</value>
   </data>
-	<data name="AdminWindow_ViewMode" xml:space="preserve">
+  <data name="AdminWindow_ViewMode" xml:space="preserve">
     <value>View Mode</value>
   </data>
-
-	<!-- ========== MAIN WINDOW ADDITIONS ========== -->
-	<data name="MainWindow_CorporateLauncher" xml:space="preserve">
-    <value>Corporate Launcher</value>
+  <data name="MainWindow_CorporateLauncher" xml:space="preserve">
+    <value>Corporate Portal</value>
   </data>
-	<data name="MainWindow_SwitchUserTooltip" xml:space="preserve">
+  <data name="MainWindow_SwitchUserTooltip" xml:space="preserve">
     <value>Switch User</value>
   </data>
-	<data name="MainWindow_ManageApplicationsTooltip" xml:space="preserve">
+  <data name="MainWindow_ManageApplicationsTooltip" xml:space="preserve">
     <value>Manage Applications</value>
   </data>
-	<data name="MainWindow_SettingsTooltip" xml:space="preserve">
+  <data name="MainWindow_SettingsTooltip" xml:space="preserve">
     <value>Settings</value>
   </data>
-	<data name="MainWindow_UpdateTooltip" xml:space="preserve">
+  <data name="MainWindow_UpdateTooltip" xml:space="preserve">
     <value>Update</value>
   </data>
-	<data name="MainWindow_ExitTooltip" xml:space="preserve">
+  <data name="MainWindow_ExitTooltip" xml:space="preserve">
     <value>Exit</value>
   </data>
-	<data name="MainWindow_LoadingApplications" xml:space="preserve">
+  <data name="MainWindow_LoadingApplications" xml:space="preserve">
     <value>Loading applications...</value>
   </data>
-	<data name="MainWindow_NoApplicationsFound" xml:space="preserve">
+  <data name="MainWindow_NoApplicationsFound" xml:space="preserve">
     <value>No applications found</value>
   </data>
-	<data name="MainWindow_NoApplicationsHint" xml:space="preserve">
+  <data name="MainWindow_NoApplicationsHint" xml:space="preserve">
     <value>Try changing search or category filter</value>
   </data>
-	<data name="MainWindow_ApplicationsCount" xml:space="preserve">
+  <data name="MainWindow_ApplicationsCount" xml:space="preserve">
     <value> applications</value>
   </data>
-
-	<!-- ========== SETUP WINDOW ========== -->
-	<data name="SetupWindow_Title" xml:space="preserve">
+  <data name="SetupWindow_Title" xml:space="preserve">
     <value>Initial Setup - KDV Launcher</value>
   </data>
-	<data name="SetupWindow_Welcome" xml:space="preserve">
+  <data name="SetupWindow_Welcome" xml:space="preserve">
     <value>Welcome to KDV Launcher</value>
   </data>
-	<data name="SetupWindow_Subtitle" xml:space="preserve">
+  <data name="SetupWindow_Subtitle" xml:space="preserve">
     <value>Initial System Setup</value>
   </data>
-	<data name="SetupWindow_Step1Title" xml:space="preserve">
+  <data name="SetupWindow_Step1Title" xml:space="preserve">
     <value>1. Domain Connection Setup</value>
   </data>
-	<data name="SetupWindow_Step1Description" xml:space="preserve">
+  <data name="SetupWindow_Step1Description" xml:space="preserve">
     <value>Specify Active Directory connection parameters for user authentication.</value>
   </data>
-	<data name="SetupWindow_Domain" xml:space="preserve">
+  <data name="SetupWindow_Domain" xml:space="preserve">
     <value>Domain:</value>
   </data>
-	<data name="SetupWindow_DomainDefault" xml:space="preserve">
+  <data name="SetupWindow_DomainDefault" xml:space="preserve">
     <value>company.local</value>
   </data>
-	<data name="SetupWindow_LdapServer" xml:space="preserve">
+  <data name="SetupWindow_LdapServer" xml:space="preserve">
     <value>LDAP Server:</value>
   </data>
-	<data name="SetupWindow_LdapServerDefault" xml:space="preserve">
+  <data name="SetupWindow_LdapServerDefault" xml:space="preserve">
     <value>dc.company.local</value>
   </data>
-	<data name="SetupWindow_Port" xml:space="preserve">
+  <data name="SetupWindow_Port" xml:space="preserve">
     <value>Port:</value>
   </data>
-	<data name="SetupWindow_PortDefault" xml:space="preserve">
+  <data name="SetupWindow_PortDefault" xml:space="preserve">
     <value>389</value>
   </data>
-	<data name="SetupWindow_UseTLS" xml:space="preserve">
+  <data name="SetupWindow_UseTLS" xml:space="preserve">
     <value>Use TLS</value>
   </data>
-	<data name="SetupWindow_TestConnection" xml:space="preserve">
+  <data name="SetupWindow_TestConnection" xml:space="preserve">
     <value>Test Connection</value>
   </data>
-	<data name="SetupWindow_Step2Title" xml:space="preserve">
+  <data name="SetupWindow_Step2Title" xml:space="preserve">
     <value>2. Service Administrator Setup</value>
   </data>
-	<data name="SetupWindow_Step2Description" xml:space="preserve">
+  <data name="SetupWindow_Step2Description" xml:space="preserve">
     <value>Create a local administrator account for system management when domain is unavailable.</value>
   </data>
-	<data name="SetupWindow_Username" xml:space="preserve">
+  <data name="SetupWindow_Username" xml:space="preserve">
     <value>Username:</value>
   </data>
-	<data name="SetupWindow_UsernameDefault" xml:space="preserve">
+  <data name="SetupWindow_UsernameDefault" xml:space="preserve">
     <value>serviceadmin</value>
   </data>
-	<data name="SetupWindow_SessionTime" xml:space="preserve">
+  <data name="SetupWindow_SessionTime" xml:space="preserve">
     <value>Session Time (min):</value>
   </data>
-	<data name="SetupWindow_SessionTimeDefault" xml:space="preserve">
+  <data name="SetupWindow_SessionTimeDefault" xml:space="preserve">
     <value>60</value>
   </data>
-	<data name="SetupWindow_Password" xml:space="preserve">
+  <data name="SetupWindow_Password" xml:space="preserve">
     <value>Password:</value>
   </data>
-	<data name="SetupWindow_PasswordConfirm" xml:space="preserve">
+  <data name="SetupWindow_PasswordConfirm" xml:space="preserve">
     <value>Confirm:</value>
   </data>
-	<data name="SetupWindow_PasswordRequirements" xml:space="preserve">
+  <data name="SetupWindow_PasswordRequirements" xml:space="preserve">
     <value>Password Requirements:</value>
   </data>
-	<data name="SetupWindow_PasswordLength" xml:space="preserve">
+  <data name="SetupWindow_PasswordLength" xml:space="preserve">
     <value>• Minimum 8 characters</value>
   </data>
-	<data name="SetupWindow_PasswordUpper" xml:space="preserve">
+  <data name="SetupWindow_PasswordUpper" xml:space="preserve">
     <value>• Upper case letters (A-Z)</value>
   </data>
-	<data name="SetupWindow_PasswordLower" xml:space="preserve">
+  <data name="SetupWindow_PasswordLower" xml:space="preserve">
     <value>• Lower case letters (a-z)</value>
   </data>
-	<data name="SetupWindow_PasswordNumbers" xml:space="preserve">
+  <data name="SetupWindow_PasswordNumbers" xml:space="preserve">
     <value>• Numbers (0-9)</value>
   </data>
-	<data name="SetupWindow_PasswordSpecial" xml:space="preserve">
+  <data name="SetupWindow_PasswordSpecial" xml:space="preserve">
     <value>• Special characters (!@#$%^*)</value>
   </data>
-	<data name="SetupWindow_PasswordMatch" xml:space="preserve">
+  <data name="SetupWindow_PasswordMatch" xml:space="preserve">
     <value>• Passwords must match</value>
   </data>
-	<data name="SetupWindow_Step3Title" xml:space="preserve">
+  <data name="SetupWindow_Step3Title" xml:space="preserve">
     <value>3. Additional Settings</value>
   </data>
-	<data name="SetupWindow_Step3Description" xml:space="preserve">
+  <data name="SetupWindow_Step3Description" xml:space="preserve">
     <value>Configure additional system parameters.</value>
   </data>
-	<data name="SetupWindow_EnableAudit" xml:space="preserve">
+  <data name="SetupWindow_EnableAudit" xml:space="preserve">
     <value>Enable user action audit</value>
   </data>
-	<data name="SetupWindow_StartWithWindows" xml:space="preserve">
+  <data name="SetupWindow_StartWithWindows" xml:space="preserve">
     <value>Start with Windows</value>
   </data>
-	<data name="SetupWindow_CheckUpdates" xml:space="preserve">
+  <data name="SetupWindow_CheckUpdates" xml:space="preserve">
     <value>Check for updates automatically</value>
   </data>
-	<data name="SetupWindow_InterfaceLanguage" xml:space="preserve">
+  <data name="SetupWindow_InterfaceLanguage" xml:space="preserve">
     <value>Interface Language:</value>
   </data>
-	<data name="SetupWindow_Russian" xml:space="preserve">
+  <data name="SetupWindow_Russian" xml:space="preserve">
     <value>Russian</value>
   </data>
-	<data name="SetupWindow_English" xml:space="preserve">
+  <data name="SetupWindow_English" xml:space="preserve">
     <value>English</value>
   </data>
-	<data name="SetupWindow_Progress" xml:space="preserve">
+  <data name="SetupWindow_Progress" xml:space="preserve">
     <value>Setup: 0/3 steps completed</value>
   </data>
-	<data name="SetupWindow_Skip" xml:space="preserve">
+  <data name="SetupWindow_Skip" xml:space="preserve">
     <value>Skip</value>
   </data>
-	<data name="SetupWindow_Complete" xml:space="preserve">
+  <data name="SetupWindow_Complete" xml:space="preserve">
     <value>Complete Setup</value>
   </data>
-	<data name="SetupWindow_SavingSettings" xml:space="preserve">
+  <data name="SetupWindow_SavingSettings" xml:space="preserve">
     <value>Saving settings...</value>
   </data>
-
-	<!-- ========== CORPORATE STYLES ========== -->
-	<data name="CorporateStyles_SearchPlaceholder" xml:space="preserve">
+  <data name="CorporateStyles_SearchPlaceholder" xml:space="preserve">
     <value>Search applications...</value>
   </data>
-
 </root>

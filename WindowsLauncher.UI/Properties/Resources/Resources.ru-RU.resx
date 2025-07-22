@@ -1,707 +1,723 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <root>
-	<xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
-		<xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
-		<xsd:element name="root" msdata:IsDataSet="true">
-			<xsd:complexType>
-				<xsd:choice maxOccurs="unbounded">
-					<xsd:element name="metadata">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" />
-							</xsd:sequence>
-							<xsd:attribute name="name" use="required" type="xsd:string" />
-							<xsd:attribute name="type" type="xsd:string" />
-							<xsd:attribute name="mimetype" type="xsd:string" />
-							<xsd:attribute ref="xml:space" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="assembly">
-						<xsd:complexType>
-							<xsd:attribute name="alias" type="xsd:string" />
-							<xsd:attribute name="name" type="xsd:string" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="data">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-								<xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
-							<xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
-							<xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
-							<xsd:attribute ref="xml:space" />
-						</xsd:complexType>
-					</xsd:element>
-					<xsd:element name="resheader">
-						<xsd:complexType>
-							<xsd:sequence>
-								<xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
-							</xsd:sequence>
-							<xsd:attribute name="name" type="xsd:string" use="required" />
-						</xsd:complexType>
-					</xsd:element>
-				</xsd:choice>
-			</xsd:complexType>
-		</xsd:element>
-	</xsd:schema>
-	<resheader name="resmimetype">
-		<value>text/microsoft-resx</value>
-	</resheader>
-	<resheader name="version">
-		<value>2.0</value>
-	</resheader>
-	<resheader name="reader">
-		<value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
-	<resheader name="writer">
-		<value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
-	</resheader>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
 
-	<!-- ========== ГЛАВНОЕ ОКНО ========== -->
-	<data name="AppTitle" xml:space="preserve">
-    <value>Корпоративный лаунчер KDV</value>
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="AppTitle" xml:space="preserve">
+    <value>Корпоративный портал KDV</value>
   </data>
-	<data name="MainWindow_Title" xml:space="preserve">
-    <value>Корпоративный лаунчер KDV</value>
+  <data name="MainWindow_Title" xml:space="preserve">
+    <value>Корпоративный портал KDV</value>
   </data>
-	<data name="WindowTitle" xml:space="preserve">
-    <value>Корпоративный лаунчер KDV - {0} ({1})</value>
+  <data name="WindowTitle" xml:space="preserve">
+    <value>Корпоративный портал KDV - {0} ({1})</value>
   </data>
-	<data name="SearchPlaceholder" xml:space="preserve">
+  <data name="SearchPlaceholder" xml:space="preserve">
     <value>Поиск приложений...</value>
   </data>
-
-	<!-- ========== ОКНО ВХОДА ========== -->
-	<data name="LoginWindow_Title" xml:space="preserve">
+  <data name="LoginWindow_Title" xml:space="preserve">
     <value>Вход в систему</value>
   </data>
-	<data name="LoginWindow_Subtitle" xml:space="preserve">
-    <value>Корпоративный лаунчер приложений KDV</value>
+  <data name="LoginWindow_Subtitle" xml:space="preserve">
+    <value>Корпоративный портал приложений KDV</value>
   </data>
-	<data name="LoginWindow_DomainMode" xml:space="preserve">
+  <data name="LoginWindow_DomainMode" xml:space="preserve">
     <value>Доменный вход</value>
   </data>
-	<data name="LoginWindow_ServiceMode" xml:space="preserve">
+  <data name="LoginWindow_ServiceMode" xml:space="preserve">
     <value>Сервисный администратор</value>
   </data>
-	<data name="LoginWindow_Domain" xml:space="preserve">
+  <data name="LoginWindow_Domain" xml:space="preserve">
     <value>Домен</value>
   </data>
-	<data name="LoginWindow_Username" xml:space="preserve">
+  <data name="LoginWindow_Username" xml:space="preserve">
     <value>Имя пользователя</value>
   </data>
-	<data name="LoginWindow_Password" xml:space="preserve">
+  <data name="LoginWindow_Password" xml:space="preserve">
     <value>Пароль</value>
   </data>
-	<data name="LoginWindow_ServiceUsername" xml:space="preserve">
+  <data name="LoginWindow_ServiceUsername" xml:space="preserve">
     <value>Имя сервисного администратора</value>
   </data>
-	<data name="LoginWindow_ServicePassword" xml:space="preserve">
+  <data name="LoginWindow_ServicePassword" xml:space="preserve">
     <value>Пароль администратора</value>
   </data>
-	<data name="LoginWindow_RememberCredentials" xml:space="preserve">
+  <data name="LoginWindow_RememberCredentials" xml:space="preserve">
     <value>Запомнить учетные данные</value>
   </data>
-	<data name="LoginWindow_DomainAvailable" xml:space="preserve">
+  <data name="LoginWindow_DomainAvailable" xml:space="preserve">
     <value>Домен доступен</value>
   </data>
-	<data name="LoginWindow_DomainUnavailable" xml:space="preserve">
+  <data name="LoginWindow_DomainUnavailable" xml:space="preserve">
     <value>Домен недоступен</value>
   </data>
-	<data name="LoginWindow_CheckingDomain" xml:space="preserve">
+  <data name="LoginWindow_CheckingDomain" xml:space="preserve">
     <value>Проверка домена...</value>
   </data>
-	<data name="LoginWindow_Login" xml:space="preserve">
+  <data name="LoginWindow_Login" xml:space="preserve">
     <value>Войти</value>
   </data>
-	<data name="LoginWindow_Settings" xml:space="preserve">
+  <data name="LoginWindow_Settings" xml:space="preserve">
     <value>Настройки</value>
   </data>
-	<data name="LoginWindow_Authenticating" xml:space="preserve">
+  <data name="LoginWindow_Authenticating" xml:space="preserve">
     <value>Выполняется аутентификация...</value>
   </data>
-	<data name="LoginWindow_AuthenticatingDomain" xml:space="preserve">
+  <data name="LoginWindow_AuthenticatingDomain" xml:space="preserve">
     <value>Аутентификация в домене...</value>
   </data>
-	<data name="LoginWindow_AuthenticatingService" xml:space="preserve">
+  <data name="LoginWindow_AuthenticatingService" xml:space="preserve">
     <value>Аутентификация сервисного администратора...</value>
   </data>
-
-	<!-- Устаревшие записи окна входа (для совместимости) -->
-	<data name="LoginWindowTitle" xml:space="preserve">
-    <value>Корпоративный лаунчер KDV - Вход</value>
+  <data name="LoginWindowTitle" xml:space="preserve">
+    <value>Корпоративный портал KDV - Вход</value>
   </data>
-	<data name="CurrentWindowsUser" xml:space="preserve">
+  <data name="CurrentWindowsUser" xml:space="preserve">
     <value>Текущий пользователь Windows:</value>
   </data>
-	<data name="ContinueAsCurrentUser" xml:space="preserve">
+  <data name="ContinueAsCurrentUser" xml:space="preserve">
     <value>Продолжить как текущий пользователь</value>
   </data>
-	<data name="OrSignInDifferent" xml:space="preserve">
+  <data name="OrSignInDifferent" xml:space="preserve">
     <value>Или войти с другими учетными данными:</value>
   </data>
-	<data name="Username" xml:space="preserve">
+  <data name="Username" xml:space="preserve">
     <value>Имя пользователя:</value>
   </data>
-	<data name="Password" xml:space="preserve">
+  <data name="Password" xml:space="preserve">
     <value>Пароль:</value>
   </data>
-	<data name="Authenticating" xml:space="preserve">
+  <data name="Authenticating" xml:space="preserve">
     <value>Аутентификация...</value>
   </data>
-	<data name="PleaseEnterUsername" xml:space="preserve">
+  <data name="PleaseEnterUsername" xml:space="preserve">
     <value>Пожалуйста, введите имя пользователя</value>
   </data>
-	<data name="PleaseEnterPassword" xml:space="preserve">
+  <data name="PleaseEnterPassword" xml:space="preserve">
     <value>Пожалуйста, введите пароль</value>
   </data>
-
-	<!-- ========== ОБЩИЕ КНОПКИ И ДЕЙСТВИЯ ========== -->
-	<data name="Common_Cancel" xml:space="preserve">
+  <data name="Common_Cancel" xml:space="preserve">
     <value>Отмена</value>
   </data>
-	<data name="Common_OK" xml:space="preserve">
+  <data name="Common_OK" xml:space="preserve">
     <value>ОК</value>
   </data>
-	<data name="Common_Yes" xml:space="preserve">
+  <data name="Common_Yes" xml:space="preserve">
     <value>Да</value>
   </data>
-	<data name="Common_No" xml:space="preserve">
+  <data name="Common_No" xml:space="preserve">
     <value>Нет</value>
   </data>
-	<data name="Common_Close" xml:space="preserve">
+  <data name="Common_Close" xml:space="preserve">
     <value>Закрыть</value>
   </data>
-	<data name="Common_Save" xml:space="preserve">
+  <data name="Common_Save" xml:space="preserve">
     <value>Сохранить</value>
   </data>
-	<data name="Common_Delete" xml:space="preserve">
+  <data name="Common_Delete" xml:space="preserve">
     <value>Удалить</value>
   </data>
-	<data name="Common_Edit" xml:space="preserve">
+  <data name="Common_Edit" xml:space="preserve">
     <value>Редактировать</value>
   </data>
-	<data name="Common_Add" xml:space="preserve">
+  <data name="Common_Add" xml:space="preserve">
     <value>Добавить</value>
   </data>
-	<data name="Common_Search" xml:space="preserve">
+  <data name="Common_Search" xml:space="preserve">
     <value>Поиск</value>
   </data>
-	<data name="Common_Filter" xml:space="preserve">
+  <data name="Common_Filter" xml:space="preserve">
     <value>Фильтр</value>
   </data>
-	<data name="Common_Settings" xml:space="preserve">
+  <data name="Common_Settings" xml:space="preserve">
     <value>Настройки</value>
   </data>
-	<data name="Common_Help" xml:space="preserve">
+  <data name="Common_Help" xml:space="preserve">
     <value>Справка</value>
   </data>
-	<data name="Common_About" xml:space="preserve">
+  <data name="Common_About" xml:space="preserve">
     <value>О программе</value>
   </data>
-
-	<!-- Устаревшие кнопки (для совместимости) -->
-	<data name="Settings" xml:space="preserve">
+  <data name="Settings" xml:space="preserve">
     <value>Настройки</value>
   </data>
-	<data name="Refresh" xml:space="preserve">
+  <data name="Refresh" xml:space="preserve">
     <value>Обновить</value>
   </data>
-	<data name="Logout" xml:space="preserve">
+  <data name="Logout" xml:space="preserve">
     <value>Выйти</value>
   </data>
-	<data name="SwitchUser" xml:space="preserve">
+  <data name="SwitchUser" xml:space="preserve">
     <value>Сменить пользователя</value>
   </data>
-	<data name="Login" xml:space="preserve">
+  <data name="Login" xml:space="preserve">
     <value>Войти</value>
   </data>
-	<data name="Cancel" xml:space="preserve">
+  <data name="Cancel" xml:space="preserve">
     <value>Отмена</value>
   </data>
-
-	<!-- ========== СООБЩЕНИЯ ОБ ОШИБКАХ ========== -->
-	<data name="Error_General" xml:space="preserve">
+  <data name="Error_General" xml:space="preserve">
     <value>Произошла ошибка</value>
   </data>
-	<data name="Error_NetworkUnavailable" xml:space="preserve">
+  <data name="Error_NetworkUnavailable" xml:space="preserve">
     <value>Сеть недоступна</value>
   </data>
-	<data name="Error_DomainUnavailable" xml:space="preserve">
+  <data name="Error_DomainUnavailable" xml:space="preserve">
     <value>Домен недоступен</value>
   </data>
-	<data name="Error_InvalidCredentials" xml:space="preserve">
+  <data name="Error_InvalidCredentials" xml:space="preserve">
     <value>Неверные учетные данные</value>
   </data>
-	<data name="Error_UserNotFound" xml:space="preserve">
+  <data name="Error_UserNotFound" xml:space="preserve">
     <value>Пользователь не найден</value>
   </data>
-	<data name="Error_AccessDenied" xml:space="preserve">
+  <data name="Error_AccessDenied" xml:space="preserve">
     <value>Доступ запрещен</value>
   </data>
-	<data name="Error_DatabaseUnavailable" xml:space="preserve">
+  <data name="Error_DatabaseUnavailable" xml:space="preserve">
     <value>База данных недоступна</value>
   </data>
-	<data name="Error_UnhandledException" xml:space="preserve">
+  <data name="Error_UnhandledException" xml:space="preserve">
     <value>Произошла непредвиденная ошибка:\n\n{0}\n\nПриложение будет закрыто.</value>
   </data>
-	<data name="Error_CriticalError" xml:space="preserve">
+  <data name="Error_CriticalError" xml:space="preserve">
     <value>Критическая ошибка</value>
   </data>
-	<data name="Error_StartupFailed" xml:space="preserve">
+  <data name="Error_StartupFailed" xml:space="preserve">
     <value>Не удалось запустить приложение:\n\n{0}</value>
   </data>
-	<data name="Error_Details" xml:space="preserve">
+  <data name="Error_Details" xml:space="preserve">
     <value>Детали: {0}</value>
   </data>
-	<data name="Error_StartupError" xml:space="preserve">
+  <data name="Error_StartupError" xml:space="preserve">
     <value>Ошибка запуска</value>
   </data>
-
-	<!-- Устаревшие сообщения об ошибках (для совместимости) -->
-	<data name="Error" xml:space="preserve">
+  <data name="Error" xml:space="preserve">
     <value>Ошибка</value>
   </data>
-	<data name="Warning" xml:space="preserve">
+  <data name="Warning" xml:space="preserve">
     <value>Предупреждение</value>
   </data>
-	<data name="Information" xml:space="preserve">
+  <data name="Information" xml:space="preserve">
     <value>Информация</value>
   </data>
-	<data name="Confirmation" xml:space="preserve">
+  <data name="Confirmation" xml:space="preserve">
     <value>Подтверждение</value>
   </data>
-
-	<!-- ========== СООБЩЕНИЯ О УСПЕХЕ ========== -->
-	<data name="Success_LoginCompleted" xml:space="preserve">
+  <data name="Success_LoginCompleted" xml:space="preserve">
     <value>Вход выполнен успешно</value>
   </data>
-	<data name="Success_SettingsSaved" xml:space="preserve">
+  <data name="Success_SettingsSaved" xml:space="preserve">
     <value>Настройки сохранены</value>
   </data>
-	<data name="Success_ApplicationLaunched" xml:space="preserve">
+  <data name="Success_ApplicationLaunched" xml:space="preserve">
     <value>Приложение запущено</value>
   </data>
-
-	<!-- ========== ПРЕДУПРЕЖДЕНИЯ ========== -->
-	<data name="Warning_UnsavedChanges" xml:space="preserve">
+  <data name="Warning_UnsavedChanges" xml:space="preserve">
     <value>У вас есть несохраненные изменения</value>
   </data>
-	<data name="Warning_ServiceModeRequired" xml:space="preserve">
+  <data name="Warning_ServiceModeRequired" xml:space="preserve">
     <value>Требуется режим сервисного администратора</value>
   </data>
-
-	<!-- ========== ИНФОРМАЦИОННЫЕ СООБЩЕНИЯ ========== -->
-	<data name="Info_Loading" xml:space="preserve">
+  <data name="Info_Loading" xml:space="preserve">
     <value>Загрузка...</value>
   </data>
-	<data name="Info_Processing" xml:space="preserve">
+  <data name="Info_Processing" xml:space="preserve">
     <value>Обработка...</value>
   </data>
-	<data name="Info_Saving" xml:space="preserve">
+  <data name="Info_Saving" xml:space="preserve">
     <value>Сохранение...</value>
   </data>
-	<data name="Info_Connecting" xml:space="preserve">
+  <data name="Info_Connecting" xml:space="preserve">
     <value>Подключение...</value>
   </data>
-
-	<!-- ========== СООБЩЕНИЯ О СТАТУСЕ ========== -->
-	<data name="Ready" xml:space="preserve">
+  <data name="Ready" xml:space="preserve">
     <value>Готов</value>
   </data>
-	<data name="Loading" xml:space="preserve">
+  <data name="Loading" xml:space="preserve">
     <value>Загрузка...</value>
   </data>
-	<data name="LoadingApplications" xml:space="preserve">
+  <data name="LoadingApplications" xml:space="preserve">
     <value>Загрузка приложений...</value>
   </data>
-	<data name="Initializing" xml:space="preserve">
+  <data name="Initializing" xml:space="preserve">
     <value>Инициализация...</value>
   </data>
-	<data name="Welcome" xml:space="preserve">
+  <data name="Welcome" xml:space="preserve">
     <value>Добро пожаловать, {0}!</value>
   </data>
-
-	<!-- ========== КАТЕГОРИИ ========== -->
-	<data name="CategoryAll" xml:space="preserve">
+  <data name="CategoryAll" xml:space="preserve">
     <value>Все</value>
   </data>
-	<data name="AllCategories" xml:space="preserve">
+  <data name="AllCategories" xml:space="preserve">
     <value>Все категории</value>
   </data>
-	<data name="CategoryTools" xml:space="preserve">
+  <data name="CategoryTools" xml:space="preserve">
     <value>Инструменты</value>
   </data>
-	<data name="CategoryWeb" xml:space="preserve">
+  <data name="CategoryWeb" xml:space="preserve">
     <value>Веб</value>
   </data>
-	<data name="CategorySystem" xml:space="preserve">
+  <data name="CategorySystem" xml:space="preserve">
     <value>Система</value>
   </data>
-	<data name="CategoryOffice" xml:space="preserve">
+  <data name="CategoryOffice" xml:space="preserve">
     <value>Офис</value>
   </data>
-	<data name="CategoryDevelopment" xml:space="preserve">
+  <data name="CategoryDevelopment" xml:space="preserve">
     <value>Разработка</value>
   </data>
-	<data name="Category_Business" xml:space="preserve">
+  <data name="Category_Business" xml:space="preserve">
     <value>Бизнес</value>
   </data>
-	<data name="Category_Communication" xml:space="preserve">
+  <data name="Category_Communication" xml:space="preserve">
     <value>Коммуникации</value>
   </data>
-	<data name="Category_Utilities" xml:space="preserve">
+  <data name="Category_Utilities" xml:space="preserve">
     <value>Утилиты</value>
   </data>
-
-	<!-- ========== ПОДТВЕРЖДЕНИЯ ========== -->
-	<data name="ConfirmLogout" xml:space="preserve">
+  <data name="ConfirmLogout" xml:space="preserve">
     <value>Вы уверены, что хотите выйти?</value>
   </data>
-
-	<!-- ========== НАСТРОЙКИ ========== -->
-	<data name="SettingsComingSoon" xml:space="preserve">
+  <data name="SettingsComingSoon" xml:space="preserve">
     <value>Функция настроек скоро будет доступна...</value>
   </data>
-	<data name="SettingsWindowMessage" xml:space="preserve">
+  <data name="SettingsWindowMessage" xml:space="preserve">
     <value>Окно настроек будет реализовано в следующей итерации.</value>
   </data>
-
-	<!-- ========== ПОДСКАЗКИ ========== -->
-	<data name="SettingsTooltip" xml:space="preserve">
+  <data name="SettingsTooltip" xml:space="preserve">
     <value>Настройки</value>
   </data>
-	<data name="RefreshTooltip" xml:space="preserve">
+  <data name="RefreshTooltip" xml:space="preserve">
     <value>Обновить приложения</value>
   </data>
-	<data name="LogoutTooltip" xml:space="preserve">
+  <data name="LogoutTooltip" xml:space="preserve">
     <value>Выйти из приложения</value>
   </data>
-	<data name="SwitchUserTooltip" xml:space="preserve">
+  <data name="SwitchUserTooltip" xml:space="preserve">
     <value>Переключиться на другого пользователя</value>
   </data>
-
-	<!-- ========== РОЛИ ПОЛЬЗОВАТЕЛЕЙ ========== -->
-	<data name="RoleStandard" xml:space="preserve">
+  <data name="RoleStandard" xml:space="preserve">
     <value>Стандартный</value>
   </data>
-	<data name="RolePowerUser" xml:space="preserve">
+  <data name="RolePowerUser" xml:space="preserve">
     <value>Опытный пользователь</value>
   </data>
-	<data name="RoleAdministrator" xml:space="preserve">
+  <data name="RoleAdministrator" xml:space="preserve">
     <value>Администратор</value>
   </data>
-
-	<!-- ========== ОПИСАНИЯ ПРИЛОЖЕНИЙ ========== -->
-	<data name="CalculatorDescription" xml:space="preserve">
+  <data name="CalculatorDescription" xml:space="preserve">
     <value>Калькулятор Windows</value>
   </data>
-	<data name="NotepadDescription" xml:space="preserve">
+  <data name="NotepadDescription" xml:space="preserve">
     <value>Текстовый редактор</value>
   </data>
-	<data name="GoogleDescription" xml:space="preserve">
+  <data name="GoogleDescription" xml:space="preserve">
     <value>Поиск Google</value>
   </data>
-	<data name="ControlPanelDescription" xml:space="preserve">
+  <data name="ControlPanelDescription" xml:space="preserve">
     <value>Панель управления Windows</value>
   </data>
-	<data name="CommandPromptDescription" xml:space="preserve">
+  <data name="CommandPromptDescription" xml:space="preserve">
     <value>Командная строка Windows</value>
   </data>
-
-	<!-- ========== АДМИН ОКНО ========== -->
-	<data name="AdminWindow_Title" xml:space="preserve">
+  <data name="AdminWindow_Title" xml:space="preserve">
     <value>Управление приложениями - Администратор</value>
   </data>
-	<data name="AdminWindow_TotalCount" xml:space="preserve">
+  <data name="AdminWindow_TotalCount" xml:space="preserve">
     <value>Всего: </value>
   </data>
-	<data name="AdminWindow_ActiveCount" xml:space="preserve">
+  <data name="AdminWindow_ActiveCount" xml:space="preserve">
     <value>Активных: </value>
   </data>
-	<data name="AdminWindow_DisabledCount" xml:space="preserve">
+  <data name="AdminWindow_DisabledCount" xml:space="preserve">
     <value>Отключенных: </value>
   </data>
-	<data name="AdminWindow_AddApplication" xml:space="preserve">
+  <data name="AdminWindow_AddApplication" xml:space="preserve">
     <value>Добавить приложение</value>
   </data>
-	<data name="AdminWindow_Update" xml:space="preserve">
+  <data name="AdminWindow_Update" xml:space="preserve">
     <value>Обновить</value>
   </data>
-	<data name="AdminWindow_Import" xml:space="preserve">
+  <data name="AdminWindow_Import" xml:space="preserve">
     <value>Импорт</value>
   </data>
-	<data name="AdminWindow_Export" xml:space="preserve">
+  <data name="AdminWindow_Export" xml:space="preserve">
     <value>Экспорт</value>
   </data>
-	<data name="AdminWindow_Save" xml:space="preserve">
+  <data name="AdminWindow_Save" xml:space="preserve">
     <value>Сохранить</value>
   </data>
-	<data name="AdminWindow_Cancel" xml:space="preserve">
+  <data name="AdminWindow_Cancel" xml:space="preserve">
     <value>Отмена</value>
   </data>
-	<data name="AdminWindow_TestLaunch" xml:space="preserve">
+  <data name="AdminWindow_TestLaunch" xml:space="preserve">
     <value>Тест запуска</value>
   </data>
-	<data name="AdminWindow_ApplicationList" xml:space="preserve">
+  <data name="AdminWindow_ApplicationList" xml:space="preserve">
     <value>Список приложений</value>
   </data>
-	<data name="AdminWindow_NameColumn" xml:space="preserve">
+  <data name="AdminWindow_NameColumn" xml:space="preserve">
     <value>Название</value>
   </data>
-	<data name="AdminWindow_CategoryColumn" xml:space="preserve">
+  <data name="AdminWindow_CategoryColumn" xml:space="preserve">
     <value>Категория</value>
   </data>
-	<data name="AdminWindow_TypeColumn" xml:space="preserve">
+  <data name="AdminWindow_TypeColumn" xml:space="preserve">
     <value>Тип</value>
   </data>
-	<data name="AdminWindow_EditTooltip" xml:space="preserve">
+  <data name="AdminWindow_EditTooltip" xml:space="preserve">
     <value>Редактировать</value>
   </data>
-	<data name="AdminWindow_DuplicateTooltip" xml:space="preserve">
+  <data name="AdminWindow_DuplicateTooltip" xml:space="preserve">
     <value>Дублировать</value>
   </data>
-	<data name="AdminWindow_DeleteTooltip" xml:space="preserve">
+  <data name="AdminWindow_DeleteTooltip" xml:space="preserve">
     <value>Удалить</value>
   </data>
-	<data name="AdminWindow_ApplicationDetails" xml:space="preserve">
+  <data name="AdminWindow_ApplicationDetails" xml:space="preserve">
     <value>Детали приложения</value>
   </data>
-	<data name="AdminWindow_EditingApplication" xml:space="preserve">
+  <data name="AdminWindow_EditingApplication" xml:space="preserve">
     <value>Редактирование приложения</value>
   </data>
-	<data name="AdminWindow_NewApplication" xml:space="preserve">
+  <data name="AdminWindow_NewApplication" xml:space="preserve">
     <value>Создание нового приложения</value>
   </data>
-	<data name="AdminWindow_BasicInformation" xml:space="preserve">
+  <data name="AdminWindow_BasicInformation" xml:space="preserve">
     <value>Основная информация</value>
   </data>
-	<data name="AdminWindow_Name" xml:space="preserve">
+  <data name="AdminWindow_Name" xml:space="preserve">
     <value>Название:</value>
   </data>
-	<data name="AdminWindow_Description" xml:space="preserve">
+  <data name="AdminWindow_Description" xml:space="preserve">
     <value>Описание:</value>
   </data>
-	<data name="AdminWindow_Category" xml:space="preserve">
+  <data name="AdminWindow_Category" xml:space="preserve">
     <value>Категория:</value>
   </data>
-	<data name="AdminWindow_Type" xml:space="preserve">
+  <data name="AdminWindow_Type" xml:space="preserve">
     <value>Тип:</value>
   </data>
-	<data name="AdminWindow_TypeApplication" xml:space="preserve">
+  <data name="AdminWindow_TypeApplication" xml:space="preserve">
     <value>Приложение</value>
   </data>
-	<data name="AdminWindow_TypeWebLink" xml:space="preserve">
+  <data name="AdminWindow_TypeWebLink" xml:space="preserve">
     <value>Веб-ссылка</value>
   </data>
-	<data name="AdminWindow_TypeFolder" xml:space="preserve">
+  <data name="AdminWindow_TypeFolder" xml:space="preserve">
     <value>Папка</value>
   </data>
-	<data name="AdminWindow_Path" xml:space="preserve">
+  <data name="AdminWindow_Path" xml:space="preserve">
     <value>Путь:</value>
   </data>
-	<data name="AdminWindow_Arguments" xml:space="preserve">
+  <data name="AdminWindow_Arguments" xml:space="preserve">
     <value>Аргументы:</value>
   </data>
-	<data name="AdminWindow_SecuritySettings" xml:space="preserve">
+  <data name="AdminWindow_SecuritySettings" xml:space="preserve">
     <value>Настройки безопасности</value>
   </data>
-	<data name="AdminWindow_MinimumRole" xml:space="preserve">
+  <data name="AdminWindow_MinimumRole" xml:space="preserve">
     <value>Минимальная роль:</value>
   </data>
-	<data name="AdminWindow_RoleStandard" xml:space="preserve">
+  <data name="AdminWindow_RoleStandard" xml:space="preserve">
     <value>Стандартный</value>
   </data>
-	<data name="AdminWindow_RolePowerUser" xml:space="preserve">
+  <data name="AdminWindow_RolePowerUser" xml:space="preserve">
     <value>Опытный пользователь</value>
   </data>
-	<data name="AdminWindow_RoleAdministrator" xml:space="preserve">
+  <data name="AdminWindow_RoleAdministrator" xml:space="preserve">
     <value>Администратор</value>
   </data>
-	<data name="AdminWindow_RequiredGroups" xml:space="preserve">
+  <data name="AdminWindow_RequiredGroups" xml:space="preserve">
     <value>Требуемые группы:</value>
   </data>
-	<data name="AdminWindow_AddGroup" xml:space="preserve">
+  <data name="AdminWindow_AddGroup" xml:space="preserve">
     <value>➕ Добавить</value>
   </data>
-	<data name="AdminWindow_Status" xml:space="preserve">
+  <data name="AdminWindow_Status" xml:space="preserve">
     <value>Статус:</value>
   </data>
-	<data name="AdminWindow_ApplicationActive" xml:space="preserve">
+  <data name="AdminWindow_ApplicationActive" xml:space="preserve">
     <value>Приложение активно</value>
   </data>
-	<data name="AdminWindow_SelectApplicationHint" xml:space="preserve">
+  <data name="AdminWindow_SelectApplicationHint" xml:space="preserve">
     <value>Выберите приложение для просмотра деталей</value>
   </data>
-	<data name="AdminWindow_UnsavedChanges" xml:space="preserve">
+  <data name="AdminWindow_UnsavedChanges" xml:space="preserve">
     <value>Несохраненные изменения</value>
   </data>
-	<data name="AdminWindow_EditMode" xml:space="preserve">
+  <data name="AdminWindow_EditMode" xml:space="preserve">
     <value>Режим редактирования</value>
   </data>
-	<data name="AdminWindow_ViewMode" xml:space="preserve">
+  <data name="AdminWindow_ViewMode" xml:space="preserve">
     <value>Режим просмотра</value>
   </data>
-
-	<!-- ========== ГЛАВНОЕ ОКНО (ДОПОЛНИТЕЛЬНО) ========== -->
-	<data name="MainWindow_CorporateLauncher" xml:space="preserve">
-    <value>Корпоративный Лаунчер</value>
+  <data name="MainWindow_CorporateLauncher" xml:space="preserve">
+    <value>Корпоративный портал</value>
   </data>
-	<data name="MainWindow_SwitchUserTooltip" xml:space="preserve">
+  <data name="MainWindow_SwitchUserTooltip" xml:space="preserve">
     <value>Сменить пользователя</value>
   </data>
-	<data name="MainWindow_ManageApplicationsTooltip" xml:space="preserve">
+  <data name="MainWindow_ManageApplicationsTooltip" xml:space="preserve">
     <value>Управление приложениями</value>
   </data>
-	<data name="MainWindow_SettingsTooltip" xml:space="preserve">
+  <data name="MainWindow_SettingsTooltip" xml:space="preserve">
     <value>Настройки</value>
   </data>
-	<data name="MainWindow_UpdateTooltip" xml:space="preserve">
+  <data name="MainWindow_UpdateTooltip" xml:space="preserve">
     <value>Обновить</value>
   </data>
-	<data name="MainWindow_ExitTooltip" xml:space="preserve">
+  <data name="MainWindow_ExitTooltip" xml:space="preserve">
     <value>Выйти</value>
   </data>
-	<data name="MainWindow_LoadingApplications" xml:space="preserve">
+  <data name="MainWindow_LoadingApplications" xml:space="preserve">
     <value>Загрузка приложений...</value>
   </data>
-	<data name="MainWindow_NoApplicationsFound" xml:space="preserve">
+  <data name="MainWindow_NoApplicationsFound" xml:space="preserve">
     <value>Приложения не найдены</value>
   </data>
-	<data name="MainWindow_NoApplicationsHint" xml:space="preserve">
+  <data name="MainWindow_NoApplicationsHint" xml:space="preserve">
     <value>Попробуйте изменить поиск или фильтр категории</value>
   </data>
-	<data name="MainWindow_ApplicationsCount" xml:space="preserve">
+  <data name="MainWindow_ApplicationsCount" xml:space="preserve">
     <value> приложений</value>
   </data>
-
-	<!-- ========== ОКНО ПЕРВОНАЧАЛЬНОЙ НАСТРОЙКИ ========== -->
-	<data name="SetupWindow_Title" xml:space="preserve">
+  <data name="SetupWindow_Title" xml:space="preserve">
     <value>Первоначальная настройка - KDV Launcher</value>
   </data>
-	<data name="SetupWindow_Welcome" xml:space="preserve">
+  <data name="SetupWindow_Welcome" xml:space="preserve">
     <value>Добро пожаловать в KDV Launcher</value>
   </data>
-	<data name="SetupWindow_Subtitle" xml:space="preserve">
+  <data name="SetupWindow_Subtitle" xml:space="preserve">
     <value>Первоначальная настройка системы</value>
   </data>
-	<data name="SetupWindow_Step1Title" xml:space="preserve">
+  <data name="SetupWindow_Step1Title" xml:space="preserve">
     <value>1. Настройка подключения к домену</value>
   </data>
-	<data name="SetupWindow_Step1Description" xml:space="preserve">
+  <data name="SetupWindow_Step1Description" xml:space="preserve">
     <value>Укажите параметры подключения к Active Directory для аутентификации пользователей.</value>
   </data>
-	<data name="SetupWindow_Domain" xml:space="preserve">
+  <data name="SetupWindow_Domain" xml:space="preserve">
     <value>Домен:</value>
   </data>
-	<data name="SetupWindow_DomainDefault" xml:space="preserve">
+  <data name="SetupWindow_DomainDefault" xml:space="preserve">
     <value>company.local</value>
   </data>
-	<data name="SetupWindow_LdapServer" xml:space="preserve">
+  <data name="SetupWindow_LdapServer" xml:space="preserve">
     <value>LDAP Сервер:</value>
   </data>
-	<data name="SetupWindow_LdapServerDefault" xml:space="preserve">
+  <data name="SetupWindow_LdapServerDefault" xml:space="preserve">
     <value>dc.company.local</value>
   </data>
-	<data name="SetupWindow_Port" xml:space="preserve">
+  <data name="SetupWindow_Port" xml:space="preserve">
     <value>Порт:</value>
   </data>
-	<data name="SetupWindow_PortDefault" xml:space="preserve">
+  <data name="SetupWindow_PortDefault" xml:space="preserve">
     <value>389</value>
   </data>
-	<data name="SetupWindow_UseTLS" xml:space="preserve">
+  <data name="SetupWindow_UseTLS" xml:space="preserve">
     <value>Использовать TLS</value>
   </data>
-	<data name="SetupWindow_TestConnection" xml:space="preserve">
+  <data name="SetupWindow_TestConnection" xml:space="preserve">
     <value>Проверить подключение</value>
   </data>
-	<data name="SetupWindow_Step2Title" xml:space="preserve">
+  <data name="SetupWindow_Step2Title" xml:space="preserve">
     <value>2. Настройка сервисного администратора</value>
   </data>
-	<data name="SetupWindow_Step2Description" xml:space="preserve">
+  <data name="SetupWindow_Step2Description" xml:space="preserve">
     <value>Создайте локальную учетную запись администратора для управления системой в случае недоступности домена.</value>
   </data>
-	<data name="SetupWindow_Username" xml:space="preserve">
+  <data name="SetupWindow_Username" xml:space="preserve">
     <value>Имя пользователя:</value>
   </data>
-	<data name="SetupWindow_UsernameDefault" xml:space="preserve">
+  <data name="SetupWindow_UsernameDefault" xml:space="preserve">
     <value>serviceadmin</value>
   </data>
-	<data name="SetupWindow_SessionTime" xml:space="preserve">
+  <data name="SetupWindow_SessionTime" xml:space="preserve">
     <value>Время сессии (мин):</value>
   </data>
-	<data name="SetupWindow_SessionTimeDefault" xml:space="preserve">
+  <data name="SetupWindow_SessionTimeDefault" xml:space="preserve">
     <value>60</value>
   </data>
-	<data name="SetupWindow_Password" xml:space="preserve">
+  <data name="SetupWindow_Password" xml:space="preserve">
     <value>Пароль:</value>
   </data>
-	<data name="SetupWindow_PasswordConfirm" xml:space="preserve">
+  <data name="SetupWindow_PasswordConfirm" xml:space="preserve">
     <value>Подтверждение:</value>
   </data>
-	<data name="SetupWindow_PasswordRequirements" xml:space="preserve">
+  <data name="SetupWindow_PasswordRequirements" xml:space="preserve">
     <value>Требования к паролю:</value>
   </data>
-	<data name="SetupWindow_PasswordLength" xml:space="preserve">
+  <data name="SetupWindow_PasswordLength" xml:space="preserve">
     <value>• Минимум 8 символов</value>
   </data>
-	<data name="SetupWindow_PasswordUpper" xml:space="preserve">
+  <data name="SetupWindow_PasswordUpper" xml:space="preserve">
     <value>• Заглавные буквы (A-Z)</value>
   </data>
-	<data name="SetupWindow_PasswordLower" xml:space="preserve">
+  <data name="SetupWindow_PasswordLower" xml:space="preserve">
     <value>• Строчные буквы (a-z)</value>
   </data>
-	<data name="SetupWindow_PasswordNumbers" xml:space="preserve">
+  <data name="SetupWindow_PasswordNumbers" xml:space="preserve">
     <value>• Цифры (0-9)</value>
   </data>
-	<data name="SetupWindow_PasswordSpecial" xml:space="preserve">
+  <data name="SetupWindow_PasswordSpecial" xml:space="preserve">
     <value>• Специальные символы (!@#$%^*)</value>
   </data>
-	<data name="SetupWindow_PasswordMatch" xml:space="preserve">
+  <data name="SetupWindow_PasswordMatch" xml:space="preserve">
     <value>• Пароли должны совпадать</value>
   </data>
-	<data name="SetupWindow_Step3Title" xml:space="preserve">
+  <data name="SetupWindow_Step3Title" xml:space="preserve">
     <value>3. Дополнительные настройки</value>
   </data>
-	<data name="SetupWindow_Step3Description" xml:space="preserve">
+  <data name="SetupWindow_Step3Description" xml:space="preserve">
     <value>Настройте дополнительные параметры системы.</value>
   </data>
-	<data name="SetupWindow_EnableAudit" xml:space="preserve">
+  <data name="SetupWindow_EnableAudit" xml:space="preserve">
     <value>Включить аудит действий пользователей</value>
   </data>
-	<data name="SetupWindow_StartWithWindows" xml:space="preserve">
+  <data name="SetupWindow_StartWithWindows" xml:space="preserve">
     <value>Запускать с Windows</value>
   </data>
-	<data name="SetupWindow_CheckUpdates" xml:space="preserve">
+  <data name="SetupWindow_CheckUpdates" xml:space="preserve">
     <value>Проверять обновления автоматически</value>
   </data>
-	<data name="SetupWindow_InterfaceLanguage" xml:space="preserve">
+  <data name="SetupWindow_InterfaceLanguage" xml:space="preserve">
     <value>Язык интерфейса:</value>
   </data>
-	<data name="SetupWindow_Russian" xml:space="preserve">
+  <data name="SetupWindow_Russian" xml:space="preserve">
     <value>Русский</value>
   </data>
-	<data name="SetupWindow_English" xml:space="preserve">
+  <data name="SetupWindow_English" xml:space="preserve">
     <value>English</value>
   </data>
-	<data name="SetupWindow_Progress" xml:space="preserve">
+  <data name="SetupWindow_Progress" xml:space="preserve">
     <value>Настройка: 0/3 шагов завершено</value>
   </data>
-	<data name="SetupWindow_Skip" xml:space="preserve">
+  <data name="SetupWindow_Skip" xml:space="preserve">
     <value>Пропустить</value>
   </data>
-	<data name="SetupWindow_Complete" xml:space="preserve">
+  <data name="SetupWindow_Complete" xml:space="preserve">
     <value>Завершить настройку</value>
   </data>
-	<data name="SetupWindow_SavingSettings" xml:space="preserve">
+  <data name="SetupWindow_SavingSettings" xml:space="preserve">
     <value>Сохранение настроек...</value>
   </data>
-
-	<!-- ========== КОРПОРАТИВНЫЕ СТИЛИ ========== -->
-	<data name="CorporateStyles_SearchPlaceholder" xml:space="preserve">
+  <data name="CorporateStyles_SearchPlaceholder" xml:space="preserve">
     <value>Поиск приложений...</value>
   </data>
-
 </root>

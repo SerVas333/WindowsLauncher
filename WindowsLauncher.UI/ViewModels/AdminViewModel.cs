@@ -886,20 +886,40 @@ namespace WindowsLauncher.UI.ViewModels
                         return;
                     }
 
-                    var result = DialogService.ShowConfirmation(
-                        $"Импорт данных лаунчера:\n" +
-                        $"• Приложений: {importData.Applications.Count}\n" +
-                        $"• Локальных пользователей: {importData.LocalUsers.Count}\n" +
-                        $"• Версия: {importData.Version}\n" +
-                        $"• Экспортировано: {importData.ExportedAt:dd.MM.yyyy HH:mm}\n\n" +
-                        $"ВНИМАНИЕ: Это действие заменит существующие данные!\n" +
-                        $"Продолжить импорт?",
-                        "Подтверждение импорта");
+                    // Показываем диалог с опциями импорта
+                    var importOptionsResult = ShowImportOptionsDialog(importData);
+                    if (importOptionsResult == null) return;
 
-                    if (result != true) return;
+                    var clearDatabase = importOptionsResult.Value;
 
                     var currentUser = await GetCurrentUserAsync();
-                    int importedApps = 0, importedUsers = 0;
+                    int importedApps = 0, importedUsers = 0, deletedApps = 0, deletedUsers = 0;
+
+                    // Очистка базы если выбрана опция
+                    if (clearDatabase)
+                    {
+                        StatusMessage = "Очистка существующих данных...";
+                        
+                        // Удаляем все существующие приложения
+                        var existingApps = await _applicationService.GetAllApplicationsAsync();
+                        foreach (var app in existingApps)
+                        {
+                            await _applicationService.DeleteApplicationAsync(app.Id, currentUser);
+                            deletedApps++;
+                        }
+
+                        // Удаляем всех локальных пользователей
+                        var existingUsers = await _localUserService.GetLocalUsersAsync();
+                        foreach (var user in existingUsers)
+                        {
+                            await _localUserService.DeleteLocalUserAsync(user.Id);
+                            deletedUsers++;
+                        }
+                        
+                        Logger.LogInformation("Database cleared: {DeletedApps} applications, {DeletedUsers} users", deletedApps, deletedUsers);
+                    }
+
+                    StatusMessage = "Импорт приложений...";
 
                     // Импорт приложений
                     foreach (var appData in importData.Applications)
@@ -925,13 +945,18 @@ namespace WindowsLauncher.UI.ViewModels
                         importedApps++;
                     }
 
+                    StatusMessage = "Импорт пользователей...";
+
                     // Импорт локальных пользователей
                     foreach (var userData in importData.LocalUsers)
                     {
+                        // Генерируем безопасный временный пароль
+                        var tempPassword = GenerateSecurePassword();
+                        
                         // Используем CreateLocalUserAsync с паролем и затем обновляем хеш
                         var user = await _localUserService.CreateLocalUserAsync(
                             userData.Username, 
-                            "TempPassword123!", // Временный пароль
+                            tempPassword, // Безопасный временный пароль
                             userData.DisplayName,
                             userData.Email,
                             userData.Role);
@@ -951,13 +976,22 @@ namespace WindowsLauncher.UI.ViewModels
                     await LoadApplicationsAsync();
                     await LoadLocalUsersAsync();
 
-                    DialogService.ShowInfo(
-                        $"Импорт завершен успешно!\n" +
-                        $"• Импортировано приложений: {importedApps}\n" +
-                        $"• Импортировано пользователей: {importedUsers}",
-                        "Импорт завершен");
+                    var resultMessage = clearDatabase 
+                        ? $"Импорт завершен успешно!\n\n" +
+                          $"Очистка базы:\n" +
+                          $"• Удалено приложений: {deletedApps}\n" +
+                          $"• Удалено пользователей: {deletedUsers}\n\n" +
+                          $"Импорт данных:\n" +
+                          $"• Импортировано приложений: {importedApps}\n" +
+                          $"• Импортировано пользователей: {importedUsers}"
+                        : $"Импорт завершен успешно!\n" +
+                          $"• Импортировано приложений: {importedApps}\n" +
+                          $"• Импортировано пользователей: {importedUsers}";
 
-                    Logger.LogInformation("Import completed: {Apps} applications, {Users} users", importedApps, importedUsers);
+                    DialogService.ShowInfo(resultMessage, "Импорт завершен");
+
+                    Logger.LogInformation("Import completed: {Apps} applications, {Users} users. Cleared: {DeletedApps} applications, {DeletedUsers} users", 
+                        importedApps, importedUsers, deletedApps, deletedUsers);
                 }
                 catch (Exception ex)
                 {
@@ -1059,6 +1093,107 @@ namespace WindowsLauncher.UI.ViewModels
                     StatusMessage = string.Empty;
                 }
             }, "export applications");
+        }
+
+        /// <summary>
+        /// Показать диалог опций импорта
+        /// </summary>
+        private bool? ShowImportOptionsDialog(LauncherExportData importData)
+        {
+            var message = $"Импорт данных лаунчера:\n" +
+                         $"• Приложений: {importData.Applications.Count}\n" +
+                         $"• Локальных пользователей: {importData.LocalUsers.Count}\n" +
+                         $"• Версия: {importData.Version}\n" +
+                         $"• Экспортировано: {importData.ExportedAt:dd.MM.yyyy HH:mm}\n\n" +
+                         $"Выберите режим импорта:\n\n" +
+                         $"Да - Полная замена (удалить все существующие данные и импортировать новые)\n" +
+                         $"Нет - Добавление (импортировать данные к существующим)\n" +
+                         $"Отмена - Отменить импорт";
+
+            var result = System.Windows.MessageBox.Show(
+                message,
+                "Настройки импорта",
+                System.Windows.MessageBoxButton.YesNoCancel,
+                System.Windows.MessageBoxImage.Question,
+                System.Windows.MessageBoxResult.Cancel);
+
+            return result switch
+            {
+                System.Windows.MessageBoxResult.Yes => true,  // Очистить базу перед импортом
+                System.Windows.MessageBoxResult.No => false, // Добавить к существующим данным
+                _ => null // Отмена
+            };
+        }
+
+        /// <summary>
+        /// Генерировать безопасный пароль для импорта
+        /// </summary>
+        private string GenerateSecurePassword()
+        {
+            const string upperCase = "ABCDEFGHJKLMNPQRSTUVWXYZ"; // Исключаем I, O для избежания путаницы
+            const string lowerCase = "abcdefghjkmnpqrstuvwxyz"; // Исключаем i, l, o для избежания путаницы
+            const string digits = "23456789"; // Исключаем 0, 1 для избежания путаницы и последовательностей
+            const string specialChars = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+
+            var random = new Random();
+            var password = new char[16]; // Длина 16 символов
+
+            // Обеспечиваем наличие всех типов символов
+            password[0] = upperCase[random.Next(upperCase.Length)];
+            password[1] = lowerCase[random.Next(lowerCase.Length)];
+            password[2] = digits[random.Next(digits.Length)];
+            password[3] = specialChars[random.Next(specialChars.Length)];
+
+            // Заполняем остальные позиции случайными символами
+            var allChars = upperCase + lowerCase + digits + specialChars;
+            for (int i = 4; i < password.Length; i++)
+            {
+                char nextChar;
+                do
+                {
+                    nextChar = allChars[random.Next(allChars.Length)];
+                    
+                    // Избегаем повторяющихся символов подряд
+                } while (i > 0 && nextChar == password[i - 1]);
+                
+                password[i] = nextChar;
+            }
+
+            // Перемешиваем массив для случайного порядка
+            for (int i = password.Length - 1; i > 0; i--)
+            {
+                int j = random.Next(i + 1);
+                (password[i], password[j]) = (password[j], password[i]);
+            }
+
+            var result = new string(password);
+            
+            // Проверяем, что пароль не содержит запрещенных последовательностей
+            if (ContainsProhibitedSequences(result))
+            {
+                // Если содержит, генерируем новый (рекурсивно, но с низкой вероятностью)
+                return GenerateSecurePassword();
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Проверить пароль на запрещенные последовательности
+        /// </summary>
+        private bool ContainsProhibitedSequences(string password)
+        {
+            var lower = password.ToLowerInvariant();
+            
+            // Проверяем на простые последовательности
+            var prohibitedSequences = new[]
+            {
+                "123", "234", "345", "456", "567", "678", "789",
+                "abc", "bcd", "cde", "def", "efg", "fgh", "ghi", "hij", "ijk", "jkl", "klm", "lmn", "mno", "nop", "opq", "pqr", "qrs", "rst", "stu", "tuv", "uvw", "vwx", "wxy", "xyz",
+                "qwerty", "qwert", "werty", "asdf", "sdfg", "zxcv", "xcvb"
+            };
+
+            return prohibitedSequences.Any(seq => lower.Contains(seq));
         }
 
         #endregion
