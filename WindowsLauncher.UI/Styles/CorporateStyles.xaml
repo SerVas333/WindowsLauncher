@@ -8,6 +8,7 @@
     <SolidColorBrush x:Key="CorporateRedLight" Color="#E8324F"/>
     <SolidColorBrush x:Key="CorporateGray" Color="#F5F5F5"/>
     <SolidColorBrush x:Key="CorporateGrayDark" Color="#EEEEEE"/>
+    <SolidColorBrush x:Key="CorporateGrayLight" Color="#FAFAFA"/>
     <SolidColorBrush x:Key="CorporateText" Color="#333333"/>
     <SolidColorBrush x:Key="CorporateTextLight" Color="#666666"/>
     <SolidColorBrush x:Key="CorporateTextMuted" Color="#999999"/>
@@ -103,6 +104,20 @@
                 </ControlTemplate>
             </Setter.Value>
         </Setter>
+    </Style>
+
+    <!-- Опасные кнопки (удаление, очистка данных) в корпоративном стиле -->
+    <Style x:Key="CorporateButtonDanger" TargetType="Button" BasedOn="{StaticResource CorporateButton}">
+        <Setter Property="Background" Value="{StaticResource CorporateRed}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource CorporateRedLight}"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource CorporateRedDark}"/>
+            </Trigger>
+        </Style.Triggers>
     </Style>
 
     <!-- Поле поиска в корпоративном стиле -->

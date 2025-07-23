@@ -242,14 +242,31 @@ namespace WindowsLauncher.UI.ViewModels
         public bool IsUserManagementMode
         {
             get => _isUserManagementMode;
-            set => SetProperty(ref _isUserManagementMode, value);
+            set 
+            { 
+                if (SetProperty(ref _isUserManagementMode, value))
+                {
+                    OnPropertyChanged(nameof(IsApplicationManagementMode));
+                }
+            }
         }
 
         public bool IsSystemManagementMode
         {
             get => _isSystemManagementMode;
-            set => SetProperty(ref _isSystemManagementMode, value);
+            set 
+            { 
+                if (SetProperty(ref _isSystemManagementMode, value))
+                {
+                    OnPropertyChanged(nameof(IsApplicationManagementMode));
+                }
+            }
         }
+
+        /// <summary>
+        /// Показать панель управления приложениями (когда не выбраны другие панели)
+        /// </summary>
+        public bool IsApplicationManagementMode => !IsUserManagementMode && !IsSystemManagementMode;
 
         // Свойства для системной панели
         public ApplicationDataInfo? DatabaseInfo
@@ -441,8 +458,11 @@ namespace WindowsLauncher.UI.ViewModels
             });
             SwitchToSystemCommand = new RelayCommand(() => 
             {
+                Logger.LogInformation("Switching to System panel");
                 IsUserManagementMode = false;
                 IsSystemManagementMode = true;
+                Logger.LogInformation("System panel state: IsSystemManagementMode={IsSystemManagementMode}, IsUserManagementMode={IsUserManagementMode}, IsApplicationManagementMode={IsApplicationManagementMode}", 
+                    IsSystemManagementMode, IsUserManagementMode, IsApplicationManagementMode);
                 _ = LoadSystemInfoAsync(); // Загружаем системную информацию при переключении
             });
             
@@ -1631,6 +1651,8 @@ namespace WindowsLauncher.UI.ViewModels
                 // Загружаем информацию о данных приложения
                 DatabaseInfo = await _applicationDataManager.GetDataInfoAsync();
                 TotalDataSize = DatabaseInfo.FormattedDataSize;
+                Logger.LogInformation("DatabaseInfo loaded: AppDataPath={AppDataPath}, FormattedDataSize={FormattedDataSize}, ConfigurationExists={ConfigurationExists}", 
+                    DatabaseInfo.AppDataPath, DatabaseInfo.FormattedDataSize, DatabaseInfo.ConfigurationExists);
                 
                 // Загружаем версионную информацию
                 using var scope = _serviceProvider.CreateScope();
@@ -1641,6 +1663,9 @@ namespace WindowsLauncher.UI.ViewModels
                 ApplicationVersion = versionService.GetVersionString();
                 BuildDate = versionInfo.BuildDate.ToString("yyyy-MM-dd HH:mm");
                 DatabaseVersion = await dbVersionService.GetCurrentDatabaseVersionAsync() ?? "Неизвестно";
+                
+                Logger.LogInformation("Version info loaded: ApplicationVersion={ApplicationVersion}, BuildDate={BuildDate}, DatabaseVersion={DatabaseVersion}, TotalDataSize={TotalDataSize}", 
+                    ApplicationVersion, BuildDate, DatabaseVersion, TotalDataSize);
                 
                 StatusMessage = "Системная информация загружена";
                 Logger.LogInformation("System information loaded successfully");

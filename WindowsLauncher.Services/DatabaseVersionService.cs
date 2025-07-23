@@ -35,9 +35,18 @@ namespace WindowsLauncher.Services
                     return "0.0.0.0";
                 }
                 
-                // Получаем последнюю версию
-                var sql = "SELECT Version FROM __DatabaseVersion ORDER BY AppliedAt DESC LIMIT 1";
-                var version = await _context.Database.SqlQueryRaw<string>(sql).FirstOrDefaultAsync();
+                // Получаем последнюю версию через ExecuteScalar
+                using var connection = _context.Database.GetDbConnection();
+                if (connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+                
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT Version FROM __DatabaseVersion ORDER BY AppliedAt DESC LIMIT 1";
+                
+                var result = await command.ExecuteScalarAsync();
+                var version = result?.ToString();
                 
                 return version ?? "0.0.0.0";
             }
@@ -92,8 +101,23 @@ namespace WindowsLauncher.Services
         {
             try
             {
-                var sql = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = @p0";
-                var count = await _context.Database.SqlQueryRaw<int>(sql, tableName).FirstAsync();
+                // Используем ExecuteSqlRaw для создания соединения и команды вручную
+                using var connection = _context.Database.GetDbConnection();
+                if (connection.State != System.Data.ConnectionState.Open)
+                {
+                    await connection.OpenAsync();
+                }
+                
+                using var command = connection.CreateCommand();
+                command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name = @tableName";
+                
+                var parameter = command.CreateParameter();
+                parameter.ParameterName = "@tableName";
+                parameter.Value = tableName;
+                command.Parameters.Add(parameter);
+                
+                var result = await command.ExecuteScalarAsync();
+                var count = Convert.ToInt32(result);
                 return count > 0;
             }
             catch

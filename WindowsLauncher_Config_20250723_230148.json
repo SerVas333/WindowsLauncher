@@ -1,0 +1,16 @@
+{
+  "ExportDate": "2025-07-23T23:01:57.8906831+07:00",
+  "ApplicationVersion": "1.0.0.0",
+  "DatabaseVersion": "1.0.0.0",
+  "DatabaseInfo": {
+    "AppDataPath": "C:\\Users\\YasAdmin\\AppData\\Roaming\\WindowsLauncher",
+    "ConfigurationExists": true,
+    "ConfigurationPath": "C:\\Users\\YasAdmin\\AppData\\Roaming\\WindowsLauncher\\database-config.json",
+    "DatabaseFiles": [
+      "C:\\Users\\YasAdmin\\AppData\\Roaming\\WindowsLauncher\\launcher.db"
+    ],
+    "TotalDataSize": 215205,
+    "FormattedDataSize": "210,16 KB"
+  },
+  "ConfigurationPath": "C:\\Users\\YasAdmin\\AppData\\Roaming\\WindowsLauncher\\database-config.json"
+}

@@ -42,18 +42,9 @@ WindowsLauncher.sln (Visual Studio 2022)
 .\clean-build.ps1
 ```
 
-### Работа с базой данных
+### База данных
 
-#### Entity Framework команды (Package Manager Console)
-```powershell
-# Установить как Default Project: WindowsLauncher.Data
-Add-Migration MigrationName -Context LauncherDbContext
-Update-Database -Context LauncherDbContext
-
-# Или через .NET CLI из WindowsLauncher.UI
-dotnet ef migrations add MigrationName --project ..\WindowsLauncher.Data
-dotnet ef database update --project ..\WindowsLauncher.Data
-```
+**📋 Подробная документация по архитектуре БД:** См. [DATABASE_ARCHITECTURE.md](DATABASE_ARCHITECTURE.md)
 
 ## Фреймворки и технологии
 
@@ -65,8 +56,8 @@ dotnet ef database update --project ..\WindowsLauncher.Data
 - **Microsoft.Extensions.*** — DI, Logging, Configuration
 
 ### Базы данных
-- **SQLite** (основная) — `%AppData%\WindowsLauncher\launcher.db`
-- **Firebird** (опциональная) — embedded или server режим
+- **Многопоставщическая архитектура:** SQLite (основная) + Firebird (корпоративная)
+- **Подробности:** см. [DATABASE_ARCHITECTURE.md](DATABASE_ARCHITECTURE.md)
 
 ### Интеграции
 - **Active Directory** — корпоративная аутентификация
@@ -227,13 +218,11 @@ BoolToStringConverter           // Bool → локализованный тек�
 
 ### Вспомогательные классы
 - `ADTestService.cs` — тестирование AD подключения
-- `CheckDatabase.cs` — проверка состояния БД
 - `TestPassword.cs` — утилиты для паролей
 
 ### Тестирование в Debug режиме
 - Точки останова в коде
 - **Debug → Windows → Output** для просмотра логов
-- **View → Other Windows → Package Manager Console** для EF команд
 
 ## Конфигурационные файлы
 
@@ -257,9 +246,6 @@ BoolToStringConverter           // Bool → локализованный тек�
 - Пользовательские настройки UI
 - Доступ через **Project Properties → Settings**
 
-### `database-config.json` (runtime)
-- Генерируется автоматически в `%AppData%\WindowsLauncher\`
-- Настройки подключения к БД
 
 ## Соглашения код-стайла
 
@@ -293,9 +279,8 @@ Services/
 ## Переменные окружения и параметры
 
 ### Важные пути
-- **База данных:** `%AppData%\WindowsLauncher\launcher.db`
-- **Конфигурация:** `%AppData%\WindowsLauncher\database-config.json`
 - **Логи:** Console + Debug Output (настраивается в appsettings.json)
+- **База данных:** см. [DATABASE_ARCHITECTURE.md](DATABASE_ARCHITECTURE.md)
 
 ### Режимы запуска
 - **Debug:** Full logging, исключения показываются пользователю
@@ -328,53 +313,27 @@ Services/
 
 ## Типичные ошибки и решения в Visual Studio
 
-### 1. Ошибки сборки Entity Framework
-**Проблема:** `Microsoft.EntityFrameworkCore.Design` missing  
-**Решение:** 
-```powershell
-# В Package Manager Console
-Install-Package Microsoft.EntityFrameworkCore.Design -ProjectName WindowsLauncher.Data
-```
+### 1. Ошибки базы данных
+**Все проблемы с БД:** см. [DATABASE_ARCHITECTURE.md](DATABASE_ARCHITECTURE.md) → раздел "Устранение неисправностей"
 
-### 2. SQLite файл заблокирован
-**Проблема:** Database is locked during debugging  
-**Решение:**
-- **Debug → Stop Debugging** (`Shift+F5`)
-- Удалить `%AppData%\WindowsLauncher\launcher.db`
-- **Build → Rebuild Solution**
-
-### 3. MaterialDesign Theme не загружается
+### 2. MaterialDesign Theme не загружается
 **Проблема:** UI выглядит как стандартный WPF  
 **Решение:** Проверить `App.xaml` → MaterialDesign ResourceDictionary
 
-### 4. Active Directory недоступен
+### 3. Active Directory недоступен
 **Проблема:** AD authentication fails in development  
 **Решение:** 
 - Настроить `"ActiveDirectory": { "Enabled": false }` в appsettings.json
 - Использовать fallback на локальных пользователей
 
-### 5. Firebird провайдер не найден
-**Проблема:** `FirebirdSql.EntityFrameworkCore.Firebird` loading error  
-**Решение:**
-```xml
-<!-- Добавить в WindowsLauncher.Data.csproj -->
-<PackageReference Include="FirebirdSql.EntityFrameworkCore.Firebird" Version="12.0.0" />
-```
-
-### 6. Настройки пользователя сбрасываются
+### 4. Настройки пользователя сбрасываются
 **Проблема:** Settings.settings не сохраняются  
 **Решение:** **Project Properties → Settings** → проверить Scope = User
 
-### 7. DPI Scaling проблемы
+### 5. DPI Scaling проблемы
 **Проблема:** UI размытый на high-DPI мониторах  
 **Решение:** Проверить `app.manifest` → DPI Awareness = PerMonitorV2
 
-### 8. Ошибки миграций БД при первом запуске
-**Проблема:** `no such column: s.Value` или подобные ошибки SQLite  
-**Решение:**
-- Удалить существующую базу: `%AppData%\WindowsLauncher\launcher.db`
-- Удалить конфигурацию: `%AppData%\WindowsLauncher\database-config.json`
-- **Build → Rebuild Solution** и запустить заново
 
 ## Быстрая диагностика
 
@@ -407,13 +366,8 @@ dotnet restore
 dotnet build --configuration Debug
 ```
 
-### Работа с Entity Framework
-```powershell
-# В Package Manager Console (Default project: WindowsLauncher.Data)
-Add-Migration InitialCreate
-Update-Database
-Drop-Database  # Осторожно! Удаляет все данные
-```
+### Работа с базой данных
+**📋 Команды и миграции:** см. [DATABASE_ARCHITECTURE.md](DATABASE_ARCHITECTURE.md)
 
 ### Генерация хэшей паролей
 ```powershell
