@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Globalization;
+using System.IO;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Windows;
@@ -25,11 +26,13 @@ namespace WindowsLauncher.UI.Views
         private readonly IAuthenticationConfigurationService _configService;
         private readonly IAuthenticationService _authService;
         private readonly IActiveDirectoryService _adService;
+        private readonly IDatabaseConfigurationService _dbConfigService;
         private readonly ILogger<SetupWindow> _logger;
         private readonly IServiceProvider _serviceProvider;
 
         private bool _isDomainValid = false;
         private bool _isServiceAdminValid = false;
+        private bool _isDatabaseValid = true; // По умолчанию SQLite валидна
         private bool _isProcessing = false;
 
         // Валидация пароля
@@ -50,6 +53,7 @@ namespace WindowsLauncher.UI.Views
             _configService = configService ?? throw new ArgumentNullException(nameof(configService));
             _authService = authService ?? throw new ArgumentNullException(nameof(authService));
             _adService = adService ?? throw new ArgumentNullException(nameof(adService));
+            _dbConfigService = serviceProvider.GetRequiredService<IDatabaseConfigurationService>();
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
 
@@ -163,6 +167,120 @@ namespace WindowsLauncher.UI.Views
                 _logger.LogError(ex, "Error toggling virtual keyboard");
                 ShowError($"Ошибка при переключении виртуальной клавиатуры: {ex.Message}");
             }
+        }
+
+        /// <summary>
+        /// Обработчик изменения типа базы данных
+        /// </summary>
+        private void DatabaseTypeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (FirebirdSettingsPanel == null) return;
+
+            var selectedItem = DatabaseTypeComboBox.SelectedItem as ComboBoxItem;
+            var databaseType = selectedItem?.Tag?.ToString();
+
+            if (databaseType == "Firebird")
+            {
+                FirebirdSettingsPanel.Visibility = Visibility.Visible;
+                InitializeFirebirdSettings();
+            }
+            else
+            {
+                FirebirdSettingsPanel.Visibility = Visibility.Collapsed;
+            }
+
+            ValidateDatabaseSettings();
+            UpdateSetupProgress();
+        }
+
+        /// <summary>
+        /// Обработчик изменения режима Firebird
+        /// </summary>
+        private void FirebirdModeComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
+        {
+            if (FirebirdServerPanel == null || DatabasePathLabel == null) return;
+
+            var selectedItem = FirebirdModeComboBox.SelectedItem as ComboBoxItem;
+            var mode = selectedItem?.Tag?.ToString();
+
+            if (mode == "ClientServer")
+            {
+                FirebirdServerPanel.Visibility = Visibility.Visible;
+                DatabasePathLabel.Text = "Имя базы данных:";
+                if (string.IsNullOrEmpty(DatabasePathTextBox.Text) || DatabasePathTextBox.Text == "launcher.fdb")
+                {
+                    DatabasePathTextBox.Text = "launcher.fdb";
+                }
+            }
+            else
+            {
+                FirebirdServerPanel.Visibility = Visibility.Collapsed;
+                DatabasePathLabel.Text = "Путь к базе данных:";
+                if (string.IsNullOrEmpty(DatabasePathTextBox.Text) || !DatabasePathTextBox.Text.Contains("\\"))
+                {
+                    var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    DatabasePathTextBox.Text = Path.Combine(appDataPath, "WindowsLauncher", "launcher.fdb");
+                }
+            }
+
+            ValidateDatabaseSettings();
+            UpdateSetupProgress();
+        }
+
+        /// <summary>
+        /// Обработчик изменения настроек базы данных
+        /// </summary>
+        private void DatabaseSettings_Changed(object sender, EventArgs e)
+        {
+            ValidateDatabaseSettings();
+            UpdateSetupProgress();
+        }
+
+        /// <summary>
+        /// Обработчик кнопки обзора пути к БД
+        /// </summary>
+        private void BrowseDatabasePathButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var selectedItem = FirebirdModeComboBox?.SelectedItem as ComboBoxItem;
+                var mode = selectedItem?.Tag?.ToString();
+
+                if (mode == "ClientServer")
+                {
+                    // Для клиент-сервер режима просто даем возможность ввести имя БД
+                    return;
+                }
+
+                // Для Embedded режима выбираем файл
+                var dialog = new Microsoft.Win32.SaveFileDialog
+                {
+                    Title = "Выберите расположение базы данных Firebird",
+                    Filter = "Firebird Database|*.fdb|All files|*.*",
+                    DefaultExt = "fdb",
+                    FileName = "launcher.fdb"
+                };
+
+                if (dialog.ShowDialog() == true)
+                {
+                    DatabasePathTextBox.Text = dialog.FileName;
+                    ValidateDatabaseSettings();
+                    UpdateSetupProgress();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error browsing database path");
+                ShowError($"Ошибка при выборе пути к базе данных: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Обработчик проверки подключения к БД
+        /// </summary>
+        private async void TestDatabaseButton_Click(object sender, RoutedEventArgs e)
+        {
+            await TestDatabaseConnectionAsync();
         }
 
         #endregion
@@ -335,6 +453,202 @@ namespace WindowsLauncher.UI.Views
         {
             ValidateDomainSettings();
             ValidateServiceAdminSettings();
+            ValidateDatabaseSettings();
+        }
+
+        /// <summary>
+        /// Инициализация настроек Firebird
+        /// </summary>
+        private void InitializeFirebirdSettings()
+        {
+            try
+            {
+                if (DatabasePathTextBox != null)
+                {
+                    var appDataPath = Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData);
+                    DatabasePathTextBox.Text = Path.Combine(appDataPath, "WindowsLauncher", "launcher.fdb");
+                }
+
+                if (FirebirdPasswordBox != null && string.IsNullOrEmpty(FirebirdPasswordBox.Password))
+                {
+                    FirebirdPasswordBox.Password = "masterkey";
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error initializing Firebird settings");
+            }
+        }
+
+        /// <summary>
+        /// Валидация настроек базы данных
+        /// </summary>
+        private void ValidateDatabaseSettings()
+        {
+            try
+            {
+                if (DatabaseTypeComboBox == null)
+                {
+                    _isDatabaseValid = true; // По умолчанию SQLite валидна
+                    return;
+                }
+
+                var selectedItem = DatabaseTypeComboBox.SelectedItem as ComboBoxItem;
+                var databaseType = selectedItem?.Tag?.ToString();
+
+                if (databaseType == "SQLite")
+                {
+                    _isDatabaseValid = true;
+                }
+                else if (databaseType == "Firebird")
+                {
+                    _isDatabaseValid = ValidateFirebirdSettings();
+                }
+                else
+                {
+                    _isDatabaseValid = true; // Fallback к SQLite
+                }
+
+                _logger.LogDebug("Database settings validation: {IsValid}", _isDatabaseValid);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Error validating database settings");
+                _isDatabaseValid = false;
+            }
+        }
+
+        /// <summary>
+        /// Валидация настроек Firebird
+        /// </summary>
+        private bool ValidateFirebirdSettings()
+        {
+            try
+            {
+                if (DatabasePathTextBox == null || FirebirdModeComboBox == null)
+                    return false;
+
+                var databasePath = DatabasePathTextBox.Text?.Trim();
+                if (string.IsNullOrEmpty(databasePath))
+                    return false;
+
+                var modeItem = FirebirdModeComboBox.SelectedItem as ComboBoxItem;
+                var mode = modeItem?.Tag?.ToString();
+
+                if (mode == "ClientServer")
+                {
+                    // Для клиент-сервер режима проверяем настройки сервера
+                    if (FirebirdServerTextBox == null || FirebirdPortTextBox == null ||
+                        FirebirdUserTextBox == null || FirebirdPasswordBox == null)
+                        return false;
+
+                    var server = FirebirdServerTextBox.Text?.Trim();
+                    var portText = FirebirdPortTextBox.Text?.Trim();
+                    var user = FirebirdUserTextBox.Text?.Trim();
+                    var password = FirebirdPasswordBox.Password;
+
+                    return !string.IsNullOrEmpty(server) &&
+                           int.TryParse(portText, out var port) && port > 0 && port <= 65535 &&
+                           !string.IsNullOrEmpty(user) &&
+                           !string.IsNullOrEmpty(password);
+                }
+
+                // Для Embedded режима достаточно указать путь
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Error validating Firebird settings");
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Создание конфигурации базы данных из UI
+        /// </summary>
+        private DatabaseConfiguration CreateDatabaseConfigurationFromUI()
+        {
+            var selectedItem = DatabaseTypeComboBox?.SelectedItem as ComboBoxItem;
+            var databaseTypeTag = selectedItem?.Tag?.ToString();
+
+            var config = new DatabaseConfiguration();
+
+            if (databaseTypeTag == "Firebird")
+            {
+                config.DatabaseType = DatabaseType.Firebird;
+                config.DatabasePath = DatabasePathTextBox?.Text?.Trim() ?? "launcher.fdb";
+
+                var modeItem = FirebirdModeComboBox?.SelectedItem as ComboBoxItem;
+                var mode = modeItem?.Tag?.ToString();
+
+                if (mode == "ClientServer")
+                {
+                    config.ConnectionMode = FirebirdConnectionMode.ClientServer;
+                    config.Server = FirebirdServerTextBox?.Text?.Trim() ?? "localhost";
+                    if (int.TryParse(FirebirdPortTextBox?.Text?.Trim(), out var port))
+                        config.Port = port;
+                    config.Username = FirebirdUserTextBox?.Text?.Trim() ?? "SYSDBA";
+                    config.Password = FirebirdPasswordBox?.Password ?? "masterkey";
+                }
+                else
+                {
+                    config.ConnectionMode = FirebirdConnectionMode.Embedded;
+                }
+            }
+            else
+            {
+                config.DatabaseType = DatabaseType.SQLite;
+            }
+
+            return config;
+        }
+
+        /// <summary>
+        /// Тестирование подключения к базе данных
+        /// </summary>
+        private async Task TestDatabaseConnectionAsync()
+        {
+            if (_isProcessing) return;
+
+            try
+            {
+                _isProcessing = true;
+                TestDatabaseButton.IsEnabled = false;
+                DatabaseStatusPanel.Visibility = Visibility.Collapsed;
+
+                var config = CreateDatabaseConfigurationFromUI();
+                var result = await _dbConfigService.TestConnectionAsync(config);
+
+                DatabaseStatusPanel.Visibility = Visibility.Visible;
+                if (result)
+                {
+                    DatabaseStatusIndicator.Fill = TryFindResource("SuccessBrush") as WpfBrush ?? Brushes.Green;
+                    DatabaseStatusText.Text = "Подключение к базе данных успешно";
+                    DatabaseStatusText.Foreground = TryFindResource("SuccessBrush") as WpfBrush ?? Brushes.Green;
+                }
+                else
+                {
+                    DatabaseStatusIndicator.Fill = TryFindResource("ErrorBrush") as WpfBrush ?? Brushes.Red;
+                    DatabaseStatusText.Text = "Ошибка подключения к базе данных";
+                    DatabaseStatusText.Foreground = TryFindResource("ErrorBrush") as WpfBrush ?? Brushes.Red;
+                }
+
+                _logger.LogInformation("Database connection test result: {Result}", result);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error testing database connection");
+                
+                DatabaseStatusPanel.Visibility = Visibility.Visible;
+                DatabaseStatusIndicator.Fill = TryFindResource("ErrorBrush") as WpfBrush ?? Brushes.Red;
+                DatabaseStatusText.Text = $"Ошибка: {ex.Message}";
+                DatabaseStatusText.Foreground = TryFindResource("ErrorBrush") as WpfBrush ?? Brushes.Red;
+            }
+            finally
+            {
+                _isProcessing = false;
+                TestDatabaseButton.IsEnabled = true;
+            }
         }
 
         /// <summary>
@@ -345,11 +659,13 @@ namespace WindowsLauncher.UI.Views
             try
             {
                 var completedSteps = 0;
-                var totalSteps = 3;
+                var totalSteps = 4;
 
                 if (_isDomainValid) completedSteps++;
+                if (_isDatabaseValid) completedSteps++;
                 if (_isServiceAdminValid) completedSteps++;
-                // Третий шаг (дополнительные настройки) всегда считается выполненным
+                // Четвертый шаг (дополнительные настройки) всегда считается выполненным
+                completedSteps++; // Дополнительные настройки
 
                 if (SetupProgressText != null)
                 {
@@ -359,7 +675,7 @@ namespace WindowsLauncher.UI.Views
                 // Кнопка "Завершить настройку" доступна только если выполнены критически важные шаги
                 if (CompleteSetupButton != null)
                 {
-                    CompleteSetupButton.IsEnabled = _isDomainValid && _isServiceAdminValid && !_isProcessing;
+                    CompleteSetupButton.IsEnabled = _isDomainValid && _isDatabaseValid && _isServiceAdminValid && !_isProcessing;
                 }
             }
             catch (Exception ex)
@@ -441,11 +757,16 @@ namespace WindowsLauncher.UI.Views
             {
                 SetLoadingState(true, "Сохранение настроек...");
 
-                // Создаем конфигурацию
-                var config = CreateConfigurationFromForm();
+                // Создаем конфигурацию аутентификации
+                var authConfig = CreateConfigurationFromForm();
+                await _configService.SaveConfigurationAsync(authConfig);
 
-                // Сохраняем конфигурацию
-                await _configService.SaveConfigurationAsync(config);
+                // Создаем конфигурацию базы данных
+                var dbConfig = CreateDatabaseConfigurationFromUI();
+                await _dbConfigService.SaveConfigurationAsync(dbConfig);
+
+                // Убеждаемся что база данных существует
+                await _dbConfigService.EnsureDatabaseExistsAsync(dbConfig);
 
                 // Создаем сервисного администратора
                 await CreateServiceAdminAsync();

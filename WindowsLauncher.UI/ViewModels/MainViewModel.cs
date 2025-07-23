@@ -248,13 +248,17 @@ namespace WindowsLauncher.UI.ViewModels
                 using var scope = _serviceProvider.CreateScope();
                 Logger.LogInformation("Created DI scope successfully");
 
-                // STEP 1: Database initialization
-                Logger.LogInformation("Step 1: Initializing database...");
+                // БД уже должна быть инициализирована на этапе запуска приложения
+                Logger.LogInformation("Step 1: Verifying database readiness...");
                 StatusMessage = LocalizationHelper.Instance.GetString("DatabaseInitializing");
 
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
-                await dbInitializer.InitializeAsync();
-                Logger.LogInformation("Database initialization completed");
+                var isReady = await dbInitializer.IsDatabaseReadyAsync();
+                if (!isReady)
+                {
+                    throw new InvalidOperationException("Database is not ready. This should have been resolved during application startup.");
+                }
+                Logger.LogInformation("Database verification completed");
 
                 // STEP 2: Authentication
                 if (CurrentUser == null)

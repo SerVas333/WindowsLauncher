@@ -7,6 +7,13 @@ namespace WindowsLauncher.Data.Configurations
 {
     public class AuditLogConfiguration : IEntityTypeConfiguration<AuditLog>
     {
+        private readonly DatabaseType _databaseType;
+
+        public AuditLogConfiguration(DatabaseType databaseType = DatabaseType.SQLite)
+        {
+            _databaseType = databaseType;
+        }
+
         public void Configure(EntityTypeBuilder<AuditLog> builder)
         {
             builder.HasKey(l => l.Id);

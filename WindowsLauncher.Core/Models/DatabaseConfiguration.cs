@@ -1,0 +1,174 @@
+using System.ComponentModel.DataAnnotations;
+using WindowsLauncher.Core.Interfaces;
+using ValidationResult = WindowsLauncher.Core.Interfaces.ValidationResult;
+
+namespace WindowsLauncher.Core.Models
+{
+    /// <summary>
+    /// Конфигурация подключения к базе данных
+    /// </summary>
+    public class DatabaseConfiguration
+    {
+        /// <summary>
+        /// Тип базы данных (SQLite, Firebird)
+        /// </summary>
+        public DatabaseType DatabaseType { get; set; } = DatabaseType.SQLite;
+
+        /// <summary>
+        /// Режим подключения для Firebird (Embedded, ClientServer)
+        /// </summary>
+        public FirebirdConnectionMode ConnectionMode { get; set; } = FirebirdConnectionMode.Embedded;
+
+        /// <summary>
+        /// Путь к файлу базы данных (для SQLite и Firebird Embedded)
+        /// </summary>
+        public string DatabasePath { get; set; } = "launcher.db";
+
+        /// <summary>
+        /// Сервер базы данных (для Firebird Client-Server)
+        /// </summary>
+        public string? Server { get; set; } = "localhost";
+
+        /// <summary>
+        /// Порт сервера (для Firebird Client-Server)
+        /// </summary>
+        public int Port { get; set; } = 3050;
+
+        /// <summary>
+        /// Имя пользователя базы данных
+        /// </summary>
+        public string Username { get; set; } = "SYSDBA";
+
+        /// <summary>
+        /// Пароль пользователя базы данных
+        /// </summary>
+        public string Password { get; set; } = "masterkey";
+
+        /// <summary>
+        /// Диалект Firebird (обычно 3)
+        /// </summary>
+        public int Dialect { get; set; } = 3;
+
+        /// <summary>
+        /// Размер страницы для новых баз данных Firebird
+        /// </summary>
+        public int PageSize { get; set; } = 8192;
+
+        /// <summary>
+        /// Кодировка для Firebird
+        /// </summary>
+        public string Charset { get; set; } = "UTF8";
+
+        /// <summary>
+        /// Таймаут соединения в секундах
+        /// </summary>
+        public int ConnectionTimeout { get; set; } = 30;
+
+        /// <summary>
+        /// Строка подключения для SQLite
+        /// </summary>
+        public string GetSQLiteConnectionString()
+        {
+            return $"Data Source={DatabasePath};";
+        }
+
+        /// <summary>
+        /// Строка подключения для Firebird
+        /// </summary>
+        public string GetFirebirdConnectionString()
+        {
+            if (ConnectionMode == FirebirdConnectionMode.Embedded)
+            {
+                return $"database={DatabasePath};user={Username};password={Password};dialect={Dialect};charset={Charset};connection timeout={ConnectionTimeout};servertype=1";
+            }
+            else
+            {
+                return $"database={Server}/{Port}:{DatabasePath};user={Username};password={Password};dialect={Dialect};charset={Charset};connection timeout={ConnectionTimeout}";
+            }
+        }
+
+        /// <summary>
+        /// Получить активную строку подключения в зависимости от типа БД
+        /// </summary>
+        public string GetConnectionString()
+        {
+            return DatabaseType switch
+            {
+                DatabaseType.SQLite => GetSQLiteConnectionString(),
+                DatabaseType.Firebird => GetFirebirdConnectionString(),
+                _ => throw new ArgumentException($"Неподдерживаемый тип базы данных: {DatabaseType}")
+            };
+        }
+
+        /// <summary>
+        /// Валидация конфигурации
+        /// </summary>
+        public ValidationResult ValidateConfiguration()
+        {
+            var errors = new List<string>();
+
+            if (string.IsNullOrEmpty(DatabasePath))
+            {
+                errors.Add("Путь к базе данных не может быть пустым");
+            }
+
+            if (DatabaseType == DatabaseType.Firebird)
+            {
+                if (ConnectionMode == FirebirdConnectionMode.ClientServer)
+                {
+                    if (string.IsNullOrEmpty(Server))
+                    {
+                        errors.Add("Сервер базы данных не может быть пустым для Client-Server режима");
+                    }
+
+                    if (Port <= 0 || Port > 65535)
+                    {
+                        errors.Add("Порт должен быть в диапазоне 1-65535");
+                    }
+                }
+
+                if (string.IsNullOrEmpty(Username))
+                {
+                    errors.Add("Имя пользователя не может быть пустым");
+                }
+
+                if (string.IsNullOrEmpty(Password))
+                {
+                    errors.Add("Пароль не может быть пустым");
+                }
+            }
+
+            return new ValidationResult
+            {
+                IsValid = errors.Count == 0,
+                Errors = errors.ToArray()
+            };
+        }
+    }
+
+    /// <summary>
+    /// Тип базы данных
+    /// </summary>
+    public enum DatabaseType
+    {
+        SQLite,
+        Firebird
+    }
+
+    /// <summary>
+    /// Режим подключения к Firebird
+    /// </summary>
+    public enum FirebirdConnectionMode
+    {
+        /// <summary>
+        /// Встроенный режим (локальная БД)
+        /// </summary>
+        Embedded,
+        
+        /// <summary>
+        /// Клиент-сервер режим (удаленная БД)
+        /// </summary>
+        ClientServer
+    }
+
+}

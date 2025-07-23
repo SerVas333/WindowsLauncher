@@ -124,6 +124,20 @@
                             </Style>
                         </Button.Style>
                     </Button>
+                    
+                    <Button Content="Система"
+                            Command="{Binding SwitchToSystemCommand}">
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource CorporateCategoryButton}">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding IsSystemManagementMode}" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource CorporateRed}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                    </Button>
                 </StackPanel>
 
                 <!-- Context-specific toolbar -->
@@ -810,6 +824,171 @@
                     </Grid>
                 </Border>
             </Grid>
+        </Grid>
+
+        <!-- System Management Panel -->
+        <Grid Visibility="{Binding IsSystemManagementMode, Converter={StaticResource BoolToVisConverter}}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="5"/>
+                <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Database Management -->
+            <Border Grid.Column="0" Background="White" Margin="24,24,0,24" 
+                    CornerRadius="8" BorderThickness="1" 
+                    BorderBrush="{StaticResource CorporateBorder}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="{StaticResource CorporateGrayDark}" 
+                            CornerRadius="8,8,0,0" Padding="16,12,16,12">
+                        <TextBlock Text="🗄️ Управление базой данных" FontWeight="SemiBold" 
+                                   Foreground="{StaticResource CorporateText}"/>
+                    </Border>
+
+                    <!-- Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16">
+                        <StackPanel>
+                            <!-- Database Info -->
+                            <GroupBox Header="Информация о базе данных" Margin="0,0,0,16">
+                                <Grid Margin="8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Тип БД:" FontWeight="SemiBold" Margin="0,0,16,8"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding DatabaseInfo.DatabaseType}" Margin="0,0,0,8"/>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Размер:" FontWeight="SemiBold" Margin="0,0,16,8"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding DatabaseInfo.FormattedSize}" Margin="0,0,0,8"/>
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Версия:" FontWeight="SemiBold" Margin="0,0,16,8"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding DatabaseInfo.Version}" Margin="0,0,0,8"/>
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Путь:" FontWeight="SemiBold" Margin="0,0,16,8"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding DatabaseInfo.Path}" 
+                                               TextWrapping="Wrap" Margin="0,0,0,8"/>
+
+                                    <TextBlock Grid.Row="4" Grid.Column="0" Text="Конфигурация:" FontWeight="SemiBold" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Row="4" Grid.Column="1" Text="{Binding DatabaseInfo.ConfigurationPath}" 
+                                               TextWrapping="Wrap"/>
+                                </Grid>
+                            </GroupBox>
+
+                            <!-- Database Actions -->
+                            <GroupBox Header="Операции с базой данных" Margin="0,0,0,0">
+                                <StackPanel Margin="8">
+                                    <Button Content="🔄 Обновить информацию" 
+                                            Command="{Binding RefreshDatabaseInfoCommand}"
+                                            Style="{StaticResource CorporateButton}"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,0,0,8"/>
+                                    
+                                    <Button Content="🗑️ Очистить только базу данных" 
+                                            Command="{Binding ClearDatabaseCommand}"
+                                            Style="{StaticResource CorporateButtonSecondary}"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,0,0,8"/>
+                                    
+                                    <Button Content="⚠️ Полная очистка данных приложения" 
+                                            Command="{Binding ClearAllDataCommand}"
+                                            Style="{StaticResource CorporateButtonDanger}"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,0,0,0"/>
+                                </StackPanel>
+                            </GroupBox>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
+
+            <!-- Application Management -->
+            <Border Grid.Column="2" Background="White" Margin="0,24,24,24" 
+                    CornerRadius="8" BorderThickness="1" 
+                    BorderBrush="{StaticResource CorporateBorder}">
+                <Grid>
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Header -->
+                    <Border Grid.Row="0" Background="{StaticResource CorporateGrayDark}" 
+                            CornerRadius="8,8,0,0" Padding="16,12,16,12">
+                        <TextBlock Text="⚙️ Система и обслуживание" FontWeight="SemiBold" 
+                                   Foreground="{StaticResource CorporateText}"/>
+                    </Border>
+
+                    <!-- Content -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="16">
+                        <StackPanel>
+                            <!-- Version Info -->
+                            <GroupBox Header="Информация о версии" Margin="0,0,0,16">
+                                <Grid Margin="8">
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Text="Версия:" FontWeight="SemiBold" Margin="0,0,16,8"/>
+                                    <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding ApplicationVersion}" Margin="0,0,0,8"/>
+
+                                    <TextBlock Grid.Row="1" Grid.Column="0" Text="Сборка:" FontWeight="SemiBold" Margin="0,0,16,8"/>
+                                    <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding BuildDate}" Margin="0,0,0,8"/>
+
+                                    <TextBlock Grid.Row="2" Grid.Column="0" Text="Версия БД:" FontWeight="SemiBold" Margin="0,0,16,8"/>
+                                    <TextBlock Grid.Row="2" Grid.Column="1" Text="{Binding DatabaseVersion}" Margin="0,0,0,8"/>
+
+                                    <TextBlock Grid.Row="3" Grid.Column="0" Text="Размер данных:" FontWeight="SemiBold" Margin="0,0,16,0"/>
+                                    <TextBlock Grid.Row="3" Grid.Column="1" Text="{Binding TotalDataSize}"/>
+                                </Grid>
+                            </GroupBox>
+
+                            <!-- System Actions -->
+                            <GroupBox Header="Системные операции">
+                                <StackPanel Margin="8">
+                                    <Button Content="📋 Экспорт конфигурации" 
+                                            Command="{Binding ExportConfigurationCommand}"
+                                            Style="{StaticResource CorporateButton}"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,0,0,8"/>
+                                    
+                                    <Button Content="📁 Открыть папку данных" 
+                                            Command="{Binding OpenDataFolderCommand}"
+                                            Style="{StaticResource CorporateButtonSecondary}"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,0,0,8"/>
+                                    
+                                    <Button Content="🔧 Диагностика системы" 
+                                            Command="{Binding RunDiagnosticsCommand}"
+                                            Style="{StaticResource CorporateButtonSecondary}"
+                                            HorizontalAlignment="Stretch"
+                                            Margin="0,0,0,0"/>
+                                </StackPanel>
+                            </GroupBox>
+                        </StackPanel>
+                    </ScrollViewer>
+                </Grid>
+            </Border>
         </Grid>
 
         <!-- Status Bar -->

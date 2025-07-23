@@ -6,6 +6,13 @@ namespace WindowsLauncher.Data.Configurations
 {
     public class UserConfiguration : IEntityTypeConfiguration<User>
     {
+        private readonly DatabaseType _databaseType;
+
+        public UserConfiguration(DatabaseType databaseType = DatabaseType.SQLite)
+        {
+            _databaseType = databaseType;
+        }
+
         public void Configure(EntityTypeBuilder<User> builder)
         {
             builder.HasKey(u => u.Id);

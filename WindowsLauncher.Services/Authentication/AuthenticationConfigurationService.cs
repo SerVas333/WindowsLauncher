@@ -9,6 +9,7 @@ using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 using System.Linq;
 using System.Collections.Generic;
+using ValidationResult = WindowsLauncher.Core.Interfaces.ValidationResult;
 
 namespace WindowsLauncher.Services.Authentication
 {

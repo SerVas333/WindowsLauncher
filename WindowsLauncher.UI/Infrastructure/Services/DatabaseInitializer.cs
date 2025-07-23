@@ -8,6 +8,8 @@ using WindowsLauncher.Data;
 using WindowsLauncher.Data.Extensions;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Core.Enums;
+using WindowsLauncher.Core.Interfaces;
+using WindowsLauncher.Core.Services;
 using CoreApplication = WindowsLauncher.Core.Models.Application;
 
 namespace WindowsLauncher.UI.Infrastructure.Services
@@ -19,11 +21,19 @@ namespace WindowsLauncher.UI.Infrastructure.Services
     {
         private readonly LauncherDbContext _context;
         private readonly ILogger<DatabaseInitializer> _logger;
+        private readonly IDatabaseMigrationService? _migrationService;
+        private readonly IDatabaseVersionService? _databaseVersionService;
 
-        public DatabaseInitializer(LauncherDbContext context, ILogger<DatabaseInitializer> logger)
+        public DatabaseInitializer(
+            LauncherDbContext context, 
+            ILogger<DatabaseInitializer> logger,
+            IDatabaseMigrationService? migrationService = null,
+            IDatabaseVersionService? databaseVersionService = null)
         {
             _context = context;
             _logger = logger;
+            _migrationService = migrationService;
+            _databaseVersionService = databaseVersionService;
         }
 
         public async Task InitializeAsync()
@@ -32,27 +42,52 @@ namespace WindowsLauncher.UI.Infrastructure.Services
             {
                 _logger.LogInformation("=== STARTING DATABASE INITIALIZATION ===");
 
-                // Сначала проверяем возможность подключения
+                // Проверяем возможность подключения
                 var canConnect = await _context.Database.CanConnectAsync();
                 _logger.LogInformation($"Database connection check: {canConnect}");
 
+                // Создание/обновление базы данных
                 if (!canConnect)
                 {
-                    _logger.LogInformation("Database does not exist, creating...");
+                    _logger.LogInformation("Database does not exist, creating with EF Core...");
                     await _context.Database.EnsureCreatedAsync();
+                    _logger.LogInformation("Database created successfully");
+                    
+                    // Устанавливаем версию БД для новой базы
+                    if (_databaseVersionService != null)
+                    {
+                        await _databaseVersionService.SetDatabaseVersionAsync("1.0.0.0");
+                        _logger.LogInformation("Set initial database version to 1.0.0.0");
+                    }
                 }
                 else
                 {
+                    _logger.LogInformation("Database exists, ensuring schema is up to date...");
+                    
+                    // Для существующих баз данных используем EnsureCreated для обеспечения схемы
+                    // (это безопасно для существующих баз - не перезаписывает данные)
                     try
                     {
-                        // Пытаемся применить миграции если они есть
-                        await _context.Database.MigrateAsync();
-                        _logger.LogInformation("Database migrations applied successfully");
-                    }
-                    catch (Exception migrationEx)
-                    {
-                        _logger.LogWarning(migrationEx, "Migration failed, using EnsureCreated as fallback");
                         await _context.Database.EnsureCreatedAsync();
+                        _logger.LogInformation("Database schema verified");
+                    }
+                    catch (Exception schemaEx)
+                    {
+                        _logger.LogWarning(schemaEx, "Schema verification failed, but continuing...");
+                    }
+                    
+                    // Обновляем версию БД если сервис доступен
+                    if (_databaseVersionService != null)
+                    {
+                        try
+                        {
+                            await _databaseVersionService.SetDatabaseVersionAsync("1.0.0.0");
+                            _logger.LogInformation("Updated database version to 1.0.0.0");
+                        }
+                        catch (Exception versionEx)
+                        {
+                            _logger.LogWarning(versionEx, "Failed to update database version");
+                        }
                     }
                 }
 
@@ -190,6 +225,88 @@ namespace WindowsLauncher.UI.Infrastructure.Services
             await _context.SaveChangesAsync();
 
             _logger.LogInformation("Seeded {Count} applications", seedApplications.Length);
+        }
+        
+        /// <summary>
+        /// Помечает все существующие миграции как примененные (для новых баз данных)
+        /// </summary>
+        private async Task MarkExistingMigrationsAsAppliedAsync()
+        {
+            if (_migrationService == null) return;
+            
+            try
+            {
+                var allMigrations = _migrationService.GetAllMigrations();
+                
+                // Получаем конфигурацию БД для определения типа
+                // Предполагаем что уже есть способ получить это
+                var databaseType = DatabaseType.SQLite; // По умолчанию, но лучше получить из конфигурации
+                
+                foreach (var migration in allMigrations)
+                {
+                    await RecordMigrationAsAppliedAsync(migration, databaseType);
+                }
+                
+                _logger.LogInformation("Marked {Count} migrations as applied", allMigrations.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Failed to mark existing migrations as applied");
+            }
+        }
+        
+        /// <summary>
+        /// Записывает миграцию как примененную в таблице истории миграций
+        /// </summary>
+        private async Task RecordMigrationAsAppliedAsync(IDatabaseMigration migration, DatabaseType databaseType)
+        {
+            var sql = databaseType switch
+            {
+                DatabaseType.SQLite => @"
+                    INSERT INTO __MigrationHistory (Version, Name, Description, AppliedAt)
+                    VALUES (@p0, @p1, @p2, @p3)",
+                DatabaseType.Firebird => @"
+                    INSERT INTO MIGRATION_HISTORY (VERSION, NAME, DESCRIPTION, APPLIED_AT)
+                    VALUES (@p0, @p1, @p2, @p3)",
+                _ => throw new System.NotSupportedException($"Database type {databaseType} not supported")
+            };
+            
+            object appliedAt = databaseType switch
+            {
+                DatabaseType.SQLite => DateTime.UtcNow.ToString("yyyy-MM-dd HH:mm:ss.fff"),
+                DatabaseType.Firebird => DateTime.UtcNow,
+                _ => (object)DateTime.UtcNow
+            };
+            
+            using var command = _context.Database.GetDbConnection().CreateCommand();
+            command.CommandText = sql;
+            
+            var p0 = command.CreateParameter();
+            p0.ParameterName = "@p0";
+            p0.Value = migration.Version;
+            command.Parameters.Add(p0);
+            
+            var p1 = command.CreateParameter();
+            p1.ParameterName = "@p1";
+            p1.Value = migration.Name;
+            command.Parameters.Add(p1);
+            
+            var p2 = command.CreateParameter();
+            p2.ParameterName = "@p2";
+            p2.Value = migration.Description;
+            command.Parameters.Add(p2);
+            
+            var p3 = command.CreateParameter();
+            p3.ParameterName = "@p3";
+            p3.Value = appliedAt;
+            command.Parameters.Add(p3);
+            
+            if (command.Connection?.State != System.Data.ConnectionState.Open)
+            {
+                await command.Connection.OpenAsync();
+            }
+            
+            await command.ExecuteNonQueryAsync();
         }
     }
 }

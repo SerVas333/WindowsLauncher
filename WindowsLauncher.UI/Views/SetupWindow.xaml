@@ -154,10 +154,141 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Шаг 2: Сервисный администратор -->
+                    <!-- Шаг 2: Настройка базы данных -->
                     <Border Style="{StaticResource SetupStepContainerStyle}">
                         <StackPanel>
-                            <TextBlock Text="2. Настройка сервисного администратора" 
+                            <TextBlock Text="2. Настройка базы данных" 
+                                       Style="{StaticResource SetupStepHeaderStyle}"/>
+                            <TextBlock Text="Выберите тип базы данных для хранения информации о пользователях и приложениях."
+                                       Style="{StaticResource SetupStepDescriptionStyle}"/>
+
+                            <Grid>
+                                <Grid.RowDefinitions>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                    <RowDefinition Height="Auto"/>
+                                </Grid.RowDefinitions>
+
+                                <!-- Выбор типа БД -->
+                                <StackPanel Grid.Row="0" Orientation="Horizontal" Margin="0,0,0,15">
+                                    <TextBlock Text="Тип базы данных:" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                                    <ComboBox x:Name="DatabaseTypeComboBox" 
+                                              Width="200" Height="45"
+                                              SelectionChanged="DatabaseTypeComboBox_SelectionChanged"
+                                              Style="{DynamicResource MaterialComboBoxStyle}">
+                                        <ComboBoxItem Content="SQLite (по умолчанию)" Tag="SQLite" IsSelected="True"/>
+                                        <ComboBoxItem Content="Firebird" Tag="Firebird"/>
+                                    </ComboBox>
+                                </StackPanel>
+
+                                <!-- Настройки Firebird (скрыты по умолчанию) -->
+                                <Border x:Name="FirebirdSettingsPanel" Grid.Row="1" 
+                                        Background="{DynamicResource BackgroundBrush}" 
+                                        CornerRadius="4" Padding="15" Margin="0,0,0,15"
+                                        Visibility="Collapsed">
+                                    <StackPanel>
+                                        <TextBlock Text="Настройки Firebird:" FontWeight="Medium" Margin="0,0,0,10"/>
+                                        
+                                        <!-- Режим подключения -->
+                                        <StackPanel Orientation="Horizontal" Margin="0,0,0,10">
+                                            <TextBlock Text="Режим:" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                                            <ComboBox x:Name="FirebirdModeComboBox" 
+                                                      Width="200" Height="40"
+                                                      SelectionChanged="FirebirdModeComboBox_SelectionChanged"
+                                                      Style="{DynamicResource MaterialComboBoxStyle}">
+                                                <ComboBoxItem Content="Встроенный (Embedded)" Tag="Embedded" IsSelected="True"/>
+                                                <ComboBoxItem Content="Клиент-сервер" Tag="ClientServer"/>
+                                            </ComboBox>
+                                        </StackPanel>
+
+                                        <!-- Путь к базе данных -->
+                                        <Grid Margin="0,0,0,10">
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="*"/>
+                                                <ColumnDefinition Width="Auto"/>
+                                            </Grid.ColumnDefinitions>
+                                            <TextBlock x:Name="DatabasePathLabel" Text="Путь к базе данных:" Margin="0,0,0,5"/>
+                                            <TextBox x:Name="DatabasePathTextBox" Grid.Row="1" 
+                                                     Text="launcher.fdb"
+                                                     Style="{DynamicResource MaterialTextBoxStyle}"
+                                                     TextChanged="DatabaseSettings_Changed"
+                                                     Margin="0,5,10,0"/>
+                                            <Button x:Name="BrowseDatabasePathButton" Grid.Column="1" Grid.Row="1" 
+                                                    Content="..." Width="40" Height="40" Margin="0,5,0,0"
+                                                    Style="{DynamicResource MaterialOutlineButtonStyle}"
+                                                    Click="BrowseDatabasePathButton_Click"/>
+                                        </Grid>
+
+                                        <!-- Настройки сервера (только для Client-Server) -->
+                                        <StackPanel x:Name="FirebirdServerPanel" Visibility="Collapsed">
+                                            <Grid>
+                                                <Grid.ColumnDefinitions>
+                                                    <ColumnDefinition Width="*"/>
+                                                    <ColumnDefinition Width="100"/>
+                                                </Grid.ColumnDefinitions>
+                                                <Grid.RowDefinitions>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                    <RowDefinition Height="Auto"/>
+                                                </Grid.RowDefinitions>
+
+                                                <TextBlock Text="Сервер:" Grid.Row="0" Grid.Column="0" Margin="0,0,10,5"/>
+                                                <TextBox x:Name="FirebirdServerTextBox" Grid.Row="1" Grid.Column="0" 
+                                                         Text="localhost" Margin="0,0,10,10"
+                                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                                         TextChanged="DatabaseSettings_Changed"/>
+
+                                                <TextBlock Text="Порт:" Grid.Row="0" Grid.Column="1" Margin="0,0,0,5"/>
+                                                <TextBox x:Name="FirebirdPortTextBox" Grid.Row="1" Grid.Column="1" 
+                                                         Text="3050" Margin="0,0,0,10"
+                                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                                         TextChanged="DatabaseSettings_Changed"/>
+
+                                                <TextBlock Text="Пользователь:" Grid.Row="2" Grid.Column="0" Margin="0,0,10,5"/>
+                                                <TextBox x:Name="FirebirdUserTextBox" Grid.Row="3" Grid.Column="0" 
+                                                         Text="SYSDBA" Margin="0,0,10,10"
+                                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                                         TextChanged="DatabaseSettings_Changed"/>
+
+                                                <TextBlock Text="Пароль:" Grid.Row="2" Grid.Column="1" Margin="0,0,0,5"/>
+                                                <PasswordBox x:Name="FirebirdPasswordBox" Grid.Row="3" Grid.Column="1" 
+                                                             Margin="0,0,0,10"
+                                                             Style="{DynamicResource MaterialPasswordBoxStyle}"
+                                                             PasswordChanged="DatabaseSettings_Changed"/>
+                                            </Grid>
+                                        </StackPanel>
+
+                                        <!-- Кнопка тестирования подключения к БД -->
+                                        <Button x:Name="TestDatabaseButton" 
+                                                Content="Проверить подключение к БД"
+                                                Width="200" Height="40"
+                                                HorizontalAlignment="Left"
+                                                Style="{DynamicResource MaterialOutlineButtonStyle}"
+                                                Click="TestDatabaseButton_Click"/>
+
+                                        <StackPanel x:Name="DatabaseStatusPanel" 
+                                                    Orientation="Horizontal" 
+                                                    Margin="0,10,0,0"
+                                                    Visibility="Collapsed">
+                                            <Ellipse x:Name="DatabaseStatusIndicator" 
+                                                     Width="8" Height="8" 
+                                                     Margin="0,0,8,0"
+                                                     VerticalAlignment="Center"/>
+                                            <TextBlock x:Name="DatabaseStatusText" 
+                                                       FontSize="12"
+                                                       VerticalAlignment="Center"/>
+                                        </StackPanel>
+                                    </StackPanel>
+                                </Border>
+                            </Grid>
+                        </StackPanel>
+                    </Border>
+
+                    <!-- Шаг 3: Сервисный администратор -->
+                    <Border Style="{StaticResource SetupStepContainerStyle}">
+                        <StackPanel>
+                            <TextBlock Text="3. Настройка сервисного администратора" 
                                        Style="{StaticResource SetupStepHeaderStyle}"/>
                             <TextBlock Text="Создайте локальную учетную запись администратора для управления системой в случае недоступности домена."
                                        Style="{StaticResource SetupStepDescriptionStyle}"/>
@@ -233,10 +364,10 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Шаг 3: Дополнительные настройки -->
+                    <!-- Шаг 4: Дополнительные настройки -->
                     <Border Style="{StaticResource SetupStepContainerStyle}">
                         <StackPanel>
-                            <TextBlock Text="3. Дополнительные настройки" 
+                            <TextBlock Text="4. Дополнительные настройки" 
                                        Style="{StaticResource SetupStepHeaderStyle}"/>
                             <TextBlock Text="Настройте дополнительные параметры системы."
                                        Style="{StaticResource SetupStepDescriptionStyle}"/>
@@ -314,7 +445,7 @@
                     <!-- Индикатор прогресса и дополнительные кнопки -->
                     <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center">
                         <TextBlock x:Name="SetupProgressText" 
-                                   Text="Настройка: 0/3 шагов завершено"
+                                   Text="Настройка: 0/4 шагов завершено"
                                    FontSize="12"
                                    Foreground="{DynamicResource OnSurfaceVariantBrush}"/>
                         

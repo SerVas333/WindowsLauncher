@@ -4,6 +4,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using FirebirdSql.EntityFrameworkCore.Firebird.Extensions;
 using System;
 using System.IO;
 using System.Windows;
@@ -18,6 +19,7 @@ using WindowsLauncher.Services.Authorization;
 using WindowsLauncher.Services.Authentication;
 using WindowsLauncher.Services;
 using WindowsLauncher.UI.ViewModels;
+using WindowsLauncher.Core.Services;
 using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.Infrastructure.Localization;
 using WindowsLauncher.UI.Views;
@@ -116,11 +118,38 @@ namespace WindowsLauncher.UI
                 configuration.GetSection("LocalUsers"));
 
             // База данных
-            services.AddDbContext<LauncherDbContext>(options =>
+            services.AddSingleton<IDatabaseConfigurationService, DatabaseConfigurationService>();
+            services.AddScoped<IDatabaseMigrationService, DatabaseMigrationService>();
+            services.AddDbContext<LauncherDbContext>((serviceProvider, options) =>
             {
-                var connectionString = configuration.GetConnectionString("DefaultConnection")
-                    ?? GetDefaultConnectionString();
-                options.UseSqlite(connectionString);
+                // Получаем сервис конфигурации БД
+                var dbConfigService = serviceProvider.GetRequiredService<IDatabaseConfigurationService>();
+                var dbConfig = dbConfigService.GetDefaultConfiguration();
+
+                // Настраиваем провайдер в зависимости от типа БД
+                switch (dbConfig.DatabaseType)
+                {
+                    case Core.Models.DatabaseType.SQLite:
+                        options.UseSqlite(dbConfig.GetSQLiteConnectionString(), sqliteOptions =>
+                        {
+                            sqliteOptions.CommandTimeout(dbConfig.ConnectionTimeout);
+                        });
+                        break;
+
+                    case Core.Models.DatabaseType.Firebird:
+                        options.UseFirebird(dbConfig.GetFirebirdConnectionString(), firebirdOptions =>
+                        {
+                            firebirdOptions.CommandTimeout(dbConfig.ConnectionTimeout);
+                        });
+                        break;
+
+                    default:
+                        // Fallback к SQLite
+                        var fallbackConnectionString = configuration.GetConnectionString("DefaultConnection")
+                            ?? GetDefaultConnectionString();
+                        options.UseSqlite(fallbackConnectionString);
+                        break;
+                }
             });
 
             // Репозитории
@@ -147,6 +176,14 @@ namespace WindowsLauncher.UI
             services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
             services.AddSingleton<IDialogService, WpfDialogService>();
             services.AddSingleton<INavigationService, WpfNavigationService>();
+            
+            // Сервисы версионирования
+            services.AddSingleton<IVersionService, VersionService>();
+            services.AddScoped<IDatabaseVersionService, DatabaseVersionService>();
+            services.AddScoped<IApplicationStartupService, ApplicationStartupService>();
+            
+            // Сервис управления данными приложения
+            services.AddScoped<ApplicationDataManager>();
 
             // ✅ ДОБАВЛЯЕМ ЛОКАЛИЗАЦИЮ КАК СИНГЛ
             services.AddSingleton<LocalizationHelper>(_ => LocalizationHelper.Instance);
@@ -270,37 +307,69 @@ namespace WindowsLauncher.UI
         }
 
         /// <summary>
-        /// ✅ ЗАПУСК ЧЕРЕЗ LoginWindow
+        /// ✅ ПРАВИЛЬНЫЙ ЗАПУСК С ПРОВЕРКОЙ КОНФИГУРАЦИИ И БД
         /// </summary>
-        private Task StartApplicationAsync()
+        private async Task StartApplicationAsync()
         {
             try
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-                logger.LogInformation("Starting application");
+                logger.LogInformation("Starting application with proper lifecycle checks");
 
-                // Проверяем, настроен ли сервисный администратор
-                var configService = ServiceProvider.GetRequiredService<IAuthenticationConfigurationService>();
-                var config = configService.GetConfiguration();
-
-                if (!config.ServiceAdmin.IsPasswordSet)
-                {
-                    logger.LogInformation("Service admin not configured, showing setup window");
-                    ShowSetupWindow();
-                }
-                else
-                {
-                    logger.LogInformation("Service admin configured, showing login screen");
-                    ShowLoginWindow();
-                }
+                var startupService = ServiceProvider.GetRequiredService<IApplicationStartupService>();
+                var action = await startupService.DetermineStartupActionAsync();
                 
-                return Task.CompletedTask;
+                switch (action)
+                {
+                    case StartupAction.ShowSetup:
+                        logger.LogInformation("Showing setup window - initial configuration required");
+                        ShowSetupWindow();
+                        break;
+                        
+                    case StartupAction.PerformMigrations:
+                        logger.LogInformation("Performing database migrations before login");
+                        await PerformMigrationsAndShowLogin();
+                        break;
+                        
+                    case StartupAction.ShowLogin:
+                        logger.LogInformation("Application ready - showing login screen");
+                        ShowLoginWindow();
+                        break;
+                        
+                    default:
+                        throw new InvalidOperationException($"Unknown startup action: {action}");
+                }
             }
             catch (Exception ex)
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
                 logger.LogError(ex, "Failed to start application");
                 throw;
+            }
+        }
+        
+        /// <summary>
+        /// Выполнить миграции БД и показать логин
+        /// </summary>
+        private async Task PerformMigrationsAndShowLogin()
+        {
+            try
+            {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogInformation("Starting database migrations...");
+                
+                var startupService = ServiceProvider.GetRequiredService<IApplicationStartupService>();
+                await startupService.PrepareApplicationAsync();
+                
+                logger.LogInformation("Database migrations completed, showing login");
+                ShowLoginWindow();
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogError(ex, "Database migration failed");
+                ShowStartupError(ex);
+                Shutdown(1);
             }
         }
 

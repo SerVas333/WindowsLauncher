@@ -19,6 +19,7 @@ using WindowsLauncher.UI.Infrastructure.Commands;
 using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.ViewModels.Base;
 using WindowsLauncher.UI.Views;
+using WindowsLauncher.Services;
 using WpfApplication = System.Windows.Application;
 using CoreApplication = WindowsLauncher.Core.Models.Application;
 
@@ -35,6 +36,7 @@ namespace WindowsLauncher.UI.ViewModels
         private readonly IAuthorizationService _authorizationService;
         private readonly ILocalUserService _localUserService;
         private readonly IServiceProvider _serviceProvider;
+        private readonly ApplicationDataManager _applicationDataManager;
 
         private ApplicationEditViewModel? _selectedApplication;
         private ApplicationEditViewModel? _editingApplication;
@@ -45,8 +47,16 @@ namespace WindowsLauncher.UI.ViewModels
         // Поля для управления локальными пользователями
         private User? _selectedUser;
         private bool _isUserManagementMode = false;
+        private bool _isSystemManagementMode = false;
         private string _userSearchText = "";
         private string _statusMessage = "";
+        
+        // Поля для системной панели
+        private ApplicationDataInfo? _applicationDataInfo;
+        private string _applicationVersion = "";
+        private string _buildDate = "";
+        private string _databaseVersion = "";
+        private string _totalDataSize = "";
 
         #endregion
 
@@ -57,6 +67,7 @@ namespace WindowsLauncher.UI.ViewModels
             IAuthorizationService authorizationService,
             ILocalUserService localUserService,
             IServiceProvider serviceProvider,
+            ApplicationDataManager applicationDataManager,
             ILogger<AdminViewModel> logger,
             IDialogService dialogService)
             : base(logger, dialogService)
@@ -65,6 +76,7 @@ namespace WindowsLauncher.UI.ViewModels
             _authorizationService = authorizationService;
             _localUserService = localUserService;
             _serviceProvider = serviceProvider;
+            _applicationDataManager = applicationDataManager;
 
             Applications = new ObservableCollection<ApplicationEditViewModel>();
             AvailableCategories = new ObservableCollection<string>();
@@ -233,6 +245,43 @@ namespace WindowsLauncher.UI.ViewModels
             set => SetProperty(ref _isUserManagementMode, value);
         }
 
+        public bool IsSystemManagementMode
+        {
+            get => _isSystemManagementMode;
+            set => SetProperty(ref _isSystemManagementMode, value);
+        }
+
+        // Свойства для системной панели
+        public ApplicationDataInfo? DatabaseInfo
+        {
+            get => _applicationDataInfo;
+            set => SetProperty(ref _applicationDataInfo, value);
+        }
+
+        public string ApplicationVersion
+        {
+            get => _applicationVersion;
+            set => SetProperty(ref _applicationVersion, value);
+        }
+
+        public string BuildDate
+        {
+            get => _buildDate;
+            set => SetProperty(ref _buildDate, value);
+        }
+
+        public string DatabaseVersion
+        {
+            get => _databaseVersion;
+            set => SetProperty(ref _databaseVersion, value);
+        }
+
+        public string TotalDataSize
+        {
+            get => _totalDataSize;
+            set => SetProperty(ref _totalDataSize, value);
+        }
+
         public string UserSearchText
         {
             get => _userSearchText;
@@ -314,6 +363,15 @@ namespace WindowsLauncher.UI.ViewModels
         // Команды переключения между разделами
         public RelayCommand SwitchToApplicationsCommand { get; private set; } = null!;
         public RelayCommand SwitchToUsersCommand { get; private set; } = null!;
+        public RelayCommand SwitchToSystemCommand { get; private set; } = null!;
+        
+        // Команды системной панели
+        public AsyncRelayCommand RefreshDatabaseInfoCommand { get; private set; } = null!;
+        public AsyncRelayCommand ClearDatabaseCommand { get; private set; } = null!;
+        public AsyncRelayCommand ClearAllDataCommand { get; private set; } = null!;
+        public RelayCommand ExportConfigurationCommand { get; private set; } = null!;
+        public RelayCommand OpenDataFolderCommand { get; private set; } = null!;
+        public AsyncRelayCommand RunDiagnosticsCommand { get; private set; } = null!;
 
         private void InitializeCommands()
         {
@@ -370,12 +428,31 @@ namespace WindowsLauncher.UI.ViewModels
             ToggleUserManagementModeCommand = new RelayCommand(() => IsUserManagementMode = !IsUserManagementMode);
             
             // Инициализация команд переключения между разделами
-            SwitchToApplicationsCommand = new RelayCommand(() => IsUserManagementMode = false);
+            SwitchToApplicationsCommand = new RelayCommand(() => 
+            {
+                IsUserManagementMode = false;
+                IsSystemManagementMode = false;
+            });
             SwitchToUsersCommand = new RelayCommand(() => 
             {
                 IsUserManagementMode = true;
+                IsSystemManagementMode = false;
                 _ = LoadLocalUsersAsync(); // Загружаем пользователей при переключении
             });
+            SwitchToSystemCommand = new RelayCommand(() => 
+            {
+                IsUserManagementMode = false;
+                IsSystemManagementMode = true;
+                _ = LoadSystemInfoAsync(); // Загружаем системную информацию при переключении
+            });
+            
+            // Инициализация команд системной панели
+            RefreshDatabaseInfoCommand = new AsyncRelayCommand(LoadSystemInfoAsync, () => !IsLoading, Logger);
+            ClearDatabaseCommand = new AsyncRelayCommand(ClearDatabaseOnlyAsync, () => !IsLoading, Logger);
+            ClearAllDataCommand = new AsyncRelayCommand(ClearAllApplicationDataAsync, () => !IsLoading, Logger);
+            ExportConfigurationCommand = new RelayCommand(ExportConfiguration);
+            OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
+            RunDiagnosticsCommand = new AsyncRelayCommand(RunSystemDiagnosticsAsync, () => !IsLoading, Logger);
         }
 
         private void UpdateCommandStates()
@@ -1536,6 +1613,232 @@ namespace WindowsLauncher.UI.ViewModels
             }
             
             return new string(password.ToArray());
+        }
+
+        #endregion
+
+        #region System Management
+
+        /// <summary>
+        /// Загрузить системную информацию
+        /// </summary>
+        private async Task LoadSystemInfoAsync()
+        {
+            await ExecuteSafelyAsync(async () =>
+            {
+                Logger.LogInformation("Loading system information");
+                
+                // Загружаем информацию о данных приложения
+                DatabaseInfo = await _applicationDataManager.GetDataInfoAsync();
+                TotalDataSize = DatabaseInfo.FormattedDataSize;
+                
+                // Загружаем версионную информацию
+                using var scope = _serviceProvider.CreateScope();
+                var versionService = scope.ServiceProvider.GetRequiredService<WindowsLauncher.Core.Services.IVersionService>();
+                var dbVersionService = scope.ServiceProvider.GetRequiredService<WindowsLauncher.Core.Services.IDatabaseVersionService>();
+                
+                var versionInfo = versionService.GetVersionInfo();
+                ApplicationVersion = versionService.GetVersionString();
+                BuildDate = versionInfo.BuildDate.ToString("yyyy-MM-dd HH:mm");
+                DatabaseVersion = await dbVersionService.GetCurrentDatabaseVersionAsync() ?? "Неизвестно";
+                
+                StatusMessage = "Системная информация загружена";
+                Logger.LogInformation("System information loaded successfully");
+            }, "load system information");
+        }
+
+        /// <summary>
+        /// Очистить только базу данных
+        /// </summary>
+        private async Task ClearDatabaseOnlyAsync()
+        {
+            var confirmMessage = "Вы уверены, что хотите удалить все данные из базы данных?\n\n" +
+                                "⚠️ Это действие нельзя отменить!\n" +
+                                "Конфигурация БД будет сохранена.";
+                                
+            if (!DialogService.ShowConfirmation(confirmMessage, "Подтвердите очистку БД"))
+                return;
+
+            await ExecuteSafelyAsync(async () =>
+            {
+                Logger.LogWarning("Starting database cleanup (keeping configuration)");
+                await _applicationDataManager.ClearDatabaseOnlyAsync();
+                
+                // Обновляем информацию
+                await LoadSystemInfoAsync();
+                
+                StatusMessage = "База данных очищена (конфигурация сохранена)";
+                DialogService.ShowInfo("База данных успешно очищена.\nКонфигурация подключения сохранена.", "Операция завершена");
+            }, "clear database only");
+        }
+
+        /// <summary>
+        /// Полная очистка всех данных приложения
+        /// </summary>
+        private async Task ClearAllApplicationDataAsync()
+        {
+            var confirmMessage = "Вы уверены, что хотите удалить ВСЕ данные приложения?\n\n" +
+                                "⚠️ Это действие нельзя отменить!\n" +
+                                "Будут удалены:\n" +
+                                "• База данных\n" +
+                                "• Конфигурационные файлы\n" +
+                                "• Логи и кэш\n\n" +
+                                "После этого потребуется повторная настройка приложения.";
+                                
+            if (!DialogService.ShowConfirmation(confirmMessage, "Подтвердите полную очистку"))
+                return;
+                
+            // Дополнительное подтверждение
+            var finalConfirm = DialogService.ShowConfirmation(
+                "Последнее предупреждение!\n\nВсе данные приложения будут безвозвратно удалены.\nПродолжить?", 
+                "Финальное подтверждение");
+                
+            if (!finalConfirm)
+                return;
+
+            await ExecuteSafelyAsync(async () =>
+            {
+                Logger.LogWarning("Starting complete application data cleanup");
+                await _applicationDataManager.ClearAllDataAsync();
+                
+                StatusMessage = "Все данные приложения удалены";
+                DialogService.ShowInfo(
+                    "Все данные приложения успешно удалены.\n\nПриложение будет закрыто для повторной настройки.", 
+                    "Операция завершена");
+                    
+                // Закрываем приложение для повторной настройки
+                WpfApplication.Current.Shutdown();
+            }, "clear all application data");
+        }
+
+        /// <summary>
+        /// Экспорт конфигурации
+        /// </summary>
+        private void ExportConfiguration()
+        {
+            try
+            {
+                var saveDialog = new SaveFileDialog
+                {
+                    Title = "Экспорт конфигурации",
+                    Filter = "JSON файлы (*.json)|*.json|Все файлы (*.*)|*.*",
+                    DefaultExt = "json",
+                    FileName = $"WindowsLauncher_Config_{DateTime.Now:yyyyMMdd_HHmmss}.json"
+                };
+
+                if (saveDialog.ShowDialog() == true)
+                {
+                    var configData = new
+                    {
+                        ExportDate = DateTime.Now,
+                        ApplicationVersion = ApplicationVersion,
+                        DatabaseVersion = DatabaseVersion,
+                        DatabaseInfo = DatabaseInfo,
+                        ConfigurationPath = DatabaseInfo?.ConfigurationPath
+                    };
+
+                    var json = JsonSerializer.Serialize(configData, new JsonSerializerOptions 
+                    { 
+                        WriteIndented = true,
+                        Encoder = System.Text.Encodings.Web.JavaScriptEncoder.UnsafeRelaxedJsonEscaping
+                    });
+                    
+                    File.WriteAllText(saveDialog.FileName, json);
+                    
+                    StatusMessage = $"Конфигурация экспортирована: {Path.GetFileName(saveDialog.FileName)}";
+                    DialogService.ShowInfo($"Конфигурация успешно экспортирована в:\n{saveDialog.FileName}", "Экспорт завершен");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to export configuration");
+                DialogService.ShowError($"Ошибка экспорта конфигурации: {ex.Message}", "Ошибка экспорта");
+            }
+        }
+
+        /// <summary>
+        /// Открыть папку с данными приложения
+        /// </summary>
+        private void OpenDataFolder()
+        {
+            try
+            {
+                var dataPath = DatabaseInfo?.AppDataPath ?? 
+                    Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "WindowsLauncher");
+                    
+                if (Directory.Exists(dataPath))
+                {
+                    System.Diagnostics.Process.Start("explorer.exe", dataPath);
+                    StatusMessage = "Папка данных открыта в проводнике";
+                }
+                else
+                {
+                    DialogService.ShowWarning("Папка данных не найдена", "Папка не существует");
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Failed to open data folder");
+                DialogService.ShowError($"Ошибка открытия папки: {ex.Message}", "Ошибка");
+            }
+        }
+
+        /// <summary>
+        /// Запуск диагностики системы
+        /// </summary>
+        private async Task RunSystemDiagnosticsAsync()
+        {
+            await ExecuteSafelyAsync(async () =>
+            {
+                Logger.LogInformation("Running system diagnostics");
+                StatusMessage = "Запуск диагностики системы...";
+                
+                var diagnostics = new List<string>();
+                diagnostics.Add($"=== Диагностика системы - {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
+                diagnostics.Add("");
+                
+                // Проверка версий
+                diagnostics.Add($"Версия приложения: {ApplicationVersion}");
+                diagnostics.Add($"Дата сборки: {BuildDate}");
+                diagnostics.Add($"Версия БД: {DatabaseVersion}");
+                diagnostics.Add("");
+                
+                // Проверка данных
+                if (DatabaseInfo != null)
+                {
+                    diagnostics.Add("=== Информация о данных ===");
+                    diagnostics.Add($"Тип БД: {DatabaseInfo.ConfigurationExists}");
+                    diagnostics.Add($"Размер данных: {DatabaseInfo.FormattedDataSize}");
+                    diagnostics.Add($"Файлы БД: {DatabaseInfo.DatabaseFiles.Length}");
+                    diagnostics.Add($"Путь к данным: {DatabaseInfo.AppDataPath}");
+                    diagnostics.Add("");
+                }
+                
+                // Проверка сервисов
+                diagnostics.Add("=== Проверка сервисов ===");
+                try
+                {
+                    using var scope = _serviceProvider.CreateScope();
+                    var dbConfigService = scope.ServiceProvider.GetRequiredService<IDatabaseConfigurationService>();
+                    var isConfigured = await dbConfigService.IsConfiguredAsync();
+                    diagnostics.Add($"БД сконфигурирована: {(isConfigured ? "✓" : "✗")}");
+                }
+                catch (Exception ex)
+                {
+                    diagnostics.Add($"Ошибка проверки БД: {ex.Message}");
+                }
+                
+                diagnostics.Add("");
+                diagnostics.Add("=== Диагностика завершена ===");
+                
+                var result = string.Join(Environment.NewLine, diagnostics);
+                
+                // Показываем результат
+                var diagWindow = new Views.DiagnosticsWindow(result);
+                diagWindow.ShowDialog();
+                
+                StatusMessage = "Диагностика системы завершена";
+            }, "run system diagnostics");
         }
 
         #endregion

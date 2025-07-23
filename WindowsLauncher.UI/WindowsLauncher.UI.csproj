@@ -6,6 +6,31 @@
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<UseWPF>true</UseWPF>
+		
+		<!-- Application Information -->
+		<AssemblyTitle>Windows Launcher</AssemblyTitle>
+		<AssemblyDescription>Enterprise application launcher with Active Directory authentication</AssemblyDescription>
+		<AssemblyConfiguration>Release</AssemblyConfiguration>
+		<AssemblyCompany>KDV</AssemblyCompany>
+		<AssemblyProduct>Windows Launcher</AssemblyProduct>
+		<AssemblyCopyright>Copyright © KDV 2025</AssemblyCopyright>
+		<AssemblyTrademark></AssemblyTrademark>
+		
+		<!-- Versioning -->
+		<AssemblyVersion>1.0.0.0</AssemblyVersion>
+		<FileVersion>1.0.0.0</FileVersion>
+		<ApplicationVersion>1.0.0.0</ApplicationVersion>
+		
+		<!-- ClickOnce Settings -->
+		<IsWebBootstrapper>false</IsWebBootstrapper>
+		<GenerateManifests>true</GenerateManifests>
+		<BootstrapperEnabled>true</BootstrapperEnabled>
+		<ApplicationIcon>Resources\Icons\KDV_icon.ico</ApplicationIcon>
+		<ApplicationManifest>app.manifest</ApplicationManifest>
+		
+		<!-- Security -->
+		<TargetZone>LocalIntranet</TargetZone>
+		<RequiredTargetFramework>4.0</RequiredTargetFramework>
 	</PropertyGroup>
 
 	<ItemGroup>
