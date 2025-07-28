@@ -1,0 +1,81 @@
+-- ===== convert_to_boolean_firebird.sql =====
+-- Скрипт для конвертации SMALLINT полей в BOOLEAN типы
+-- Выполните под пользователем с правами ALTER TABLE
+
+-- Подключение к БД (замените на ваш алиас/путь)
+CONNECT 'KDV_LAUNCHER' 
+USER 'SYSDBA' 
+PASSWORD 'Ghtgjyf1';
+
+-- ===== КОНВЕРТАЦИЯ ТАБЛИЦЫ USERS =====
+-- Конвертируем boolean поля в таблице USERS
+ALTER TABLE USERS ALTER COLUMN IS_ACTIVE TYPE BOOLEAN;
+ALTER TABLE USERS ALTER COLUMN IS_SERVICE_ACCOUNT TYPE BOOLEAN;
+ALTER TABLE USERS ALTER COLUMN IS_LOCKED TYPE BOOLEAN;
+ALTER TABLE USERS ALTER COLUMN IS_LOCAL_USER TYPE BOOLEAN;
+ALTER TABLE USERS ALTER COLUMN ALLOW_LOCAL_LOGIN TYPE BOOLEAN;
+
+-- ===== КОНВЕРТАЦИЯ ТАБЛИЦЫ APPLICATIONS =====
+-- Конвертируем boolean поля в таблице APPLICATIONS  
+ALTER TABLE APPLICATIONS ALTER COLUMN IS_ENABLED TYPE BOOLEAN;
+
+-- ===== КОНВЕРТАЦИЯ ТАБЛИЦЫ USER_SETTINGS =====
+-- Конвертируем boolean поля в таблице USER_SETTINGS
+ALTER TABLE USER_SETTINGS ALTER COLUMN SHOW_CATEGORIES TYPE BOOLEAN;
+ALTER TABLE USER_SETTINGS ALTER COLUMN AUTO_REFRESH TYPE BOOLEAN;  
+ALTER TABLE USER_SETTINGS ALTER COLUMN SHOW_DESCRIPTIONS TYPE BOOLEAN;
+
+-- ===== КОНВЕРТАЦИЯ ТАБЛИЦЫ AUDIT_LOGS =====
+-- Конвертируем boolean поля в таблице AUDIT_LOGS
+ALTER TABLE AUDIT_LOGS ALTER COLUMN SUCCESS TYPE BOOLEAN;
+
+-- ===== ОБНОВЛЕНИЕ DEFAULT ЗНАЧЕНИЙ =====
+-- Устанавливаем правильные boolean DEFAULT значения
+ALTER TABLE USERS ALTER COLUMN IS_ACTIVE SET DEFAULT TRUE;
+ALTER TABLE USERS ALTER COLUMN IS_SERVICE_ACCOUNT SET DEFAULT FALSE;
+ALTER TABLE USERS ALTER COLUMN IS_LOCKED SET DEFAULT FALSE;
+ALTER TABLE USERS ALTER COLUMN IS_LOCAL_USER SET DEFAULT TRUE;
+ALTER TABLE USERS ALTER COLUMN ALLOW_LOCAL_LOGIN SET DEFAULT FALSE;
+
+ALTER TABLE APPLICATIONS ALTER COLUMN IS_ENABLED SET DEFAULT TRUE;
+
+ALTER TABLE USER_SETTINGS ALTER COLUMN SHOW_CATEGORIES SET DEFAULT TRUE;
+ALTER TABLE USER_SETTINGS ALTER COLUMN AUTO_REFRESH SET DEFAULT TRUE;
+ALTER TABLE USER_SETTINGS ALTER COLUMN SHOW_DESCRIPTIONS SET DEFAULT TRUE;
+
+ALTER TABLE AUDIT_LOGS ALTER COLUMN SUCCESS SET DEFAULT TRUE;
+
+COMMIT;
+
+-- ===== ПРОВЕРКА РЕЗУЛЬТАТА =====
+-- Проверяем типы данных после конвертации
+SELECT 
+    RDB$RELATION_NAME AS TABLE_NAME,
+    RDB$FIELD_NAME AS COLUMN_NAME,
+    RDB$FIELD_TYPE AS FIELD_TYPE,
+    RDB$FIELD_SUB_TYPE AS FIELD_SUBTYPE
+FROM RDB$RELATION_FIELDS RF
+JOIN RDB$FIELDS F ON RF.RDB$FIELD_SOURCE = F.RDB$FIELD_NAME
+WHERE RDB$RELATION_NAME IN ('USERS', 'APPLICATIONS', 'USER_SETTINGS', 'AUDIT_LOGS')
+  AND RDB$FIELD_NAME IN ('IS_ACTIVE', 'IS_SERVICE_ACCOUNT', 'IS_LOCKED', 'IS_LOCAL_USER', 
+                         'ALLOW_LOCAL_LOGIN', 'IS_ENABLED', 'SHOW_CATEGORIES', 
+                         'AUTO_REFRESH', 'SHOW_DESCRIPTIONS', 'SUCCESS')
+ORDER BY RDB$RELATION_NAME, RDB$FIELD_NAME;
+
+-- Сообщение об успешном выполнении
+SELECT 'SMALLINT поля успешно конвертированы в BOOLEAN!' AS STATUS FROM RDB$DATABASE;
+
+/*
+ИНСТРУКЦИЯ ПО ПРИМЕНЕНИЮ:
+
+1. Остановите приложение
+2. Сделайте backup базы данных:
+   gbak -b -user SYSDBA -password password KDV_LAUNCHER backup.fbk
+3. Выполните скрипт: isql -i convert_to_boolean_firebird.sql
+4. Обновите скрипты инициализации БД (будет сделано отдельно)
+5. Перезапустите приложение
+
+ВАЖНО: После выполнения этого скрипта все SMALLINT boolean поля 
+станут нативными BOOLEAN типами Firebird, что решит проблемы 
+с SQL синтаксисом и совместимостью с Entity Framework.
+*/

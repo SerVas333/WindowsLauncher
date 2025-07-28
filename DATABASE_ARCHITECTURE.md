@@ -335,4 +335,4 @@ database={Server}/{Port}:{DatabasePath};user={Username};password={Password};dial
 
 **Последнее обновление:** 2024-01-23  
 **Entity Framework версия:** 9.0.6  
-**Поддерживаемые БД:** SQLite 3.x, Firebird 3.0+
+**Поддерживаемые БД:** SQLite 3.x, Firebird 5.0+

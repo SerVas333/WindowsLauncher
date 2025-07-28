@@ -86,6 +86,7 @@
                                 <ColumnDefinition Width="Auto"/>
                                 <ColumnDefinition Width="*"/>
                                 <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="Auto"/>
                             </Grid.ColumnDefinitions>
 
                             <TextBlock Grid.Row="0" Grid.Column="0" 
@@ -103,9 +104,17 @@
                                     Style="{StaticResource CorporateButtonSecondary}"
                                     Width="40"
                                     ToolTip="Выбрать файл"
-                                    Click="BrowseSQLite_Click"/>
+                                    Click="BrowseSQLite_Click"
+                                    Margin="0,0,5,0"/>
+                            <Button x:Name="DefaultSQLiteButton" 
+                                    Grid.Row="0" Grid.Column="3" 
+                                    Content="⚙️"
+                                    Style="{StaticResource CorporateButtonSecondary}"
+                                    Width="40"
+                                    ToolTip="Значения по умолчанию"
+                                    Click="DefaultSQLite_Click"/>
 
-                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="3" 
+                            <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" 
                                        Text="💡 База данных будет создана автоматически при первом запуске" 
                                        FontSize="11" 
                                        Foreground="{StaticResource CorporateTextMuted}"
@@ -144,6 +153,7 @@
                                         <ColumnDefinition Width="Auto"/>
                                         <ColumnDefinition Width="*"/>
                                         <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="Auto"/>
                                     </Grid.ColumnDefinitions>
 
                                     <TextBlock Grid.Row="0" Grid.Column="0" 
@@ -161,7 +171,15 @@
                                             Style="{StaticResource CorporateButtonSecondary}"
                                             Width="40"
                                             ToolTip="Выбрать файл"
-                                            Click="BrowseFirebird_Click"/>
+                                            Click="BrowseFirebird_Click"
+                                            Margin="0,0,5,0"/>
+                                    <Button x:Name="DefaultFirebirdButton" 
+                                            Grid.Row="0" Grid.Column="3" 
+                                            Content="⚙️"
+                                            Style="{StaticResource CorporateButtonSecondary}"
+                                            Width="40"
+                                            ToolTip="Значения по умолчанию"
+                                            Click="DefaultFirebird_Click"/>
                                 </Grid>
                             </StackPanel>
 

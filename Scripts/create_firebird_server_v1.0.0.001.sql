@@ -34,16 +34,16 @@ QUIT;
 -- ===== СОЗДАНИЕ БАЗЫ ДАННЫХ =====
 -- Выполните под SYSDBA для создания БД:
 
-CREATE DATABASE 'localhost:C:\FirebirdData\WindowsLauncher\launcher_server.fdb'
+CREATE DATABASE 'KDV_LAUNCHER'
 PAGE_SIZE 16384
 USER 'SYSDBA' 
-PASSWORD 'your_sysdba_password'
+PASSWORD 'Ghtgjyf1'
 DEFAULT CHARACTER SET UTF8;
 
 -- Подключение к созданной БД
-CONNECT 'localhost:C:\FirebirdData\WindowsLauncher\launcher_server.fdb' 
+CONNECT 'KDV_LAUNCHER' 
 USER 'SYSDBA' 
-PASSWORD 'your_sysdba_password';
+PASSWORD 'Ghtgjyf1';
 
 -- ===== СОЗДАНИЕ ГЕНЕРАТОРОВ =====
 CREATE GENERATOR GEN_USERS_ID;
@@ -321,13 +321,13 @@ ORDER BY RDB$RELATION_NAME, RDB$PRIVILEGE;
 ===== ИНСТРУКЦИИ ПО РАЗВЕРТЫВАНИЮ FIREBIRD SERVER =====
 
 1. ПОДГОТОВКА СЕРВЕРА:
-   - Установите Firebird Server 3.0+ или 4.0+
+   - Установите Firebird Server 5.0+ 
    - Настройте firebird.conf (безопасность, порты, память)
    - Запустите службу Firebird
    - Настройте firewall для порта 3050
 
 2. СОЗДАНИЕ ПОЛЬЗОВАТЕЛЯ ПРИЛОЖЕНИЯ:
-   isql localhost:security3.fdb -user SYSDBA -password your_sysdba_password
+   isql "C:\Program Files\Firebird\Firebird_5_0\security5.fdb" -user SYSDBA -password your_sysdba_password
    CREATE USER KDV_LAUNCHER PASSWORD 'KDV_L@unch3r_S3cur3_2025!';
    QUIT;
 

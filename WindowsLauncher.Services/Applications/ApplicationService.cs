@@ -252,21 +252,26 @@ namespace WindowsLauncher.Services.Applications
                 {
                     FileName = app.ExecutablePath,
                     Arguments = app.Arguments ?? "",
-                    UseShellExecute = true,
-                    WorkingDirectory = Path.GetDirectoryName(app.ExecutablePath) ?? ""
+                    UseShellExecute = true
                 };
 
-                // Проверяем существование файла
-                if (!File.Exists(app.ExecutablePath) && !app.ExecutablePath.EndsWith(".exe"))
+                // Определяем рабочую директорию
+                if (File.Exists(app.ExecutablePath))
                 {
-                    // Возможно это системная команда (calc, notepad и т.д.)
+                    // Если файл существует, используем его директорию
+                    startInfo.WorkingDirectory = Path.GetDirectoryName(app.ExecutablePath) ?? "";
+                    _logger.LogDebug("Launching existing file {Path}", app.ExecutablePath);
+                }
+                else
+                {
+                    // Для системных команд (calc, notepad и т.д.) не устанавливаем WorkingDirectory
                     _logger.LogDebug("File {Path} not found, trying as system command", app.ExecutablePath);
                 }
 
                 var process = Process.Start(startInfo);
                 if (process == null)
                 {
-                    return LaunchResult.Failure("Failed to start process");
+                    return LaunchResult.Failure($"Failed to start process: {app.ExecutablePath}");
                 }
 
                 _logger.LogDebug("Desktop application {AppName} launched with PID {ProcessId}",
@@ -290,8 +295,9 @@ namespace WindowsLauncher.Services.Applications
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error launching desktop application {AppName}", app.Name);
-                return LaunchResult.Failure(ex.Message);
+                var errorMsg = $"Error launching desktop application '{app.Name}' ({app.ExecutablePath}): {ex.Message}";
+                _logger.LogError(ex, "Error launching desktop application {AppName} at path {Path}", app.Name, app.ExecutablePath);
+                return LaunchResult.Failure(errorMsg);
             }
         }
 
@@ -317,8 +323,9 @@ namespace WindowsLauncher.Services.Applications
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error launching web application {AppName}", app.Name);
-                return LaunchResult.Failure(ex.Message);
+                var errorMsg = $"Error launching web application '{app.Name}' ({app.ExecutablePath}): {ex.Message}";
+                _logger.LogError(ex, "Error launching web application {AppName} at URL {Url}", app.Name, app.ExecutablePath);
+                return LaunchResult.Failure(errorMsg);
             }
         }
 
@@ -350,8 +357,9 @@ namespace WindowsLauncher.Services.Applications
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error launching folder {AppName}", app.Name);
-                return LaunchResult.Failure(ex.Message);
+                var errorMsg = $"Error launching folder '{app.Name}' ({app.ExecutablePath}): {ex.Message}";
+                _logger.LogError(ex, "Error launching folder {AppName} at path {Path}", app.Name, app.ExecutablePath);
+                return LaunchResult.Failure(errorMsg);
             }
         }
     }

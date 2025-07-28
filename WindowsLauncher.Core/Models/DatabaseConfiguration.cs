@@ -83,19 +83,20 @@ namespace WindowsLauncher.Core.Models
             }
             else
             {
-                // Для Full Server используем legacy синтаксис: host[/port]:database_or_alias
-                string connectionString;
+                // Для Client-Server используем правильный формат: server[/port]:database
+                string databasePart;
                 if (Port != 3050)
                 {
                     // Нестандартный порт
-                    connectionString = $"database={Server}/{Port}:{DatabasePath};user={Username};password={Password};dialect={Dialect};charset={Charset};connection timeout={ConnectionTimeout}";
+                    databasePart = $"{Server}/{Port}:{DatabasePath}";
                 }
                 else
                 {
                     // Стандартный порт 3050
-                    connectionString = $"database={Server}:{DatabasePath};user={Username};password={Password};dialect={Dialect};charset={Charset};connection timeout={ConnectionTimeout}";
+                    databasePart = $"{Server}:{DatabasePath}";
                 }
-                return connectionString;
+                
+                return $"database={databasePart};user={Username};password={Password};dialect={Dialect};charset={Charset};connection timeout={ConnectionTimeout}";
             }
         }
 

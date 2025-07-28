@@ -170,6 +170,13 @@ namespace WindowsLauncher.UI.Views
         {
             if (_isLoading) return;
 
+            // Проверяем что основные контролы инициализированы
+            if (SQLiteRadio == null || FirebirdRadio == null)
+            {
+                _logger?.LogDebug("UI controls not yet initialized in UpdateUIFromConfiguration");
+                return;
+            }
+
             try
             {
                 // Тип БД
@@ -177,23 +184,42 @@ namespace WindowsLauncher.UI.Views
                 FirebirdRadio.IsChecked = _currentConfig.DatabaseType == DatabaseType.Firebird;
 
                 // SQLite настройки
-                SQLitePathTextBox.Text = _currentConfig.DatabasePath;
+                if (SQLitePathTextBox != null)
+                    SQLitePathTextBox.Text = _currentConfig.DatabasePath;
 
                 // Firebird настройки
-                FirebirdPathTextBox.Text = _currentConfig.DatabasePath;
-                EmbeddedRadio.IsChecked = _currentConfig.ConnectionMode == FirebirdConnectionMode.Embedded;
-                ClientServerRadio.IsChecked = _currentConfig.ConnectionMode == FirebirdConnectionMode.ClientServer;
+                if (FirebirdPathTextBox != null)
+                    FirebirdPathTextBox.Text = _currentConfig.DatabasePath;
                 
-                ServerTextBox.Text = _currentConfig.Server ?? "localhost";
-                PortTextBox.Text = _currentConfig.Port.ToString();
-                DatabaseNameTextBox.Text = _currentConfig.DatabasePath;
+                if (EmbeddedRadio != null)
+                    EmbeddedRadio.IsChecked = _currentConfig.ConnectionMode == FirebirdConnectionMode.Embedded;
                 
-                UsernameTextBox.Text = _currentConfig.Username;
-                PasswordBox.Password = _currentConfig.Password;
+                if (ClientServerRadio != null)
+                    ClientServerRadio.IsChecked = _currentConfig.ConnectionMode == FirebirdConnectionMode.ClientServer;
                 
-                CharsetComboBox.Text = _currentConfig.Charset;
-                DialectComboBox.Text = _currentConfig.Dialect.ToString();
-                TimeoutTextBox.Text = _currentConfig.ConnectionTimeout.ToString();
+                if (ServerTextBox != null)
+                    ServerTextBox.Text = _currentConfig.Server ?? "localhost";
+                
+                if (PortTextBox != null)
+                    PortTextBox.Text = _currentConfig.Port.ToString();
+                
+                if (DatabaseNameTextBox != null)
+                    DatabaseNameTextBox.Text = _currentConfig.DatabasePath;
+                
+                if (UsernameTextBox != null)
+                    UsernameTextBox.Text = _currentConfig.Username;
+                
+                if (PasswordBox != null)
+                    PasswordBox.Password = _currentConfig.Password;
+                
+                if (CharsetComboBox != null)
+                    CharsetComboBox.Text = _currentConfig.Charset;
+                
+                if (DialectComboBox != null)
+                    DialectComboBox.Text = _currentConfig.Dialect.ToString();
+                
+                if (TimeoutTextBox != null)
+                    TimeoutTextBox.Text = _currentConfig.ConnectionTimeout.ToString();
 
                 // Обновляем видимость панелей
                 UpdatePanelVisibility();
@@ -235,6 +261,120 @@ namespace WindowsLauncher.UI.Views
             }
         }
 
+        /// <summary>
+        /// Устанавливает значения по умолчанию для SQLite
+        /// </summary>
+        private void SetSQLiteDefaults()
+        {
+            if (_isLoading) return;
+            
+            // Проверяем что контролы инициализированы
+            if (SQLitePathTextBox == null)
+            {
+                _logger?.LogDebug("SQLite UI controls not yet initialized");
+                return;
+            }
+            
+            try
+            {
+                // Только если поле пустое или содержит значение по умолчанию
+                if (string.IsNullOrEmpty(SQLitePathTextBox.Text) || 
+                    SQLitePathTextBox.Text == "launcher.db" ||
+                    SQLitePathTextBox.Text.EndsWith("launcher.fdb"))
+                {
+                    var defaultPath = Path.Combine(
+                        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                        "WindowsLauncher",
+                        "launcher.db"
+                    );
+                    SQLitePathTextBox.Text = defaultPath;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error setting SQLite defaults");
+            }
+        }
+
+        /// <summary>
+        /// Устанавливает значения по умолчанию для Firebird в зависимости от режима
+        /// </summary>
+        private void SetFirebirdDefaults()
+        {
+            if (_isLoading) return;
+            
+            // Проверяем что контролы инициализированы
+            if (EmbeddedRadio == null || ClientServerRadio == null || 
+                FirebirdPathTextBox == null || UsernameTextBox == null || PasswordBox == null ||
+                ServerTextBox == null || PortTextBox == null || DatabaseNameTextBox == null ||
+                CharsetComboBox == null || DialectComboBox == null || TimeoutTextBox == null)
+            {
+                _logger?.LogDebug("Firebird UI controls not yet initialized");
+                return;
+            }
+            
+            try
+            {
+                if (EmbeddedRadio.IsChecked == true)
+                {
+                    // Embedded режим - локальный файл
+                    if (string.IsNullOrEmpty(FirebirdPathTextBox.Text) || 
+                        FirebirdPathTextBox.Text == "launcher.fdb" ||
+                        FirebirdPathTextBox.Text.EndsWith("launcher.db"))
+                    {
+                        var defaultPath = Path.Combine(
+                            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+                            "WindowsLauncher",
+                            "launcher.fdb"
+                        );
+                        FirebirdPathTextBox.Text = defaultPath;
+                    }
+                    
+                    // Embedded настройки
+                    if (string.IsNullOrEmpty(UsernameTextBox.Text) || UsernameTextBox.Text == "SYSDBA")
+                        UsernameTextBox.Text = "SYSDBA";
+                    
+                    if (string.IsNullOrEmpty(PasswordBox.Password) || PasswordBox.Password == "masterkey")
+                        PasswordBox.Password = "KDV_Launcher_2025!";
+                }
+                else if (ClientServerRadio.IsChecked == true)
+                {
+                    // Client-Server режим - сетевая БД
+                    if (string.IsNullOrEmpty(ServerTextBox.Text) || ServerTextBox.Text == "localhost")
+                        ServerTextBox.Text = "localhost";
+                    
+                    if (string.IsNullOrEmpty(PortTextBox.Text) || PortTextBox.Text == "3050")
+                        PortTextBox.Text = "3050";
+                    
+                    if (string.IsNullOrEmpty(DatabaseNameTextBox.Text) || 
+                        DatabaseNameTextBox.Text == "launcher.fdb" ||
+                        DatabaseNameTextBox.Text.EndsWith("launcher.db"))
+                        DatabaseNameTextBox.Text = "KDV_LAUNCHER"; // Используем алиас БД
+                    
+                    // Server настройки - более безопасные значения по умолчанию
+                    if (string.IsNullOrEmpty(UsernameTextBox.Text) || UsernameTextBox.Text == "SYSDBA")
+                        UsernameTextBox.Text = "KDV_LAUNCHER"; // Не используем SYSDBA для продакшена
+                    
+                    if (string.IsNullOrEmpty(PasswordBox.Password) || PasswordBox.Password == "masterkey")
+                        PasswordBox.Password = "KDV_L@unch3r_S3cur3_2025!"; // Надежный пароль
+                }
+                
+                // Общие настройки Firebird
+                if (string.IsNullOrEmpty(CharsetComboBox.Text) || CharsetComboBox.Text == "NONE")
+                    CharsetComboBox.Text = "UTF8";
+                
+                if (string.IsNullOrEmpty(DialectComboBox.Text) || DialectComboBox.Text == "1")
+                    DialectComboBox.Text = "3";
+                
+                if (string.IsNullOrEmpty(TimeoutTextBox.Text) || TimeoutTextBox.Text == "0")
+                    TimeoutTextBox.Text = "15";
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error setting Firebird defaults");
+            }
+        }
+
         private DatabaseConfiguration CreateConfigurationFromUI()
         {
             var config = new DatabaseConfiguration();
@@ -261,7 +401,7 @@ namespace WindowsLauncher.UI.Views
                 else
                 {
                     config.Server = ServerTextBox.Text?.Trim() ?? "localhost";
-                    config.DatabasePath = DatabaseNameTextBox.Text?.Trim() ?? "launcher.fdb";
+                    config.DatabasePath = DatabaseNameTextBox.Text?.Trim() ?? "KDV_LAUNCHER";
                     
                     if (int.TryParse(PortTextBox.Text, out int port))
                         config.Port = port;
@@ -317,6 +457,23 @@ namespace WindowsLauncher.UI.Views
         {
             if (_isLoading) return;
             
+            // Проверяем что все контролы инициализированы
+            if (FirebirdRadio == null || SQLiteRadio == null)
+            {
+                _logger?.LogDebug("UI controls not yet initialized in DatabaseType_Changed");
+                return;
+            }
+            
+            // Устанавливаем значения по умолчанию при переключении типа БД
+            if (FirebirdRadio.IsChecked == true)
+            {
+                SetFirebirdDefaults();
+            }
+            else if (SQLiteRadio.IsChecked == true)
+            {
+                SetSQLiteDefaults();
+            }
+            
             UpdatePanelVisibility();
             UpdateStatus("Настройки изменены", StatusType.Warning);
         }
@@ -325,8 +482,33 @@ namespace WindowsLauncher.UI.Views
         {
             if (_isLoading) return;
             
+            // Проверяем что все контролы инициализированы
+            if (FirebirdRadio == null || EmbeddedRadio == null || ClientServerRadio == null)
+            {
+                _logger?.LogDebug("UI controls not yet initialized in FirebirdMode_Changed");
+                return;
+            }
+            
+            // Обновляем значения по умолчанию при переключении режима Firebird
+            if (FirebirdRadio.IsChecked == true)
+            {
+                SetFirebirdDefaults();
+            }
+            
             UpdatePanelVisibility();
             UpdateStatus("Настройки изменены", StatusType.Warning);
+        }
+
+        private void DefaultSQLite_Click(object sender, RoutedEventArgs e)
+        {
+            SetSQLiteDefaults();
+            UpdateStatus("Установлены значения по умолчанию для SQLite", StatusType.Info);
+        }
+
+        private void DefaultFirebird_Click(object sender, RoutedEventArgs e)
+        {
+            SetFirebirdDefaults();
+            UpdateStatus("Установлены значения по умолчанию для Firebird", StatusType.Info);
         }
 
         private void BrowseSQLite_Click(object sender, RoutedEventArgs e)
