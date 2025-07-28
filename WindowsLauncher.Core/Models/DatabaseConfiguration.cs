@@ -1,6 +1,5 @@
 using System.ComponentModel.DataAnnotations;
 using WindowsLauncher.Core.Interfaces;
-using ValidationResult = WindowsLauncher.Core.Interfaces.ValidationResult;
 
 namespace WindowsLauncher.Core.Models
 {
@@ -20,49 +19,49 @@ namespace WindowsLauncher.Core.Models
         public FirebirdConnectionMode ConnectionMode { get; set; } = FirebirdConnectionMode.Embedded;
 
         /// <summary>
-        /// Путь к файлу базы данных (для SQLite и Firebird Embedded)
+        /// Путь к файлу базы данных (для SQLite и Firebird Embedded) или имя БД (для Firebird Client/Server)
         /// </summary>
         public string DatabasePath { get; set; } = "launcher.db";
 
         /// <summary>
         /// Сервер базы данных (для Firebird Client-Server)
         /// </summary>
-        public string? Server { get; set; } = "localhost";
+        public string? Server { get; set; }
 
         /// <summary>
         /// Порт сервера (для Firebird Client-Server)
         /// </summary>
-        public int Port { get; set; } = 3050;
+        public int Port { get; set; }
 
         /// <summary>
         /// Имя пользователя базы данных
         /// </summary>
-        public string Username { get; set; } = "SYSDBA";
+        public string Username { get; set; } = string.Empty;
 
         /// <summary>
         /// Пароль пользователя базы данных
         /// </summary>
-        public string Password { get; set; } = "masterkey";
+        public string Password { get; set; } = string.Empty;
 
         /// <summary>
         /// Диалект Firebird (обычно 3)
         /// </summary>
-        public int Dialect { get; set; } = 3;
+        public int Dialect { get; set; }
 
         /// <summary>
         /// Размер страницы для новых баз данных Firebird
         /// </summary>
-        public int PageSize { get; set; } = 8192;
+        public int PageSize { get; set; }
 
         /// <summary>
         /// Кодировка для Firebird
         /// </summary>
-        public string Charset { get; set; } = "UTF8";
+        public string Charset { get; set; } = string.Empty;
 
         /// <summary>
         /// Таймаут соединения в секундах
         /// </summary>
-        public int ConnectionTimeout { get; set; } = 30;
+        public int ConnectionTimeout { get; set; }
 
         /// <summary>
         /// Строка подключения для SQLite
@@ -79,11 +78,24 @@ namespace WindowsLauncher.Core.Models
         {
             if (ConnectionMode == FirebirdConnectionMode.Embedded)
             {
+                // Для Embedded - путь к файлу
                 return $"database={DatabasePath};user={Username};password={Password};dialect={Dialect};charset={Charset};connection timeout={ConnectionTimeout};servertype=1";
             }
             else
             {
-                return $"database={Server}/{Port}:{DatabasePath};user={Username};password={Password};dialect={Dialect};charset={Charset};connection timeout={ConnectionTimeout}";
+                // Для Full Server используем legacy синтаксис: host[/port]:database_or_alias
+                string connectionString;
+                if (Port != 3050)
+                {
+                    // Нестандартный порт
+                    connectionString = $"database={Server}/{Port}:{DatabasePath};user={Username};password={Password};dialect={Dialect};charset={Charset};connection timeout={ConnectionTimeout}";
+                }
+                else
+                {
+                    // Стандартный порт 3050
+                    connectionString = $"database={Server}:{DatabasePath};user={Username};password={Password};dialect={Dialect};charset={Charset};connection timeout={ConnectionTimeout}";
+                }
+                return connectionString;
             }
         }
 
@@ -103,7 +115,7 @@ namespace WindowsLauncher.Core.Models
         /// <summary>
         /// Валидация конфигурации
         /// </summary>
-        public ValidationResult ValidateConfiguration()
+        public DatabaseValidationResult ValidateConfiguration()
         {
             var errors = new List<string>();
 
@@ -125,6 +137,14 @@ namespace WindowsLauncher.Core.Models
                     {
                         errors.Add("Порт должен быть в диапазоне 1-65535");
                     }
+
+                    // Предупреждение о ограничениях DatabaseAccess
+                    if (!string.IsNullOrEmpty(DatabasePath) && 
+                        DatabasePath.Contains("\\") && 
+                        !DatabasePath.StartsWith("C:\\DataBase", StringComparison.OrdinalIgnoreCase))
+                    {
+                        errors.Add("Путь к базе данных должен находиться в папке C:\\DataBase (ограничение сервера)");
+                    }
                 }
 
                 if (string.IsNullOrEmpty(Username))
@@ -138,7 +158,7 @@ namespace WindowsLauncher.Core.Models
                 }
             }
 
-            return new ValidationResult
+            return new DatabaseValidationResult
             {
                 IsValid = errors.Count == 0,
                 Errors = errors.ToArray()

@@ -8,49 +8,49 @@ WindowsLauncher использует **многопоставщическую а
 
 ## Структура данных
 
-### 1. Таблица Users
+### 1. Таблица USERS
 **Основная модель:** `WindowsLauncher.Core.Models.User`
 **Конфигурация:** `WindowsLauncher.Data.Configurations.UserConfiguration`
 
 ```sql
-CREATE TABLE Users (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Username NVARCHAR(100) NOT NULL UNIQUE,
-    DisplayName NVARCHAR(200),
-    Email NVARCHAR(255),
-    Role INTEGER NOT NULL DEFAULT 0, -- UserRole enum
-    IsActive BOOLEAN NOT NULL DEFAULT 1,
-    IsServiceAccount BOOLEAN NOT NULL DEFAULT 0,
-    PasswordHash NVARCHAR(500),
-    Salt NVARCHAR(500),
-    CreatedAt DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    LastLoginAt DATETIME,
-    LastActivityAt DATETIME,
-    FailedLoginAttempts INTEGER NOT NULL DEFAULT 0,
-    IsLocked BOOLEAN NOT NULL DEFAULT 0,
-    LockoutEnd DATETIME,
-    LastPasswordChange DATETIME,
-    GroupsJson NVARCHAR(2000) NOT NULL DEFAULT '[]',
-    SettingsJson NVARCHAR(4000) NOT NULL DEFAULT '{}',
-    MetadataJson NVARCHAR(2000) NOT NULL DEFAULT '{}',
+CREATE TABLE USERS (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    USERNAME NVARCHAR(100) NOT NULL UNIQUE,
+    DISPLAY_NAME NVARCHAR(200),
+    EMAIL NVARCHAR(320),
+    ROLE INTEGER NOT NULL DEFAULT 0, -- UserRole enum
+    IS_ACTIVE BOOLEAN NOT NULL DEFAULT 1,
+    IS_SERVICE_ACCOUNT BOOLEAN NOT NULL DEFAULT 0,
+    PASSWORD_HASH NVARCHAR(500),
+    SALT NVARCHAR(500),
+    CREATED_AT DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    LAST_LOGIN_AT DATETIME,
+    LAST_ACTIVITY_AT DATETIME,
+    FAILED_LOGIN_ATTEMPTS INTEGER NOT NULL DEFAULT 0,
+    IS_LOCKED BOOLEAN NOT NULL DEFAULT 0,
+    LOCKOUT_END DATETIME,
+    LAST_PASSWORD_CHANGE DATETIME,
+    GROUPS_JSON NVARCHAR(2000) NOT NULL DEFAULT '[]',
+    SETTINGS_JSON NVARCHAR(4000) NOT NULL DEFAULT '{}',
+    METADATA_JSON NVARCHAR(2000) NOT NULL DEFAULT '{}',
     
-    -- Гибридная авторизация (новое)
-    AuthenticationType INTEGER NOT NULL DEFAULT 0, -- AuthenticationType enum
-    DomainUsername NVARCHAR(100),
-    LastDomainSync DATETIME,
-    IsLocalUser BOOLEAN NOT NULL DEFAULT 1,
-    AllowLocalLogin BOOLEAN NOT NULL DEFAULT 0
+    -- Гибридная авторизация
+    AUTHENTICATION_TYPE INTEGER NOT NULL DEFAULT 0, -- AuthenticationType enum
+    DOMAIN_USERNAME NVARCHAR(100),
+    LAST_DOMAIN_SYNC DATETIME,
+    IS_LOCAL_USER BOOLEAN NOT NULL DEFAULT 1,
+    ALLOW_LOCAL_LOGIN BOOLEAN NOT NULL DEFAULT 0
 );
 ```
 
 **Индексы:**
-- `IX_Users_Username` (UNIQUE)
-- `IX_Users_IsActive`
-- `IX_Users_IsServiceAccount`
-- `IX_Users_AuthenticationType`
-- `IX_Users_IsLocalUser`
-- `IX_Users_DomainUsername`
-- `IX_Users_LastDomainSync`
+- `IX_USERS_USERNAME` (UNIQUE)
+- `IX_USERS_IS_ACTIVE`
+- `IX_USERS_IS_SERVICE_ACCOUNT`
+- `IX_USERS_AUTHENTICATION_TYPE`
+- `IX_USERS_IS_LOCAL_USER`
+- `IX_USERS_DOMAIN_USERNAME`
+- `IX_USERS_LAST_DOMAIN_SYNC`
 
 **Типы авторизации:**
 ```csharp
@@ -73,34 +73,35 @@ public enum UserRole
 }
 ```
 
-### 2. Таблица Applications
+### 2. Таблица APPLICATIONS
 **Основная модель:** `WindowsLauncher.Core.Models.Application`
 **Конфигурация:** `WindowsLauncher.Data.Configurations.ApplicationConfiguration`
 
 ```sql
-CREATE TABLE Applications (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Name NVARCHAR(200) NOT NULL,
-    Description NVARCHAR(500),
-    ExecutablePath NVARCHAR(1000) NOT NULL,
-    Arguments NVARCHAR(500),
-    IconPath NVARCHAR(1000),
-    Category NVARCHAR(100) NOT NULL DEFAULT 'General',
-    Type INTEGER NOT NULL DEFAULT 0, -- ApplicationType enum
-    MinimumRole INTEGER NOT NULL DEFAULT 0, -- UserRole enum
-    RequiredGroups TEXT, -- JSON массив строк
-    IsEnabled BOOLEAN NOT NULL DEFAULT 1,
-    SortOrder INTEGER NOT NULL DEFAULT 0,
-    CreatedDate DATETIME NOT NULL,
-    ModifiedDate DATETIME NOT NULL,
-    CreatedBy NVARCHAR(100)
+CREATE TABLE APPLICATIONS (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    NAME NVARCHAR(200) NOT NULL,
+    DESCRIPTION NVARCHAR(500),
+    EXECUTABLE_PATH NVARCHAR(1000) NOT NULL,
+    ARGUMENTS NVARCHAR(500),
+    WORKING_DIRECTORY NVARCHAR(1000),
+    ICON_PATH NVARCHAR(1000),
+    CATEGORY NVARCHAR(100) NOT NULL DEFAULT 'General',
+    APP_TYPE INTEGER NOT NULL DEFAULT 0, -- ApplicationType enum
+    MINIMUM_ROLE INTEGER NOT NULL DEFAULT 0, -- UserRole enum
+    REQUIRED_GROUPS TEXT, -- JSON массив строк
+    IS_ENABLED BOOLEAN NOT NULL DEFAULT 1,
+    SORT_ORDER INTEGER NOT NULL DEFAULT 0,
+    CREATED_DATE DATETIME NOT NULL,
+    MODIFIED_DATE DATETIME NOT NULL,
+    CREATED_BY NVARCHAR(100)
 );
 ```
 
 **Индексы:**
-- `IX_Applications_Name`
-- `IX_Applications_Category`
-- `IX_Applications_IsEnabled`
+- `IX_APPLICATIONS_NAME`
+- `IX_APPLICATIONS_CATEGORY`
+- `IX_APPLICATIONS_IS_ENABLED`
 
 **Типы приложений:**
 ```csharp
@@ -112,62 +113,67 @@ public enum ApplicationType
 }
 ```
 
-### 3. Таблица UserSettings
+### 3. Таблица USER_SETTINGS
 **Основная модель:** `WindowsLauncher.Core.Models.UserSettings`
 **Конфигурация:** `WindowsLauncher.Data.Configurations.UserSettingsConfiguration`
 
 ```sql
-CREATE TABLE UserSettings (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    Username NVARCHAR(100) NOT NULL UNIQUE,
-    Theme NVARCHAR(50) NOT NULL DEFAULT 'Light',
-    AccentColor NVARCHAR(50) NOT NULL DEFAULT 'Blue',
-    TileSize INTEGER NOT NULL DEFAULT 150,
-    ShowCategories BOOLEAN NOT NULL DEFAULT 1,
-    DefaultCategory NVARCHAR(100) NOT NULL DEFAULT 'All',
-    HiddenCategories TEXT, -- JSON массив строк
-    AutoRefresh BOOLEAN NOT NULL DEFAULT 1,
-    RefreshIntervalMinutes INTEGER NOT NULL DEFAULT 30,
-    ShowDescriptions BOOLEAN NOT NULL DEFAULT 1,
-    LastModified DATETIME NOT NULL
+CREATE TABLE USER_SETTINGS (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    USER_ID INTEGER NOT NULL,
+    THEME NVARCHAR(50) NOT NULL DEFAULT 'Light',
+    ACCENT_COLOR NVARCHAR(50) NOT NULL DEFAULT 'Blue', 
+    TILE_SIZE INTEGER NOT NULL DEFAULT 150,
+    SHOW_CATEGORIES BOOLEAN NOT NULL DEFAULT 1,
+    DEFAULT_CATEGORY NVARCHAR(100) NOT NULL DEFAULT 'All',
+    HIDDEN_CATEGORIES TEXT, -- JSON массив строк
+    AUTO_REFRESH BOOLEAN NOT NULL DEFAULT 1,
+    REFRESH_INTERVAL_MINUTES INTEGER NOT NULL DEFAULT 30,
+    SHOW_DESCRIPTIONS BOOLEAN NOT NULL DEFAULT 1,
+    UPDATED_AT DATETIME NOT NULL,
+    
+    FOREIGN KEY (USER_ID) REFERENCES USERS(ID) ON DELETE CASCADE
 );
 ```
 
 **Индексы:**
-- `IX_UserSettings_Username` (UNIQUE)
+- `IX_USER_SETTINGS_USER_ID` (UNIQUE)
 
-### 4. Таблица AuditLogs
+### 4. Таблица AUDIT_LOGS
 **Основная модель:** `WindowsLauncher.Core.Models.AuditLog`
 **Конфигурация:** `WindowsLauncher.Data.Configurations.AuditLogConfiguration`
 
 ```sql
-CREATE TABLE AuditLogs (
-    Id INTEGER PRIMARY KEY AUTOINCREMENT,
-    UserId INTEGER, -- FK to Users (nullable для системных действий)
-    Username NVARCHAR(100) NOT NULL,
-    Action NVARCHAR(100) NOT NULL,
-    ApplicationName NVARCHAR(200),
-    Details NVARCHAR(2000),
-    Timestamp DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    Success BOOLEAN NOT NULL DEFAULT 1,
-    ErrorMessage NVARCHAR(1000),
-    ComputerName NVARCHAR(100) NOT NULL,
-    IPAddress NVARCHAR(45), -- Поддержка IPv6
-    UserAgent NVARCHAR(500),
-    MetadataJson NVARCHAR(2000) NOT NULL DEFAULT '{}'
+CREATE TABLE AUDIT_LOGS (
+    ID INTEGER PRIMARY KEY AUTOINCREMENT,
+    USER_ID INTEGER, -- FK to USERS (nullable для системных действий)
+    USERNAME NVARCHAR(100) NOT NULL,
+    ACTION NVARCHAR(100) NOT NULL,
+    APPLICATION_NAME NVARCHAR(200),
+    DETAILS NVARCHAR(2000),
+    TIMESTAMP_UTC DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    SUCCESS BOOLEAN NOT NULL DEFAULT 1,
+    ERROR_MESSAGE NVARCHAR(1000),
+    COMPUTER_NAME NVARCHAR(100) NOT NULL,
+    IP_ADDRESS NVARCHAR(45), -- Поддержка IPv6
+    USER_AGENT NVARCHAR(500),
+    METADATA_JSON NVARCHAR(2000) NOT NULL DEFAULT '{}',
+    
+    FOREIGN KEY (USER_ID) REFERENCES USERS(ID) ON DELETE SET NULL
 );
 ```
 
 **Индексы:**
-- `IX_AuditLogs_Username`
-- `IX_AuditLogs_Action`
-- `IX_AuditLogs_Timestamp`
-- `IX_AuditLogs_Username_Timestamp` (composite)
+- `IX_AUDIT_LOGS_USERNAME`
+- `IX_AUDIT_LOGS_ACTION`
+- `IX_AUDIT_LOGS_TIMESTAMP_UTC`
+- `IX_AUDIT_LOGS_USERNAME_TIMESTAMP` (composite)
 
 **Навигационные свойства:**
-- `AuditLog.User` → `User` (optional, через UserId)
-- `User.AuditLogs` → `ICollection<AuditLog>`
-- `User.UserSettings` → `UserSettings` (optional)
+- `User.UserSettings` → `UserSettings` (1:1, через USER_ID FK)
+- `UserSettings.User` → `User` (через USER_ID FK) 
+- `User.AuditLogs` → `ICollection<AuditLog>` (через USER_ID FK)
+- `AuditLog.User` → `User` (optional, через USER_ID FK)
 
 ## Конфигурация подключения
 
@@ -214,16 +220,16 @@ database={Server}/{Port}:{DatabasePath};user={Username};password={Password};dial
 **Файл:** `WindowsLauncher.Data.LauncherDbContext`
 
 **DbSets:**
-- `Users` → `User`
-- `Applications` → `Application`  
-- `UserSettings` → `UserSettings`
-- `AuditLogs` → `AuditLog`
+- `Users` → `User` (таблица USERS)
+- `Applications` → `Application` (таблица APPLICATIONS)
+- `UserSettings` → `UserSettings` (таблица USER_SETTINGS)
+- `AuditLogs` → `AuditLog` (таблица AUDIT_LOGS)
 
 **Особенности:**
-- **Динамическая конфигурация БД** через `IDatabaseConfigurationService`
-- **Адаптация к типу БД** (SQLite/Firebird) в `OnModelCreating`
-- **Firebird специфика:** UPPERCASE имена таблиц/колонок, специальные типы данных
-- **SQLite специфика:** стандартные настройки EF Core
+- **Унифицированные UPPERCASE имена** для всех БД (SQLite и Firebird)
+- **Единая конфигурация** без условной логики по типу БД
+- **Стандартные FK связи** через USER_ID вместо текстовых ключей
+- **ApplyUniversalConfiguration** обеспечивает UPPERCASE во всех именах
 
 ## Сервисы инициализации
 

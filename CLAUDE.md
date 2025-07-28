@@ -63,6 +63,221 @@ WindowsLauncher.sln (Visual Studio 2022)
 - **Active Directory** — корпоративная аутентификация
 - **System.DirectoryServices** — LDAP интеграция
 
+## Система управления версиями БД
+
+### Архитектура версионирования
+
+**Версионирование:** Семантическое `MAJOR.MINOR.PATCH.BUILD` (например, `1.0.0.001`)
+
+**Структура миграций:**
+```
+WindowsLauncher.Data/Migrations/
+├── v1.0.0.001_InitialSchema.cs     # Базовая схема версии 1.0.0
+├── v1.0.0.002_AddNewFeature.cs     # Следующие инкрементальные изменения
+├── v1.1.0.001_MajorUpdate.cs       # Большие обновления
+└── v2.0.0.001_BreakingChanges.cs   # Критические изменения API
+```
+
+### Таблицы метаданных версионирования
+
+**DATABASE_VERSION** — текущая версия БД:
+```sql
+CREATE TABLE DATABASE_VERSION (
+    VERSION VARCHAR(20) PRIMARY KEY,        -- Версия БД (1.0.0.001)
+    APPLIED_AT TIMESTAMP NOT NULL,          -- Время применения
+    APPLICATION_VERSION VARCHAR(20)         -- Совместимая версия приложения
+);
+```
+
+**MIGRATION_HISTORY** — полная история миграций:
+```sql
+CREATE TABLE MIGRATION_HISTORY (
+    ID INTEGER PRIMARY KEY,
+    VERSION VARCHAR(20) NOT NULL,           -- Версия миграции
+    NAME VARCHAR(200) NOT NULL,             -- Имя миграции
+    DESCRIPTION TEXT,                       -- Описание изменений
+    APPLIED_AT TIMESTAMP NOT NULL,          -- Время применения
+    ROLLBACK_SCRIPT TEXT                    -- SQL для отката (будущее)
+);
+```
+
+### Сервисы версионирования
+
+**IApplicationVersionService** — управление совместимостью:
+```csharp
+GetApplicationVersion()                    // Версия приложения из Assembly
+GetDatabaseVersionAsync()                  // Текущая версия БД
+SetDatabaseVersionAsync(version)           // Обновление версии БД
+IsDatabaseCompatibleAsync()                // Проверка совместимости
+IsDatabaseInitializedAsync()               // Проверка инициализации БД
+```
+
+**IDatabaseMigrationService** — применение миграций:
+```csharp
+GetAllMigrations()                         // Список всех миграций
+GetPendingMigrationsAsync()               // Неприменённые миграции
+MigrateAsync()                            // Применение ожидающих миграций
+IsDatabaseUpToDateAsync()                 // Проверка актуальности схемы
+```
+
+### Процесс инициализации БД
+
+**При первом запуске приложения:**
+1. **Проверка инициализации** — `IsDatabaseInitializedAsync()`
+2. **Применение базовой миграции** — `v1.0.0.001_InitialSchema.cs`
+3. **Создание полной схемы** — все таблицы, индексы, начальные данные
+4. **Установка версии** — запись в `DATABASE_VERSION`
+
+**При последующих запусках:**
+1. **Проверка совместимости** — `IsDatabaseCompatibleAsync()`
+2. **Применение новых миграций** — инкрементальные обновления
+3. **Обновление версии** — при успешном применении миграций
+
+### Схема БД версии 1.0.0.001
+
+**Основные таблицы:**
+- **USERS** — пользователи с ролями и AD интеграцией
+- **APPLICATIONS** — приложения с эмодзи иконками (`ICONTEXT` поле)  
+- **USER_SETTINGS** — персональные настройки UI
+- **AUDIT_LOGS** — журнал действий пользователей
+- **DATABASE_VERSION** — текущая версия БД
+- **MIGRATION_HISTORY** — история применённых миграций
+
+**Совместимость БД:**
+- **SQLite** — основная БД для разработки и малых установок
+- **Firebird** — корпоративная БД для production окружений
+- **UPPERCASE имена** — таблицы и колонки для универсальности
+
+### Первоначальная настройка (важно!)
+
+**⚠️ Для первого запуска с новой системой версионирования:**
+
+1. **Удалите старую базу данных:**
+   ```bash
+   # Удалить SQLite БД
+   rm "%AppData%\WindowsLauncher\launcher.db"
+   
+   # Удалить конфигурацию БД
+   rm "%AppData%\WindowsLauncher\database-config.json"
+   ```
+
+2. **Первый запуск:**
+   - Приложение автоматически создаст БД версии `1.0.0.001`
+   - Применится миграция `InitialSchema` с полной схемой
+   - Добавятся начальные данные (пользователь `guest`, базовые приложения)
+
+3. **Проверка успешной инициализации:**
+   ```sql
+   SELECT * FROM DATABASE_VERSION;  -- Должна показать версию 1.0.0.001
+   SELECT * FROM MIGRATION_HISTORY; -- История применённых миграций
+   SELECT * FROM APPLICATIONS;      -- Базовые приложения с эмодзи иконками
+   ```
+
+### Развертывание Firebird БД
+
+**Автоматизированное развертывание:**
+```powershell
+# Embedded режим (автономная установка)
+.\Scripts\Deploy-FirebirdDatabase.ps1 -Mode Embedded
+
+# Server режим (корпоративная установка)
+.\Scripts\Deploy-FirebirdDatabase.ps1 -Mode Server -ServerHost "fb-server.local" -CreateBackup
+```
+
+**Ручное развертывание:**
+
+**Firebird Embedded:**
+```bash
+# 1. Создание embedded БД
+isql -i Scripts\create_firebird_embedded_v1.0.0.001.sql
+
+# 2. Конфигурация приложения
+{
+  "DatabaseType": "Firebird",
+  "DatabasePath": "C:\\WindowsLauncher\\Data\\launcher_embedded.fdb",
+  "Username": "SYSDBA",
+  "Password": "KDV_Launcher_2025!",
+  "ConnectionMode": "Embedded"
+}
+```
+
+**Firebird Server:**
+```bash
+# 1. Создание пользователя БД
+isql localhost:security3.fdb -user SYSDBA -password your_password
+CREATE USER KDV_LAUNCHER PASSWORD 'KDV_L@unch3r_S3cur3_2025!';
+
+# 2. Создание server БД  
+isql -i Scripts\create_firebird_server_v1.0.0.001.sql
+
+# 3. Конфигурация приложения
+{
+  "DatabaseType": "Firebird",
+  "Server": "localhost",
+  "Port": 3050,
+  "DatabasePath": "C:\\FirebirdData\\launcher_server.fdb",
+  "Username": "KDV_LAUNCHER", 
+  "Password": "KDV_L@unch3r_S3cur3_2025!",
+  "ConnectionMode": "Server"
+}
+```
+
+**Требования безопасности:**
+- **Пароли:** Минимум 12 символов, смешанный регистр, цифры, спецсимволы
+- **Пользователи:** Отдельный пользователь для приложения (НЕ SYSDBA)
+- **Сеть:** Firewall настройки для порта 3050 (server режим)
+- **SSL/TLS:** Рекомендуется для удаленных подключений
+
+### Разработка новых миграций
+
+**Создание новой миграции:**
+```csharp
+public class AddNotificationSystem : IDatabaseMigration
+{
+    public string Name => "AddNotificationSystem";
+    public string Version => "1.1.0.001";  // Инкремент версии
+    public string Description => "Add notification tables and triggers";
+    
+    public async Task UpAsync(IDatabaseMigrationContext context, DatabaseType databaseType)
+    {
+        // Проверяем что изменение ещё не применено
+        bool tableExists = await context.TableExistsAsync("NOTIFICATIONS");
+        if (tableExists) return;
+        
+        // SQL для создания новых таблиц/колонок
+        string sql = databaseType switch { /* ... */ };
+        await context.ExecuteSqlAsync(sql);
+    }
+    
+    public async Task DownAsync(IDatabaseMigrationContext context, DatabaseType databaseType)
+    {
+        // SQL для отката изменений (future feature)
+    }
+}
+```
+
+**Регистрация в DatabaseMigrationService:**
+```csharp
+_migrations = new List<IDatabaseMigration>
+{
+    new InitialSchema(),           // v1.0.0.001
+    new AddNotificationSystem()    // v1.1.0.001
+};
+```
+
+### Рекомендации по версионированию
+
+**Правила инкрементации версий:**
+- **PATCH (1.0.0.xxx)** — мелкие изменения, добавление колонок, индексов
+- **MINOR (1.x.0.001)** — новые таблицы, функциональность, обратно совместимые изменения  
+- **MAJOR (x.0.0.001)** — критические изменения, несовместимые с предыдущими версиями
+
+**Безопасность миграций:**
+- Всегда проверять существование объектов перед созданием
+- Использовать транзакции для критических изменений
+- Тестировать на копиях production данных
+- Сохранять скрипты отката для критических миграций
+
 ## Корпоративный дизайн-система
 
 ### Архитектура стилей

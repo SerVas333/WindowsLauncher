@@ -145,11 +145,11 @@ namespace WindowsLauncher.Services.Authorization
                 await _settingsRepository.UpdateAsync(settings);
                 await _settingsRepository.SaveChangesAsync();
 
-                _logger.LogInformation("Settings saved for user {Username}", settings.Username);
+                _logger.LogInformation("Settings saved for user ID {UserId}", settings.UserId);
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error saving settings for user {Username}", settings.Username);
+                _logger.LogError(ex, "Error saving settings for user ID {UserId}", settings.UserId);
                 throw;
             }
         }
@@ -195,7 +195,7 @@ namespace WindowsLauncher.Services.Authorization
         {
             var settings = new UserSettings
             {
-                Username = user.Username,
+                UserId = user.Id,
                 Theme = "Light",
                 AccentColor = "Blue",
                 TileSize = 150,

@@ -41,17 +41,17 @@ namespace WindowsLauncher.Data
         {
             base.OnModelCreating(modelBuilder);
 
-            // Определяем тип базы данных для условных конфигураций
-            var databaseType = GetCurrentDatabaseType();
+            // ПРОСТОЕ РЕШЕНИЕ: Все таблицы и колонки в UPPERCASE для всех БД
+            // SQLite нечувствителен к регистру, Firebird требует UPPERCASE
+            
+            // Применяем UNIFORM конфигурации с UPPERCASE именами
+            modelBuilder.ApplyConfiguration(new UserConfiguration());
+            modelBuilder.ApplyConfiguration(new ApplicationConfiguration());
+            modelBuilder.ApplyConfiguration(new UserSettingsConfiguration());
+            modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
 
-            // Применяем конфигурации с учетом типа БД
-            modelBuilder.ApplyConfiguration(new UserConfiguration(databaseType));
-            modelBuilder.ApplyConfiguration(new ApplicationConfiguration(databaseType));
-            modelBuilder.ApplyConfiguration(new UserSettingsConfiguration(databaseType));
-            modelBuilder.ApplyConfiguration(new AuditLogConfiguration(databaseType));
-
-            // Применяем специфичные для БД настройки
-            ApplyDatabaseSpecificConfiguration(modelBuilder, databaseType);
+            // Применяем общие настройки для всех БД
+            ApplyUniversalConfiguration(modelBuilder);
         }
 
         private DatabaseConfiguration GetDatabaseConfigurationSync()
@@ -66,18 +66,6 @@ namespace WindowsLauncher.Data
             catch
             {
                 return new DatabaseConfiguration();
-            }
-        }
-
-        private DatabaseType GetCurrentDatabaseType()
-        {
-            try
-            {
-                return GetDatabaseConfigurationSync().DatabaseType;
-            }
-            catch
-            {
-                return DatabaseType.SQLite; // По умолчанию SQLite
             }
         }
 
@@ -104,117 +92,46 @@ namespace WindowsLauncher.Data
             }
         }
 
-        private static void ApplyDatabaseSpecificConfiguration(ModelBuilder modelBuilder, DatabaseType databaseType)
-        {
-            switch (databaseType)
-            {
-                case DatabaseType.SQLite:
-                    // SQLite-специфичные настройки
-                    ApplySQLiteConfiguration(modelBuilder);
-                    break;
 
-                case DatabaseType.Firebird:
-                    // Firebird-специфичные настройки
-                    ApplyFirebirdConfiguration(modelBuilder);
-                    break;
-            }
-        }
-
-        private static void ApplySQLiteConfiguration(ModelBuilder modelBuilder)
+        private static void ApplyUniversalConfiguration(ModelBuilder modelBuilder)
         {
-            // Для SQLite используем стандартные настройки
-            // DateTime сохраняется как TEXT
-            // GUID как TEXT
-            // Bool как INTEGER (0/1)
-        }
-
-        private static void ApplyFirebirdConfiguration(ModelBuilder modelBuilder)
-        {
-            // Настройки для Firebird
+            // UNIVERSAL настройки для всех БД - все в UPPERCASE
+            // Обеспечиваем что все имена таблиц и колонок в верхнем регистре
+            
             foreach (var entityType in modelBuilder.Model.GetEntityTypes())
             {
-                // Настройка имен таблиц (Firebird любит UPPERCASE)
+                // Убеждаемся что имена таблиц в UPPERCASE
                 var tableName = entityType.GetTableName();
-                if (!string.IsNullOrEmpty(tableName))
+                if (!string.IsNullOrEmpty(tableName) && tableName != tableName.ToUpper())
                 {
                     entityType.SetTableName(tableName.ToUpper());
                 }
 
-                // Настройка имен колонок
+                // Убеждаемся что имена колонок в UPPERCASE
                 foreach (var property in entityType.GetProperties())
                 {
                     var columnName = property.GetColumnName();
-                    if (!string.IsNullOrEmpty(columnName))
+                    if (!string.IsNullOrEmpty(columnName) && columnName != columnName.ToUpper())
                     {
                         property.SetColumnName(columnName.ToUpper());
                     }
-
-                    // Настройка типов данных для Firebird
-                    var clrType = property.ClrType;
-                    var underlyingType = Nullable.GetUnderlyingType(clrType) ?? clrType;
-
-                    if (underlyingType == typeof(string))
-                    {
-                        // Для строк используем VARCHAR с максимальной длиной или BLOB SUB_TYPE TEXT
-                        var maxLength = property.GetMaxLength();
-                        if (maxLength == null || maxLength > 8191)
-                        {
-                            property.SetColumnType("BLOB SUB_TYPE TEXT");
-                        }
-                        else
-                        {
-                            property.SetColumnType($"VARCHAR({maxLength})");
-                        }
-                    }
-                    else if (underlyingType == typeof(DateTime))
-                    {
-                        property.SetColumnType("TIMESTAMP");
-                    }
-                    else if (underlyingType == typeof(bool))
-                    {
-                        property.SetColumnType("SMALLINT");
-                    }
-                    else if (underlyingType == typeof(Guid))
-                    {
-                        property.SetColumnType("CHAR(36)");
-                    }
-                    else if (underlyingType == typeof(long))
-                    {
-                        property.SetColumnType("BIGINT");
-                    }
-                    else if (underlyingType == typeof(int))
-                    {
-                        property.SetColumnType("INTEGER");
-                    }
-                    else if (underlyingType == typeof(decimal))
-                    {
-                        property.SetColumnType("DECIMAL(18,2)");
-                    }
-                    else if (underlyingType == typeof(double))
-                    {
-                        property.SetColumnType("DOUBLE PRECISION");
-                    }
-                    else if (underlyingType == typeof(float))
-                    {
-                        property.SetColumnType("FLOAT");
-                    }
                 }
 
-                // Настройка индексов
+                // Убеждаемся что имена индексов в UPPERCASE
                 foreach (var index in entityType.GetIndexes())
                 {
                     var indexName = index.GetDatabaseName();
-                    if (!string.IsNullOrEmpty(indexName))
+                    if (!string.IsNullOrEmpty(indexName) && indexName != indexName.ToUpper())
                     {
                         index.SetDatabaseName(indexName.ToUpper());
                     }
                 }
 
-                // Настройка внешних ключей
+                // Убеждаемся что имена внешних ключей в UPPERCASE
                 foreach (var foreignKey in entityType.GetForeignKeys())
                 {
                     var constraintName = foreignKey.GetConstraintName();
-                    if (!string.IsNullOrEmpty(constraintName))
+                    if (!string.IsNullOrEmpty(constraintName) && constraintName != constraintName.ToUpper())
                     {
                         foreignKey.SetConstraintName(constraintName.ToUpper());
                     }

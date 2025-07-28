@@ -8,6 +8,7 @@ using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Data;
 using WindowsLauncher.Data.Services;
+using WindowsLauncher.Data.Migrations;
 
 namespace WindowsLauncher.Services
 {
@@ -30,8 +31,11 @@ namespace WindowsLauncher.Services
             _dbConfigService = dbConfigService;
             _logger = logger;
             
-            // Список миграций (будет заполняться по мере развития приложения)
-            _migrations = new List<IDatabaseMigration>();
+            // Список миграций версии 1.0.0
+            _migrations = new List<IDatabaseMigration>
+            {
+                new InitialSchema()
+            };
         }
         
         public IReadOnlyList<IDatabaseMigration> GetAllMigrations()

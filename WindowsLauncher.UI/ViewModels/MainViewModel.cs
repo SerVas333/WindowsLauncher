@@ -197,7 +197,7 @@ namespace WindowsLauncher.UI.ViewModels
         public RelayCommand OpenSettingsCommand { get; private set; } = null!;
         public RelayCommand SwitchUserCommand { get; private set; } = null!;
         public RelayCommand OpenAdminCommand { get; private set; } = null!;
-        public AsyncRelayCommand ToggleVirtualKeyboardCommand { get; private set; } = null!;
+        public AsyncRelayCommand ShowVirtualKeyboardCommand { get; private set; } = null!;
 
         private void InitializeCommands()
         {
@@ -225,8 +225,8 @@ namespace WindowsLauncher.UI.ViewModels
                 OpenAdminWindow,
                 () => CurrentUser?.Role >= Core.Enums.UserRole.Administrator);
 
-            ToggleVirtualKeyboardCommand = new AsyncRelayCommand(
-                ToggleVirtualKeyboard,
+            ShowVirtualKeyboardCommand = new AsyncRelayCommand(
+                ToggleVirtualKeyboard, // Оставляем старое имя метода для совместимости
                 () => !IsLoading,
                 Logger);
         }
@@ -443,7 +443,7 @@ namespace WindowsLauncher.UI.ViewModels
         {
             return new UserSettings
             {
-                Username = CurrentUser?.Username ?? "",
+                UserId = CurrentUser?.Id ?? 0,
                 Theme = "Light",
                 AccentColor = "Blue",
                 TileSize = 150,
@@ -680,30 +680,46 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
 
-        private void Logout()
+        private async void Logout()
         {
             try
             {
-                var confirmMessage = LocalizationHelper.Instance.GetString("ConfirmLogout");
+                using var scope = _serviceProvider.CreateScope();
+                var sessionManager = scope.ServiceProvider.GetRequiredService<ISessionManagementService>();
+                
+                var confirmMessage = sessionManager.Configuration.LogoutConfirmationMessage;
                 var confirmTitle = LocalizationHelper.Instance.GetString("Confirmation");
 
                 if (!DialogService.ShowConfirmation(confirmMessage, confirmTitle))
                     return;
 
-                using var scope = _serviceProvider.CreateScope();
-                var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
-
-                authService.Logout();
-                Logger.LogInformation("User logged out: {User}", CurrentUser?.Username);
-
-                StatusMessage = LocalizationHelper.Instance.GetString("LoggedOut");
-                WpfApplication.Current.Shutdown();
+                StatusMessage = LocalizationHelper.Instance.GetString("LoggingOut");
+                
+                // Используем SessionManagementService для обработки выхода
+                var success = await sessionManager.HandleLogoutRequestAsync();
+                
+                if (success)
+                {
+                    Logger.LogInformation("User logged out successfully: {User}", CurrentUser?.Username);
+                    StatusMessage = LocalizationHelper.Instance.GetString("LoggedOut");
+                    
+                    // Закрываем MainWindow - это запустит HandleMainWindowClosedAsync в App.xaml.cs
+                    System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
+                    {
+                        System.Windows.Application.Current.MainWindow?.Close();
+                    });
+                }
+                else
+                {
+                    StatusMessage = LocalizationHelper.Instance.GetString("LogoutFailed");
+                }
             }
             catch (Exception ex)
             {
                 var errorMessage = LocalizationHelper.Instance.GetFormattedString("LogoutError", ex.Message);
                 StatusMessage = errorMessage;
                 DialogService.ShowError(errorMessage);
+                Logger.LogError(ex, "Error during logout");
             }
         }
 
@@ -772,25 +788,34 @@ namespace WindowsLauncher.UI.ViewModels
 
                 StatusMessage = LocalizationHelper.Instance.GetString("TogglingVirtualKeyboard");
 
-                bool success = await virtualKeyboardService.ToggleVirtualKeyboardAsync();
+                // Изменяем логику: всегда показываем клавиатуру и позиционируем её
+                bool success = await virtualKeyboardService.ShowVirtualKeyboardAsync();
+                
+                if (!success)
+                {
+                    // Если первая попытка не удалась, пробуем принудительное позиционирование
+                    Logger.LogInformation("Первая попытка показа не удалась, пытаемся принудительное позиционирование");
+                    success = await virtualKeyboardService.RepositionKeyboardAsync();
+                }
 
                 if (success)
                 {
-                    var isRunning = virtualKeyboardService.IsVirtualKeyboardRunning();
-                    IsVirtualKeyboardVisible = isRunning;
-                    
-                    var messageKey = isRunning ? "VirtualKeyboardShown" : "VirtualKeyboardHidden";
-                    StatusMessage = LocalizationHelper.Instance.GetString(messageKey);
-                    Logger.LogInformation("Virtual keyboard toggled successfully, state: {IsRunning}", isRunning);
+                    IsVirtualKeyboardVisible = true;
+                    StatusMessage = LocalizationHelper.Instance.GetString("VirtualKeyboardShown");
+                    Logger.LogInformation("Virtual keyboard shown successfully from MainWindow button");
                 }
                 else
                 {
+                    // Выполняем диагностику для понимания проблемы
+                    var diagnosis = await virtualKeyboardService.DiagnoseVirtualKeyboardAsync();
+                    Logger.LogWarning("Failed to show virtual keyboard from MainWindow button. Diagnosis:\n{Diagnosis}", diagnosis);
+                    
                     StatusMessage = LocalizationHelper.Instance.GetString("VirtualKeyboardToggleFailed");
                     DialogService.ShowWarning(
                         LocalizationHelper.Instance.GetString("VirtualKeyboardError"), 
                         LocalizationHelper.Instance.GetString("Error"));
                 }
-            }, "toggle virtual keyboard");
+            }, "show virtual keyboard");
         }
 
         #endregion

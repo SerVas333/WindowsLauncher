@@ -7,6 +7,7 @@ using Microsoft.Extensions.Logging;
 using FirebirdSql.EntityFrameworkCore.Firebird.Extensions;
 using System;
 using System.IO;
+using System.Text.Json;
 using System.Windows;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
@@ -52,6 +53,9 @@ namespace WindowsLauncher.UI
                 // Настройка глобальной обработки исключений
                 SetupExceptionHandling();
 
+                // Инициализация глобального менеджера сенсорной клавиатуры
+                InitializeGlobalTouchKeyboardManager();
+
                 // ✅ ЗАПУСК ЧЕРЕЗ LoginWindow ВМЕСТО ПРЯМОГО ПОКАЗА MainWindow
                 await StartApplicationAsync();
 
@@ -70,6 +74,18 @@ namespace WindowsLauncher.UI
         {
             try
             {
+                // Очищаем глобальный менеджер сенсорной клавиатуры
+                try
+                {
+                    var globalManager = ServiceProvider?.GetService<WindowsLauncher.UI.Services.GlobalTouchKeyboardManager>();
+                    globalManager?.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    var logger = ServiceProvider?.GetService<ILogger<App>>();
+                    logger?.LogWarning(ex, "Ошибка при очистке GlobalTouchKeyboardManager");
+                }
+
                 // Сохраняем настройки локализации
                 LocalizationHelper.Instance.SaveLanguageSettings();
 
@@ -118,37 +134,71 @@ namespace WindowsLauncher.UI
                 configuration.GetSection("LocalUsers"));
 
             // База данных
+            services.AddSingleton<IEncryptionService, WindowsLauncher.Services.Security.EncryptionService>();
             services.AddSingleton<IDatabaseConfigurationService, DatabaseConfigurationService>();
             services.AddScoped<IDatabaseMigrationService, DatabaseMigrationService>();
             services.AddDbContext<LauncherDbContext>((serviceProvider, options) =>
             {
-                // Получаем сервис конфигурации БД
-                var dbConfigService = serviceProvider.GetRequiredService<IDatabaseConfigurationService>();
-                var dbConfig = dbConfigService.GetDefaultConfiguration();
-
-                // Настраиваем провайдер в зависимости от типа БД
-                switch (dbConfig.DatabaseType)
+                try
                 {
-                    case Core.Models.DatabaseType.SQLite:
-                        options.UseSqlite(dbConfig.GetSQLiteConnectionString(), sqliteOptions =>
+                    // Получаем сервис конфигурации БД
+                    var dbConfigService = serviceProvider.GetRequiredService<IDatabaseConfigurationService>();
+                    
+                    // Проверяем существует ли файл конфигурации
+                    DatabaseConfiguration dbConfig;
+                    if (dbConfigService.ConfigurationFileExists())
+                    {
+                        // Загружаем синхронно для избежания deadlock в DI
+                        var configPath = dbConfigService.GetConfigurationFilePath();
+                        var json = File.ReadAllText(configPath);
+                        dbConfig = System.Text.Json.JsonSerializer.Deserialize<DatabaseConfiguration>(json) 
+                                   ?? dbConfigService.GetDefaultConfiguration();
+                        
+                        // Простая расшифровка пароля если нужно
+                        var encryptionService = serviceProvider.GetRequiredService<IEncryptionService>();
+                        if (encryptionService.IsEncrypted(dbConfig.Password))
                         {
-                            sqliteOptions.CommandTimeout(dbConfig.ConnectionTimeout);
-                        });
-                        break;
+                            dbConfig.Password = encryptionService.Decrypt(dbConfig.Password);
+                        }
+                    }
+                    else
+                    {
+                        // Используем дефолтную конфигурацию
+                        dbConfig = dbConfigService.GetDefaultConfiguration();
+                    }
 
-                    case Core.Models.DatabaseType.Firebird:
-                        options.UseFirebird(dbConfig.GetFirebirdConnectionString(), firebirdOptions =>
-                        {
-                            firebirdOptions.CommandTimeout(dbConfig.ConnectionTimeout);
-                        });
-                        break;
+                    // Настраиваем провайдер в зависимости от типа БД
+                    switch (dbConfig.DatabaseType)
+                    {
+                        case Core.Models.DatabaseType.SQLite:
+                            options.UseSqlite(dbConfig.GetSQLiteConnectionString(), sqliteOptions =>
+                            {
+                                sqliteOptions.CommandTimeout(dbConfig.ConnectionTimeout);
+                            });
+                            break;
 
-                    default:
-                        // Fallback к SQLite
-                        var fallbackConnectionString = configuration.GetConnectionString("DefaultConnection")
-                            ?? GetDefaultConnectionString();
-                        options.UseSqlite(fallbackConnectionString);
-                        break;
+                        case Core.Models.DatabaseType.Firebird:
+                            options.UseFirebird(dbConfig.GetFirebirdConnectionString(), firebirdOptions =>
+                            {
+                                firebirdOptions.CommandTimeout(dbConfig.ConnectionTimeout);
+                            });
+                            break;
+
+                        default:
+                            // Fallback к SQLite
+                            var fallbackConnectionString = configuration.GetConnectionString("DefaultConnection")
+                                ?? GetDefaultConnectionString();
+                            options.UseSqlite(fallbackConnectionString);
+                            break;
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // В случае ошибки загрузки конфигурации используем SQLite fallback
+                    System.Diagnostics.Debug.WriteLine($"Error loading DB config, using SQLite fallback: {ex.Message}");
+                    var fallbackConnectionString = configuration.GetConnectionString("DefaultConnection")
+                        ?? GetDefaultConnectionString();
+                    options.UseSqlite(fallbackConnectionString);
                 }
             });
 
@@ -169,8 +219,15 @@ namespace WindowsLauncher.UI
             // Новый сервис локальных пользователей
             services.AddScoped<ILocalUserService, LocalUserService>();
             
-            // Сервис виртуальной клавиатуры
-            services.AddScoped<IVirtualKeyboardService, VirtualKeyboardService>();
+            // Управление сессиями
+            services.AddSingleton<ISessionManagementService, SessionManagementService>();
+            
+            // Сервисы виртуальной клавиатуры с адаптивным выбором по версии Windows
+            services.AddScoped<VirtualKeyboardService>(); // Универсальный сервис
+            services.AddScoped<Windows10TouchKeyboardService>(); // Windows 10 специфичный
+            services.AddScoped<VirtualKeyboardServiceFactory>(); // Фабрика для выбора подходящего сервиса
+            services.AddScoped<IVirtualKeyboardService, AdaptiveVirtualKeyboardService>(); // Адаптивный сервис
+            services.AddSingleton<WindowsLauncher.UI.Services.GlobalTouchKeyboardManager>();
 
             // Infrastructure сервисы
             services.AddScoped<IDatabaseInitializer, DatabaseInitializer>();
@@ -179,14 +236,18 @@ namespace WindowsLauncher.UI
             
             // Сервисы версионирования
             services.AddSingleton<IVersionService, VersionService>();
-            services.AddScoped<IDatabaseVersionService, DatabaseVersionService>();
             services.AddScoped<IApplicationStartupService, ApplicationStartupService>();
+            services.AddScoped<IApplicationVersionService, ApplicationVersionService>();
             
             // Сервис управления данными приложения
             services.AddScoped<ApplicationDataManager>();
 
             // ✅ ДОБАВЛЯЕМ ЛОКАЛИЗАЦИЮ КАК СИНГЛ
             services.AddSingleton<LocalizationHelper>(_ => LocalizationHelper.Instance);
+
+            // Сервисы управления запущенными приложениями
+            services.AddSingleton<IRunningApplicationsService, RunningApplicationsService>();
+            services.AddSingleton<WindowsLauncher.UI.Components.SystemTray.SystemTrayManager>();
 
             // ViewModels
             services.AddTransient<MainViewModel>();
@@ -271,13 +332,33 @@ namespace WindowsLauncher.UI
             }
         }
 
-        private async Task InitializeDatabaseAsync()
+        private void InitializeGlobalTouchKeyboardManager()
         {
             try
             {
-                using var scope = ServiceProvider.CreateScope();
-                var logger = scope.ServiceProvider.GetRequiredService<ILogger<App>>();
-                
+                var globalManager = ServiceProvider.GetService<WindowsLauncher.UI.Services.GlobalTouchKeyboardManager>();
+                if (globalManager != null)
+                {
+                    globalManager.Initialize();
+                    
+                    var logger = ServiceProvider.GetService<ILogger<App>>();
+                    logger?.LogInformation("GlobalTouchKeyboardManager успешно инициализирован");
+                }
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider.GetService<ILogger<App>>();
+                logger?.LogError(ex, "Ошибка инициализации GlobalTouchKeyboardManager");
+            }
+        }
+
+        private async Task InitializeDatabaseAsync()
+        {
+            using var scope = ServiceProvider.CreateScope();
+            var logger = scope.ServiceProvider.GetRequiredService<ILogger<App>>();
+            
+            try
+            {
                 logger.LogInformation("Starting database initialization...");
                 
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
@@ -291,8 +372,24 @@ namespace WindowsLauncher.UI
             }
             catch (Exception ex)
             {
-                var logger = ServiceProvider.GetService<ILogger<App>>();
                 logger?.LogError(ex, "Failed to initialize database: {Message}", ex.Message);
+                
+                // Пытаемся fallback к SQLite если была Firebird конфигурация
+                try
+                {
+                    logger?.LogWarning("Attempting fallback to SQLite database...");
+                    var dbConfigService = scope.ServiceProvider.GetService<IDatabaseConfigurationService>();
+                    if (dbConfigService != null)
+                    {
+                        var defaultConfig = dbConfigService.GetDefaultConfiguration(); // SQLite по умолчанию
+                        await dbConfigService.SaveConfigurationAsync(defaultConfig);
+                        logger?.LogInformation("Fallback to SQLite configuration saved, restart required");
+                    }
+                }
+                catch (Exception fallbackEx)
+                {
+                    logger?.LogError(fallbackEx, "Fallback to SQLite also failed");
+                }
                 
                 // Показываем пользователю ошибку но не останавливаем приложение
                 System.Diagnostics.Debug.WriteLine($"Database initialization failed: {ex.Message}");
@@ -301,6 +398,8 @@ namespace WindowsLauncher.UI
                 #if DEBUG
                 logger?.LogWarning("Continuing in debug mode without database");
                 #else
+                MessageBox.Show($"Ошибка инициализации базы данных:\n{ex.Message}\n\nПриложение будет закрыто.", 
+                    "Ошибка базы данных", MessageBoxButton.OK, MessageBoxImage.Error);
                 throw;
                 #endif
             }
@@ -414,24 +513,58 @@ namespace WindowsLauncher.UI
         /// <summary>
         /// ✅ ПОКАЗ ОКНА ВХОДА
         /// </summary>
-        private void ShowLoginWindow()
+        private async void ShowLoginWindow()
         {
             try
             {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
                 var loginWindow = new LoginWindow();
 
                 // Показываем модально
                 var result = loginWindow.ShowDialog();
 
+                logger.LogInformation("LoginWindow closed with result: {Result}", result);
+                logger.LogInformation("AuthenticationResult: {AuthResult}", loginWindow.AuthenticationResult != null ? "not null" : "null");
+                logger.LogInformation("AuthenticatedUser: {AuthUser}", loginWindow.AuthenticatedUser?.Username ?? "null");
+
                 if (result == true && loginWindow.AuthenticatedUser != null)
                 {
                     // Успешная аутентификация - показываем главное окно
+                    logger.LogInformation("Calling ShowMainWindow for user: {Username}", loginWindow.AuthenticatedUser.Username);
                     ShowMainWindow(loginWindow.AuthenticatedUser);
                 }
                 else
                 {
-                    // Пользователь отменил вход или ошибка аутентификации
-                    Shutdown(0);
+                    logger.LogWarning("Login failed or cancelled - result: {Result}, user: {User}", 
+                        result, loginWindow.AuthenticatedUser?.Username ?? "null");
+                    
+                    // Проверяем режим Shell
+                    var sessionManager = ServiceProvider?.GetService<ISessionManagementService>();
+                    bool isShellMode = false;
+                    
+                    if (sessionManager != null)
+                    {
+                        await sessionManager.LoadConfigurationAsync();
+                        isShellMode = sessionManager.Configuration.RunAsShell;
+                    }
+
+                    if (isShellMode)
+                    {
+                        // В Shell режиме при отмене входа показываем диалог снова
+                        logger.LogInformation("Shell mode: login cancelled, showing login window again");
+                        
+                        // Небольшая задержка чтобы избежать бесконечного цикла
+                        await Task.Delay(500);
+                        
+                        // Рекурсивно показываем окно входа снова
+                        ShowLoginWindow();
+                    }
+                    else
+                    {
+                        // В обычном режиме завершаем приложение
+                        logger.LogInformation("Standard mode: login cancelled, shutting down");
+                        Shutdown(0);
+                    }
                 }
             }
             catch (Exception ex)
@@ -446,12 +579,17 @@ namespace WindowsLauncher.UI
         /// <summary>
         /// ✅ ПОКАЗ ГЛАВНОГО ОКНА С ПЕРЕДАННЫМ ПОЛЬЗОВАТЕЛЕМ
         /// </summary>
-        private void ShowMainWindow(User authenticatedUser)
+        private async void ShowMainWindow(User authenticatedUser)
         {
             try
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-                logger.LogInformation("Creating main window for user {Username}", authenticatedUser.Username);
+                logger.LogInformation("=== STARTING ShowMainWindow for user {Username} ===", authenticatedUser.Username);
+
+                // Инициализируем сессию через SessionManagementService
+                var sessionManager = ServiceProvider.GetRequiredService<ISessionManagementService>();
+                await sessionManager.LoadConfigurationAsync();
+                await sessionManager.StartSessionAsync(authenticatedUser);
 
                 var mainWindow = new MainWindow();
                 logger.LogInformation("Main window created successfully");
@@ -469,17 +607,22 @@ namespace WindowsLauncher.UI
                 // Устанавливаем главное окно
                 MainWindow = mainWindow;
                 
-                // Добавляем обработчик закрытия главного окна для завершения приложения
-                mainWindow.Closed += (s, e) => 
+                // Добавляем обработчик закрытия главного окна
+                mainWindow.Closed += async (s, e) => 
                 {
-                    logger.LogInformation("MainWindow closed, shutting down application");
-                    Shutdown(0);
+                    await HandleMainWindowClosedAsync(logger);
                 };
                 
                 logger.LogInformation("About to show main window, ShutdownMode: {ShutdownMode}", ShutdownMode);
                 
                 mainWindow.Show();
                 logger.LogInformation("Main window shown for user {Username}", authenticatedUser.Username);
+                
+                // Инициализируем системный трей после показа главного окна
+                await InitializeSystemTrayAsync();
+                
+                // Запускаем мониторинг запущенных приложений
+                await InitializeRunningApplicationsMonitoringAsync();
                 
                 // Проверяем что окно действительно открыто
                 logger.LogInformation("MainWindow state - IsVisible: {IsVisible}, IsLoaded: {IsLoaded}", 
@@ -491,6 +634,52 @@ namespace WindowsLauncher.UI
                 logger.LogError(ex, "Failed to show main window: {Message}", ex.Message);
                 logger.LogError(ex, "Stack trace: {StackTrace}", ex.StackTrace);
                 ShowStartupError(ex);
+            }
+        }
+
+        /// <summary>
+        /// Инициализация системного трея
+        /// </summary>
+        private async Task InitializeSystemTrayAsync()
+        {
+            try
+            {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogInformation("Initializing system tray manager");
+
+                var systemTrayManager = ServiceProvider.GetRequiredService<WindowsLauncher.UI.Components.SystemTray.SystemTrayManager>();
+                await systemTrayManager.InitializeAsync();
+
+                logger.LogInformation("System tray manager initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogError(ex, "Failed to initialize system tray manager");
+                // Не прерываем работу приложения из-за ошибки системного трея
+            }
+        }
+
+        /// <summary>
+        /// Инициализация мониторинга запущенных приложений
+        /// </summary>
+        private async Task InitializeRunningApplicationsMonitoringAsync()
+        {
+            try
+            {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogInformation("Starting running applications monitoring");
+
+                var runningAppsService = ServiceProvider.GetRequiredService<IRunningApplicationsService>();
+                await runningAppsService.StartMonitoringAsync();
+
+                logger.LogInformation("Running applications monitoring started successfully");
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogError(ex, "Failed to start running applications monitoring");
+                // Не прерываем работу приложения из-за ошибки мониторинга
             }
         }
 
@@ -562,16 +751,77 @@ namespace WindowsLauncher.UI
         {
             try
             {
-                // Закрываем главное окно
-                MainWindow?.Close();
+                var logger = ServiceProvider?.GetService<ILogger<App>>();
+                logger?.LogInformation("Logout requested via LogoutAndShowLogin method");
 
-                // Показываем окно входа снова
-                ShowLoginWindow();
+                // Закрываем главное окно - обработчик HandleMainWindowClosedAsync сам решит что делать
+                MainWindow?.Close();
             }
             catch (Exception ex)
             {
                 var logger = ServiceProvider?.GetService<ILogger<App>>();
                 logger?.LogError(ex, "Error during logout");
+                Shutdown(1);
+            }
+        }
+
+        /// <summary>
+        /// Обработка закрытия главного окна с учетом режима Shell
+        /// </summary>
+        private async Task HandleMainWindowClosedAsync(ILogger<App> logger)
+        {
+            try
+            {
+                logger.LogInformation("MainWindow closed, checking shell mode configuration");
+
+                // Получаем конфигурацию сессии
+                var sessionManager = ServiceProvider?.GetService<ISessionManagementService>();
+                if (sessionManager != null)
+                {
+                    await sessionManager.LoadConfigurationAsync();
+                    var config = sessionManager.Configuration;
+
+                    logger.LogInformation("Shell mode configuration - RunAsShell: {RunAsShell}, ReturnToLoginOnLogout: {ReturnToLogin}", 
+                        config.RunAsShell, config.ReturnToLoginOnLogout);
+
+                    if (config.RunAsShell && config.ReturnToLoginOnLogout)
+                    {
+                        logger.LogInformation("Shell mode: ending current session and returning to login window");
+                        
+                        // ВАЖНО: Явно завершаем сессию перед переходом к LoginWindow
+                        await sessionManager.EndSessionAsync("MainWindow closed in shell mode");
+                        logger.LogInformation("Session ended successfully");
+                        
+                        // Небольшая задержка для гарантии завершения всех операций
+                        await Task.Delay(200);
+                        
+                        // Сбрасываем MainWindow чтобы не было конфликтов
+                        MainWindow = null;
+                        
+                        // Возвращаемся к окну входа
+                        Dispatcher.BeginInvoke(() =>
+                        {
+                            try
+                            {
+                                ShowLoginWindow();
+                            }
+                            catch (Exception ex)
+                            {
+                                logger.LogError(ex, "Error returning to login window in shell mode");
+                                Shutdown(1);
+                            }
+                        });
+                        return;
+                    }
+                }
+
+                // Обычный режим - завершаем приложение
+                logger.LogInformation("Standard mode: shutting down application");
+                Shutdown(0);
+            }
+            catch (Exception ex)
+            {
+                logger.LogError(ex, "Error handling MainWindow close");
                 Shutdown(1);
             }
         }

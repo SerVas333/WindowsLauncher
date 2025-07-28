@@ -15,7 +15,9 @@ namespace WindowsLauncher.Core.Models
         public string Description { get; set; } = string.Empty;
         public string ExecutablePath { get; set; } = string.Empty;
         public string Arguments { get; set; } = string.Empty;
+        public string WorkingDirectory { get; set; } = string.Empty;
         public string IconPath { get; set; } = string.Empty;
+        public string IconText { get; set; } = "📱"; // Emoji иконка для приложения
         public string Category { get; set; } = "General";
         public ApplicationType Type { get; set; } = ApplicationType.Desktop;
 

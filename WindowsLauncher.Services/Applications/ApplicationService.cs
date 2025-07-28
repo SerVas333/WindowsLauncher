@@ -17,6 +17,7 @@ namespace WindowsLauncher.Services.Applications
         private readonly IApplicationRepository _applicationRepository;
         private readonly IAuthorizationService _authorizationService;
         private readonly IAuditService _auditService;
+        private readonly IRunningApplicationsService _runningApplicationsService;
         private readonly ILogger<ApplicationService> _logger;
 
         public event EventHandler<Application>? ApplicationLaunched;
@@ -25,11 +26,13 @@ namespace WindowsLauncher.Services.Applications
             IApplicationRepository applicationRepository,
             IAuthorizationService authorizationService,
             IAuditService auditService,
+            IRunningApplicationsService runningApplicationsService,
             ILogger<ApplicationService> logger)
         {
             _applicationRepository = applicationRepository;
             _authorizationService = authorizationService;
             _auditService = auditService;
+            _runningApplicationsService = runningApplicationsService;
             _logger = logger;
         }
 
@@ -50,7 +53,7 @@ namespace WindowsLauncher.Services.Applications
                 // Запускаем приложение в зависимости от типа
                 var result = application.Type switch
                 {
-                    ApplicationType.Desktop => await LaunchDesktopApplicationAsync(application),
+                    ApplicationType.Desktop => await LaunchDesktopApplicationAsync(application, user.Username),
                     ApplicationType.Web => await LaunchWebApplicationAsync(application),
                     ApplicationType.Folder => await LaunchFolderAsync(application),
                     _ => LaunchResult.Failure("Unsupported application type")
@@ -241,7 +244,7 @@ namespace WindowsLauncher.Services.Applications
             }
         }
 
-        private async Task<LaunchResult> LaunchDesktopApplicationAsync(Application app)
+        private async Task<LaunchResult> LaunchDesktopApplicationAsync(Application app, string launchedBy)
         {
             try
             {
@@ -268,6 +271,20 @@ namespace WindowsLauncher.Services.Applications
 
                 _logger.LogDebug("Desktop application {AppName} launched with PID {ProcessId}",
                     app.Name, process.Id);
+
+                // Регистрируем запущенное приложение в сервисе управления
+                try
+                {
+                    await _runningApplicationsService.RegisterApplicationAsync(app, process, launchedBy);
+                    _logger.LogDebug("Registered running application {AppName} (PID: {ProcessId}) for user {User}",
+                        app.Name, process.Id, launchedBy);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogWarning(ex, "Failed to register running application {AppName} (PID: {ProcessId})",
+                        app.Name, process.Id);
+                    // Не прерываем выполнение если регистрация не удалась
+                }
 
                 return LaunchResult.Success(process.Id);
             }

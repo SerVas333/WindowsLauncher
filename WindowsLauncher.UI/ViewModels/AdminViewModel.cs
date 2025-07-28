@@ -1657,12 +1657,12 @@ namespace WindowsLauncher.UI.ViewModels
                 // Загружаем версионную информацию
                 using var scope = _serviceProvider.CreateScope();
                 var versionService = scope.ServiceProvider.GetRequiredService<WindowsLauncher.Core.Services.IVersionService>();
-                var dbVersionService = scope.ServiceProvider.GetRequiredService<WindowsLauncher.Core.Services.IDatabaseVersionService>();
+                var appVersionService = scope.ServiceProvider.GetRequiredService<WindowsLauncher.Core.Interfaces.IApplicationVersionService>();
                 
                 var versionInfo = versionService.GetVersionInfo();
-                ApplicationVersion = versionService.GetVersionString();
+                ApplicationVersion = appVersionService.GetApplicationVersion();
                 BuildDate = versionInfo.BuildDate.ToString("yyyy-MM-dd HH:mm");
-                DatabaseVersion = await dbVersionService.GetCurrentDatabaseVersionAsync() ?? "Неизвестно";
+                DatabaseVersion = await appVersionService.GetDatabaseVersionAsync() ?? "Неизвестно";
                 
                 Logger.LogInformation("Version info loaded: ApplicationVersion={ApplicationVersion}, BuildDate={BuildDate}, DatabaseVersion={DatabaseVersion}, TotalDataSize={TotalDataSize}", 
                     ApplicationVersion, BuildDate, DatabaseVersion, TotalDataSize);

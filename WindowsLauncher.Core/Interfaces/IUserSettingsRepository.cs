@@ -12,8 +12,18 @@ namespace WindowsLauncher.Core.Interfaces
         Task<UserSettings?> GetByUsernameAsync(string username);
 
         /// <summary>
-        /// Создать настройки по умолчанию для пользователя
+        /// Получить настройки пользователя по ID
+        /// </summary>
+        Task<UserSettings?> GetByUserIdAsync(int userId);
+
+        /// <summary>
+        /// Создать настройки по умолчанию для пользователя (по username)
         /// </summary>
         Task<UserSettings> CreateDefaultSettingsAsync(string username);
+
+        /// <summary>
+        /// Создать настройки по умолчанию для пользователя (по userId)
+        /// </summary>
+        Task<UserSettings> CreateDefaultSettingsAsync(int userId);
     }
 }

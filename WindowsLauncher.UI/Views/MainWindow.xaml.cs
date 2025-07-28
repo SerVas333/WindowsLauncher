@@ -9,7 +9,9 @@ using WindowsLauncher.Services;
 using WindowsLauncher.UI.ViewModels;
 using WindowsLauncher.UI.Infrastructure.Localization;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
+using WindowsLauncher.UI.Helpers;
 
 namespace WindowsLauncher.UI
 {
@@ -18,6 +20,8 @@ namespace WindowsLauncher.UI
         private bool _isViewModelInitialized = false;
         private double _originalHeight;
         private const double KEYBOARD_HEIGHT_ESTIMATE = 300; // Примерная высота виртуальной клавиатуры
+        private ISessionManagementService? _sessionManager;
+        private ILogger<MainWindow>? _logger;
 
         public MainWindow()
         {
@@ -25,6 +29,7 @@ namespace WindowsLauncher.UI
             _originalHeight = Height;
             InitializeViewModel();
             SubscribeToVirtualKeyboardEvents();
+            InitializeSessionManagement();
         }
 
         private void InitializeViewModel()
@@ -124,6 +129,46 @@ namespace WindowsLauncher.UI
             });
         }
 
+        private void InitializeSessionManagement()
+        {
+            try
+            {
+                var serviceProvider = ((App)Application.Current).ServiceProvider;
+                _sessionManager = serviceProvider.GetService<ISessionManagementService>();
+                _logger = serviceProvider.GetService<ILogger<MainWindow>>();
+                
+                if (_sessionManager != null)
+                {
+                    // Загружаем конфигурацию сессии
+                    _ = Task.Run(async () => await _sessionManager.LoadConfigurationAsync());
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error initializing session management: {ex.Message}");
+            }
+        }
+
+        protected override void OnClosing(System.ComponentModel.CancelEventArgs e)
+        {
+            try
+            {
+                // ОТКЛЮЧЕНО: Старая логика с автоперезапуском конфликтует с новой логикой в App.xaml.cs
+                // Теперь вся логика закрытия обрабатывается в App.xaml.cs HandleMainWindowClosedAsync()
+                _logger?.LogInformation("MainWindow closing event - new logic in App.xaml.cs will handle this");
+                
+                // Просто разрешаем закрытие - логика обработается в App.xaml.cs
+                // (старый код с SessionManager отключен)
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error handling window closing: {ex.Message}");
+                // В случае ошибки разрешаем закрытие
+            }
+            
+            base.OnClosing(e);
+        }
+
         protected override void OnClosed(EventArgs e)
         {
             try
@@ -139,7 +184,7 @@ namespace WindowsLauncher.UI
             }
             catch (Exception ex)
             {
-                System.Diagnostics.Debug.WriteLine($"Error unsubscribing from virtual keyboard events: {ex.Message}");
+                System.Diagnostics.Debug.WriteLine($"Error cleaning up resources: {ex.Message}");
             }
             
             base.OnClosed(e);

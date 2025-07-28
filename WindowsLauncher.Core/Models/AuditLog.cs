@@ -8,7 +8,7 @@ namespace WindowsLauncher.Core.Models
     /// <summary>
     /// Модель для логирования действий пользователей
     /// </summary>
-    [Table("AuditLogs")]
+    [Table("AUDIT_LOGS")]
     public class AuditLog
     {
         /// <summary>
@@ -20,7 +20,7 @@ namespace WindowsLauncher.Core.Models
         /// <summary>
         /// ID пользователя (может быть null для системных действий)
         /// </summary>
-        [Column("UserId")]
+        [Column("USER_ID")]
         public int? UserId { get; set; }
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace WindowsLauncher.Core.Models
         /// </summary>
         [Required]
         [MaxLength(100)]
-        [Column("Username")]
+        [Column("USERNAME")]
         public string Username { get; set; } = string.Empty;
 
         /// <summary>
@@ -36,68 +36,68 @@ namespace WindowsLauncher.Core.Models
         /// </summary>
         [Required]
         [MaxLength(100)]
-        [Column("Action")]
+        [Column("ACTION")]
         public string Action { get; set; } = string.Empty;
 
         /// <summary>
         /// Название приложения (для действий с приложениями)
         /// </summary>
         [MaxLength(200)]
-        [Column("ApplicationName")]
+        [Column("APPLICATION_NAME")]
         public string ApplicationName { get; set; } = string.Empty;
 
         /// <summary>
         /// Детали действия
         /// </summary>
         [MaxLength(2000)]
-        [Column("Details")]
+        [Column("DETAILS")]
         public string Details { get; set; } = string.Empty;
 
         /// <summary>
         /// Время выполнения действия
         /// </summary>
-        [Column("Timestamp")]
+        [Column("TIMESTAMP_UTC")]
         public DateTime Timestamp { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Успешно ли выполнено действие
         /// </summary>
-        [Column("Success")]
+        [Column("SUCCESS")]
         public bool Success { get; set; } = true;
 
         /// <summary>
         /// Сообщение об ошибке (если действие неуспешно)
         /// </summary>
         [MaxLength(1000)]
-        [Column("ErrorMessage")]
+        [Column("ERROR_MESSAGE")]
         public string ErrorMessage { get; set; } = string.Empty;
 
         /// <summary>
         /// Имя компьютера, с которого выполнено действие
         /// </summary>
         [MaxLength(100)]
-        [Column("ComputerName")]
+        [Column("COMPUTER_NAME")]
         public string ComputerName { get; set; } = Environment.MachineName;
 
         /// <summary>
         /// IP адрес пользователя - ЕДИНСТВЕННОЕ поле для IP
         /// </summary>
         [MaxLength(45)] // Поддержка IPv6
-        [Column("IPAddress")]
+        [Column("IP_ADDRESS")]
         public string IPAddress { get; set; } = string.Empty;
 
         /// <summary>
         /// User Agent браузера/приложения
         /// </summary>
         [MaxLength(500)]
-        [Column("UserAgent")]
+        [Column("USER_AGENT")]
         public string UserAgent { get; set; } = string.Empty;
 
         /// <summary>
         /// Дополнительные метаданные в формате JSON
         /// </summary>
         [MaxLength(2000)]
-        [Column("MetadataJson")]
+        [Column("METADATA_JSON")]
         public string MetadataJson { get; set; } = "{}";
 
         #region Свойства для совместимости (НЕ МАППЯТСЯ В БД)

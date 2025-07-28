@@ -12,20 +12,20 @@ namespace WindowsLauncher.Services
     {
         private readonly ILogger<ApplicationStartupService> _logger;
         private readonly IVersionService _versionService;
-        private readonly IDatabaseVersionService _databaseVersionService;
+        private readonly IApplicationVersionService _applicationVersionService;
         private readonly IDatabaseConfigurationService _dbConfigService;
         private readonly IAuthenticationConfigurationService _authConfigService;
         
         public ApplicationStartupService(
             ILogger<ApplicationStartupService> logger,
             IVersionService versionService,
-            IDatabaseVersionService databaseVersionService,
+            IApplicationVersionService applicationVersionService,
             IDatabaseConfigurationService dbConfigService,
             IAuthenticationConfigurationService authConfigService)
         {
             _logger = logger;
             _versionService = versionService;
-            _databaseVersionService = databaseVersionService;
+            _applicationVersionService = applicationVersionService;
             _dbConfigService = dbConfigService;
             _authConfigService = authConfigService;
         }
@@ -85,14 +85,14 @@ namespace WindowsLauncher.Services
             if (!status.DatabaseAccessible)
             {
                 _logger.LogInformation("Database not accessible - needs initialization");
-                await _databaseVersionService.SetDatabaseVersionAsync(_versionService.GetVersionString());
+                await _applicationVersionService.SetDatabaseVersionAsync(_applicationVersionService.GetApplicationVersion());
             }
             
             if (!status.DatabaseVersionCurrent)
             {
                 _logger.LogInformation("Updating database from {Current} to {Required}", 
                     status.CurrentDatabaseVersion, status.RequiredDatabaseVersion);
-                await _databaseVersionService.SetDatabaseVersionAsync(_versionService.GetVersionString());
+                await _applicationVersionService.SetDatabaseVersionAsync(_applicationVersionService.GetApplicationVersion());
             }
             
             _logger.LogInformation("Application preparation completed");
@@ -101,7 +101,7 @@ namespace WindowsLauncher.Services
         private async Task<ApplicationStatus> GetApplicationStatusAsync()
         {
             var status = new ApplicationStatus();
-            var appVersion = _versionService.GetVersionString();
+            var appVersion = _applicationVersionService.GetApplicationVersion();
             status.RequiredDatabaseVersion = appVersion;
             
             try
@@ -126,21 +126,12 @@ namespace WindowsLauncher.Services
                 status.DatabaseConfigured = true;
                 
                 // Проверяем доступность БД
-                var dbVersion = await _databaseVersionService.GetCurrentDatabaseVersionAsync();
+                var dbVersion = await _applicationVersionService.GetDatabaseVersionAsync();
                 status.CurrentDatabaseVersion = dbVersion;
                 status.DatabaseAccessible = !string.IsNullOrEmpty(dbVersion);
                 
-                // Сравниваем версии
-                if (Version.TryParse(dbVersion, out var dbVer) && Version.TryParse(appVersion, out var appVer))
-                {
-                    // БД актуальна если версии совпадают или версия БД новее
-                    status.DatabaseVersionCurrent = dbVer >= appVer;
-                }
-                else
-                {
-                    status.DatabaseVersionCurrent = false;
-                    status.Issues.Add($"Version comparison failed: DB={dbVersion}, App={appVersion}");
-                }
+                // Проверяем совместимость версий
+                status.DatabaseVersionCurrent = await _applicationVersionService.IsDatabaseCompatibleAsync();
             }
             catch (Exception ex)
             {

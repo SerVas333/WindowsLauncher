@@ -11,13 +11,14 @@ namespace WindowsLauncher.Core.Models
     /// <summary>
     /// Модель пользователя системы
     /// </summary>
-    [Table("Users")]
+    [Table("USERS")]
     public class User
     {
         /// <summary>
         /// Уникальный идентификатор пользователя
         /// </summary>
         [Key]
+        [Column("ID")]
         public int Id { get; set; }
 
         /// <summary>
@@ -25,116 +26,116 @@ namespace WindowsLauncher.Core.Models
         /// </summary>
         [Required]
         [MaxLength(100)]
-        [Column("Username")]
+        [Column("USERNAME")]
         public string Username { get; set; } = string.Empty;
 
         /// <summary>
         /// Отображаемое имя пользователя
         /// </summary>
         [MaxLength(200)]
-        [Column("DisplayName")]
+        [Column("DISPLAY_NAME")]
         public string DisplayName { get; set; } = string.Empty;
 
         /// <summary>
         /// Email адрес пользователя
         /// </summary>
         [MaxLength(255)]
-        [Column("Email")]
+        [Column("EMAIL")]
         public string Email { get; set; } = string.Empty;
 
         /// <summary>
         /// Роль пользователя в системе
         /// </summary>
         [Required]
-        [Column("Role")]
+        [Column("ROLE")]
         public UserRole Role { get; set; } = UserRole.Standard;
 
         /// <summary>
         /// Активен ли пользователь
         /// </summary>
-        [Column("IsActive")]
+        [Column("IS_ACTIVE")]
         public bool IsActive { get; set; } = true;
 
         /// <summary>
         /// Является ли пользователь сервисным аккаунтом
         /// </summary>
-        [Column("IsServiceAccount")]
+        [Column("IS_SERVICE_ACCOUNT")]
         public bool IsServiceAccount { get; set; } = false;
 
         /// <summary>
         /// Хэш пароля (только для сервисных аккаунтов)
         /// </summary>
         [MaxLength(500)]
-        [Column("PasswordHash")]
+        [Column("PASSWORD_HASH")]
         public string PasswordHash { get; set; } = string.Empty;
 
         /// <summary>
         /// Соль для хэширования пароля
         /// </summary>
         [MaxLength(500)]
-        [Column("Salt")]
+        [Column("SALT")]
         public string Salt { get; set; } = string.Empty;
 
         /// <summary>
         /// Дата и время создания пользователя
         /// </summary>
-        [Column("CreatedAt")]
+        [Column("CREATED_AT")]
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
 
         /// <summary>
         /// Дата и время последнего входа
         /// </summary>
-        [Column("LastLoginAt")]
+        [Column("LAST_LOGIN_AT")]
         public DateTime? LastLoginAt { get; set; }
 
         /// <summary>
         /// Дата и время последней активности
         /// </summary>
-        [Column("LastActivityAt")]
+        [Column("LAST_ACTIVITY_AT")]
         public DateTime? LastActivityAt { get; set; }
 
         /// <summary>
         /// Количество неудачных попыток входа
         /// </summary>
-        [Column("FailedLoginAttempts")]
+        [Column("FAILED_LOGIN_ATTEMPTS")]
         public int FailedLoginAttempts { get; set; } = 0;
 
         /// <summary>
         /// Заблокирован ли пользователь
         /// </summary>
-        [Column("IsLocked")]
+        [Column("IS_LOCKED")]
         public bool IsLocked { get; set; } = false;
 
         /// <summary>
         /// Время окончания блокировки
         /// </summary>
-        [Column("LockoutEnd")]
+        [Column("LOCKOUT_END")]
         public DateTime? LockoutEnd { get; set; }
 
         /// <summary>
         /// Дата последней смены пароля
         /// </summary>
-        [Column("LastPasswordChange")]
+        [Column("LAST_PASSWORD_CHANGE")]
         public DateTime? LastPasswordChange { get; set; }
 
         /// <summary>
         /// Группы пользователя (сериализованный JSON)
         /// </summary>
-        [Column("GroupsJson")]
+        [Column("GROUPS_JSON")]
         [MaxLength(2000)]
         public string GroupsJson { get; set; } = "[]";
 
         /// <summary>
         /// Дополнительные настройки пользователя (JSON)
         /// </summary>
-        [Column("SettingsJson")]
+        [Column("SETTINGS_JSON")]
         [MaxLength(4000)]
         public string SettingsJson { get; set; } = "{}";
 
         /// <summary>
         /// Дополнительные метаданные (JSON)
         /// </summary>
-        [Column("MetadataJson")]
+        [Column("METADATA_JSON")]
         [MaxLength(2000)]
         public string MetadataJson { get; set; } = "{}";
 
@@ -143,32 +144,32 @@ namespace WindowsLauncher.Core.Models
         /// <summary>
         /// Тип аутентификации пользователя
         /// </summary>
-        [Column("AuthenticationType")]
+        [Column("AUTHENTICATION_TYPE")]
         public AuthenticationType AuthenticationType { get; set; } = AuthenticationType.LocalService;
 
         /// <summary>
         /// Доменное имя пользователя (для кэшированных доменных пользователей)
         /// </summary>
         [MaxLength(100)]
-        [Column("DomainUsername")]
+        [Column("DOMAIN_USERNAME")]
         public string DomainUsername { get; set; } = string.Empty;
 
         /// <summary>
         /// Время последней синхронизации с доменом
         /// </summary>
-        [Column("LastDomainSync")]
+        [Column("LAST_DOMAIN_SYNC")]
         public DateTime? LastDomainSync { get; set; }
 
         /// <summary>
         /// Является ли пользователь локальным (не доменным)
         /// </summary>
-        [Column("IsLocalUser")]
+        [Column("IS_LOCAL_USER")]
         public bool IsLocalUser { get; set; } = true;
 
         /// <summary>
         /// Разрешить локальный вход для доменного пользователя (offline режим)
         /// </summary>
-        [Column("AllowLocalLogin")]
+        [Column("ALLOW_LOCAL_LOGIN")]
         public bool AllowLocalLogin { get; set; } = false;
 
         #endregion

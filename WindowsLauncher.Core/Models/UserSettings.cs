@@ -10,7 +10,10 @@ namespace WindowsLauncher.Core.Models
     public class UserSettings
     {
         public int Id { get; set; }
-        public string Username { get; set; } = string.Empty;
+        public int UserId { get; set; }
+        
+        // Навигационное свойство к пользователю
+        public virtual User? User { get; set; }
 
         // Настройки темы
         public string Theme { get; set; } = "Light"; // Light, Dark

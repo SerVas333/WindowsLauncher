@@ -1,0 +1,143 @@
+{
+  "examples": {
+    "sqlite_default": {
+      "DatabaseType": "SQLite",
+      "DatabasePath": "%AppData%\\WindowsLauncher\\launcher.db",
+      "ConnectionTimeout": 30,
+      "Description": "Локальная SQLite база данных для разработки и малых установок"
+    },
+    
+    "firebird_embedded": {
+      "DatabaseType": "Firebird", 
+      "DatabasePath": "C:\\WindowsLauncher\\Data\\launcher_embedded.fdb",
+      "Username": "SYSDBA",
+      "Password": "KDV_Launcher_2025!",
+      "ConnectionMode": "Embedded",
+      "ConnectionTimeout": 30,
+      "Description": "Firebird Embedded для автономных установок без сервера"
+    },
+    
+    "firebird_server_local": {
+      "DatabaseType": "Firebird",
+      "Server": "localhost",
+      "Port": 3050,
+      "DatabasePath": "C:\\FirebirdData\\WindowsLauncher\\launcher_server.fdb", 
+      "Username": "KDV_LAUNCHER",
+      "Password": "KDV_L@unch3r_S3cur3_2025!",
+      "ConnectionMode": "Server",
+      "ConnectionTimeout": 30,
+      "Description": "Firebird Server на локальной машине"
+    },
+    
+    "firebird_server_remote": {
+      "DatabaseType": "Firebird",
+      "Server": "fb-server.company.local",
+      "Port": 3050,
+      "DatabasePath": "/opt/firebird/databases/kdv/launcher_prod.fdb",
+      "Username": "KDV_LAUNCHER_PROD", 
+      "Password": "Pr0d_KDV_L@unch3r_2025_S3cur3!",
+      "ConnectionMode": "Server",
+      "ConnectionTimeout": 60,
+      "Description": "Firebird Server на удаленном сервере (production)"
+    },
+    
+    "firebird_server_ssl": {
+      "DatabaseType": "Firebird",
+      "Server": "secure-fb.company.com",
+      "Port": 3050,
+      "DatabasePath": "/var/lib/firebird/databases/launcher_secure.fdb",
+      "Username": "KDV_LAUNCHER_SEC",
+      "Password": "S3cur3_KDV_SSL_2025!",
+      "ConnectionMode": "Server",
+      "ConnectionTimeout": 45,
+      "UseSSL": true,
+      "SSLCertificatePath": "C:\\Certificates\\client.crt",
+      "SSLKeyPath": "C:\\Certificates\\client.key",
+      "Description": "Firebird Server с SSL/TLS шифрованием"
+    }
+  },
+  
+  "password_policy": {
+    "minimum_length": 12,
+    "require_uppercase": true,
+    "require_lowercase": true, 
+    "require_numbers": true,
+    "require_special_chars": true,
+    "forbidden_patterns": ["password", "123456", "qwerty", "admin"],
+    "examples": [
+      "KDV_Launcher_2025!",
+      "KDV_L@unch3r_S3cur3_2025!",
+      "Pr0d_KDV_L@unch3r_2025_S3cur3!",
+      "S3cur3_KDV_SSL_2025!"
+    ]
+  },
+  
+  "deployment_scenarios": {
+    "development": {
+      "recommended": "sqlite_default",
+      "alternative": "firebird_embedded",
+      "notes": "Для разработки и тестирования используйте SQLite"
+    },
+    
+    "small_office": {
+      "recommended": "firebird_embedded", 
+      "alternative": "firebird_server_local",
+      "notes": "До 10 пользователей - Embedded, больше - локальный сервер"
+    },
+    
+    "corporate": {
+      "recommended": "firebird_server_remote",
+      "alternative": "firebird_server_ssl", 
+      "notes": "Корпоративные установки требуют выделенный сервер БД"
+    },
+    
+    "high_security": {
+      "recommended": "firebird_server_ssl",
+      "notes": "Для чувствительных данных обязательно SSL/TLS"
+    }
+  },
+  
+  "migration_guide": {
+    "from_old_version": {
+      "steps": [
+        "1. Создайте backup старой БД",
+        "2. Удалите старые файлы БД и конфигурации",
+        "3. Запустите приложение - создастся БД v1.0.0.001",
+        "4. Импортируйте данные из backup (если нужно)"
+      ]
+    },
+    
+    "sqlite_to_firebird": {
+      "steps": [
+        "1. Экспортируйте данные из SQLite", 
+        "2. Создайте Firebird БД используя скрипты",
+        "3. Импортируйте данные в Firebird",
+        "4. Обновите конфигурацию приложения",
+        "5. Протестируйте подключение"
+      ]
+    }
+  },
+  
+  "troubleshooting": {
+    "common_issues": {
+      "connection_failed": {
+        "firebird_service_not_running": "Проверьте службу Firebird Guardian",
+        "wrong_port": "Убедитесь что порт 3050 открыт",
+        "wrong_credentials": "Проверьте имя пользователя и пароль",
+        "file_not_found": "Проверьте путь к файлу БД"
+      },
+      
+      "permission_denied": {
+        "file_permissions": "Проверьте права доступа к файлу БД",
+        "user_privileges": "Проверьте права пользователя в БД", 
+        "firewall": "Проверьте настройки файрвола"
+      },
+      
+      "performance_issues": {
+        "slow_queries": "Добавьте индексы на часто используемые поля",
+        "memory_usage": "Настройте DefaultDbCachePages в firebird.conf",
+        "connection_pool": "Используйте пул соединений"
+      }
+    }
+  }
+}

@@ -11,6 +11,7 @@ using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.UI.Properties.Resources;
 using WindowsLauncher.UI.Infrastructure.Localization;
+using WindowsLauncher.UI.Helpers;
 
 // Алиасы для разрешения конфликтов имен
 using WpfApplication = System.Windows.Application;
@@ -25,6 +26,7 @@ namespace WindowsLauncher.UI.Views
     {
         private readonly IAuthenticationService? _authService;
         private readonly ILogger<LoginWindow>? _logger;
+        private readonly IServiceProvider? _serviceProvider;
         private bool _isAuthenticating = false;
 
         // Публичные свойства для доступа к результату
@@ -44,8 +46,10 @@ namespace WindowsLauncher.UI.Views
                 var app = WpfApplication.Current as App;
                 if (app?.ServiceProvider != null)
                 {
+                    _serviceProvider = app.ServiceProvider;
                     _authService = app.ServiceProvider.GetService<IAuthenticationService>();
                     _logger = app.ServiceProvider.GetService<ILogger<LoginWindow>>();
+                    
                     System.Diagnostics.Debug.WriteLine("LoginWindow: Services initialized successfully");
                 }
                 
@@ -138,7 +142,7 @@ namespace WindowsLauncher.UI.Views
             }
         }
 
-        private void Input_KeyDown(object sender, KeyEventArgs e)
+        private void Input_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
         {
             if (e.Key == Key.Enter && !_isAuthenticating)
             {
@@ -244,26 +248,98 @@ namespace WindowsLauncher.UI.Views
             Close();
         }
 
-        private void SettingsButton_Click(object sender, RoutedEventArgs e)
+        private async void SettingsButton_Click(object sender, RoutedEventArgs e)
         {
             try
             {
-                // Временная заглушка
-                MessageBox.Show(
-                    LocalizationHelper.Instance.GetString("SettingsComingSoon"),
-                    LocalizationHelper.Instance.GetString("Common_Settings"),
-                    MessageBoxButton.OK,
-                    MessageBoxImage.Information);
+                // Используем ту же логику аутентификации что и при основном входе
+                if (!ValidateInput())
+                {
+                    return;
+                }
+
+                ShowLoadingState(true);
+                HideError();
+                
+                // Аутентификация с теми же данными что заполнены в форме
+                AuthenticationResult result = await GetAuthenticationResultFromCurrentInputAsync();
+                
+                if (!result.IsSuccess)
+                {
+                    ShowError(result.ErrorMessage);
+                    return;
+                }
+
+                // Проверяем права администратора
+                if (result.User.Role < UserRole.Administrator)
+                {
+                    ShowError("Недостаточно прав доступа. Для настроек БД требуются права администратора.");
+                    return;
+                }
+
+                _logger?.LogInformation("Database settings access granted for admin user: {Username}", result.User.Username);
+
+                // Показываем окно настроек БД
+                var settingsWindow = new DatabaseSettingsWindow { Owner = this };
+                var settingsResult = settingsWindow.ShowDialog();
+                
+                if (settingsResult == true && settingsWindow.ResultConfiguration != null)
+                {
+                    _logger?.LogInformation("Database configuration updated by admin {Admin}, type: {DatabaseType}", 
+                        result.User.Username, settingsWindow.ResultConfiguration.DatabaseType);
+                        
+                    CheckDomainAvailabilityAsync();
+                }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Settings button error");
+                ShowError($"Ошибка при открытии настроек: {ex.Message}");
+            }
+            finally
+            {
+                ShowLoadingState(false);
             }
         }
 
         #endregion
 
         #region Authentication Methods
+
+        private async Task<AuthenticationResult> GetAuthenticationResultFromCurrentInputAsync()
+        {
+            // Та же логика что в LoginButton_ClickAsync()
+            if (DomainModeRadio?.IsChecked == true)
+            {
+                var credentials = new AuthenticationCredentials
+                {
+                    Username = UsernameTextBox?.Text?.Trim() ?? "",
+                    Password = PasswordBox?.Password ?? "",
+                    Domain = DomainTextBox?.Text?.Trim() ?? "",
+                    IsServiceAccount = false
+                };
+                return await AuthenticateWithCredentialsAsync(credentials);
+            }
+            else if (LocalModeRadio?.IsChecked == true)
+            {
+                var username = LocalUsernameTextBox?.Text?.Trim() ?? "";
+                var password = LocalPasswordBox?.Password ?? "";
+                var isServiceAdmin = username.Equals("serviceadmin", StringComparison.OrdinalIgnoreCase);
+                
+                var credentials = new AuthenticationCredentials
+                {
+                    Username = username,
+                    Password = password,
+                    IsServiceAccount = isServiceAdmin,
+                    AuthenticationType = isServiceAdmin ? AuthenticationType.LocalService : AuthenticationType.LocalUsers
+                };
+                return await AuthenticateWithCredentialsAsync(credentials);
+            }
+            else
+            {
+                return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials, "Гостевой режим не поддерживает доступ к настройкам");
+            }
+        }
 
         private async Task<AuthenticationResult> AuthenticateWithCredentialsAsync(AuthenticationCredentials credentials)
         {
@@ -549,15 +625,47 @@ namespace WindowsLauncher.UI.Views
                     var virtualKeyboardService = app.ServiceProvider.GetService<IVirtualKeyboardService>();
                     if (virtualKeyboardService != null)
                     {
-                        await virtualKeyboardService.ToggleVirtualKeyboardAsync();
+                        // Сначала выполняем диагностику
+                        var diagnosis = await virtualKeyboardService.DiagnoseVirtualKeyboardAsync();
+                        _logger?.LogInformation("Диагностика перед показом клавиатуры:\n{Diagnosis}", diagnosis);
+                        
+                        // Затем пытаемся показать клавиатуру
+                        var success = await virtualKeyboardService.ShowVirtualKeyboardAsync();
+                        
+                        if (!success)
+                        {
+                            // Дополнительная попытка принудительного позиционирования
+                            _logger?.LogInformation("Первая попытка не удалась, пытаемся принудительное позиционирование");
+                            success = await virtualKeyboardService.RepositionKeyboardAsync();
+                        }
+                        
+                        if (!success)
+                        {
+                            // Если всё ещё не удалось, показываем диагностику пользователю
+                            var finalDiagnosis = await virtualKeyboardService.DiagnoseVirtualKeyboardAsync();
+                            MessageBox.Show($"Не удалось показать виртуальную клавиатуру.\n\nДиагностика:\n{finalDiagnosis}", 
+                                          "Диагностика виртуальной клавиатуры", 
+                                          MessageBoxButton.OK, 
+                                          MessageBoxImage.Information);
+                        }
+                        else
+                        {
+                            _logger?.LogInformation("Виртуальная клавиатура успешно показана");
+                        }
                     }
                 }
             }
             catch (Exception ex)
             {
                 _logger?.LogError(ex, "Error toggling virtual keyboard");
-                MessageBox.Show("Ошибка при вызове виртуальной клавиатуры", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
+                MessageBox.Show($"Ошибка при вызове виртуальной клавиатуры: {ex.Message}", "Ошибка", MessageBoxButton.OK, MessageBoxImage.Warning);
             }
+        }
+
+        protected override void OnClosed(EventArgs e)
+        {
+            // Автоматическая очистка теперь выполняется GlobalTouchKeyboardManager
+            base.OnClosed(e);
         }
     }
 }

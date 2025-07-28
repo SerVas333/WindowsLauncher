@@ -39,6 +39,18 @@ namespace WindowsLauncher.Core.Interfaces
         bool IsVirtualKeyboardAvailable();
 
         /// <summary>
+        /// Диагностика состояния виртуальной клавиатуры для отладки
+        /// </summary>
+        /// <returns>Строка с результатами диагностики</returns>
+        Task<string> DiagnoseVirtualKeyboardAsync();
+
+        /// <summary>
+        /// Принудительно позиционировать клавиатуру в видимой области экрана
+        /// </summary>
+        /// <returns>True если операция выполнена успешно</returns>
+        Task<bool> RepositionKeyboardAsync();
+
+        /// <summary>
         /// Событие изменения состояния виртуальной клавиатуры
         /// </summary>
         event EventHandler<VirtualKeyboardStateChangedEventArgs>? StateChanged;

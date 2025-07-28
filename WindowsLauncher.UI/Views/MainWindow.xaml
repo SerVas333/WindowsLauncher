@@ -2,24 +2,30 @@
 <Window x:Class="WindowsLauncher.UI.MainWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:WindowsLauncher.UI"
         xmlns:converters="clr-namespace:WindowsLauncher.UI.Converters"
         xmlns:loc="clr-namespace:WindowsLauncher.UI.Infrastructure.Localization"
-        Title="{Binding WindowTitle}" 
+        xmlns:statusbar="clr-namespace:WindowsLauncher.UI.Components.StatusBar"
+        mc:Ignorable="d"
+        Title="{Binding WindowTitle, FallbackValue='Windows Launcher'}" 
+        d:Title="Windows Launcher - Design Time"
+        d:DataContext="{d:DesignInstance Type=local:MainWindow, IsDesignTimeCreatable=False}"
         Height="700" Width="1200"
         WindowStartupLocation="CenterScreen"
         Background="{DynamicResource BackgroundBrush}"
         MinHeight="600" MinWidth="900">
 
     <Window.Resources>
-       
-
         <!-- Конвертеры -->
-        <converters:BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
         <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
         <converters:StringToVisibilityConverter x:Key="StringToVisConverter"/>
         <converters:RoleToVisibilityConverter x:Key="RoleToVisibilityConverter"/>
         
+        <!-- Localization converter -->
+        <loc:LocalizedStringConverter x:Key="LocalizedStringConverter"/>
     </Window.Resources>
 
     <Grid>
@@ -309,6 +315,15 @@
                     <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_ApplicationsCount}" FontSize="12" 
                               Foreground="{StaticResource CorporateTextMuted}"/>
 
+                    <!-- Running Applications Status -->
+                    <Border BorderBrush="{StaticResource OutlineBrush}" 
+                            BorderThickness="1" 
+                            CornerRadius="4" 
+                            Margin="12,0,0,0"
+                            Padding="2">
+                        <statusbar:RunningAppsStatusBarControl />
+                    </Border>
+
                     <!-- Search Indicator -->
                     <Border Background="{StaticResource CorporateRed}" 
                             CornerRadius="10" Padding="8,2" Margin="12,0,0,0"
@@ -321,7 +336,7 @@
                     </Border>
 
                     <!-- Virtual Keyboard Button -->
-                    <Button Command="{Binding ToggleVirtualKeyboardCommand}"
+                    <Button Command="{Binding ShowVirtualKeyboardCommand}"
                             ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_VirtualKeyboardTooltip}"
                             Width="32" Height="28" FontSize="14" Padding="0"
                             Margin="12,0,0,0">

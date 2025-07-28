@@ -21,16 +21,19 @@
 		<FileVersion>1.0.0.0</FileVersion>
 		<ApplicationVersion>1.0.0.0</ApplicationVersion>
 		
-		<!-- ClickOnce Settings -->
-		<IsWebBootstrapper>false</IsWebBootstrapper>
-		<GenerateManifests>true</GenerateManifests>
-		<BootstrapperEnabled>true</BootstrapperEnabled>
+		<!-- Application Icon -->
 		<ApplicationIcon>Resources\Icons\KDV_icon.ico</ApplicationIcon>
 		<ApplicationManifest>app.manifest</ApplicationManifest>
 		
-		<!-- Security -->
-		<TargetZone>LocalIntranet</TargetZone>
-		<RequiredTargetFramework>4.0</RequiredTargetFramework>
+		<!-- Modern .NET 8 Publishing Configuration -->
+		<PublishSingleFile>false</PublishSingleFile>
+		<SelfContained>false</SelfContained>
+		<PublishReadyToRun>false</PublishReadyToRun>
+		<RuntimeIdentifier>win-x64</RuntimeIdentifier>
+		
+		<!-- Windows-specific publishing -->
+		<EnableWindowsTargeting>true</EnableWindowsTargeting>
+		<PublishProtocol>FileSystem</PublishProtocol>
 	</PropertyGroup>
 
 	<ItemGroup>
@@ -46,6 +49,10 @@
 
 
 	<ItemGroup>
+		<FrameworkReference Include="Microsoft.WindowsDesktop.App" />
+	</ItemGroup>
+
+	<ItemGroup>
 		<PackageReference Include="FirebirdSql.Data.FirebirdClient" Version="10.3.3" />
 		<PackageReference Include="MaterialDesignThemes" Version="5.2.1" />
 		<PackageReference Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.6">
@@ -55,7 +62,7 @@
 		<PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.6" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Console" Version="9.0.6" />
 		<PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.6" />
-		<PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />		
+		<PackageReference Include="Microsoft.VisualBasic" Version="10.3.0" />
 	</ItemGroup>
 
 	<ItemGroup>
@@ -83,5 +90,14 @@
 	  </None>
 	</ItemGroup>
 
+	<!-- Копирование нативных библиотек Firebird -->
+	<PropertyGroup>
+		<RunPostBuildEvent>OnBuildSuccess</RunPostBuildEvent>
+	</PropertyGroup>
+
+	<!-- Добавляем нативные библиотеки Firebird для копирования -->
+	<ItemGroup>
+		<None Include="firebird\**\*.*" CopyToOutputDirectory="PreserveNewest" Condition="Exists('firebird')" />
+	</ItemGroup>
 
 </Project>
