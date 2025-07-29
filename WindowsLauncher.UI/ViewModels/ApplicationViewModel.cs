@@ -28,6 +28,7 @@ namespace WindowsLauncher.UI.ViewModels
         public int Id => _application.Id;
         public string Name => _application.Name;
         public string Description => GetLocalizedDescription();
+        public string DisplayDescription => GetDisplayDescription();
         public string Category => _application.Category;
         public string ExecutablePath => _application.ExecutablePath;
         public bool IsEnabled => _application.IsEnabled;
@@ -208,6 +209,24 @@ namespace WindowsLauncher.UI.ViewModels
         }
 
         /// <summary>
+        /// Получить описание без технического префикса [CACHED_TITLE] для отображения пользователю
+        /// </summary>
+        private string GetDisplayDescription()
+        {
+            // Сначала получаем обычное описание (с локализацией)
+            var description = GetLocalizedDescription();
+            
+            if (string.IsNullOrEmpty(description))
+                return "";
+            
+            // Убираем технический префикс если он есть
+            if (description.StartsWith("[CACHED_TITLE]"))
+                return description.Substring("[CACHED_TITLE]".Length);
+            
+            return description;
+        }
+
+        /// <summary>
         /// Получить ключ локализации для описания приложения
         /// </summary>
         private string GetDescriptionKey(string appName)
@@ -265,6 +284,7 @@ namespace WindowsLauncher.UI.ViewModels
         {
             // Обновляем локализованные свойства
             OnPropertyChanged(nameof(Description));
+            OnPropertyChanged(nameof(DisplayDescription));
             OnPropertyChanged(nameof(LocalizedCategory));
             OnPropertyChanged(nameof(LaunchTooltip));
             OnPropertyChanged(nameof(StatusText));

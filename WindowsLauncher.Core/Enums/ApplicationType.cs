@@ -11,6 +11,7 @@ namespace WindowsLauncher.Core.Enums
     {
         Desktop = 1,    // .exe приложения Windows
         Web = 2,        // URL ссылки (откроются в браузере)
-        Folder = 3      // Папки в проводнике
+        Folder = 3,     // Папки в проводнике
+        ChromeApp = 4   // Chrome приложения в режиме --app (управление через title)
     }
 }

@@ -24,6 +24,7 @@ using WindowsLauncher.Core.Services;
 using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.Infrastructure.Localization;
 using WindowsLauncher.UI.Views;
+using WindowsLauncher.Core.Configuration;
 
 // ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы
 using WpfApplication = System.Windows.Application;
@@ -132,6 +133,8 @@ namespace WindowsLauncher.UI
                 configuration.GetSection("ActiveDirectory"));
             services.Configure<LocalUserConfiguration>(
                 configuration.GetSection("LocalUsers"));
+            services.Configure<ChromeWindowSearchOptions>(
+                configuration.GetSection("ChromeWindowSearch"));
 
             // База данных
             services.AddSingleton<IEncryptionService, WindowsLauncher.Services.Security.EncryptionService>();
@@ -248,6 +251,11 @@ namespace WindowsLauncher.UI
             // Сервисы управления запущенными приложениями
             services.AddSingleton<IRunningApplicationsService, RunningApplicationsService>();
             services.AddSingleton<WindowsLauncher.UI.Components.SystemTray.SystemTrayManager>();
+            
+            // Сервисы переключения приложений
+            services.AddSingleton<WindowsLauncher.UI.Services.GlobalHotKeyService>();
+            services.AddSingleton<WindowsLauncher.UI.Services.AppSwitcherService>();
+            services.AddSingleton<WindowsLauncher.UI.Services.ShellModeDetectionService>();
 
             // ViewModels
             services.AddTransient<MainViewModel>();

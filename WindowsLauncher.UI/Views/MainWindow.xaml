@@ -7,7 +7,6 @@
         xmlns:local="clr-namespace:WindowsLauncher.UI"
         xmlns:converters="clr-namespace:WindowsLauncher.UI.Converters"
         xmlns:loc="clr-namespace:WindowsLauncher.UI.Infrastructure.Localization"
-        xmlns:statusbar="clr-namespace:WindowsLauncher.UI.Components.StatusBar"
         mc:Ignorable="d"
         Title="{Binding WindowTitle, FallbackValue='Windows Launcher'}" 
         d:Title="Windows Launcher - Design Time"
@@ -21,7 +20,6 @@
         <!-- Конвертеры -->
         <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
         <converters:InverseBooleanToVisibilityConverter x:Key="InverseBoolToVisConverter"/>
-        <converters:StringToVisibilityConverter x:Key="StringToVisConverter"/>
         <converters:RoleToVisibilityConverter x:Key="RoleToVisibilityConverter"/>
         
         <!-- Localization converter -->
@@ -235,7 +233,7 @@
                                                   TextAlignment="Center" TextWrapping="Wrap"
                                                   Margin="0,0,0,6"
                                                   Foreground="{StaticResource CorporateText}"/>
-                                        <TextBlock Text="{Binding Description}" 
+                                        <TextBlock Text="{Binding DisplayDescription}" 
                                                   FontSize="11" 
                                                   Foreground="{StaticResource CorporateTextMuted}"
                                                   TextAlignment="Center" TextWrapping="Wrap"
@@ -315,31 +313,59 @@
                     <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_ApplicationsCount}" FontSize="12" 
                               Foreground="{StaticResource CorporateTextMuted}"/>
 
-                    <!-- Running Applications Status -->
-                    <Border BorderBrush="{StaticResource OutlineBrush}" 
-                            BorderThickness="1" 
-                            CornerRadius="4" 
-                            Margin="12,0,0,0"
-                            Padding="2">
-                        <statusbar:RunningAppsStatusBarControl />
-                    </Border>
 
-                    <!-- Search Indicator -->
-                    <Border Background="{StaticResource CorporateRed}" 
-                            CornerRadius="10" Padding="8,2" Margin="12,0,0,0"
-                            Visibility="{Binding SearchText, Converter={StaticResource StringToVisConverter}}">
-                        <StackPanel Orientation="Horizontal">
-                            <TextBlock Text="🔍" FontSize="10" Foreground="White" Margin="0,0,4,0"/>
-                            <TextBlock Text="{Binding SearchText}" FontSize="11" 
-                                      Foreground="White" FontWeight="SemiBold"/>
-                        </StackPanel>
-                    </Border>
+                    <!-- App Switcher Button -->
+                    <Button x:Name="AppSwitcherButton"
+                            Click="AppSwitcherButton_Click"
+                            Width="32" Height="28" FontSize="14" Padding="0"
+                            Margin="12,0,0,0">
+                        <Button.ToolTip>
+                            <StackPanel Orientation="Vertical">
+                                <TextBlock Text="Переключатель приложений" FontWeight="SemiBold"/>
+                                <TextBlock x:Name="AppSwitcherTooltipText" Text="Режим: Загрузка..." FontSize="11" Opacity="0.8"/>
+                            </StackPanel>
+                        </Button.ToolTip>
+                        <Button.Style>
+                            <Style TargetType="Button" BasedOn="{StaticResource CorporateButtonSecondary}">
+                                <Setter Property="Opacity" Value="0.7"/>
+                                <Style.Triggers>
+                                    <Trigger Property="IsEnabled" Value="True">
+                                        <Setter Property="Opacity" Value="1.0"/>
+                                    </Trigger>
+                                    <Trigger Property="IsMouseOver" Value="True">
+                                        <Setter Property="Background" Value="{StaticResource CorporateRedLight}"/>
+                                        <Setter Property="Foreground" Value="White"/>
+                                    </Trigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Button.Style>
+                        <Grid>
+                            <TextBlock Text="🔄" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                            <!-- Индикатор количества приложений -->
+                            <Border x:Name="AppCountBadge" 
+                                    Background="{StaticResource CorporateRed}" 
+                                    CornerRadius="8" 
+                                    Width="14" Height="14"
+                                    HorizontalAlignment="Right" 
+                                    VerticalAlignment="Top" 
+                                    Margin="0,-2,-2,0"
+                                    Visibility="Collapsed">
+                                <TextBlock x:Name="AppCountText" 
+                                           Text="0" 
+                                           Foreground="White" 
+                                           FontSize="8" 
+                                           FontWeight="Bold"
+                                           HorizontalAlignment="Center" 
+                                           VerticalAlignment="Center"/>
+                            </Border>
+                        </Grid>
+                    </Button>
 
                     <!-- Virtual Keyboard Button -->
                     <Button Command="{Binding ShowVirtualKeyboardCommand}"
                             ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_VirtualKeyboardTooltip}"
                             Width="32" Height="28" FontSize="14" Padding="0"
-                            Margin="12,0,0,0">
+                            Margin="8,0,0,0">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource CorporateButtonSecondary}">
                                 <Style.Triggers>

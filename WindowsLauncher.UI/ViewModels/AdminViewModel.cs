@@ -2002,6 +2002,7 @@ namespace WindowsLauncher.UI.ViewModels
             ApplicationType.Desktop => "Приложение",
             ApplicationType.Web => "Веб-ссылка",
             ApplicationType.Folder => "Папка",
+            ApplicationType.ChromeApp => "Chrome App",
             _ => Type.ToString()
         };
 

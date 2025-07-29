@@ -13,6 +13,23 @@ namespace WindowsLauncher.Core.Models
         public int Id { get; set; }
         public string Name { get; set; } = string.Empty;
         public string Description { get; set; } = string.Empty;
+        
+        /// <summary>
+        /// Возвращает Description без технического префикса [CACHED_TITLE] для отображения пользователю
+        /// </summary>
+        public string DisplayDescription
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Description))
+                    return string.Empty;
+                
+                if (Description.StartsWith("[CACHED_TITLE]"))
+                    return Description.Substring("[CACHED_TITLE]".Length);
+                
+                return Description;
+            }
+        }
         public string ExecutablePath { get; set; } = string.Empty;
         public string Arguments { get; set; } = string.Empty;
         public string WorkingDirectory { get; set; } = string.Empty;

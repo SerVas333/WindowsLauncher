@@ -114,10 +114,39 @@ namespace WindowsLauncher.Core.Models
         }
 
         /// <summary>
-        /// Создать RunningApplication из Application и Process
+        /// Создать RunningApplication из Application и Process с проверкой состояния процесса
         /// </summary>
         public static RunningApplication FromApplication(Application app, System.Diagnostics.Process process, string launchedBy)
         {
+            // Безопасное получение информации о процессе с проверкой состояния
+            string processName = app.Name; // Fallback на имя приложения
+            IntPtr mainWindowHandle = IntPtr.Zero;
+            string mainWindowTitle = string.Empty;
+            DateTime startTime = DateTime.Now;
+            bool isActive = false;
+            bool isResponding = true;
+            long memoryUsageMB = 0;
+
+            try
+            {
+                // Проверяем что процесс еще не завершился
+                if (!process.HasExited)
+                {
+                    processName = process.ProcessName;
+                    mainWindowHandle = process.MainWindowHandle;
+                    mainWindowTitle = process.MainWindowTitle ?? string.Empty;
+                    startTime = process.StartTime;
+                    isActive = process.MainWindowHandle != IntPtr.Zero;
+                    isResponding = process.Responding;
+                    memoryUsageMB = process.WorkingSet64 / 1024 / 1024;
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                // Процесс завершился между проверкой HasExited и обращением к свойствам
+                // Используем fallback значения
+            }
+
             return new RunningApplication
             {
                 ApplicationId = app.Id,
@@ -127,18 +156,18 @@ namespace WindowsLauncher.Core.Models
                 IconText = app.IconText,
                 Type = app.Type,
                 ProcessId = process.Id,
-                ProcessName = process.ProcessName,
-                MainWindowHandle = process.MainWindowHandle,
-                MainWindowTitle = process.MainWindowTitle ?? string.Empty,
-                StartTime = process.StartTime,
+                ProcessName = processName,
+                MainWindowHandle = mainWindowHandle,
+                MainWindowTitle = mainWindowTitle,
+                StartTime = startTime,
                 LaunchedBy = launchedBy,
                 ExecutablePath = app.ExecutablePath,
                 Arguments = app.Arguments ?? string.Empty,
                 WorkingDirectory = app.WorkingDirectory ?? string.Empty,
-                IsActive = !process.HasExited && process.MainWindowHandle != IntPtr.Zero,
+                IsActive = isActive,
                 IsMinimized = false, // Будет определено позже через Windows API
-                IsResponding = process.Responding,
-                MemoryUsageMB = process.WorkingSet64 / 1024 / 1024,
+                IsResponding = isResponding,
+                MemoryUsageMB = memoryUsageMB,
                 LastStatusUpdate = DateTime.Now
             };
         }

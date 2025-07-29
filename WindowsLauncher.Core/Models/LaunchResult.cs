@@ -13,6 +13,7 @@ namespace WindowsLauncher.Core.Models
         public bool IsSuccess { get; set; }
         public int ProcessId { get; set; }
         public string ErrorMessage { get; set; } = string.Empty;
+        public string Message { get; set; } = string.Empty; 
         public DateTime LaunchTime { get; set; } = DateTime.Now;
 
         public static LaunchResult Success(int processId)
@@ -21,6 +22,16 @@ namespace WindowsLauncher.Core.Models
             {
                 IsSuccess = true,
                 ProcessId = processId
+            };
+        }
+
+        public static LaunchResult Success(int processId, string message)
+        {
+            return new LaunchResult
+            {
+                IsSuccess = true,
+                ProcessId = processId,
+                Message = message
             };
         }
 

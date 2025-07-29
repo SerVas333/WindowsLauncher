@@ -1,0 +1,207 @@
+<Window x:Class="WindowsLauncher.UI.Components.AppSwitcher.AppSwitcherWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:local="clr-namespace:WindowsLauncher.UI.Components.AppSwitcher"
+        Title="App Switcher" 
+        Height="400" Width="600"
+        WindowStyle="None" 
+        AllowsTransparency="True" 
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        WindowStartupLocation="CenterScreen"
+        KeyDown="Window_KeyDown"
+        KeyUp="Window_KeyUp"
+        Focusable="True">
+
+    <Window.Resources>
+        <ResourceDictionary>
+            <!-- Подключение корпоративных ресурсов -->
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Styles/MaterialColors.xaml"/>
+                <ResourceDictionary Source="/Styles/MaterialStyles.xaml"/>
+                <ResourceDictionary Source="/Styles/CorporateStyles.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+            
+            <!-- Локальные конвертеры для AppSwitcher -->
+            <local:BooleanToStringConverter x:Key="BooleanToStringConverter"/>
+            <local:StatusColorConverter x:Key="StatusColorConverter"/>
+            <local:StatusTextConverter x:Key="StatusTextConverter"/>
+        
+        <!-- Анимации для появления/исчезновения -->
+        <Storyboard x:Key="FadeInAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="0" To="1" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" From="0.9" To="1" Duration="0:0:0.2"/>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="0.9" To="1" Duration="0:0:0.2"/>
+        </Storyboard>
+        
+        <Storyboard x:Key="FadeOutAnimation">
+            <DoubleAnimation Storyboard.TargetProperty="Opacity" From="1" To="0" Duration="0:0:0.15"/>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleX)" From="1" To="0.9" Duration="0:0:0.15"/>
+            <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="1" To="0.9" Duration="0:0:0.15"/>
+        </Storyboard>
+
+        <!-- Стиль для карточек приложений -->
+        <Style x:Key="AppSwitcherCard" TargetType="Border">
+            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+            <Setter Property="CornerRadius" Value="8"/>
+            <Setter Property="Margin" Value="8"/>
+            <Setter Property="Padding" Value="12"/>
+            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Effect">
+                <Setter.Value>
+                    <DropShadowEffect Color="Black" Opacity="0.1" ShadowDepth="2" BlurRadius="8"/>
+                </Setter.Value>
+            </Setter>
+            <Style.Triggers>
+                <Trigger Property="Tag" Value="Selected">
+                    <Setter Property="BorderBrush" Value="{StaticResource CorporateRed}"/>
+                    <Setter Property="BorderThickness" Value="3"/>
+                    <Setter Property="Effect">
+                        <Setter.Value>
+                            <DropShadowEffect Color="#C41E3A" Opacity="0.3" ShadowDepth="2" BlurRadius="12"/>
+                        </Setter.Value>
+                    </Setter>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <!-- Полупрозрачный фон -->
+    <Border Background="#80000000" CornerRadius="0">
+        <Grid>
+            <!-- Основной контейнер -->
+            <Border Background="{DynamicResource MaterialDesignPaper}" 
+                    CornerRadius="12" 
+                    Margin="40"
+                    Effect="{DynamicResource MaterialDesignShadowDepth3}"
+                    RenderTransformOrigin="0.5,0.5">
+                <Border.RenderTransform>
+                    <ScaleTransform ScaleX="1" ScaleY="1"/>
+                </Border.RenderTransform>
+                
+                <Grid Margin="20">
+                    <Grid.RowDefinitions>
+                        <RowDefinition Height="Auto"/>
+                        <RowDefinition Height="*"/>
+                        <RowDefinition Height="Auto"/>
+                    </Grid.RowDefinitions>
+
+                    <!-- Заголовок -->
+                    <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
+                        <materialDesign:PackIcon Kind="ApplicationOutline" 
+                                               Foreground="{StaticResource CorporateRed}" 
+                                               Width="24" Height="24" 
+                                               VerticalAlignment="Center" Margin="0,0,8,0"/>
+                        <TextBlock Text="Переключение приложений" 
+                                   Style="{StaticResource CorporateSubtitle}"
+                                   VerticalAlignment="Center"/>
+                    </StackPanel>
+
+                    <!-- Список приложений -->
+                    <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" HorizontalScrollBarVisibility="Disabled">
+                        <ItemsControl x:Name="AppsItemsControl" ItemsSource="{Binding RunningApplications}">
+                            <ItemsControl.ItemsPanel>
+                                <ItemsPanelTemplate>
+                                    <UniformGrid Columns="3" HorizontalAlignment="Center"/>
+                                </ItemsPanelTemplate>
+                            </ItemsControl.ItemsPanel>
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Style="{StaticResource AppSwitcherCard}" 
+                                            Tag="{Binding IsSelected, Converter={x:Static local:BooleanToStringConverter.Instance}, ConverterParameter=Selected}"
+                                            MouseLeftButtonDown="AppCard_MouseLeftButtonDown"
+                                            Cursor="Hand">
+                                        <Grid>
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+
+                                            <!-- Иконка приложения -->
+                                            <Border Grid.Row="0" 
+                                                    Width="48" Height="48" 
+                                                    Background="{StaticResource CorporateRed}" 
+                                                    CornerRadius="24" 
+                                                    HorizontalAlignment="Center"
+                                                    Margin="0,0,0,8">
+                                                <TextBlock Text="{Binding IconText, FallbackValue='📱'}" 
+                                                           FontSize="24" 
+                                                           HorizontalAlignment="Center" 
+                                                           VerticalAlignment="Center"
+                                                           Foreground="White"/>
+                                            </Border>
+
+                                            <!-- Название приложения -->
+                                            <TextBlock Grid.Row="1" 
+                                                       Text="{Binding Name}" 
+                                                       FontWeight="SemiBold" 
+                                                       FontSize="14"
+                                                       HorizontalAlignment="Center" 
+                                                       TextAlignment="Center"
+                                                       TextWrapping="Wrap"
+                                                       MaxWidth="120"
+                                                       Margin="0,0,0,4"/>
+
+                                            <!-- Статус приложения -->
+                                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
+                                                <Ellipse Width="8" Height="8" Margin="0,0,4,0">
+                                                    <Ellipse.Fill>
+                                                        <SolidColorBrush Color="{Binding Path=., Converter={x:Static local:StatusColorConverter.Instance}}"/>
+                                                    </Ellipse.Fill>
+                                                </Ellipse>
+                                                <TextBlock FontSize="10" Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                                    <TextBlock.Text>
+                                                        <MultiBinding StringFormat="{}{0} | {1:F0} МБ">
+                                                            <Binding Path="IsMinimized" Converter="{x:Static local:StatusTextConverter.Instance}"/>
+                                                            <Binding Path="MemoryUsageMB"/>
+                                                        </MultiBinding>
+                                                    </TextBlock.Text>
+                                                </TextBlock>
+                                            </StackPanel>
+
+                                            <!-- PID процесса -->
+                                            <TextBlock Grid.Row="3" 
+                                                       Text="{Binding ProcessId, StringFormat='PID: {0}'}" 
+                                                       FontSize="9" 
+                                                       Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                                       HorizontalAlignment="Center"/>
+                                        </Grid>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </ScrollViewer>
+
+                    <!-- Подсказки управления -->
+                    <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Center" Margin="0,20,0,0">
+                        <!-- Навигация -->
+                        <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
+                            <TextBlock Text="↑↓←→" FontFamily="Segoe UI Symbol" Foreground="{StaticResource CorporateRed}" Margin="0,0,4,0"/>
+                            <TextBlock Text="навигация" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,16,0"/>
+                            
+                            <TextBlock Text="Enter" FontFamily="Consolas" Foreground="{StaticResource CorporateRed}" Margin="0,0,4,0"/>
+                            <TextBlock Text="переключить" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,16,0"/>
+                            
+                            <TextBlock Text="Esc" FontFamily="Consolas" Foreground="{StaticResource CorporateRed}" Margin="0,0,4,0"/>
+                            <TextBlock Text="отмена" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                        </StackPanel>
+                        
+                        <!-- Информация о режиме -->
+                        <TextBlock x:Name="ModeInfoTextBlock" 
+                                   Text="Режим: Обычный Windows (Win+`, Win+Shift+`)" 
+                                   FontSize="10" 
+                                   Foreground="{DynamicResource MaterialDesignBodyLight}"
+                                   HorizontalAlignment="Center"
+                                   Opacity="0.7"/>
+                    </StackPanel>
+                </Grid>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

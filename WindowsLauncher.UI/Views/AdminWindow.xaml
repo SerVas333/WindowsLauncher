@@ -538,6 +538,9 @@
                                                         <DataTrigger Binding="{Binding}" Value="Folder">
                                                             <Setter Property="Text" Value="Папка"/>
                                                         </DataTrigger>
+                                                        <DataTrigger Binding="{Binding}" Value="ChromeApp">
+                                                            <Setter Property="Text" Value="Chrome App"/>
+                                                        </DataTrigger>
                                                     </Style.Triggers>
                                                 </Style>
                                             </TextBlock.Style>

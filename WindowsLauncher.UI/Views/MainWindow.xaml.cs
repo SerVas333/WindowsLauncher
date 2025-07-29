@@ -1,6 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using System;
 using System.IO;
+using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
 using WindowsLauncher.Data;
@@ -11,7 +12,9 @@ using WindowsLauncher.UI.Infrastructure.Localization;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
+using WindowsLauncher.Core.Models;
 using WindowsLauncher.UI.Helpers;
+using WindowsLauncher.UI.Services;
 
 namespace WindowsLauncher.UI
 {
@@ -22,6 +25,9 @@ namespace WindowsLauncher.UI
         private const double KEYBOARD_HEIGHT_ESTIMATE = 300; // Примерная высота виртуальной клавиатуры
         private ISessionManagementService? _sessionManager;
         private ILogger<MainWindow>? _logger;
+        private GlobalHotKeyService? _globalHotKeyService;
+        private AppSwitcherService? _appSwitcherService;
+        private ShellMode _currentShellMode = ShellMode.Normal;
 
         public MainWindow()
         {
@@ -30,6 +36,7 @@ namespace WindowsLauncher.UI
             InitializeViewModel();
             SubscribeToVirtualKeyboardEvents();
             InitializeSessionManagement();
+            _ = InitializeAppSwitcherAsync(); // Инициализируем асинхронно
         }
 
         private void InitializeViewModel()
@@ -41,7 +48,7 @@ namespace WindowsLauncher.UI
                     return;
 
                 // Получаем ViewModel через DI
-                var serviceProvider = ((App)Application.Current).ServiceProvider;
+                var serviceProvider = ((App)System.Windows.Application.Current).ServiceProvider;
                 var viewModel = serviceProvider.GetRequiredService<MainViewModel>();
 
                 DataContext = viewModel;
@@ -52,7 +59,7 @@ namespace WindowsLauncher.UI
                 // Базовая обработка ошибок если DI не работает
                 MessageBox.Show($"Failed to initialize application: {ex.Message}",
                     "Initialization Error", MessageBoxButton.OK, MessageBoxImage.Error);
-                Application.Current.Shutdown();
+                System.Windows.Application.Current.Shutdown();
             }
         }
 
@@ -72,7 +79,7 @@ namespace WindowsLauncher.UI
         {
             try
             {
-                var serviceProvider = ((App)Application.Current).ServiceProvider;
+                var serviceProvider = ((App)System.Windows.Application.Current).ServiceProvider;
                 var virtualKeyboardService = serviceProvider.GetService<IVirtualKeyboardService>();
                 
                 if (virtualKeyboardService != null)
@@ -133,7 +140,7 @@ namespace WindowsLauncher.UI
         {
             try
             {
-                var serviceProvider = ((App)Application.Current).ServiceProvider;
+                var serviceProvider = ((App)System.Windows.Application.Current).ServiceProvider;
                 _sessionManager = serviceProvider.GetService<ISessionManagementService>();
                 _logger = serviceProvider.GetService<ILogger<MainWindow>>();
                 
@@ -174,7 +181,7 @@ namespace WindowsLauncher.UI
             try
             {
                 // Отписываемся от событий при закрытии окна
-                var serviceProvider = ((App)Application.Current).ServiceProvider;
+                var serviceProvider = ((App)System.Windows.Application.Current).ServiceProvider;
                 var virtualKeyboardService = serviceProvider.GetService<IVirtualKeyboardService>();
                 
                 if (virtualKeyboardService != null)
@@ -186,8 +193,236 @@ namespace WindowsLauncher.UI
             {
                 System.Diagnostics.Debug.WriteLine($"Error cleaning up resources: {ex.Message}");
             }
+
+            // Освобождаем ресурсы переключателя приложений
+            try
+            {
+                _disposed = true; // Останавливаем таймер обновления
+                _globalHotKeyService?.Dispose();
+                _appSwitcherService?.Dispose();
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Error disposing app switcher resources: {ex.Message}");
+            }
             
             base.OnClosed(e);
         }
+
+        /// <summary>
+        /// Инициализация переключателя приложений и глобальных хоткеев
+        /// </summary>
+        private async Task InitializeAppSwitcherAsync()
+        {
+            try
+            {
+                var serviceProvider = ((App)System.Windows.Application.Current).ServiceProvider;
+                _logger = serviceProvider.GetService<ILogger<MainWindow>>();
+
+                // Определяем режим работы приложения
+                var shellModeDetectionService = serviceProvider.GetService<ShellModeDetectionService>();
+                if (shellModeDetectionService != null)
+                {
+                    _currentShellMode = await shellModeDetectionService.DetectShellModeAsync();
+                }
+                else
+                {
+                    _currentShellMode = ShellMode.Normal;
+                }
+
+                // Создаем сервисы
+                _globalHotKeyService = serviceProvider.GetService<GlobalHotKeyService>();
+                _appSwitcherService = serviceProvider.GetService<AppSwitcherService>();
+
+                if (_globalHotKeyService == null || _appSwitcherService == null)
+                {
+                    _logger?.LogWarning("App switcher services not registered in DI container");
+                    return;
+                }
+
+                // Инициализируем сервис глобальных хоткеев с определенным режимом
+                await _globalHotKeyService.InitializeAsync(this, _currentShellMode);
+
+                // Подписываемся на события хоткеев
+                _globalHotKeyService.AltTabPressed += OnAltTabPressed;
+                _globalHotKeyService.CtrlAltTabPressed += OnCtrlAltTabPressed;
+
+                // Логируем информацию о режиме и доступных хоткеях
+                var modeDescription = shellModeDetectionService?.GetModeDescription(_currentShellMode) ?? "Unknown";
+                var hotKeysDescription = shellModeDetectionService?.GetHotKeysDescription(_currentShellMode) ?? "Unknown";
+                
+                _logger?.LogInformation("Application switcher initialized successfully");
+                _logger?.LogInformation("Running in: {ModeDescription}", modeDescription);
+                _logger?.LogInformation("Available hotkeys: {HotKeysDescription}", hotKeysDescription);
+
+                // Обновляем UI кнопки переключателя
+                UpdateAppSwitcherButtonState(modeDescription, hotKeysDescription);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error initializing application switcher");
+            }
+        }
+
+        /// <summary>
+        /// Обработчик нажатия Alt+Tab
+        /// </summary>
+        private async void OnAltTabPressed(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (_appSwitcherService != null)
+                {
+                    await _appSwitcherService.ShowAppSwitcherAsync(_currentShellMode);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error handling Alt+Tab press");
+            }
+        }
+
+        /// <summary>
+        /// Обработчик нажатия Ctrl+Alt+Tab
+        /// </summary>
+        private async void OnCtrlAltTabPressed(object? sender, EventArgs e)
+        {
+            try
+            {
+                if (_appSwitcherService != null)
+                {
+                    // Показываем переключатель в режиме обратного переключения
+                    await _appSwitcherService.ShowAppSwitcherAsync(_currentShellMode);
+                    await _appSwitcherService.SelectPreviousApplicationAsync();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error handling Ctrl+Alt+Tab press");
+            }
+        }
+
+        /// <summary>
+        /// Обработчик нажатия кнопки AppSwitcher в статус баре
+        /// </summary>
+        private async void AppSwitcherButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                if (_appSwitcherService != null)
+                {
+                    await _appSwitcherService.ShowAppSwitcherAsync(_currentShellMode);
+                    _logger?.LogDebug("App switcher opened via status bar button");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error opening app switcher from status bar button");
+            }
+        }
+
+        /// <summary>
+        /// Обновить состояние кнопки переключателя приложений
+        /// </summary>
+        private void UpdateAppSwitcherButtonState(string modeDescription, string hotKeysDescription)
+        {
+            try
+            {
+                // Обновляем tooltip с информацией о режиме
+                if (AppSwitcherTooltipText != null)
+                {
+                    AppSwitcherTooltipText.Text = $"{modeDescription}\nГорячие клавиши: {hotKeysDescription}";
+                }
+
+                // Запускаем периодическое обновление счетчика приложений
+                _ = StartAppCountUpdateTimerAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Error updating app switcher button state");
+            }
+        }
+
+        /// <summary>
+        /// Запустить таймер для обновления счетчика приложений
+        /// </summary>
+        private async Task StartAppCountUpdateTimerAsync()
+        {
+            await Task.Run(async () =>
+            {
+                while (!_disposed)
+                {
+                    try
+                    {
+                        if (_appSwitcherService != null)
+                        {
+                            var serviceProvider = ((App)System.Windows.Application.Current).ServiceProvider;
+                            var runningAppsService = serviceProvider.GetService<IRunningApplicationsService>();
+                            
+                            if (runningAppsService != null)
+                            {
+                                var appCount = await runningAppsService.GetRunningApplicationsCountAsync();
+                                
+                                // Обновляем UI в главном потоке
+                                Dispatcher.BeginInvoke(() =>
+                                {
+                                    UpdateAppCountDisplay(appCount);
+                                });
+                            }
+                        }
+
+                        await Task.Delay(2000); // Обновляем каждые 2 секунды
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger?.LogDebug(ex, "Error updating app count display");
+                        await Task.Delay(5000); // Увеличиваем интервал при ошибке
+                    }
+                }
+            });
+        }
+
+        /// <summary>
+        /// Обновить отображение счетчика приложений
+        /// </summary>
+        private void UpdateAppCountDisplay(int appCount)
+        {
+            try
+            {
+                if (AppCountText != null && AppCountBadge != null)
+                {
+                    if (appCount > 0)
+                    {
+                        AppCountText.Text = appCount > 9 ? "9+" : appCount.ToString();
+                        AppCountBadge.Visibility = Visibility.Visible;
+                        
+                        // Включаем кнопку если есть приложения для переключения
+                        if (AppSwitcherButton != null)
+                        {
+                            AppSwitcherButton.IsEnabled = true;
+                        }
+                    }
+                    else
+                    {
+                        AppCountBadge.Visibility = Visibility.Collapsed;
+                        
+                        // Отключаем кнопку если нет приложений
+                        if (AppSwitcherButton != null)
+                        {
+                            AppSwitcherButton.IsEnabled = false;
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogDebug(ex, "Error updating app count display");
+            }
+        }
+
+        /// <summary>
+        /// Флаг для остановки таймера при закрытии окна
+        /// </summary>
+        private bool _disposed = false;
     }
 }

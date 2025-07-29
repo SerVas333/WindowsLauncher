@@ -64,7 +64,13 @@ namespace WindowsLauncher.Services
                 }
 
                 // Получаем текущую версию БД
-                command.CommandText = "SELECT VERSION FROM DATABASE_VERSION ORDER BY APPLIED_AT DESC LIMIT 1;";
+                string versionSql = config.DatabaseType switch
+                {
+                    DatabaseType.SQLite => "SELECT VERSION FROM DATABASE_VERSION ORDER BY APPLIED_AT DESC LIMIT 1;",
+                    DatabaseType.Firebird => "SELECT FIRST 1 VERSION FROM DATABASE_VERSION ORDER BY APPLIED_AT DESC;",
+                    _ => throw new NotSupportedException($"Database type {config.DatabaseType} is not supported")
+                };
+                command.CommandText = versionSql;
                 var result = await command.ExecuteScalarAsync();
                 
                 return result?.ToString();

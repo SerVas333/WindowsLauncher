@@ -182,6 +182,55 @@ namespace WindowsLauncher.UI.Components.SystemTray
             }
         }
 
+        private Image? LoadApplicationIcon(string executablePath)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(executablePath) || !File.Exists(executablePath))
+                {
+                    return null;
+                }
+
+                // Извлекаем иконку из исполняемого файла
+                using var icon = Icon.ExtractAssociatedIcon(executablePath);
+                if (icon != null)
+                {
+                    return icon.ToBitmap();
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogDebug(ex, "Failed to load icon for {ExecutablePath}", executablePath);
+            }
+
+            return null;
+        }
+
+        private async Task UpdateRunningApplicationsMenuSafe()
+        {
+            try
+            {
+                if (_runningAppsMenuItem == null)
+                    return;
+
+                // Получаем данные в фоновом потоке
+                var menuData = await GetMenuDataAsync();
+                
+                // Обновляем UI в основном потоке
+                if (System.Windows.Application.Current?.Dispatcher != null)
+                {
+                    await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                    {
+                        UpdateMenuItems(menuData);
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Failed to update running applications menu safely");
+            }
+        }
+
         private async Task UpdateRunningApplicationsMenu()
         {
             try
@@ -281,21 +330,124 @@ namespace WindowsLauncher.UI.Components.SystemTray
             }
         }
 
+        private async Task<(List<RunningApplication> runningApps, int count)> GetMenuDataAsync()
+        {
+            var currentUser = _sessionManagementService.CurrentUser;
+            if (currentUser == null)
+            {
+                return (new List<RunningApplication>(), 0);
+            }
+
+            var runningApps = await _runningApplicationsService.GetUserRunningApplicationsAsync(currentUser.Username);
+            return (runningApps.ToList(), runningApps.Count);
+        }
+
+        private void UpdateMenuItems((List<RunningApplication> runningApps, int count) menuData)
+        {
+            try
+            {
+                // Очищаем существующие элементы
+                _runningAppsMenuItem.DropDownItems.Clear();
+
+                if (menuData.count == 0)
+                {
+                    var noAppsItem = new ToolStripMenuItem("Нет запущенных приложений")
+                    {
+                        Enabled = false
+                    };
+                    _runningAppsMenuItem.DropDownItems.Add(noAppsItem);
+                }
+                else
+                {
+                    foreach (var app in menuData.runningApps)
+                    {
+                        var appItem = new ToolStripMenuItem($"{app.Name} (PID: {app.ProcessId})")
+                        {
+                            Image = LoadApplicationIcon(app.ExecutablePath),
+                            Tag = app
+                        };
+
+                        var switchItem = new ToolStripMenuItem("Переключиться");
+                        switchItem.Click += async (s, e) => await OnSwitchToApplicationClick(app.ProcessId);
+                        appItem.DropDownItems.Add(switchItem);
+
+                        if (app.IsMinimized)
+                        {
+                            var restoreItem = new ToolStripMenuItem("Развернуть");
+                            restoreItem.Click += async (s, e) => await OnRestoreApplicationClick(app.ProcessId);
+                            appItem.DropDownItems.Add(restoreItem);
+                        }
+                        else
+                        {
+                            var minimizeItem = new ToolStripMenuItem("Свернуть");
+                            minimizeItem.Click += async (s, e) => await OnMinimizeApplicationClick(app.ProcessId);
+                            appItem.DropDownItems.Add(minimizeItem);
+                        }
+
+                        var closeItem = new ToolStripMenuItem("Закрыть");
+                        closeItem.Click += async (s, e) => await OnCloseApplicationClick(app.ProcessId);
+                        appItem.DropDownItems.Add(closeItem);
+
+                        _runningAppsMenuItem.DropDownItems.Add(appItem);
+                    }
+                }
+
+                // Обновляем текст главного пункта
+                _runningAppsMenuItem.Text = $"Запущенные приложения ({menuData.count})";
+                
+                _logger.LogDebug("Updated running applications menu with {Count} items", menuData.count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating menu items");
+            }
+        }
+
         private async void OnApplicationStarted(object? sender, RunningApplicationEventArgs e)
         {
-            await UpdateRunningApplicationsMenu();
-            ShowNotification("Приложение запущено", $"{e.Application.Name} было запущено", ToolTipIcon.Info);
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await UpdateRunningApplicationsMenuSafe();
+                    ShowNotification("Приложение запущено", $"{e.Application.Name} было запущено", ToolTipIcon.Info);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in OnApplicationStarted");
+                }
+            });
         }
 
         private async void OnApplicationExited(object? sender, RunningApplicationEventArgs e)
         {
-            await UpdateRunningApplicationsMenu();
-            ShowNotification("Приложение завершено", $"{e.Application.Name} было закрыто", ToolTipIcon.Warning);
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await UpdateRunningApplicationsMenuSafe();
+                    ShowNotification("Приложение завершено", $"{e.Application.Name} было закрыто", ToolTipIcon.Warning);
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in OnApplicationExited");
+                }
+            });
         }
 
         private async void OnApplicationStatusChanged(object? sender, RunningApplicationEventArgs e)
         {
-            await UpdateRunningApplicationsMenu();
+            _ = Task.Run(async () =>
+            {
+                try
+                {
+                    await UpdateRunningApplicationsMenuSafe();
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error in OnApplicationStatusChanged");
+                }
+            });
         }
 
         private void OnNotifyIconDoubleClick(object? sender, EventArgs e)

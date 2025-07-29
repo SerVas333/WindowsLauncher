@@ -24,7 +24,7 @@ namespace WindowsLauncher.Data.Configurations
             builder.Property(s => s.AutoRefresh).HasColumnName("AUTO_REFRESH");
             builder.Property(s => s.RefreshIntervalMinutes).HasColumnName("REFRESH_INTERVAL_MINUTES");
             builder.Property(s => s.ShowDescriptions).HasColumnName("SHOW_DESCRIPTIONS");
-            builder.Property(s => s.LastModified).HasColumnName("UPDATED_AT");
+            builder.Property(s => s.LastModified).HasColumnName("LAST_MODIFIED");
 
             // Сериализуем список скрытых категорий в JSON с компаратором
             builder.Property(s => s.HiddenCategories)
