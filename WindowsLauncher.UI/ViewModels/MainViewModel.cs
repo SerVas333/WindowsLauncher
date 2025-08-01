@@ -15,6 +15,7 @@ using WindowsLauncher.UI.Infrastructure.Localization;
 using System.ComponentModel;
 using WpfApplication = System.Windows.Application;
 using CoreApplication = WindowsLauncher.Core.Models.Application;
+using WindowsLauncher.UI.Views;
 
 namespace WindowsLauncher.UI.ViewModels
 {

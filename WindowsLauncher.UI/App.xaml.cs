@@ -26,6 +26,13 @@ using WindowsLauncher.UI.Infrastructure.Localization;
 using WindowsLauncher.UI.Views;
 using WindowsLauncher.Core.Configuration;
 
+// Новая архитектура ApplicationLifecycleService
+using WindowsLauncher.Services.Lifecycle;
+using WindowsLauncher.Services.Lifecycle.Windows;
+using WindowsLauncher.Services.Lifecycle.Monitoring;
+using WindowsLauncher.Services.Lifecycle.Management;
+using WindowsLauncher.Services.Lifecycle.Launchers;
+
 // ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы
 using WpfApplication = System.Windows.Application;
 using CoreApplication = WindowsLauncher.Core.Models.Application;
@@ -75,6 +82,31 @@ namespace WindowsLauncher.UI
         {
             try
             {
+                var logger = ServiceProvider?.GetService<ILogger<App>>();
+                logger?.LogInformation("Application shutdown started");
+
+                // Останавливаем ApplicationLifecycleService
+                try
+                {
+                    var lifecycleService = ServiceProvider?.GetService<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLifecycleService>();
+                    if (lifecycleService != null)
+                    {
+                        await lifecycleService.StopMonitoringAsync();
+                        await lifecycleService.CleanupAsync();
+                        
+                        if (lifecycleService is IDisposable disposable)
+                        {
+                            disposable.Dispose();
+                        }
+                        
+                        logger?.LogInformation("ApplicationLifecycleService stopped and disposed");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogWarning(ex, "Error stopping ApplicationLifecycleService");
+                }
+
                 // Очищаем глобальный менеджер сенсорной клавиатуры
                 try
                 {
@@ -83,7 +115,6 @@ namespace WindowsLauncher.UI
                 }
                 catch (Exception ex)
                 {
-                    var logger = ServiceProvider?.GetService<ILogger<App>>();
                     logger?.LogWarning(ex, "Ошибка при очистке GlobalTouchKeyboardManager");
                 }
 
@@ -95,6 +126,8 @@ namespace WindowsLauncher.UI
                     await _host.StopAsync();
                     _host.Dispose();
                 }
+
+                logger?.LogInformation("Application shutdown completed");
             }
             catch (Exception ex)
             {
@@ -248,9 +281,41 @@ namespace WindowsLauncher.UI
             // ✅ ДОБАВЛЯЕМ ЛОКАЛИЗАЦИЮ КАК СИНГЛ
             services.AddSingleton<LocalizationHelper>(_ => LocalizationHelper.Instance);
 
-            // Сервисы управления запущенными приложениями
-            services.AddSingleton<IRunningApplicationsService, RunningApplicationsService>();
-            services.AddSingleton<WindowsLauncher.UI.Components.SystemTray.SystemTrayManager>();
+            // ===== НОВАЯ АРХИТЕКТУРА APPLICATION LIFECYCLE SERVICES =====
+            
+            // Основные сервисы жизненного цикла приложений
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IWindowManager, 
+                WindowsLauncher.Services.Lifecycle.Windows.WindowManager>();
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IProcessMonitor, 
+                WindowsLauncher.Services.Lifecycle.Monitoring.ProcessMonitor>();
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationInstanceManager, 
+                WindowsLauncher.Services.Lifecycle.Management.ApplicationInstanceManager>();
+            
+            // Специализированные лаунчеры приложений
+            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+                WindowsLauncher.Services.Lifecycle.Launchers.DesktopApplicationLauncher>();
+            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+                WindowsLauncher.Services.Lifecycle.Launchers.ChromeAppLauncher>();
+            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+                WindowsLauncher.Services.Lifecycle.Launchers.WebApplicationLauncher>();
+            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+                WindowsLauncher.Services.Lifecycle.Launchers.FolderLauncher>();
+            
+            // WebView2 лаунчер для замены Chrome Apps
+            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+                WindowsLauncher.UI.Services.WebView2ApplicationLauncher>();
+            
+            // TextEditor лаунчер для встроенного текстового редактора
+            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+                WindowsLauncher.UI.Services.TextEditorApplicationLauncher>();
+            
+            // Главный сервис управления жизненным циклом приложений
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLifecycleService, 
+                WindowsLauncher.Services.Lifecycle.ApplicationLifecycleService>();
+            
+            // ===== LEGACY SERVICES (для совместимости) =====
+            
+            // Сервисы управления запущенными приложениями удалены - используется ApplicationLifecycleService
             
             // Сервисы переключения приложений
             services.AddSingleton<WindowsLauncher.UI.Services.GlobalHotKeyService>();
@@ -653,12 +718,7 @@ namespace WindowsLauncher.UI
             try
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-                logger.LogInformation("Initializing system tray manager");
-
-                var systemTrayManager = ServiceProvider.GetRequiredService<WindowsLauncher.UI.Components.SystemTray.SystemTrayManager>();
-                await systemTrayManager.InitializeAsync();
-
-                logger.LogInformation("System tray manager initialized successfully");
+                // SystemTrayManager удален - используется встроенный трей MainWindow
             }
             catch (Exception ex)
             {
@@ -676,17 +736,19 @@ namespace WindowsLauncher.UI
             try
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-                logger.LogInformation("Starting running applications monitoring");
+                logger.LogInformation("Starting application lifecycle monitoring");
 
-                var runningAppsService = ServiceProvider.GetRequiredService<IRunningApplicationsService>();
-                await runningAppsService.StartMonitoringAsync();
+                // ===== НОВАЯ АРХИТЕКТУРА: ApplicationLifecycleService =====
+                var lifecycleService = ServiceProvider.GetRequiredService<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLifecycleService>();
+                await lifecycleService.StartMonitoringAsync();
+                logger.LogInformation("ApplicationLifecycleService monitoring started successfully");
 
-                logger.LogInformation("Running applications monitoring started successfully");
+                // Legacy RunningApplicationsService удален - используется ApplicationLifecycleService
             }
             catch (Exception ex)
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-                logger.LogError(ex, "Failed to start running applications monitoring");
+                logger.LogError(ex, "Failed to start application monitoring services");
                 // Не прерываем работу приложения из-за ошибки мониторинга
             }
         }

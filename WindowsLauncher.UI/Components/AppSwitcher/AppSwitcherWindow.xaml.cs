@@ -5,12 +5,18 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using System.Windows.Controls;
+using System.Windows.Controls.Primitives;
 using System.Windows.Media.Animation;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
+using WindowsLauncher.Core.Interfaces.Lifecycle;
 using WindowsLauncher.Core.Models;
+
+// ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы
+using WpfApplication = System.Windows.Application;
+using CoreApplication = WindowsLauncher.Core.Models.Application;
 
 namespace WindowsLauncher.UI.Components.AppSwitcher
 {
@@ -19,7 +25,7 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
     /// </summary>
     public partial class AppSwitcherWindow : Window
     {
-        private readonly IRunningApplicationsService _runningAppsService;
+        private readonly IApplicationLifecycleService _lifecycleService;
         private readonly ILogger<AppSwitcherWindow> _logger;
         private readonly ObservableCollection<AppSwitcherItem> _runningApplications;
         private int _selectedIndex = 0;
@@ -27,19 +33,20 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
 
         public ObservableCollection<AppSwitcherItem> RunningApplications => _runningApplications;
 
-        public AppSwitcherWindow(IRunningApplicationsService runningAppsService, ILogger<AppSwitcherWindow> logger)
+        public AppSwitcherWindow(IApplicationLifecycleService lifecycleService, ILogger<AppSwitcherWindow> logger)
         {
             InitializeComponent();
             
-            _runningAppsService = runningAppsService ?? throw new ArgumentNullException(nameof(runningAppsService));
+            _lifecycleService = lifecycleService ?? throw new ArgumentNullException(nameof(lifecycleService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _runningApplications = new ObservableCollection<AppSwitcherItem>();
             
             DataContext = this;
             
-            // Подписываемся на события клавиатуры
+            // Подписываемся на события клавиатуры и потери фокуса
             PreviewKeyDown += AppSwitcherWindow_PreviewKeyDown;
             Loaded += AppSwitcherWindow_Loaded;
+            Deactivated += AppSwitcherWindow_Deactivated;
         }
 
         /// <summary>
@@ -67,6 +74,9 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
                 // Выбираем первое приложение
                 _selectedIndex = 0;
                 UpdateSelection();
+                
+                // Рассчитываем динамические размеры окна
+                CalculateDynamicSize();
                 
                 // Показываем окно с анимацией
                 Show();
@@ -125,7 +135,8 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
                     _logger.LogInformation("Switching to application: {Name} (PID: {ProcessId})", 
                         selectedApp.Name, selectedApp.ProcessId);
                     
-                    var success = await _runningAppsService.SwitchToApplicationAsync(selectedApp.ProcessId);
+                    // Переключаемся на приложение по InstanceId
+                    var success = await _lifecycleService.SwitchToAsync(selectedApp.InstanceId);
                     
                     if (success)
                     {
@@ -182,30 +193,75 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
         {
             try
             {
-                var runningApps = await _runningAppsService.GetRunningApplicationsAsync();
+                var runningInstances = await _lifecycleService.GetRunningAsync();
                 
-                _runningApplications.Clear();
-                
-                foreach (var app in runningApps.OrderBy(a => a.Name))
+                // Обновляем UI элементы в UI потоке
+                await Dispatcher.InvokeAsync(() =>
                 {
-                    _runningApplications.Add(new AppSwitcherItem
+                    _runningApplications.Clear();
+                    
+                    foreach (var instance in runningInstances.OrderBy(i => i.Application.Name))
                     {
-                        ProcessId = app.ProcessId,
-                        ApplicationId = app.ApplicationId,
-                        Name = app.Name,
-                        IconText = GetAppIcon(app.Name),
-                        IsResponding = app.IsResponding,
-                        IsMinimized = app.IsMinimized,
-                        MemoryUsageMB = app.MemoryUsageMB,
-                        IsSelected = false
-                    });
-                }
+                        _runningApplications.Add(new AppSwitcherItem
+                        {
+                            ProcessId = instance.ProcessId,
+                            ApplicationId = instance.Application.Id,
+                            InstanceId = instance.InstanceId,
+                            Name = instance.Application.Name,
+                            IconText = GetAppIcon(instance.Application.Name),
+                            IsResponding = instance.IsResponding,
+                            IsMinimized = instance.IsMinimized,
+                            MemoryUsageMB = instance.MemoryUsageMB,
+                            IsSelected = false
+                        });
+                    }
+                });
                 
                 _logger.LogDebug("Loaded {Count} running applications for switcher", _runningApplications.Count);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error loading running applications for switcher");
+            }
+        }
+
+        /// <summary>
+        /// Обновить список запущенных приложений (для интеграции с ApplicationLifecycleService)
+        /// </summary>
+        public async Task RefreshApplicationsAsync()
+        {
+            try
+            {
+                // Сохраняем текущий выбор
+                var currentSelectedProcessId = _selectedIndex >= 0 && _selectedIndex < _runningApplications.Count
+                    ? _runningApplications[_selectedIndex].ProcessId
+                    : -1;
+
+                // Загружаем обновленный список приложений
+                await LoadRunningApplicationsAsync();
+
+                // Пытаемся восстановить выбор
+                if (currentSelectedProcessId > 0)
+                {
+                    var newIndex = _runningApplications
+                        .Select((app, index) => new { app, index })
+                        .FirstOrDefault(x => x.app.ProcessId == currentSelectedProcessId)?.index ?? 0;
+                    
+                    _selectedIndex = newIndex;
+                }
+                else
+                {
+                    _selectedIndex = Math.Min(_selectedIndex, _runningApplications.Count - 1);
+                }
+
+                // Обновляем UI выбор
+                UpdateSelection();
+                
+                _logger.LogTrace("Refreshed application switcher with {Count} applications", _runningApplications.Count);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error refreshing applications in switcher");
             }
         }
 
@@ -217,6 +273,94 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
             for (int i = 0; i < _runningApplications.Count; i++)
             {
                 _runningApplications[i].IsSelected = (i == _selectedIndex);
+            }
+        }
+
+        /// <summary>
+        /// Рассчитать динамические размеры окна на основе количества приложений
+        /// </summary>
+        private void CalculateDynamicSize()
+        {
+            try
+            {
+                var appCount = _runningApplications.Count;
+                if (appCount == 0) return;
+
+                // Получаем размеры экрана (или главного окна если возможно)
+                var screenWidth = SystemParameters.PrimaryScreenWidth;
+                var screenHeight = SystemParameters.PrimaryScreenHeight;
+
+                // Пытаемся найти главное окно для определения его размеров
+                Window? mainWindow = null;
+                foreach (Window window in WpfApplication.Current.Windows)
+                {
+                    if (window.GetType().Name == "MainWindow" && window != this)
+                    {
+                        mainWindow = window;
+                        break;
+                    }
+                }
+
+                // Если нашли главное окно, используем его размеры, иначе - экрана
+                var parentWidth = mainWindow?.Width ?? screenWidth;
+                var parentHeight = mainWindow?.Height ?? screenHeight;
+
+                // Размеры карточки приложения (компактные, соответствуют XAML)
+                const double cardWidth = 150; // Ширина карточки (из XAML Style)
+                const double cardHeight = 110; // Высота карточки (из XAML Style)
+                const double cardMargin = 12; // Отступы вокруг карточки (6px с каждой стороны)
+                
+                // Отступы из XAML структуры:
+                // Border Margin="2" + Grid Margin="20" = 44px с каждой стороны
+                const double windowPadding = 88; // 44px * 2 (слева+справа или сверху+снизу)
+                const double headerFooterHeight = 120; // Заголовок (20px margin) + подсказки (20px margin) + дополнительные отступы
+                
+                // Максимальная ширина окна (80% от родительского окна)
+                var maxWidth = parentWidth * 0.8;
+                
+                // Количество колонок, которое поместится по ширине
+                var maxColumnsWidth = (int)Math.Floor((maxWidth - windowPadding) / (cardWidth + cardMargin));
+                maxColumnsWidth = Math.Max(1, Math.Min(maxColumnsWidth, 6)); // От 1 до 6 колонок
+                
+                // Определяем количество колонок на основе количества приложений
+                var columns = Math.Min(appCount, maxColumnsWidth);
+                
+                // Количество строк
+                var rows = (int)Math.Ceiling((double)appCount / columns);
+                
+                // Рассчитываем итоговые размеры с учетом всех отступов
+                var calculatedWidth = Math.Min(maxWidth, columns * (cardWidth + cardMargin) + windowPadding);
+                var calculatedHeight = rows * (cardHeight + cardMargin) + headerFooterHeight + windowPadding;
+                
+                // Ограничиваем высоту экрана (максимум 80% высоты экрана)
+                var maxHeight = parentHeight * 0.8;
+                calculatedHeight = Math.Min(calculatedHeight, maxHeight);
+                
+                // Применяем размеры
+                Width = calculatedWidth;
+                Height = calculatedHeight;
+                
+                // Обновляем количество колонок в UniformGrid
+                if (AppsItemsControl?.ItemsPanel != null)
+                {
+                    var itemsPanel = AppsItemsControl.ItemsPanel;
+                    // Создаем новый ItemsPanelTemplate с обновленным количеством колонок
+                    var factory = new FrameworkElementFactory(typeof(UniformGrid));
+                    factory.SetValue(UniformGrid.ColumnsProperty, columns);
+                    factory.SetValue(UniformGrid.HorizontalAlignmentProperty, HorizontalAlignment.Center);
+                    
+                    var newTemplate = new ItemsPanelTemplate(factory);
+                    AppsItemsControl.ItemsPanel = newTemplate;
+                }
+                
+                _logger.LogDebug("AppSwitcher size calculated: {Width}x{Height}, {Columns} columns, {Rows} rows for {AppCount} apps", 
+                    Width, Height, columns, rows, appCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error calculating dynamic size, using default");
+                Width = 600;
+                Height = 400;
             }
         }
 
@@ -253,6 +397,13 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
             // Устанавливаем фокус на окно
             Focusable = true;
             Focus();
+        }
+
+        private async void AppSwitcherWindow_Deactivated(object sender, EventArgs e)
+        {
+            // Закрываем окно при потере фокуса
+            _logger.LogDebug("AppSwitcher lost focus, hiding window");
+            await HideWithAnimationAsync();
         }
 
         private async void AppSwitcherWindow_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -389,6 +540,7 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
 
         public int ProcessId { get; set; }
         public int ApplicationId { get; set; }
+        public string InstanceId { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public string IconText { get; set; } = "📱";
         public bool IsResponding { get; set; }

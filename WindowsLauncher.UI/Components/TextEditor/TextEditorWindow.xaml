@@ -1,0 +1,496 @@
+<Window x:Class="WindowsLauncher.UI.Components.TextEditor.TextEditorWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:properties="clr-namespace:WindowsLauncher.UI.Properties.Resources"
+        Title="{x:Static properties:Resources.TextEditor_Title}"
+        Width="900" Height="700"
+        WindowStartupLocation="CenterScreen">
+
+    <!-- Ресурсы окна -->
+    <Window.Resources>
+        <!-- Стили для элементов интерфейса -->
+        <Style x:Key="ToolbarButtonStyle" TargetType="Button">
+            <Setter Property="Padding" Value="8,4,8,4"/>
+            <Setter Property="Margin" Value="2,0,2,0"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+        </Style>
+
+        <Style x:Key="MenuItemStyle" TargetType="MenuItem">
+            <Setter Property="Height" Value="32"/>
+        </Style>
+
+        <Style x:Key="StatusBarTextStyle" TargetType="TextBlock">
+            <Setter Property="Margin" Value="5,2,5,2"/>
+            <Setter Property="VerticalAlignment" Value="Center"/>
+            <Setter Property="FontSize" Value="11"/>
+        </Style>
+
+        <!-- Конвертер для видимости элементов -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
+    </Window.Resources>
+
+    <!-- Команды окна -->
+    <Window.CommandBindings>
+        <CommandBinding Command="ApplicationCommands.New" Executed="NewFile_Executed" CanExecute="NewFile_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Open" Executed="OpenFile_Executed" CanExecute="OpenFile_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Save" Executed="SaveFile_Executed" CanExecute="SaveFile_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.SaveAs" Executed="SaveFileAs_Executed" CanExecute="SaveFileAs_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Print" Executed="PrintDocument_Executed" CanExecute="PrintDocument_CanExecute"/>
+        <CommandBinding Command="ApplicationCommands.Find" Executed="FindText_Executed" CanExecute="FindText_CanExecute"/>
+        <CommandBinding Command="EditingCommands.ToggleBold" Executed="ToggleBold_Executed" CanExecute="ToggleBold_CanExecute"/>
+        <CommandBinding Command="EditingCommands.ToggleItalic" Executed="ToggleItalic_Executed" CanExecute="ToggleItalic_CanExecute"/>
+        <CommandBinding Command="EditingCommands.ToggleUnderline" Executed="ToggleUnderline_Executed" CanExecute="ToggleUnderline_CanExecute"/>
+    </Window.CommandBindings>
+
+    <!-- Горячие клавиши -->
+    <Window.InputBindings>
+        <KeyBinding Key="N" Modifiers="Ctrl" Command="ApplicationCommands.New"/>
+        <KeyBinding Key="O" Modifiers="Ctrl" Command="ApplicationCommands.Open"/>
+        <KeyBinding Key="S" Modifiers="Ctrl" Command="ApplicationCommands.Save"/>
+        <KeyBinding Key="S" Modifiers="Ctrl+Shift" Command="ApplicationCommands.SaveAs"/>
+        <KeyBinding Key="P" Modifiers="Ctrl" Command="ApplicationCommands.Print"/>
+        <KeyBinding Key="F" Modifiers="Ctrl" Command="ApplicationCommands.Find"/>
+        <KeyBinding Key="B" Modifiers="Ctrl" Command="EditingCommands.ToggleBold"/>
+        <KeyBinding Key="I" Modifiers="Ctrl" Command="EditingCommands.ToggleItalic"/>
+        <KeyBinding Key="U" Modifiers="Ctrl" Command="EditingCommands.ToggleUnderline"/>
+    </Window.InputBindings>
+
+    <!-- Основная сетка окна -->
+    <Grid>
+        <Grid.RowDefinitions>
+            <!-- Меню -->
+            <RowDefinition Height="Auto"/>
+            <!-- Панель инструментов -->
+            <RowDefinition Height="Auto"/>
+            <!-- Основная область редактора -->
+            <RowDefinition Height="*"/>
+            <!-- Статус бар -->
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- МЕНЮ БАР -->
+        <Menu Grid.Row="0" Style="{StaticResource CorporateMenu}">
+            
+            <!-- Меню "Файл" -->
+            <MenuItem Header="{x:Static properties:Resources.TextEditor_File}" Style="{StaticResource CorporateMenuItem}">
+                <MenuItem x:Name="NewMenuItem" 
+                          Header="{x:Static properties:Resources.TextEditor_New}" 
+                          Command="ApplicationCommands.New"
+                          InputGestureText="Ctrl+N">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_FileNew}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                
+                <MenuItem x:Name="OpenMenuItem" 
+                          Header="{x:Static properties:Resources.TextEditor_Open}" 
+                          Command="ApplicationCommands.Open"
+                          InputGestureText="Ctrl+O"
+                          Visibility="{Binding AllowOpenFiles, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_FolderOpen}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                
+                <Separator Visibility="{Binding AllowOpenFiles, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                
+                <MenuItem x:Name="SaveMenuItem" 
+                          Header="{x:Static properties:Resources.TextEditor_Save}" 
+                          Command="ApplicationCommands.Save"
+                          InputGestureText="Ctrl+S"
+                          Visibility="{Binding AllowSaveFiles, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_ContentSave}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                
+                <MenuItem x:Name="SaveAsMenuItem" 
+                          Header="{x:Static properties:Resources.TextEditor_SaveAs}" 
+                          Command="ApplicationCommands.SaveAs"
+                          InputGestureText="Ctrl+Shift+S"
+                          Visibility="{Binding AllowSaveFiles, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_ContentSaveAs}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                
+                <Separator Visibility="{Binding AllowSaveFiles, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                
+                <!-- Подменю печати -->
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Print}" 
+                          Visibility="{Binding AllowPrint, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_Printer}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                    <MenuItem Header="{x:Static properties:Resources.TextEditor_PrintMenu}" 
+                              Command="ApplicationCommands.Print"
+                              InputGestureText="Ctrl+P">
+                        <MenuItem.Icon>
+                            <Path Data="{StaticResource Icon_Printer}" Style="{StaticResource MenuIcon}"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem x:Name="PrintPreviewMenuItem" 
+                              Header="{x:Static properties:Resources.TextEditor_PrintPreview}"
+                              Click="PrintPreview_Click">
+                        <MenuItem.Icon>
+                            <Path Data="{StaticResource Icon_PrinterEye}" Style="{StaticResource MenuIcon}"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                    <MenuItem x:Name="PageSetupMenuItem" 
+                              Header="{x:Static properties:Resources.TextEditor_PageSetup}"
+                              Click="PageSetup_Click">
+                        <MenuItem.Icon>
+                            <Path Data="{StaticResource Icon_FileDocumentMultiple}" Style="{StaticResource MenuIcon}"/>
+                        </MenuItem.Icon>
+                    </MenuItem>
+                </MenuItem>
+                
+                <Separator Visibility="{Binding AllowPrint, Converter={StaticResource BoolToVisibilityConverter}}"/>
+
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Exit}" 
+                          Click="Exit_Click"
+                          InputGestureText="Alt+F4">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_ExitToApp}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            
+            <!-- Меню "Правка" -->
+            <MenuItem Header="{x:Static properties:Resources.TextEditor_Edit}" Style="{StaticResource CorporateMenuItem}">
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Undo}" 
+                          Command="ApplicationCommands.Undo"
+                          InputGestureText="Ctrl+Z">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_Undo}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Redo}" 
+                          Command="ApplicationCommands.Redo"
+                          InputGestureText="Ctrl+Y">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_Redo}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Cut}" 
+                          Command="ApplicationCommands.Cut"
+                          InputGestureText="Ctrl+X">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_ContentCut}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Copy}" 
+                          Command="ApplicationCommands.Copy"
+                          InputGestureText="Ctrl+C">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_ContentCopy}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Paste}" 
+                          Command="ApplicationCommands.Paste"
+                          InputGestureText="Ctrl+V">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_ContentPaste}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_SelectAll}" 
+                          Command="ApplicationCommands.SelectAll"
+                          InputGestureText="Ctrl+A">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_SelectAll}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Find}" 
+                          Command="ApplicationCommands.Find"
+                          InputGestureText="Ctrl+F">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_Magnify}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            
+            <!-- Меню "Формат" (условно показывается) -->
+            <MenuItem Header="{x:Static properties:Resources.TextEditor_Format}" 
+                      Style="{StaticResource CorporateMenuItem}"
+                      Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}">
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Bold}" 
+                          Command="EditingCommands.ToggleBold"
+                          InputGestureText="Ctrl+B">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_FormatBold}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Italic}" 
+                          Command="EditingCommands.ToggleItalic"
+                          InputGestureText="Ctrl+I">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_FormatItalic}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem Header="{x:Static properties:Resources.TextEditor_Underline}" 
+                          Command="EditingCommands.ToggleUnderline"
+                          InputGestureText="Ctrl+U">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_FormatUnderline}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+                <MenuItem x:Name="TextColorMenuItem" 
+                          Header="{x:Static properties:Resources.TextEditor_TextColor}"
+                          Click="ChangeTextColor_Click">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_FormatColorText}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <MenuItem x:Name="TextBackgroundMenuItem" 
+                          Header="{x:Static properties:Resources.TextEditor_Highlight}"
+                          Click="ChangeTextBackground_Click">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_FormatColorHighlight}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+                <MenuItem x:Name="FontMenuItem" 
+                          Header="{x:Static properties:Resources.TextEditor_Font}"
+                          Click="ChooseFont_Click">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_FormatFont}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+            
+            <!-- Меню "Вид" -->
+            <MenuItem Header="{x:Static properties:Resources.TextEditor_View}" Style="{StaticResource CorporateMenuItem}">
+                <MenuItem x:Name="ReadOnlyMenuItem" 
+                          Header="{x:Static properties:Resources.TextEditor_ReadOnly}" 
+                          IsCheckable="True"
+                          IsChecked="{Binding IsReadOnlyMode}"
+                          Click="ToggleReadOnly_Click">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_Lock}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+                <Separator/>
+                <MenuItem x:Name="ZoomMenuItem" 
+                          Header="{x:Static properties:Resources.TextEditor_Zoom}"
+                          Click="ChangeZoom_Click">
+                    <MenuItem.Icon>
+                        <Path Data="{StaticResource Icon_Magnify}" Style="{StaticResource MenuIcon}"/>
+                    </MenuItem.Icon>
+                </MenuItem>
+            </MenuItem>
+        </Menu>
+
+        <!-- ПАНЕЛЬ ИНСТРУМЕНТОВ -->
+        <ToolBarTray Grid.Row="1" 
+                     Background="{StaticResource SurfaceVariantBrush}"
+                     Visibility="{Binding ShowToolbar, Converter={StaticResource BoolToVisibilityConverter}}">
+            <ToolBar Background="Transparent" 
+                     ToolBarTray.IsLocked="True">
+                
+                <!-- Файловые операции -->
+                <Button x:Name="NewButton"
+                        ToolTip="Создать (Ctrl+N)"
+                        Command="ApplicationCommands.New"
+                        Style="{StaticResource CorporateToolbarButton}">
+                    <Path Data="{StaticResource Icon_FileNew}" Style="{StaticResource ToolbarIcon}"/>
+                </Button>
+                
+                <Button x:Name="OpenButton"
+                        ToolTip="Открыть (Ctrl+O)"
+                        Command="ApplicationCommands.Open"
+                        Style="{StaticResource CorporateToolbarButton}"
+                        Visibility="{Binding AllowOpenFiles, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path Data="{StaticResource Icon_FolderOpen}" Style="{StaticResource ToolbarIcon}"/>
+                </Button>
+                
+                <Button x:Name="SaveButton"
+                        ToolTip="Сохранить (Ctrl+S)"
+                        Command="ApplicationCommands.Save"
+                        Style="{StaticResource CorporateToolbarButton}"
+                        Visibility="{Binding AllowSaveFiles, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path Data="{StaticResource Icon_ContentSave}" Style="{StaticResource ToolbarIcon}"/>
+                </Button>
+                
+                <Button x:Name="PrintButton"
+                        ToolTip="Печать (Ctrl+P)"
+                        Command="ApplicationCommands.Print"
+                        Style="{StaticResource CorporateToolbarButton}"
+                        Visibility="{Binding AllowPrint, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path Data="{StaticResource Icon_Printer}" Style="{StaticResource ToolbarIcon}"/>
+                </Button>
+                
+                <Separator Visibility="{Binding HasFileOperations, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                
+                <!-- Операции редактирования -->
+                <Button ToolTip="Вырезать (Ctrl+X)"
+                        Command="ApplicationCommands.Cut"
+                        Style="{StaticResource CorporateToolbarButton}">
+                    <Path Data="{StaticResource Icon_ContentCut}" Style="{StaticResource ToolbarIcon}"/>
+                </Button>
+                
+                <Button ToolTip="Копировать (Ctrl+C)"
+                        Command="ApplicationCommands.Copy"
+                        Style="{StaticResource CorporateToolbarButton}">
+                    <Path Data="{StaticResource Icon_ContentCopy}" Style="{StaticResource ToolbarIcon}"/>
+                </Button>
+                
+                <Button ToolTip="Вставить (Ctrl+V)"
+                        Command="ApplicationCommands.Paste"
+                        Style="{StaticResource CorporateToolbarButton}">
+                    <Path Data="{StaticResource Icon_ContentPaste}" Style="{StaticResource ToolbarIcon}"/>
+                </Button>
+                
+                <Separator/>
+                
+                <!-- Форматирование (если разрешено) -->
+                <Button x:Name="BoldButton"
+                        ToolTip="Полужирный (Ctrl+B)"
+                        Command="EditingCommands.ToggleBold"
+                        Style="{StaticResource CorporateToolbarButton}"
+                        Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path Data="{StaticResource Icon_FormatBold}" Style="{StaticResource ToolbarIcon}"/>
+                </Button>
+                
+                <Button x:Name="ItalicButton"
+                        ToolTip="Курсив (Ctrl+I)"
+                        Command="EditingCommands.ToggleItalic"
+                        Style="{StaticResource CorporateToolbarButton}"
+                        Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path Data="{StaticResource Icon_FormatItalic}" Style="{StaticResource ToolbarIcon}"/>
+                </Button>
+                
+                <Button x:Name="UnderlineButton"
+                        ToolTip="Подчеркнутый (Ctrl+U)"
+                        Command="EditingCommands.ToggleUnderline"
+                        Style="{StaticResource CorporateToolbarButton}"
+                        Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}">
+                    <Path Data="{StaticResource Icon_FormatUnderline}" Style="{StaticResource ToolbarIcon}"/>
+                </Button>
+                
+                <Separator Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                
+                <!-- Размер шрифта -->
+                <Label Content="{x:Static properties:Resources.TextEditor_FontSizeLabel}" 
+                       VerticalAlignment="Center"
+                       Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}"/>
+                <ComboBox x:Name="FontSizeComboBox"
+                          Width="60"
+                          SelectedValue="12"
+                          SelectionChanged="FontSizeComboBox_SelectionChanged"
+                          Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}"
+                          Style="{StaticResource CorporateComboBox}">
+                    <ComboBoxItem Content="8"/>
+                    <ComboBoxItem Content="9"/>
+                    <ComboBoxItem Content="10"/>
+                    <ComboBoxItem Content="11"/>
+                    <ComboBoxItem Content="12" IsSelected="True"/>
+                    <ComboBoxItem Content="14"/>
+                    <ComboBoxItem Content="16"/>
+                    <ComboBoxItem Content="18"/>
+                    <ComboBoxItem Content="20"/>
+                    <ComboBoxItem Content="24"/>
+                </ComboBox>
+            </ToolBar>
+        </ToolBarTray>
+
+        <!-- ОСНОВНАЯ ОБЛАСТЬ РЕДАКТОРА -->
+        <Border Grid.Row="2" 
+                BorderBrush="LightGray"
+                BorderThickness="1"
+                Margin="5"
+                CornerRadius="4">
+            
+            <RichTextBox x:Name="MainEditor"
+                         AcceptsReturn="True"
+                         AcceptsTab="True"
+                         VerticalScrollBarVisibility="Auto"
+                         HorizontalScrollBarVisibility="Auto"
+                         FontFamily="Segoe UI"
+                         FontSize="12"
+                         Padding="15"
+                         BorderThickness="0"
+                         Background="White"
+                         SelectionBrush="{StaticResource PrimaryBrush}"
+                         TextChanged="MainEditor_TextChanged"
+                         SelectionChanged="MainEditor_SelectionChanged"
+                         CommandManager.PreviewExecuted="MainEditor_PreviewExecuted">
+                
+                <!-- Стили для readonly режима -->
+                <RichTextBox.Style>
+                    <Style TargetType="RichTextBox" BasedOn="{StaticResource {x:Type RichTextBox}}">
+                        <Style.Triggers>
+                            <DataTrigger Binding="{Binding IsReadOnlyMode}" Value="True">
+                                <Setter Property="Background" Value="Lavender"/>
+                                <Setter Property="IsReadOnly" Value="True"/>
+                            </DataTrigger>
+                        </Style.Triggers>
+                    </Style>
+                </RichTextBox.Style>
+            </RichTextBox>
+        </Border>
+
+        <!-- СТАТУС БАР -->
+        <StatusBar Grid.Row="3" 
+                   Background="{StaticResource SurfaceVariantBrush}"
+                   Visibility="{Binding ShowStatusbar, Converter={StaticResource BoolToVisibilityConverter}}">
+            
+            <StatusBarItem>
+                <TextBlock x:Name="StatusText" 
+                           Text="{x:Static properties:Resources.TextEditor_Ready}"
+                           Style="{StaticResource StatusBarTextStyle}"/>
+            </StatusBarItem>
+            
+            <Separator/>
+            
+            <StatusBarItem>
+                <TextBlock x:Name="LineColumnText" 
+                           Text="Строка 1, Столбец 1"
+                           Style="{StaticResource StatusBarTextStyle}"/>
+            </StatusBarItem>
+            
+            <Separator/>
+            
+            <StatusBarItem>
+                <TextBlock x:Name="ReadOnlyIndicator"
+                           Text=""
+                           Foreground="{StaticResource PrimaryBrush}"
+                           FontWeight="Bold">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource StatusBarTextStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsReadOnlyMode}" Value="True">
+                                    <Setter Property="Text" Value="{x:Static properties:Resources.TextEditor_ReadOnlyIndicator}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StatusBarItem>
+            
+            <!-- Индикатор изменений -->
+            <StatusBarItem HorizontalAlignment="Right">
+                <TextBlock x:Name="ModifiedIndicator"
+                           Text=""
+                           Foreground="{StaticResource PrimaryBrush}"
+                           FontWeight="Bold">
+                    <TextBlock.Style>
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource StatusBarTextStyle}">
+                            <Style.Triggers>
+                                <DataTrigger Binding="{Binding IsModified}" Value="True">
+                                    <Setter Property="Text" Value="{x:Static properties:Resources.TextEditor_ModifiedIndicator}"/>
+                                    <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </TextBlock.Style>
+                </TextBlock>
+            </StatusBarItem>
+        </StatusBar>
+    </Grid>
+</Window>

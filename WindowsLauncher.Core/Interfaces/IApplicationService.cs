@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WindowsLauncher.Core.Models;
+using WindowsLauncher.Core.Models.Lifecycle;
 
 namespace WindowsLauncher.Core.Interfaces
 {

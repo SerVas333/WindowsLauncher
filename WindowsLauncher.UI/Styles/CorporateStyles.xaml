@@ -340,4 +340,177 @@
         </Setter>
     </Style>
 
+    <!-- === ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ TEXTEDITIOR === -->
+    
+    <!-- Эмуляция MaterialDesignPaper для фонов меню и панелей -->
+    <SolidColorBrush x:Key="MaterialDesignPaper" Color="#FFFFFF"/>
+    
+    <!-- Эмуляция PrimaryHueMidBrush для выделения -->
+    <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="#C41E3A"/>
+    
+    <!-- Эмуляция SecondaryHueMidBrush для второстепенных элементов -->
+    <SolidColorBrush x:Key="SecondaryHueMidBrush" Color="#666666"/>
+    
+    <!-- Эмуляция ValidationErrorBrush для ошибок -->
+    <SolidColorBrush x:Key="ValidationErrorBrush" Color="#F44336"/>
+
+    <!-- === MATERIAL DESIGN ИКОНКИ (векторные пути) === -->
+    
+    <!-- Файловые операции -->
+    <Geometry x:Key="Icon_FileNew">M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z</Geometry>
+    <Geometry x:Key="Icon_FolderOpen">M19,20H4C2.89,20 2,19.1 2,18V6C2,4.89 2.89,4 4,4H10L12,6H19A2,2 0 0,1 21,8H21L4,8V18L6.14,10H23.21L20.93,18.5C20.7,19.37 19.92,20 19,20Z</Geometry>
+    <Geometry x:Key="Icon_ContentSave">M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z</Geometry>
+    <Geometry x:Key="Icon_ContentSaveAs">M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z</Geometry>
+    <Geometry x:Key="Icon_Printer">M18,3H6V7H18M19,12A1,1 0 0,1 18,11A1,1 0 0,1 19,10A1,1 0 0,1 20,11A1,1 0 0,1 19,12M16,19H8V14H16M19,8H5A3,3 0 0,0 2,11V17H6V21H18V17H22V11A3,3 0 0,0 19,8Z</Geometry>
+    <Geometry x:Key="Icon_PrinterEye">M18,3H6V7H18M19,12A1,1 0 0,1 18,11A1,1 0 0,1 19,10A1,1 0 0,1 20,11A1,1 0 0,1 19,12M16,19H8V14H16M19,8H5A3,3 0 0,0 2,11V17H6V21H18V17H22V11A3,3 0 0,0 19,8M12,13.5A2.5,2.5 0 0,0 9.5,16A2.5,2.5 0 0,0 12,18.5A2.5,2.5 0 0,0 14.5,16A2.5,2.5 0 0,0 12,13.5Z</Geometry>
+    <Geometry x:Key="Icon_ExitToApp">M19,3H5C3.89,3 3,3.89 3,5V9H5V5H19V19H5V15H3V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M10.08,15.58L11.5,17L16.5,12L11.5,7L10.08,8.41L12.67,11H3V13H12.67L10.08,15.58Z</Geometry>
+
+    <!-- Редактирование -->
+    <Geometry x:Key="Icon_Undo">M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z</Geometry>
+    <Geometry x:Key="Icon_Redo">M18.4,10.6C16.55,9 14.15,8 11.5,8C6.85,8 2.92,11.03 1.53,15.22L3.9,16C4.95,12.81 7.96,10.5 11.5,10.5C13.46,10.5 15.23,11.22 16.62,12.38L13,16H22V7L18.4,10.6Z</Geometry>
+    <Geometry x:Key="Icon_ContentCut">M9.64,7.64C10.37,6.91 10.37,5.73 9.64,5C8.91,4.27 7.73,4.27 7,5C6.27,5.73 6.27,6.91 7,7.64C7.73,8.37 8.91,8.37 9.64,7.64M21.64,2.64C22.37,1.91 22.37,0.73 21.64,0C20.91,-0.73 19.73,-0.73 19,0C18.27,0.73 18.27,1.91 19,2.64C19.73,3.37 20.91,3.37 21.64,2.64M22.5,8.5L18.5,12.5L17,11L21,7L22.5,8.5M17,11L9.5,18.5L8,17L15.5,9.5L17,11M7.64,16.36C8.37,15.63 8.37,14.45 7.64,13.72C6.91,13 5.73,13 5,13.72C4.27,14.45 4.27,15.63 5,16.36C5.73,17.09 6.91,17.09 7.64,16.36M12,20.5L10.5,19L9,20.5L7.5,22L9,20.5L12,20.5Z</Geometry>
+    <Geometry x:Key="Icon_ContentCopy">M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z</Geometry>
+    <Geometry x:Key="Icon_ContentPaste">M19,20H5V4H7V7H17V4H19M12,2A1,1 0 0,1 13,3A1,1 0 0,1 12,4A1,1 0 0,1 11,3A1,1 0 0,1 12,2M19,2H14.82C14.4,0.84 13.3,0 12,0C10.7,0 9.6,0.84 9.18,2H5A2,2 0 0,0 3,4V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V4A2,2 0 0,0 19,2Z</Geometry>
+    <Geometry x:Key="Icon_SelectAll">M9,9H15V15H9M7,17H17V7H7M15,5H17V3H15M15,21H17V19H15M19,17H21V15H19M19,9H21V7H19M19,21A2,2 0 0,0 21,19H19M19,13H21V11H19M11,21H13V19H11M9,3H7V5H9M3,17H5V15H3M5,21V19H3A2,2 0 0,0 5,21M19,3V5H21A2,2 0 0,0 19,3M13,3H11V5H13M3,9H5V7H3M7,21H9V19H7M3,13H5V11H3M3,7A2,2 0 0,1 5,5V7H3Z</Geometry>
+    <Geometry x:Key="Icon_Magnify">M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z</Geometry>
+
+    <!-- Форматирование -->
+    <Geometry x:Key="Icon_FormatBold">M13.5,15.5H10V12.5H13.5A1.5,1.5 0 0,1 15,14A1.5,1.5 0 0,1 13.5,15.5M10,6.5H13A1.5,1.5 0 0,1 14.5,8A1.5,1.5 0 0,1 13,9.5H10M15.6,10.79C16.57,10.11 17.25,9.02 17.25,8C17.25,5.74 15.5,4 13.25,4H7V18H14.04C16.14,18 17.75,16.3 17.75,14.21C17.75,12.69 16.89,11.39 15.6,10.79Z</Geometry>
+    <Geometry x:Key="Icon_FormatItalic">M10,4V7H12.21L8.79,15H6V18H14V15H11.79L15.21,7H18V4H10Z</Geometry>
+    <Geometry x:Key="Icon_FormatUnderline">M5,21H19V19H5V21M12,17A6,6 0 0,0 18,11V3H15.5V11A3.5,3.5 0 0,1 12,14.5A3.5,3.5 0 0,1 8.5,11V3H6V11A6,6 0 0,0 12,17Z</Geometry>
+    <Geometry x:Key="Icon_FormatColorText">M9.62,12L12,5.67L14.38,12M11,3L5.5,17H7.75L8.87,14H15.13L16.25,17H18.5L13,3H11Z</Geometry>
+    <Geometry x:Key="Icon_FormatColorHighlight">M18.5,1.15L17.97,1.68L16.17,3.48L15.11,2.42L14.4,3.13L15.46,4.19L6.87,12.78C6.27,13.38 6,14.2 6,15.04C6,15.88 6.27,16.7 6.87,17.3L7.71,18.14C8.31,18.74 9.13,19 9.97,19C10.81,19 11.63,18.74 12.23,18.14L20.82,9.55L21.88,10.61L22.59,9.9L21.53,8.84L23.33,7.04L22.8,6.51L18.5,1.15M9.97,17C9.58,17 9.21,16.85 8.95,16.59L8.11,15.75C7.85,15.49 7.7,15.12 7.7,14.73C7.7,14.34 7.85,13.97 8.11,13.71L10.5,11.32L14.68,15.5L12.29,17.89C12.03,18.15 11.66,18.3 11.27,18.3H9.97V17Z</Geometry>
+    <Geometry x:Key="Icon_FormatFont">M9,10V12H7V10A5,5 0 0,1 12,5A5,5 0 0,1 17,10V12H15V10A3,3 0 0,0 12,7A3,3 0 0,0 9,10M12,2A8,8 0 0,1 20,10V16H16V14H20V10A8,8 0 0,0 12,2A8,8 0 0,0 4,10V14H8V16H4V10A8,8 0 0,1 12,2Z</Geometry>
+
+    <!-- Прочие -->
+    <Geometry x:Key="Icon_Lock">M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z</Geometry>
+    <Geometry x:Key="Icon_FileDocumentMultiple">M15,7H20.5L15,1.5V7M8,0H16L22,6V18A2,2 0 0,1 20,20H8C6.89,20 6,19.1 6,18V2A2,2 0 0,1 8,0M4,4V22H20V24H4A2,2 0 0,1 2,22V4H4Z</Geometry>
+
+    <!-- Кнопки панели инструментов с Material Design иконками -->
+    <Style x:Key="CorporateToolbarButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8,6,8,6"/>
+        <Setter Property="Margin" Value="2,0,2,0"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border Background="{TemplateBinding Background}" 
+                            CornerRadius="3"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter HorizontalAlignment="Center" 
+                                        VerticalAlignment="Center"
+                                        Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" Value="{StaticResource CorporateGray}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" Value="{StaticResource CorporateGrayDark}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Меню в корпоративном стиле -->
+    <Style x:Key="CorporateMenu" TargetType="Menu">
+        <Setter Property="Background" Value="{StaticResource MaterialDesignPaper}"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+    </Style>
+
+    <!-- MenuItem в корпоративном стиле -->
+    <Style x:Key="CorporateMenuItem" TargetType="MenuItem">
+        <Setter Property="Height" Value="32"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Padding" Value="12,6"/>
+        <Style.Triggers>
+            <Trigger Property="IsMouseOver" Value="True">
+                <Setter Property="Background" Value="{StaticResource CorporateGray}"/>
+            </Trigger>
+            <Trigger Property="IsPressed" Value="True">
+                <Setter Property="Background" Value="{StaticResource CorporateGrayDark}"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- StatusBar в корпоративном стиле -->
+    <Style x:Key="CorporateStatusBar" TargetType="StatusBar">
+        <Setter Property="Background" Value="{StaticResource MaterialDesignPaper}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource OutlineBrush}"/>
+        <Setter Property="BorderThickness" Value="0,1,0,0"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="11"/>
+    </Style>
+
+    <!-- ToolBarTray в корпоративном стиле -->
+    <Style x:Key="CorporateToolBarTray" TargetType="ToolBarTray">
+        <Setter Property="Background" Value="{StaticResource MaterialDesignPaper}"/>
+    </Style>
+
+    <!-- ToolBar в корпоративном стиле -->
+    <Style x:Key="CorporateToolBar" TargetType="ToolBar">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+    </Style>
+
+    <!-- RichTextBox в корпоративном стиле -->
+    <Style x:Key="CorporateRichTextBox" TargetType="RichTextBox">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="Background" Value="{StaticResource CorporateWhite}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CorporateBorder}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="15"/>
+        <Setter Property="SelectionBrush" Value="{StaticResource PrimaryHueMidBrush}"/>
+        <Style.Triggers>
+            <Trigger Property="IsReadOnly" Value="True">
+                <Setter Property="Background" Value="Lavender"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Separator в корпоративном стиле -->
+    <Style x:Key="CorporateSeparator" TargetType="Separator">
+        <Setter Property="Background" Value="{StaticResource OutlineBrush}"/>
+        <Setter Property="Height" Value="1"/>
+        <Setter Property="Margin" Value="4,2"/>
+    </Style>
+
+    <!-- Стиль для Material Design иконок -->
+    <Style x:Key="MaterialIcon" TargetType="Path">
+        <Setter Property="Fill" Value="{StaticResource CorporateText}"/>
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+        <Setter Property="Stretch" Value="Uniform"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Стиль для иконок в кнопках панели инструментов -->
+    <Style x:Key="ToolbarIcon" TargetType="Path" BasedOn="{StaticResource MaterialIcon}">
+        <Setter Property="Fill" Value="{StaticResource CorporateTextLight}"/>
+    </Style>
+
+    <!-- Стиль для иконок в меню -->
+    <Style x:Key="MenuIcon" TargetType="Path" BasedOn="{StaticResource MaterialIcon}">
+        <Setter Property="Fill" Value="{StaticResource CorporateTextLight}"/>
+        <Setter Property="Margin" Value="0,0,8,0"/>
+    </Style>
+
 </ResourceDictionary>

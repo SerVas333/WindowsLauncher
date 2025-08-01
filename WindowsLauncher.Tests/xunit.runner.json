@@ -1,0 +1,10 @@
+{
+  "methodDisplay": "method",
+  "methodDisplayOptions": "all",
+  "preEnumerateTheories": false,
+  "diagnosticMessages": true,
+  "internalDiagnosticMessages": false,
+  "maxParallelThreads": -1,
+  "parallelizeTestCollections": true,
+  "shadowCopy": false
+}

@@ -7,7 +7,7 @@ using System.Windows.Controls;
 using WindowsLauncher.UI.ViewModels;
 using WindowsLauncher.Core.Interfaces;
 
-namespace WindowsLauncher.UI
+namespace WindowsLauncher.UI.Views
 {
     /// <summary>
     /// Окно администрирования приложений

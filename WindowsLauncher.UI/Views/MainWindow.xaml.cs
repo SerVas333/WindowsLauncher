@@ -15,6 +15,10 @@ using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.UI.Helpers;
 using WindowsLauncher.UI.Services;
+using System.Windows.Media;
+using System.Linq;
+using System.Collections.Generic;
+using System.Windows.Data;
 
 namespace WindowsLauncher.UI
 {
@@ -37,6 +41,9 @@ namespace WindowsLauncher.UI
             SubscribeToVirtualKeyboardEvents();
             InitializeSessionManagement();
             _ = InitializeAppSwitcherAsync(); // Инициализируем асинхронно
+            
+            // Подписываемся на событие загрузки для настройки адаптивных плиток
+            Loaded += MainWindow_Loaded;
         }
 
         private void InitializeViewModel()
@@ -187,6 +194,12 @@ namespace WindowsLauncher.UI
                 if (virtualKeyboardService != null)
                 {
                     virtualKeyboardService.StateChanged -= OnVirtualKeyboardStateChanged;
+                }
+                
+                // Отписываемся от события изменения коллекции приложений
+                if (DataContext is MainViewModel viewModel)
+                {
+                    viewModel.FilteredApplications.CollectionChanged -= OnFilteredApplicationsChanged;
                 }
             }
             catch (Exception ex)
@@ -357,11 +370,11 @@ namespace WindowsLauncher.UI
                         if (_appSwitcherService != null)
                         {
                             var serviceProvider = ((App)System.Windows.Application.Current).ServiceProvider;
-                            var runningAppsService = serviceProvider.GetService<IRunningApplicationsService>();
+                            var lifecycleService = serviceProvider.GetService<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLifecycleService>();
                             
-                            if (runningAppsService != null)
+                            if (lifecycleService != null)
                             {
-                                var appCount = await runningAppsService.GetRunningApplicationsCountAsync();
+                                var appCount = await lifecycleService.GetCountAsync();
                                 
                                 // Обновляем UI в главном потоке
                                 Dispatcher.BeginInvoke(() =>
@@ -424,5 +437,310 @@ namespace WindowsLauncher.UI
         /// Флаг для остановки таймера при закрытии окна
         /// </summary>
         private bool _disposed = false;
+        
+        /// <summary>
+        /// Публичный метод для принудительного пересчета высот плиток (для тестирования)
+        /// </summary>
+        public void RecalculateTileHeights()
+        {
+            try
+            {
+                _logger?.LogInformation("Manual tile heights recalculation requested");
+                Dispatcher.BeginInvoke(new Action(() =>
+                {
+                    CalculateAndApplyAdaptiveTileHeights();
+                }), System.Windows.Threading.DispatcherPriority.Render);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error in manual tile heights recalculation");
+            }
+        }
+        
+        /// <summary>
+        /// Обработчик загрузки окна для настройки адаптивных плиток
+        /// </summary>
+        private async void MainWindow_Loaded(object sender, RoutedEventArgs e)
+        {
+            // Подписываемся на изменения коллекции приложений
+            SubscribeToApplicationsCollectionChanges();
+            
+            // Ждем небольшую задержку для завершения рендеринга
+            await Task.Delay(100);
+            CalculateAndApplyAdaptiveTileHeights();
+        }
+        
+        /// <summary>
+        /// Подписаться на изменения коллекции приложений
+        /// </summary>
+        private void SubscribeToApplicationsCollectionChanges()
+        {
+            try
+            {
+                if (DataContext is MainViewModel viewModel)
+                {
+                    // Подписываемся на изменения фильтрации приложений
+                    viewModel.FilteredApplications.CollectionChanged += OnFilteredApplicationsChanged;
+                    _logger?.LogDebug("Subscribed to FilteredApplications collection changes");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Error subscribing to applications collection changes");
+            }
+        }
+        
+        /// <summary>
+        /// Обработчик изменения коллекции приложений
+        /// </summary>
+        private async void OnFilteredApplicationsChanged(object? sender, System.Collections.Specialized.NotifyCollectionChangedEventArgs e)
+        {
+            try
+            {
+                _logger?.LogTrace("FilteredApplications collection changed: {Action}, Count: {Count}", 
+                    e.Action, (sender as System.Collections.ICollection)?.Count ?? 0);
+                
+                // Небольшая задержка для обновления UI и завершения рендеринга
+                await Task.Delay(150); // Увеличиваем задержку для стабильности
+                CalculateAndApplyAdaptiveTileHeights();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Error handling applications collection change");
+            }
+        }
+        
+        /// <summary>
+        /// Рассчитать и применить адаптивную высоту плиток
+        /// </summary>
+        private void CalculateAndApplyAdaptiveTileHeights()
+        {
+            try
+            {
+                _logger?.LogDebug("Calculating adaptive tile heights for MainWindow");
+                
+                // Находим ItemsControl с приложениями
+                var itemsControl = FindApplicationsItemsControl();
+                if (itemsControl == null)
+                {
+                    _logger?.LogWarning("Could not find applications ItemsControl for adaptive heights");
+                    return;
+                }
+                
+                _logger?.LogTrace("Found ItemsControl with {ItemCount} items", itemsControl.Items.Count);
+                
+                if (itemsControl.Items.Count == 0)
+                {
+                    _logger?.LogTrace("No items in ItemsControl, skipping height calculation");
+                    return;
+                }
+                
+                var tileBorders = new List<Border>();
+                double maxHeight = 0;
+                
+                // Собираем все Border элементы плиток
+                for (int i = 0; i < itemsControl.Items.Count; i++)
+                {
+                    var container = itemsControl.ItemContainerGenerator.ContainerFromIndex(i) as ContentPresenter;
+                    if (container != null)
+                    {
+                        var border = FindChildByName<Border>(container, "AppTileBorder");
+                        if (border != null)
+                        {
+                            tileBorders.Add(border);
+                            
+                            // Рассчитываем высоту содержимого
+                            var contentHeight = CalculateTileContentHeight(border);
+                            maxHeight = Math.Max(maxHeight, contentHeight);
+                        }
+                    }
+                }
+                
+                // Добавляем минимальную высоту и запас для стабильности
+                const double minHeight = 160; // Минимальная высота плитки
+                const double safetyMargin = 10; // Дополнительный запас для стабильности
+                maxHeight = Math.Max(maxHeight + safetyMargin, minHeight);
+                
+                // Применяем одинаковую высоту ко всем плиткам
+                foreach (var border in tileBorders)
+                {
+                    border.Height = maxHeight;
+                }
+                
+                _logger?.LogDebug("Applied adaptive height {Height}px to {Count} tiles (was max content: {MaxContent}px)", 
+                    maxHeight, tileBorders.Count, maxHeight - 10);
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error calculating adaptive tile heights");
+            }
+        }
+        
+        /// <summary>
+        /// Рассчитать высоту содержимого плитки
+        /// </summary>
+        private double CalculateTileContentHeight(Border tileBorder)
+        {
+            try
+            {
+                var contentGrid = FindChildByName<Grid>(tileBorder, "AppTileContent");
+                if (contentGrid == null) return 160; // Увеличиваем дефолтную высоту
+                
+                double totalHeight = 0;
+                
+                // Размеры компонентов плитки (точные значения из XAML)
+                const double iconHeight = 50 + 12; // Icon (50px) + margin bottom (12px)
+                const double categoryBadgeHeight = 18 + 8; // Badge height (~18px) + margin top (8px)
+                const double tilePadding = 16; // Внутренние отступы Border (8px с каждой стороны)
+                
+                totalHeight += iconHeight;
+                totalHeight += categoryBadgeHeight;
+                totalHeight += tilePadding;
+                
+                // Рассчитываем высоту инфо-панели с точным измерением текста
+                var infoPanel = FindChildByName<StackPanel>(contentGrid, "AppInfoPanel");
+                if (infoPanel != null)
+                {
+                    double infoPanelHeight = 12; // Margin снизу у AppInfoPanel
+                    
+                    // Доступная ширина для текста (ширина плитки минус padding)
+                    const double availableWidth = 220 - 32; // 220px ширина плитки - 16px padding с каждой стороны
+                    
+                    foreach (UIElement child in infoPanel.Children)
+                    {
+                        if (child is TextBlock textBlock)
+                        {
+                            // Принудительно обновляем layout перед измерением
+                            textBlock.UpdateLayout();
+                            
+                            // Создаем точную копию TextBlock для измерения
+                            var measureTextBlock = new TextBlock
+                            {
+                                Text = textBlock.Text,
+                                FontSize = textBlock.FontSize,
+                                FontWeight = textBlock.FontWeight,
+                                FontFamily = textBlock.FontFamily,
+                                TextWrapping = textBlock.TextWrapping,
+                                TextAlignment = textBlock.TextAlignment,
+                                LineHeight = textBlock.LineHeight > 0 ? textBlock.LineHeight : double.NaN
+                            };
+                            
+                            // Измеряем с доступной шириной
+                            measureTextBlock.Measure(new Size(availableWidth, double.PositiveInfinity));
+                            double textHeight = measureTextBlock.DesiredSize.Height;
+                            
+                            // Минимальная высота для одной строки
+                            if (textHeight < textBlock.FontSize * 1.2)
+                            {
+                                textHeight = textBlock.FontSize * 1.2;
+                            }
+                            
+                            infoPanelHeight += textHeight;
+                            
+                            // Добавляем margin если есть
+                            infoPanelHeight += textBlock.Margin.Top + textBlock.Margin.Bottom;
+                            
+                            _logger?.LogTrace("Text measurement: '{Text}' = {Height}px", 
+                                textBlock.Text?.Substring(0, Math.Min(textBlock.Text.Length, 20)), textHeight);
+                        }
+                    }
+                    
+                    totalHeight += infoPanelHeight;
+                }
+                else
+                {
+                    // Дефолтная высота инфо-панели если не нашли
+                    totalHeight += 60; // Увеличиваем дефолтную высоту
+                }
+                
+                // Минимальная высота плитки
+                totalHeight = Math.Max(totalHeight, 160);
+                
+                _logger?.LogTrace("Calculated tile height: {Height}px", totalHeight);
+                return totalHeight;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Error calculating tile content height, using default");
+                return 160;
+            }
+        }
+        
+        /// <summary>
+        /// Найти дочерний элемент по имени
+        /// </summary>
+        private T? FindChildByName<T>(DependencyObject parent, string name) where T : FrameworkElement
+        {
+            if (parent == null) return null;
+            
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                
+                // Проверяем текущий элемент
+                if (child is T element && element.Name == name)
+                {
+                    return element;
+                }
+                
+                // Рекурсивный поиск в дочерних элементах
+                var found = FindChildByName<T>(child, name);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            
+            return null;
+        }
+        
+        /// <summary>
+        /// Найти ItemsControl с приложениями
+        /// </summary>
+        private ItemsControl? FindApplicationsItemsControl()
+        {
+            try
+            {
+                // Ищем ItemsControl по привязке данных FilteredApplications
+                return FindItemsControlByBinding(this, "FilteredApplications");
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Error finding applications ItemsControl");
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// Найти ItemsControl по привязке данных
+        /// </summary>
+        private ItemsControl? FindItemsControlByBinding(DependencyObject parent, string bindingPath)
+        {
+            if (parent == null) return null;
+            
+            for (int i = 0; i < VisualTreeHelper.GetChildrenCount(parent); i++)
+            {
+                var child = VisualTreeHelper.GetChild(parent, i);
+                
+                if (child is ItemsControl itemsControl)
+                {
+                    // Проверяем привязку ItemsSource
+                    var binding = itemsControl.GetBindingExpression(ItemsControl.ItemsSourceProperty);
+                    if (binding?.ParentBinding?.Path?.Path == bindingPath)
+                    {
+                        return itemsControl;
+                    }
+                }
+                
+                // Рекурсивный поиск
+                var found = FindItemsControlByBinding(child, bindingPath);
+                if (found != null)
+                {
+                    return found;
+                }
+            }
+            
+            return null;
+        }
     }
 }

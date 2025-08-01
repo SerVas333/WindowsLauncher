@@ -1,5 +1,5 @@
 ﻿<!-- ===== WindowsLauncher.UI/Views/AdminWindow.xaml - ИСПРАВЛЕННАЯ ВЕРСИЯ ===== -->
-<Window x:Class="WindowsLauncher.UI.AdminWindow"
+<Window x:Class="WindowsLauncher.UI.Views.AdminWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:local="clr-namespace:WindowsLauncher.UI"

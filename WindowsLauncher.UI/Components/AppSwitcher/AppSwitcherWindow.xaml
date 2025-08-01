@@ -4,7 +4,7 @@
         xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
         xmlns:local="clr-namespace:WindowsLauncher.UI.Components.AppSwitcher"
         Title="App Switcher" 
-        Height="400" Width="600"
+        SizeToContent="Manual"
         WindowStyle="None" 
         AllowsTransparency="True" 
         Background="Transparent"
@@ -42,26 +42,28 @@
             <DoubleAnimation Storyboard.TargetProperty="(UIElement.RenderTransform).(ScaleTransform.ScaleY)" From="1" To="0.9" Duration="0:0:0.15"/>
         </Storyboard>
 
-        <!-- Стиль для карточек приложений -->
+        <!-- Стиль для карточек приложений (компактный) -->
         <Style x:Key="AppSwitcherCard" TargetType="Border">
             <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
-            <Setter Property="CornerRadius" Value="8"/>
-            <Setter Property="Margin" Value="8"/>
-            <Setter Property="Padding" Value="12"/>
+            <Setter Property="CornerRadius" Value="6"/>
+            <Setter Property="Margin" Value="6"/>
+            <Setter Property="Padding" Value="8"/>
             <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
             <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Width" Value="150"/>
+            <Setter Property="Height" Value="110"/>
             <Setter Property="Effect">
                 <Setter.Value>
-                    <DropShadowEffect Color="Black" Opacity="0.1" ShadowDepth="2" BlurRadius="8"/>
+                    <DropShadowEffect Color="Black" Opacity="0.1" ShadowDepth="1" BlurRadius="6"/>
                 </Setter.Value>
             </Setter>
             <Style.Triggers>
                 <Trigger Property="Tag" Value="Selected">
                     <Setter Property="BorderBrush" Value="{StaticResource CorporateRed}"/>
-                    <Setter Property="BorderThickness" Value="3"/>
+                    <Setter Property="BorderThickness" Value="2"/>
                     <Setter Property="Effect">
                         <Setter.Value>
-                            <DropShadowEffect Color="#C41E3A" Opacity="0.3" ShadowDepth="2" BlurRadius="12"/>
+                            <DropShadowEffect Color="#C41E3A" Opacity="0.3" ShadowDepth="2" BlurRadius="10"/>
                         </Setter.Value>
                     </Setter>
                 </Trigger>
@@ -71,12 +73,12 @@
     </Window.Resources>
 
     <!-- Полупрозрачный фон -->
-    <Border Background="#80000000" CornerRadius="0">
+    <Border Background="#FAFAFA" CornerRadius="12">
         <Grid>
             <!-- Основной контейнер -->
-            <Border Background="{DynamicResource MaterialDesignPaper}" 
+            <Border Background="{StaticResource CorporateGrayDark}" 
                     CornerRadius="12" 
-                    Margin="40"
+                    Margin="2"
                     Effect="{DynamicResource MaterialDesignShadowDepth3}"
                     RenderTransformOrigin="0.5,0.5">
                 <Border.RenderTransform>
@@ -123,39 +125,41 @@
                                                 <RowDefinition Height="Auto"/>
                                             </Grid.RowDefinitions>
 
-                                            <!-- Иконка приложения -->
+                                            <!-- Иконка приложения (уменьшенная) -->
                                             <Border Grid.Row="0" 
-                                                    Width="48" Height="48" 
+                                                    Width="36" Height="36" 
                                                     Background="{StaticResource CorporateRed}" 
-                                                    CornerRadius="24" 
+                                                    CornerRadius="18" 
                                                     HorizontalAlignment="Center"
-                                                    Margin="0,0,0,8">
+                                                    Margin="0,0,0,6">
                                                 <TextBlock Text="{Binding IconText, FallbackValue='📱'}" 
-                                                           FontSize="24" 
+                                                           FontSize="18" 
                                                            HorizontalAlignment="Center" 
                                                            VerticalAlignment="Center"
                                                            Foreground="White"/>
                                             </Border>
 
-                                            <!-- Название приложения -->
+                                            <!-- Название приложения (компактное) -->
                                             <TextBlock Grid.Row="1" 
                                                        Text="{Binding Name}" 
                                                        FontWeight="SemiBold" 
-                                                       FontSize="14"
+                                                       FontSize="12"
                                                        HorizontalAlignment="Center" 
                                                        TextAlignment="Center"
                                                        TextWrapping="Wrap"
-                                                       MaxWidth="120"
-                                                       Margin="0,0,0,4"/>
+                                                       MaxWidth="130"
+                                                       MaxHeight="32"
+                                                       TextTrimming="CharacterEllipsis"
+                                                       Margin="0,0,0,3"/>
 
-                                            <!-- Статус приложения -->
-                                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,4">
-                                                <Ellipse Width="8" Height="8" Margin="0,0,4,0">
+                                            <!-- Статус приложения (компактный) -->
+                                            <StackPanel Grid.Row="2" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,2">
+                                                <Ellipse Width="6" Height="6" Margin="0,0,3,0">
                                                     <Ellipse.Fill>
                                                         <SolidColorBrush Color="{Binding Path=., Converter={x:Static local:StatusColorConverter.Instance}}"/>
                                                     </Ellipse.Fill>
                                                 </Ellipse>
-                                                <TextBlock FontSize="10" Foreground="{DynamicResource MaterialDesignBodyLight}">
+                                                <TextBlock FontSize="9" Foreground="{DynamicResource MaterialDesignBodyLight}">
                                                     <TextBlock.Text>
                                                         <MultiBinding StringFormat="{}{0} | {1:F0} МБ">
                                                             <Binding Path="IsMinimized" Converter="{x:Static local:StatusTextConverter.Instance}"/>
@@ -165,12 +169,13 @@
                                                 </TextBlock>
                                             </StackPanel>
 
-                                            <!-- PID процесса -->
+                                            <!-- PID процесса (мелкий) -->
                                             <TextBlock Grid.Row="3" 
                                                        Text="{Binding ProcessId, StringFormat='PID: {0}'}" 
-                                                       FontSize="9" 
+                                                       FontSize="8" 
                                                        Foreground="{DynamicResource MaterialDesignBodyLight}"
-                                                       HorizontalAlignment="Center"/>
+                                                       HorizontalAlignment="Center"
+                                                       Opacity="0.7"/>
                                         </Grid>
                                     </Border>
                                 </DataTemplate>

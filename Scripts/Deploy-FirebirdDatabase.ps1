@@ -47,7 +47,8 @@ function Test-FirebirdInstallation {
         "C:\Program Files\Firebird\Firebird_3_0\bin\isql.exe",
         "C:\Program Files\Firebird\Firebird_4_0\bin\isql.exe", 
         "C:\Program Files (x86)\Firebird\Firebird_3_0\bin\isql.exe",
-        "C:\Program Files (x86)\Firebird\Firebird_4_0\bin\isql.exe"
+        "C:\Program Files (x86)\Firebird\Firebird_4_0\bin\isql.exe",
+		"C:\Program Files (x86)\Firebird\Firebird_5_0\isql.exe"
     ) | Where-Object { Test-Path $_ } | Select-Object -First 1
     
     if (-not $isqlPath) {

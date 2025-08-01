@@ -738,4 +738,107 @@
   <data name="VirtualKeyboardError" xml:space="preserve">
     <value>Виртуальная клавиатура недоступна в данной системе</value>
   </data>
+  <!-- TextEditor Resources -->
+  <data name="TextEditor_Title" xml:space="preserve">
+    <value>Текстовый редактор KDV</value>
+  </data>
+  <data name="TextEditor_File" xml:space="preserve">
+    <value>_Файл</value>
+  </data>
+  <data name="TextEditor_Edit" xml:space="preserve">
+    <value>_Правка</value>
+  </data>
+  <data name="TextEditor_Format" xml:space="preserve">
+    <value>Ф_ормат</value>
+  </data>
+  <data name="TextEditor_View" xml:space="preserve">
+    <value>_Вид</value>
+  </data>
+  <data name="TextEditor_New" xml:space="preserve">
+    <value>_Создать</value>
+  </data>
+  <data name="TextEditor_Open" xml:space="preserve">
+    <value>_Открыть...</value>
+  </data>
+  <data name="TextEditor_Save" xml:space="preserve">
+    <value>_Сохранить</value>
+  </data>
+  <data name="TextEditor_SaveAs" xml:space="preserve">
+    <value>Сохранить _как...</value>
+  </data>
+  <data name="TextEditor_Print" xml:space="preserve">
+    <value>_Печать</value>
+  </data>
+  <data name="TextEditor_PrintMenu" xml:space="preserve">
+    <value>_Печать...</value>
+  </data>
+  <data name="TextEditor_PrintPreview" xml:space="preserve">
+    <value>_Предварительный просмотр</value>
+  </data>
+  <data name="TextEditor_PageSetup" xml:space="preserve">
+    <value>_Параметры страницы...</value>
+  </data>
+  <data name="TextEditor_Exit" xml:space="preserve">
+    <value>_Выход</value>
+  </data>
+  <data name="TextEditor_Undo" xml:space="preserve">
+    <value>_Отменить</value>
+  </data>
+  <data name="TextEditor_Redo" xml:space="preserve">
+    <value>_Повторить</value>
+  </data>
+  <data name="TextEditor_Cut" xml:space="preserve">
+    <value>_Вырезать</value>
+  </data>
+  <data name="TextEditor_Copy" xml:space="preserve">
+    <value>_Копировать</value>
+  </data>
+  <data name="TextEditor_Paste" xml:space="preserve">
+    <value>В_ставить</value>
+  </data>
+  <data name="TextEditor_SelectAll" xml:space="preserve">
+    <value>Выделить _все</value>
+  </data>
+  <data name="TextEditor_Find" xml:space="preserve">
+    <value>_Найти...</value>
+  </data>
+  <data name="TextEditor_Bold" xml:space="preserve">
+    <value>_Полужирный</value>
+  </data>
+  <data name="TextEditor_Italic" xml:space="preserve">
+    <value>_Курсив</value>
+  </data>
+  <data name="TextEditor_Underline" xml:space="preserve">
+    <value>_Подчеркнутый</value>
+  </data>
+  <data name="TextEditor_TextColor" xml:space="preserve">
+    <value>_Цвет текста...</value>
+  </data>
+  <data name="TextEditor_Highlight" xml:space="preserve">
+    <value>_Выделение...</value>
+  </data>
+  <data name="TextEditor_Font" xml:space="preserve">
+    <value>_Шрифт...</value>
+  </data>
+  <data name="TextEditor_ReadOnly" xml:space="preserve">
+    <value>_Только чтение</value>
+  </data>
+  <data name="TextEditor_Zoom" xml:space="preserve">
+    <value>_Масштаб...</value>
+  </data>
+  <data name="TextEditor_Ready" xml:space="preserve">
+    <value>Готово</value>
+  </data>
+  <data name="TextEditor_LineColumn" xml:space="preserve">
+    <value>Строка {0}, Столбец {1}</value>
+  </data>
+  <data name="TextEditor_ReadOnlyIndicator" xml:space="preserve">
+    <value>ТОЛЬКО ЧТЕНИЕ</value>
+  </data>
+  <data name="TextEditor_ModifiedIndicator" xml:space="preserve">
+    <value>ИЗМЕНЕНО</value>
+  </data>
+  <data name="TextEditor_FontSizeLabel" xml:space="preserve">
+    <value>Размер:</value>
+  </data>
 </root>

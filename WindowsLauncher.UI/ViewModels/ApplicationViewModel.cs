@@ -136,6 +136,23 @@ namespace WindowsLauncher.UI.ViewModels
         /// Показывать ли приложение (фильтрация)
         /// </summary>
         public bool IsVisible { get; set; } = true;
+        
+        /// <summary>
+        /// Адаптивная высота плитки (рассчитывается динамически)
+        /// </summary>
+        private double _adaptiveHeight = 160; // Дефолтная высота
+        public double AdaptiveHeight
+        {
+            get => _adaptiveHeight;
+            set
+            {
+                if (Math.Abs(_adaptiveHeight - value) > 0.1) // Избегаем лишних уведомлений
+                {
+                    _adaptiveHeight = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         /// <summary>
         /// Подсказка для кнопки запуска

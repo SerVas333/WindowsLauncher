@@ -83,7 +83,7 @@ Windows Registry Editor Version 5.00
 
 1. **Проверьте зависимости:**
    - .NET 8 Desktop Runtime должен быть установлен на целевой машине
-   - Windows 7+ (поддержка согласно app.manifest)
+   - Windows 10+ (поддержка согласно app.manifest)
 
 2. **Проверьте файлы конфигурации:**
    - `appsettings.json` для основных настроек

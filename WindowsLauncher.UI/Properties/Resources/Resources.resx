@@ -738,4 +738,107 @@
   <data name="VirtualKeyboardError" xml:space="preserve">
     <value>Virtual keyboard is not available on this system</value>
   </data>
+  <!-- TextEditor Resources -->
+  <data name="TextEditor_Title" xml:space="preserve">
+    <value>KDV Text Editor</value>
+  </data>
+  <data name="TextEditor_File" xml:space="preserve">
+    <value>_File</value>
+  </data>
+  <data name="TextEditor_Edit" xml:space="preserve">
+    <value>_Edit</value>
+  </data>
+  <data name="TextEditor_Format" xml:space="preserve">
+    <value>For_mat</value>
+  </data>
+  <data name="TextEditor_View" xml:space="preserve">
+    <value>_View</value>
+  </data>
+  <data name="TextEditor_New" xml:space="preserve">
+    <value>_New</value>
+  </data>
+  <data name="TextEditor_Open" xml:space="preserve">
+    <value>_Open...</value>
+  </data>
+  <data name="TextEditor_Save" xml:space="preserve">
+    <value>_Save</value>
+  </data>
+  <data name="TextEditor_SaveAs" xml:space="preserve">
+    <value>Save _As...</value>
+  </data>
+  <data name="TextEditor_Print" xml:space="preserve">
+    <value>_Print</value>
+  </data>
+  <data name="TextEditor_PrintMenu" xml:space="preserve">
+    <value>_Print...</value>
+  </data>
+  <data name="TextEditor_PrintPreview" xml:space="preserve">
+    <value>Print Pre_view</value>
+  </data>
+  <data name="TextEditor_PageSetup" xml:space="preserve">
+    <value>Page _Setup...</value>
+  </data>
+  <data name="TextEditor_Exit" xml:space="preserve">
+    <value>E_xit</value>
+  </data>
+  <data name="TextEditor_Undo" xml:space="preserve">
+    <value>_Undo</value>
+  </data>
+  <data name="TextEditor_Redo" xml:space="preserve">
+    <value>_Redo</value>
+  </data>
+  <data name="TextEditor_Cut" xml:space="preserve">
+    <value>Cu_t</value>
+  </data>
+  <data name="TextEditor_Copy" xml:space="preserve">
+    <value>_Copy</value>
+  </data>
+  <data name="TextEditor_Paste" xml:space="preserve">
+    <value>_Paste</value>
+  </data>
+  <data name="TextEditor_SelectAll" xml:space="preserve">
+    <value>Select _All</value>
+  </data>
+  <data name="TextEditor_Find" xml:space="preserve">
+    <value>_Find...</value>
+  </data>
+  <data name="TextEditor_Bold" xml:space="preserve">
+    <value>_Bold</value>
+  </data>
+  <data name="TextEditor_Italic" xml:space="preserve">
+    <value>_Italic</value>
+  </data>
+  <data name="TextEditor_Underline" xml:space="preserve">
+    <value>_Underline</value>
+  </data>
+  <data name="TextEditor_TextColor" xml:space="preserve">
+    <value>Text _Color...</value>
+  </data>
+  <data name="TextEditor_Highlight" xml:space="preserve">
+    <value>_Highlight...</value>
+  </data>
+  <data name="TextEditor_Font" xml:space="preserve">
+    <value>_Font...</value>
+  </data>
+  <data name="TextEditor_ReadOnly" xml:space="preserve">
+    <value>_Read Only</value>
+  </data>
+  <data name="TextEditor_Zoom" xml:space="preserve">
+    <value>_Zoom...</value>
+  </data>
+  <data name="TextEditor_Ready" xml:space="preserve">
+    <value>Ready</value>
+  </data>
+  <data name="TextEditor_LineColumn" xml:space="preserve">
+    <value>Line {0}, Column {1}</value>
+  </data>
+  <data name="TextEditor_ReadOnlyIndicator" xml:space="preserve">
+    <value>READ ONLY</value>
+  </data>
+  <data name="TextEditor_ModifiedIndicator" xml:space="preserve">
+    <value>MODIFIED</value>
+  </data>
+  <data name="TextEditor_FontSizeLabel" xml:space="preserve">
+    <value>Size:</value>
+  </data>
 </root>

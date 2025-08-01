@@ -205,11 +205,11 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Border Style="{StaticResource CorporateAppCard}" 
-                                    Width="220" Height="160">
-                                <Grid>
+                                    Width="220" x:Name="AppTileBorder">
+                                <Grid x:Name="AppTileContent">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="*"/>
+                                        <RowDefinition Height="Auto"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
@@ -227,9 +227,9 @@
                                     </Border>
 
                                     <!-- App Info -->
-                                    <StackPanel Grid.Row="1" VerticalAlignment="Center">
+                                    <StackPanel Grid.Row="1" x:Name="AppInfoPanel" Margin="0,0,0,12">
                                         <TextBlock Text="{Binding Name}" 
-                                                  FontWeight="SemiBold" FontSize="14"
+                                                  FontWeight="SemiBold" FontSize="12"
                                                   TextAlignment="Center" TextWrapping="Wrap"
                                                   Margin="0,0,0,6"
                                                   Foreground="{StaticResource CorporateText}"/>
@@ -237,7 +237,6 @@
                                                   FontSize="11" 
                                                   Foreground="{StaticResource CorporateTextMuted}"
                                                   TextAlignment="Center" TextWrapping="Wrap"
-                                                  MaxHeight="32"
                                                   LineHeight="16"/>
                                     </StackPanel>
 

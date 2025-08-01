@@ -61,6 +61,402 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Active: .
+        /// </summary>
+        public static string AdminWindow_ActiveCount {
+            get {
+                return ResourceManager.GetString("AdminWindow_ActiveCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Add Application.
+        /// </summary>
+        public static string AdminWindow_AddApplication {
+            get {
+                return ResourceManager.GetString("AdminWindow_AddApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на ➕ Add.
+        /// </summary>
+        public static string AdminWindow_AddGroup {
+            get {
+                return ResourceManager.GetString("AdminWindow_AddGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Application Active.
+        /// </summary>
+        public static string AdminWindow_ApplicationActive {
+            get {
+                return ResourceManager.GetString("AdminWindow_ApplicationActive", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Application Details.
+        /// </summary>
+        public static string AdminWindow_ApplicationDetails {
+            get {
+                return ResourceManager.GetString("AdminWindow_ApplicationDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Application List.
+        /// </summary>
+        public static string AdminWindow_ApplicationList {
+            get {
+                return ResourceManager.GetString("AdminWindow_ApplicationList", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Arguments:.
+        /// </summary>
+        public static string AdminWindow_Arguments {
+            get {
+                return ResourceManager.GetString("AdminWindow_Arguments", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Basic Information.
+        /// </summary>
+        public static string AdminWindow_BasicInformation {
+            get {
+                return ResourceManager.GetString("AdminWindow_BasicInformation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Cancel.
+        /// </summary>
+        public static string AdminWindow_Cancel {
+            get {
+                return ResourceManager.GetString("AdminWindow_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Category:.
+        /// </summary>
+        public static string AdminWindow_Category {
+            get {
+                return ResourceManager.GetString("AdminWindow_Category", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Category.
+        /// </summary>
+        public static string AdminWindow_CategoryColumn {
+            get {
+                return ResourceManager.GetString("AdminWindow_CategoryColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Delete.
+        /// </summary>
+        public static string AdminWindow_DeleteTooltip {
+            get {
+                return ResourceManager.GetString("AdminWindow_DeleteTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Description:.
+        /// </summary>
+        public static string AdminWindow_Description {
+            get {
+                return ResourceManager.GetString("AdminWindow_Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Disabled: .
+        /// </summary>
+        public static string AdminWindow_DisabledCount {
+            get {
+                return ResourceManager.GetString("AdminWindow_DisabledCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Duplicate.
+        /// </summary>
+        public static string AdminWindow_DuplicateTooltip {
+            get {
+                return ResourceManager.GetString("AdminWindow_DuplicateTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Editing Application.
+        /// </summary>
+        public static string AdminWindow_EditingApplication {
+            get {
+                return ResourceManager.GetString("AdminWindow_EditingApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Edit Mode.
+        /// </summary>
+        public static string AdminWindow_EditMode {
+            get {
+                return ResourceManager.GetString("AdminWindow_EditMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Edit.
+        /// </summary>
+        public static string AdminWindow_EditTooltip {
+            get {
+                return ResourceManager.GetString("AdminWindow_EditTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Export.
+        /// </summary>
+        public static string AdminWindow_Export {
+            get {
+                return ResourceManager.GetString("AdminWindow_Export", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Import.
+        /// </summary>
+        public static string AdminWindow_Import {
+            get {
+                return ResourceManager.GetString("AdminWindow_Import", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Minimum Role:.
+        /// </summary>
+        public static string AdminWindow_MinimumRole {
+            get {
+                return ResourceManager.GetString("AdminWindow_MinimumRole", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Name:.
+        /// </summary>
+        public static string AdminWindow_Name {
+            get {
+                return ResourceManager.GetString("AdminWindow_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Name.
+        /// </summary>
+        public static string AdminWindow_NameColumn {
+            get {
+                return ResourceManager.GetString("AdminWindow_NameColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Creating New Application.
+        /// </summary>
+        public static string AdminWindow_NewApplication {
+            get {
+                return ResourceManager.GetString("AdminWindow_NewApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Path:.
+        /// </summary>
+        public static string AdminWindow_Path {
+            get {
+                return ResourceManager.GetString("AdminWindow_Path", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Required Groups:.
+        /// </summary>
+        public static string AdminWindow_RequiredGroups {
+            get {
+                return ResourceManager.GetString("AdminWindow_RequiredGroups", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Administrator.
+        /// </summary>
+        public static string AdminWindow_RoleAdministrator {
+            get {
+                return ResourceManager.GetString("AdminWindow_RoleAdministrator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Power User.
+        /// </summary>
+        public static string AdminWindow_RolePowerUser {
+            get {
+                return ResourceManager.GetString("AdminWindow_RolePowerUser", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Standard.
+        /// </summary>
+        public static string AdminWindow_RoleStandard {
+            get {
+                return ResourceManager.GetString("AdminWindow_RoleStandard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Save.
+        /// </summary>
+        public static string AdminWindow_Save {
+            get {
+                return ResourceManager.GetString("AdminWindow_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Security Settings.
+        /// </summary>
+        public static string AdminWindow_SecuritySettings {
+            get {
+                return ResourceManager.GetString("AdminWindow_SecuritySettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Select application to view details.
+        /// </summary>
+        public static string AdminWindow_SelectApplicationHint {
+            get {
+                return ResourceManager.GetString("AdminWindow_SelectApplicationHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Status:.
+        /// </summary>
+        public static string AdminWindow_Status {
+            get {
+                return ResourceManager.GetString("AdminWindow_Status", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Test Launch.
+        /// </summary>
+        public static string AdminWindow_TestLaunch {
+            get {
+                return ResourceManager.GetString("AdminWindow_TestLaunch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Application Management - Administrator.
+        /// </summary>
+        public static string AdminWindow_Title {
+            get {
+                return ResourceManager.GetString("AdminWindow_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Total: .
+        /// </summary>
+        public static string AdminWindow_TotalCount {
+            get {
+                return ResourceManager.GetString("AdminWindow_TotalCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Type:.
+        /// </summary>
+        public static string AdminWindow_Type {
+            get {
+                return ResourceManager.GetString("AdminWindow_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Application.
+        /// </summary>
+        public static string AdminWindow_TypeApplication {
+            get {
+                return ResourceManager.GetString("AdminWindow_TypeApplication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Type.
+        /// </summary>
+        public static string AdminWindow_TypeColumn {
+            get {
+                return ResourceManager.GetString("AdminWindow_TypeColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Folder.
+        /// </summary>
+        public static string AdminWindow_TypeFolder {
+            get {
+                return ResourceManager.GetString("AdminWindow_TypeFolder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Web Link.
+        /// </summary>
+        public static string AdminWindow_TypeWebLink {
+            get {
+                return ResourceManager.GetString("AdminWindow_TypeWebLink", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Unsaved Changes.
+        /// </summary>
+        public static string AdminWindow_UnsavedChanges {
+            get {
+                return ResourceManager.GetString("AdminWindow_UnsavedChanges", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Update.
+        /// </summary>
+        public static string AdminWindow_Update {
+            get {
+                return ResourceManager.GetString("AdminWindow_Update", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на View Mode.
+        /// </summary>
+        public static string AdminWindow_ViewMode {
+            get {
+                return ResourceManager.GetString("AdminWindow_ViewMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на All Categories.
         /// </summary>
         public static string AllCategories {
@@ -70,7 +466,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на KDV Corporate Launcher.
+        ///   Ищет локализованную строку, похожую на KDV Corporate Portal.
         /// </summary>
         public static string AppTitle {
             get {
@@ -354,6 +750,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string ControlPanelDescription {
             get {
                 return ResourceManager.GetString("ControlPanelDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Search applications....
+        /// </summary>
+        public static string CorporateStyles_SearchPlaceholder {
+            get {
+                return ResourceManager.GetString("CorporateStyles_SearchPlaceholder", resourceCulture);
             }
         }
         
@@ -709,7 +1114,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на KDV Corporate Application Launcher.
+        ///   Ищет локализованную строку, похожую на KDV Corporate Application Portal.
         /// </summary>
         public static string LoginWindow_Subtitle {
             get {
@@ -736,7 +1141,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на KDV Corporate Launcher - Login.
+        ///   Ищет локализованную строку, похожую на KDV Corporate Portal- Login.
         /// </summary>
         public static string LoginWindowTitle {
             get {
@@ -763,11 +1168,110 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на KDV Corporate Launcher.
+        ///   Ищет локализованную строку, похожую на  applications.
+        /// </summary>
+        public static string MainWindow_ApplicationsCount {
+            get {
+                return ResourceManager.GetString("MainWindow_ApplicationsCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Corporate Portal.
+        /// </summary>
+        public static string MainWindow_CorporateLauncher {
+            get {
+                return ResourceManager.GetString("MainWindow_CorporateLauncher", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Exit.
+        /// </summary>
+        public static string MainWindow_ExitTooltip {
+            get {
+                return ResourceManager.GetString("MainWindow_ExitTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Loading applications....
+        /// </summary>
+        public static string MainWindow_LoadingApplications {
+            get {
+                return ResourceManager.GetString("MainWindow_LoadingApplications", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Manage Applications.
+        /// </summary>
+        public static string MainWindow_ManageApplicationsTooltip {
+            get {
+                return ResourceManager.GetString("MainWindow_ManageApplicationsTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на No applications found.
+        /// </summary>
+        public static string MainWindow_NoApplicationsFound {
+            get {
+                return ResourceManager.GetString("MainWindow_NoApplicationsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Try changing search or category filter.
+        /// </summary>
+        public static string MainWindow_NoApplicationsHint {
+            get {
+                return ResourceManager.GetString("MainWindow_NoApplicationsHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Settings.
+        /// </summary>
+        public static string MainWindow_SettingsTooltip {
+            get {
+                return ResourceManager.GetString("MainWindow_SettingsTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Switch User.
+        /// </summary>
+        public static string MainWindow_SwitchUserTooltip {
+            get {
+                return ResourceManager.GetString("MainWindow_SwitchUserTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на KDV Corporate Portal.
         /// </summary>
         public static string MainWindow_Title {
             get {
                 return ResourceManager.GetString("MainWindow_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Update.
+        /// </summary>
+        public static string MainWindow_UpdateTooltip {
+            get {
+                return ResourceManager.GetString("MainWindow_UpdateTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Virtual Keyboard.
+        /// </summary>
+        public static string MainWindow_VirtualKeyboardTooltip {
+            get {
+                return ResourceManager.GetString("MainWindow_VirtualKeyboardTooltip", resourceCulture);
             }
         }
         
@@ -916,6 +1420,366 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Check for updates automatically.
+        /// </summary>
+        public static string SetupWindow_CheckUpdates {
+            get {
+                return ResourceManager.GetString("SetupWindow_CheckUpdates", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Complete Setup.
+        /// </summary>
+        public static string SetupWindow_Complete {
+            get {
+                return ResourceManager.GetString("SetupWindow_Complete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Domain:.
+        /// </summary>
+        public static string SetupWindow_Domain {
+            get {
+                return ResourceManager.GetString("SetupWindow_Domain", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на company.local.
+        /// </summary>
+        public static string SetupWindow_DomainDefault {
+            get {
+                return ResourceManager.GetString("SetupWindow_DomainDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Enable user action audit.
+        /// </summary>
+        public static string SetupWindow_EnableAudit {
+            get {
+                return ResourceManager.GetString("SetupWindow_EnableAudit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на English.
+        /// </summary>
+        public static string SetupWindow_English {
+            get {
+                return ResourceManager.GetString("SetupWindow_English", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Interface Language:.
+        /// </summary>
+        public static string SetupWindow_InterfaceLanguage {
+            get {
+                return ResourceManager.GetString("SetupWindow_InterfaceLanguage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на LDAP Server:.
+        /// </summary>
+        public static string SetupWindow_LdapServer {
+            get {
+                return ResourceManager.GetString("SetupWindow_LdapServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на dc.company.local.
+        /// </summary>
+        public static string SetupWindow_LdapServerDefault {
+            get {
+                return ResourceManager.GetString("SetupWindow_LdapServerDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Password:.
+        /// </summary>
+        public static string SetupWindow_Password {
+            get {
+                return ResourceManager.GetString("SetupWindow_Password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Confirm:.
+        /// </summary>
+        public static string SetupWindow_PasswordConfirm {
+            get {
+                return ResourceManager.GetString("SetupWindow_PasswordConfirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на • Minimum 8 characters.
+        /// </summary>
+        public static string SetupWindow_PasswordLength {
+            get {
+                return ResourceManager.GetString("SetupWindow_PasswordLength", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на • Lower case letters (a-z).
+        /// </summary>
+        public static string SetupWindow_PasswordLower {
+            get {
+                return ResourceManager.GetString("SetupWindow_PasswordLower", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на • Passwords must match.
+        /// </summary>
+        public static string SetupWindow_PasswordMatch {
+            get {
+                return ResourceManager.GetString("SetupWindow_PasswordMatch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на • Numbers (0-9).
+        /// </summary>
+        public static string SetupWindow_PasswordNumbers {
+            get {
+                return ResourceManager.GetString("SetupWindow_PasswordNumbers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Password Requirements:.
+        /// </summary>
+        public static string SetupWindow_PasswordRequirements {
+            get {
+                return ResourceManager.GetString("SetupWindow_PasswordRequirements", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на • Special characters (!@#$%^*).
+        /// </summary>
+        public static string SetupWindow_PasswordSpecial {
+            get {
+                return ResourceManager.GetString("SetupWindow_PasswordSpecial", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на • Upper case letters (A-Z).
+        /// </summary>
+        public static string SetupWindow_PasswordUpper {
+            get {
+                return ResourceManager.GetString("SetupWindow_PasswordUpper", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Port:.
+        /// </summary>
+        public static string SetupWindow_Port {
+            get {
+                return ResourceManager.GetString("SetupWindow_Port", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на 389.
+        /// </summary>
+        public static string SetupWindow_PortDefault {
+            get {
+                return ResourceManager.GetString("SetupWindow_PortDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Setup: 0/3 steps completed.
+        /// </summary>
+        public static string SetupWindow_Progress {
+            get {
+                return ResourceManager.GetString("SetupWindow_Progress", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Russian.
+        /// </summary>
+        public static string SetupWindow_Russian {
+            get {
+                return ResourceManager.GetString("SetupWindow_Russian", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Saving settings....
+        /// </summary>
+        public static string SetupWindow_SavingSettings {
+            get {
+                return ResourceManager.GetString("SetupWindow_SavingSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Session Time (min):.
+        /// </summary>
+        public static string SetupWindow_SessionTime {
+            get {
+                return ResourceManager.GetString("SetupWindow_SessionTime", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на 60.
+        /// </summary>
+        public static string SetupWindow_SessionTimeDefault {
+            get {
+                return ResourceManager.GetString("SetupWindow_SessionTimeDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Skip.
+        /// </summary>
+        public static string SetupWindow_Skip {
+            get {
+                return ResourceManager.GetString("SetupWindow_Skip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Start with Windows.
+        /// </summary>
+        public static string SetupWindow_StartWithWindows {
+            get {
+                return ResourceManager.GetString("SetupWindow_StartWithWindows", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Specify Active Directory connection parameters for user authentication..
+        /// </summary>
+        public static string SetupWindow_Step1Description {
+            get {
+                return ResourceManager.GetString("SetupWindow_Step1Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на 1. Domain Connection Setup.
+        /// </summary>
+        public static string SetupWindow_Step1Title {
+            get {
+                return ResourceManager.GetString("SetupWindow_Step1Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Create a local administrator account for system management when domain is unavailable..
+        /// </summary>
+        public static string SetupWindow_Step2Description {
+            get {
+                return ResourceManager.GetString("SetupWindow_Step2Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на 2. Service Administrator Setup.
+        /// </summary>
+        public static string SetupWindow_Step2Title {
+            get {
+                return ResourceManager.GetString("SetupWindow_Step2Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Configure additional system parameters..
+        /// </summary>
+        public static string SetupWindow_Step3Description {
+            get {
+                return ResourceManager.GetString("SetupWindow_Step3Description", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на 3. Additional Settings.
+        /// </summary>
+        public static string SetupWindow_Step3Title {
+            get {
+                return ResourceManager.GetString("SetupWindow_Step3Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Initial System Setup.
+        /// </summary>
+        public static string SetupWindow_Subtitle {
+            get {
+                return ResourceManager.GetString("SetupWindow_Subtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Test Connection.
+        /// </summary>
+        public static string SetupWindow_TestConnection {
+            get {
+                return ResourceManager.GetString("SetupWindow_TestConnection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Initial Setup - KDV Launcher.
+        /// </summary>
+        public static string SetupWindow_Title {
+            get {
+                return ResourceManager.GetString("SetupWindow_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Username:.
+        /// </summary>
+        public static string SetupWindow_Username {
+            get {
+                return ResourceManager.GetString("SetupWindow_Username", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на serviceadmin.
+        /// </summary>
+        public static string SetupWindow_UsernameDefault {
+            get {
+                return ResourceManager.GetString("SetupWindow_UsernameDefault", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Use TLS.
+        /// </summary>
+        public static string SetupWindow_UseTLS {
+            get {
+                return ResourceManager.GetString("SetupWindow_UseTLS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Welcome to KDV Launcher.
+        /// </summary>
+        public static string SetupWindow_Welcome {
+            get {
+                return ResourceManager.GetString("SetupWindow_Welcome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Application launched.
         /// </summary>
         public static string Success_ApplicationLaunched {
@@ -961,11 +1825,362 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на _Bold.
+        /// </summary>
+        public static string TextEditor_Bold {
+            get {
+                return ResourceManager.GetString("TextEditor_Bold", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Copy.
+        /// </summary>
+        public static string TextEditor_Copy {
+            get {
+                return ResourceManager.GetString("TextEditor_Copy", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Cu_t.
+        /// </summary>
+        public static string TextEditor_Cut {
+            get {
+                return ResourceManager.GetString("TextEditor_Cut", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Edit.
+        /// </summary>
+        public static string TextEditor_Edit {
+            get {
+                return ResourceManager.GetString("TextEditor_Edit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на E_xit.
+        /// </summary>
+        public static string TextEditor_Exit {
+            get {
+                return ResourceManager.GetString("TextEditor_Exit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _File.
+        /// </summary>
+        public static string TextEditor_File {
+            get {
+                return ResourceManager.GetString("TextEditor_File", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Find....
+        /// </summary>
+        public static string TextEditor_Find {
+            get {
+                return ResourceManager.GetString("TextEditor_Find", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Font....
+        /// </summary>
+        public static string TextEditor_Font {
+            get {
+                return ResourceManager.GetString("TextEditor_Font", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Size:.
+        /// </summary>
+        public static string TextEditor_FontSizeLabel {
+            get {
+                return ResourceManager.GetString("TextEditor_FontSizeLabel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на For_mat.
+        /// </summary>
+        public static string TextEditor_Format {
+            get {
+                return ResourceManager.GetString("TextEditor_Format", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Highlight....
+        /// </summary>
+        public static string TextEditor_Highlight {
+            get {
+                return ResourceManager.GetString("TextEditor_Highlight", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Italic.
+        /// </summary>
+        public static string TextEditor_Italic {
+            get {
+                return ResourceManager.GetString("TextEditor_Italic", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Line {0}, Column {1}.
+        /// </summary>
+        public static string TextEditor_LineColumn {
+            get {
+                return ResourceManager.GetString("TextEditor_LineColumn", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на MODIFIED.
+        /// </summary>
+        public static string TextEditor_ModifiedIndicator {
+            get {
+                return ResourceManager.GetString("TextEditor_ModifiedIndicator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _New.
+        /// </summary>
+        public static string TextEditor_New {
+            get {
+                return ResourceManager.GetString("TextEditor_New", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Open....
+        /// </summary>
+        public static string TextEditor_Open {
+            get {
+                return ResourceManager.GetString("TextEditor_Open", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Page _Setup....
+        /// </summary>
+        public static string TextEditor_PageSetup {
+            get {
+                return ResourceManager.GetString("TextEditor_PageSetup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Paste.
+        /// </summary>
+        public static string TextEditor_Paste {
+            get {
+                return ResourceManager.GetString("TextEditor_Paste", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Print.
+        /// </summary>
+        public static string TextEditor_Print {
+            get {
+                return ResourceManager.GetString("TextEditor_Print", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Print....
+        /// </summary>
+        public static string TextEditor_PrintMenu {
+            get {
+                return ResourceManager.GetString("TextEditor_PrintMenu", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Print Pre_view.
+        /// </summary>
+        public static string TextEditor_PrintPreview {
+            get {
+                return ResourceManager.GetString("TextEditor_PrintPreview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Read Only.
+        /// </summary>
+        public static string TextEditor_ReadOnly {
+            get {
+                return ResourceManager.GetString("TextEditor_ReadOnly", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на READ ONLY.
+        /// </summary>
+        public static string TextEditor_ReadOnlyIndicator {
+            get {
+                return ResourceManager.GetString("TextEditor_ReadOnlyIndicator", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Ready.
+        /// </summary>
+        public static string TextEditor_Ready {
+            get {
+                return ResourceManager.GetString("TextEditor_Ready", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Redo.
+        /// </summary>
+        public static string TextEditor_Redo {
+            get {
+                return ResourceManager.GetString("TextEditor_Redo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Save.
+        /// </summary>
+        public static string TextEditor_Save {
+            get {
+                return ResourceManager.GetString("TextEditor_Save", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Save _As....
+        /// </summary>
+        public static string TextEditor_SaveAs {
+            get {
+                return ResourceManager.GetString("TextEditor_SaveAs", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Select _All.
+        /// </summary>
+        public static string TextEditor_SelectAll {
+            get {
+                return ResourceManager.GetString("TextEditor_SelectAll", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Text _Color....
+        /// </summary>
+        public static string TextEditor_TextColor {
+            get {
+                return ResourceManager.GetString("TextEditor_TextColor", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на KDV Text Editor.
+        /// </summary>
+        public static string TextEditor_Title {
+            get {
+                return ResourceManager.GetString("TextEditor_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Underline.
+        /// </summary>
+        public static string TextEditor_Underline {
+            get {
+                return ResourceManager.GetString("TextEditor_Underline", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Undo.
+        /// </summary>
+        public static string TextEditor_Undo {
+            get {
+                return ResourceManager.GetString("TextEditor_Undo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _View.
+        /// </summary>
+        public static string TextEditor_View {
+            get {
+                return ResourceManager.GetString("TextEditor_View", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на _Zoom....
+        /// </summary>
+        public static string TextEditor_Zoom {
+            get {
+                return ResourceManager.GetString("TextEditor_Zoom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Toggling virtual keyboard....
+        /// </summary>
+        public static string TogglingVirtualKeyboard {
+            get {
+                return ResourceManager.GetString("TogglingVirtualKeyboard", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Username:.
         /// </summary>
         public static string Username {
             get {
                 return ResourceManager.GetString("Username", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Virtual keyboard is not available on this system.
+        /// </summary>
+        public static string VirtualKeyboardError {
+            get {
+                return ResourceManager.GetString("VirtualKeyboardError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Virtual keyboard hidden.
+        /// </summary>
+        public static string VirtualKeyboardHidden {
+            get {
+                return ResourceManager.GetString("VirtualKeyboardHidden", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Virtual keyboard shown.
+        /// </summary>
+        public static string VirtualKeyboardShown {
+            get {
+                return ResourceManager.GetString("VirtualKeyboardShown", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Failed to toggle virtual keyboard.
+        /// </summary>
+        public static string VirtualKeyboardToggleFailed {
+            get {
+                return ResourceManager.GetString("VirtualKeyboardToggleFailed", resourceCulture);
             }
         }
         
@@ -1006,7 +2221,7 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на KDV Corporate Launcher - {0} ({1}).
+        ///   Ищет локализованную строку, похожую на KDV Corporate Portal - {0} ({1}).
         /// </summary>
         public static string WindowTitle {
             get {
