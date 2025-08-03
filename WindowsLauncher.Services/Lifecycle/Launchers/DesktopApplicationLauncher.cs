@@ -145,6 +145,36 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
             
             try
             {
+                // ИСПРАВЛЕНИЕ: Для UWP приложений используем специальную логику поиска
+                var isUwpLauncher = IsUwpLauncherApplication(application);
+                
+                if (isUwpLauncher)
+                {
+                    _logger.LogDebug("Searching for existing UWP application instance: {AppName}", application.Name);
+                    
+                    // Ищем уже запущенные UWP процессы
+                    var candidateProcesses = await FindUwpCandidateProcessesAsync(application);
+                    
+                    foreach (var processId in candidateProcesses)
+                    {
+                        var window = await _windowManager.FindMainWindowAsync(processId);
+                        if (window != null && window.IsVisible && IsCorrectUwpWindow(application, window))
+                        {
+                            var instance = ApplicationInstance.CreateFromProcess(application, processId, "system");
+                            instance.State = ApplicationState.Running;
+                            instance.MainWindow = window;
+                            
+                            _logger.LogInformation("Found existing UWP instance: {AppName} (PID: {ProcessId}, Title: '{Title}')", 
+                                application.Name, processId, window.Title);
+                            return instance;
+                        }
+                    }
+                    
+                    _logger.LogDebug("No existing UWP instance found for {AppName}", application.Name);
+                    return null;
+                }
+                
+                // Обычная логика для не-UWP приложений
                 var processName = GetProcessNameFromPath(application.ExecutablePath);
                 if (string.IsNullOrEmpty(processName))
                     return null;
@@ -594,7 +624,32 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
             
             try
             {
-                // Ищем главное окно
+                // ИСПРАВЛЕНИЕ: Проверяем является ли это UWP лаунчером (например calc.exe)
+                var isUwpLauncher = IsUwpLauncherApplication(application);
+                
+                if (isUwpLauncher)
+                {
+                    _logger.LogDebug("Detected UWP launcher application: {AppName}, searching for actual UWP process", application.Name);
+                    
+                    // Для UWP лаунчеров ищем фактический процесс приложения
+                    var uwpWindow = await FindUwpApplicationWindowAsync(application, process.Id);
+                    if (uwpWindow != null)
+                    {
+                        // Обновляем instance с данными фактического UWP процесса
+                        instance.ProcessId = (int)uwpWindow.ProcessId;
+                        instance.MainWindow = uwpWindow;
+                        instance.State = ApplicationState.Running;
+                        _logger.LogInformation("Found UWP application window: {AppName} (Launcher PID: {LauncherPid}, App PID: {AppPid}, Title: '{Title}')", 
+                            application.Name, process.Id, (int)uwpWindow.ProcessId, uwpWindow.Title);
+                        return instance;
+                    }
+                    else
+                    {
+                        _logger.LogWarning("UWP launcher {AppName} started but could not find actual application window", application.Name);
+                    }
+                }
+                
+                // Обычная логика поиска окна для не-UWP приложений
                 var mainWindow = await FindMainWindowForProcessAsync(process.Id);
                 if (mainWindow != null)
                 {
@@ -794,6 +849,154 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                 _logger.LogTrace(ex, "Error in TryFindWindowViaProcessApi for PID {ProcessId}", processId);
                 return null;
             }
+        }
+        
+        /// <summary>
+        /// Определяет является ли приложение UWP лаунчером
+        /// </summary>
+        private bool IsUwpLauncherApplication(Application application)
+        {
+            var executablePath = application.ExecutablePath?.ToLowerInvariant() ?? "";
+            var executableName = Path.GetFileName(executablePath).ToLowerInvariant();
+            
+            // Известные UWP лаунчеры
+            var uwpLaunchers = new[]
+            {
+                "calc.exe",           // Калькулятор Windows 10/11
+                "ms-calculator:",     // Протокол калькулятора
+                "notepad.exe"         // Блокнот Windows 11 (может быть UWP)
+            };
+            
+            return uwpLaunchers.Any(launcher => 
+                executableName.Contains(launcher) || executablePath.Contains(launcher));
+        }
+        
+        /// <summary>
+        /// Ищет окно фактического UWP приложения после запуска лаунчера
+        /// </summary>
+        private async Task<WindowInfo?> FindUwpApplicationWindowAsync(Application application, int launcherProcessId)
+        {
+            try
+            {
+                var timeout = TimeSpan.FromSeconds(8); // UWP приложения могут дольше запускаться
+                var startTime = DateTime.Now;
+                
+                _logger.LogDebug("Searching for UWP application window, launcher PID: {LauncherPid}", launcherProcessId);
+                
+                while (DateTime.Now - startTime < timeout)
+                {
+                    // Ищем процессы-кандидаты для UWP приложения
+                    var candidateProcesses = await FindUwpCandidateProcessesAsync(application);
+                    
+                    foreach (var processId in candidateProcesses)
+                    {
+                        // Пропускаем сам лаунчер
+                        if (processId == launcherProcessId)
+                            continue;
+                            
+                        var window = await _windowManager.FindMainWindowAsync(processId);
+                        if (window != null && window.IsVisible && !string.IsNullOrEmpty(window.Title))
+                        {
+                            // Проверяем что это правильное приложение по заголовку окна
+                            if (IsCorrectUwpWindow(application, window))
+                            {
+                                _logger.LogDebug("Found UWP window: PID {ProcessId}, Title '{Title}'", processId, window.Title);
+                                return window;
+                            }
+                        }
+                    }
+                    
+                    // Ждем перед следующей попыткой
+                    await Task.Delay(500);
+                }
+                
+                _logger.LogDebug("UWP application window not found within timeout");
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error finding UWP application window");
+                return null;
+            }
+        }
+        
+        /// <summary>
+        /// Находит процессы-кандидаты для UWP приложения
+        /// </summary>
+        private async Task<List<int>> FindUwpCandidateProcessesAsync(Application application)
+        {
+            var candidates = new List<int>();
+            
+            try
+            {
+                var executableName = Path.GetFileNameWithoutExtension(application.ExecutablePath ?? "").ToLowerInvariant();
+                
+                // Известные имена процессов для UWP приложений
+                var uwpProcessNames = new List<string>();
+                
+                if (executableName.Contains("calc"))
+                {
+                    uwpProcessNames.AddRange(new[] { "calculator", "calculatorapp", "windowscalculator" });
+                }
+                else if (executableName.Contains("notepad"))
+                {
+                    uwpProcessNames.AddRange(new[] { "notepad", "texteditor", "windowsnotepad" });
+                }
+                
+                // Также ищем общие UWP контейнеры
+                uwpProcessNames.AddRange(new[] 
+                { 
+                    "applicationframehost",    // Основной UWP контейнер
+                    "runtimebroker",          // UWP runtime
+                    "wwahostnowindow"         // UWP web apps
+                });
+                
+                // Ищем процессы по именам
+                foreach (var processName in uwpProcessNames)
+                {
+                    var processIds = await GetCurrentUserProcessesByNameAsync(processName);
+                    candidates.AddRange(processIds);
+                }
+                
+                _logger.LogDebug("Found {Count} UWP candidate processes", candidates.Count);
+                return candidates.Distinct().ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error finding UWP candidate processes");
+                return candidates;
+            }
+        }
+        
+        /// <summary>
+        /// Проверяет соответствует ли окно ожидаемому UWP приложению
+        /// </summary>
+        private bool IsCorrectUwpWindow(Application application, WindowInfo window)
+        {
+            var appName = application.Name?.ToLowerInvariant() ?? "";
+            var windowTitle = window.Title?.ToLowerInvariant() ?? "";
+            var executableName = Path.GetFileNameWithoutExtension(application.ExecutablePath ?? "").ToLowerInvariant();
+            
+            // Проверяем соответствие по заголовку окна
+            if (executableName.Contains("calc") && 
+                (windowTitle.Contains("calculator") || windowTitle.Contains("калькулятор")))
+            {
+                return true;
+            }
+            
+            if (executableName.Contains("notepad") && 
+                (windowTitle.Contains("notepad") || windowTitle.Contains("блокнот") || windowTitle.Contains("text")))
+            {
+                return true;
+            }
+            
+            // Общая проверка по имени приложения
+            if (!string.IsNullOrEmpty(appName) && windowTitle.Contains(appName))
+            {
+                return true;
+            }
+            
+            return false;
         }
         
         

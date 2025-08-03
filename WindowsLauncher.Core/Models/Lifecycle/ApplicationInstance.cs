@@ -267,6 +267,47 @@ namespace WindowsLauncher.Core.Models.Lifecycle
         }
         
         /// <summary>
+        /// Создать экземпляр приложения из Application и Process ID (для UWP и системных процессов)
+        /// </summary>
+        /// <param name="application">Модель приложения</param>
+        /// <param name="processId">ID процесса</param>
+        /// <param name="launchedBy">Пользователь</param>
+        /// <returns>Новый экземпляр приложения</returns>
+        public static ApplicationInstance CreateFromProcess(Application application, int processId, string launchedBy)
+        {
+            var timestamp = DateTime.Now.Ticks;
+            var instanceId = $"{application.Id}_{processId}_{timestamp}";
+            
+            var instance = new ApplicationInstance
+            {
+                InstanceId = instanceId,
+                Application = application,
+                LaunchedBy = launchedBy,
+                StartTime = DateTime.Now,
+                LastUpdate = DateTime.Now,
+                ProcessId = processId,
+                State = ApplicationState.Starting
+            };
+            
+            // Для UWP и системных процессов не обновляем данные из Process объекта
+            // так как он может быть недоступен или уже завершен
+            
+            // Специфичные данные для Web приложений
+            if (application.Type == ApplicationType.Web)
+            {
+                instance.WebUrl = application.ExecutablePath; // URL хранится в ExecutablePath для Web типа
+            }
+            
+            // Специфичные данные для папок
+            if (application.Type == ApplicationType.Folder)
+            {
+                instance.FolderPath = application.ExecutablePath;
+            }
+            
+            return instance;
+        }
+        
+        /// <summary>
         /// Извлечь ожидаемый заголовок окна из аргументов Chrome --app
         /// </summary>
         /// <param name="application">Приложение</param>

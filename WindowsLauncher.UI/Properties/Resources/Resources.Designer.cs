@@ -772,6 +772,123 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Logout.
+        /// </summary>
+        public static string Dialog_Confirm {
+            get {
+                return ResourceManager.GetString("Dialog_Confirm", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Delete.
+        /// </summary>
+        public static string Dialog_Delete {
+            get {
+                return ResourceManager.GetString("Dialog_Delete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на This action cannot be undone..
+        /// </summary>
+        public static string Dialog_DeleteDetails {
+            get {
+                return ResourceManager.GetString("Dialog_DeleteDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Do you really want to delete &quot;{0}&quot;?.
+        /// </summary>
+        public static string Dialog_DeleteMessage {
+            get {
+                return ResourceManager.GetString("Dialog_DeleteMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Delete Confirmation.
+        /// </summary>
+        public static string Dialog_DeleteTitle {
+            get {
+                return ResourceManager.GetString("Dialog_DeleteTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на All running applications will be closed..
+        /// </summary>
+        public static string Dialog_LogoutDetails {
+            get {
+                return ResourceManager.GetString("Dialog_LogoutDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Do you really want to logout?.
+        /// </summary>
+        public static string Dialog_LogoutMessage {
+            get {
+                return ResourceManager.GetString("Dialog_LogoutMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Logout Confirmation.
+        /// </summary>
+        public static string Dialog_LogoutTitle {
+            get {
+                return ResourceManager.GetString("Dialog_LogoutTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на No.
+        /// </summary>
+        public static string Dialog_No {
+            get {
+                return ResourceManager.GetString("Dialog_No", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на All running applications will be closed and the login window will be displayed..
+        /// </summary>
+        public static string Dialog_SwitchUserDetails {
+            get {
+                return ResourceManager.GetString("Dialog_SwitchUserDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Do you really want to switch user?.
+        /// </summary>
+        public static string Dialog_SwitchUserMessage {
+            get {
+                return ResourceManager.GetString("Dialog_SwitchUserMessage", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Switch User Confirmation.
+        /// </summary>
+        public static string Dialog_SwitchUserTitle {
+            get {
+                return ResourceManager.GetString("Dialog_SwitchUserTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Yes.
+        /// </summary>
+        public static string Dialog_Yes {
+            get {
+                return ResourceManager.GetString("Dialog_Yes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Error.
         /// </summary>
         public static string Error {
@@ -1047,6 +1164,24 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string LoginWindow_DomainUnavailable {
             get {
                 return ResourceManager.GetString("LoginWindow_DomainUnavailable", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Guest Login.
+        /// </summary>
+        public static string LoginWindow_GuestMode {
+            get {
+                return ResourceManager.GetString("LoginWindow_GuestMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Local Users.
+        /// </summary>
+        public static string LoginWindow_LocalMode {
+            get {
+                return ResourceManager.GetString("LoginWindow_LocalMode", resourceCulture);
             }
         }
         
@@ -2145,6 +2280,24 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string Username {
             get {
                 return ResourceManager.GetString("Username", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Switching user....
+        /// </summary>
+        public static string UserSwitchComplete {
+            get {
+                return ResourceManager.GetString("UserSwitchComplete", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на User switch failed.
+        /// </summary>
+        public static string UserSwitchFailed {
+            get {
+                return ResourceManager.GetString("UserSwitchFailed", resourceCulture);
             }
         }
         

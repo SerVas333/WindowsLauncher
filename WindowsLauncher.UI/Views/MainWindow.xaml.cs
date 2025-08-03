@@ -71,17 +71,6 @@ namespace WindowsLauncher.UI
             }
         }
 
-        private void LanguageComboBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            if (e.AddedItems.Count > 0 && e.AddedItems[0] is ComboBoxItem item)
-            {
-                var culture = item.Tag.ToString();
-                if (!string.IsNullOrEmpty(culture))
-                {
-                    LocalizationHelper.Instance.SetLanguage(culture);
-                }
-            }
-        }
 
         private void SubscribeToVirtualKeyboardEvents()
         {

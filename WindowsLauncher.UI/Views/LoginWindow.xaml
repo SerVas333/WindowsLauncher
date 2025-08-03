@@ -5,6 +5,7 @@
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:properties="clr-namespace:WindowsLauncher.UI.Properties.Resources"
+        xmlns:loc="clr-namespace:WindowsLauncher.UI.Infrastructure.Localization"
         mc:Ignorable="d"
         Title="{x:Static properties:Resources.LoginWindow_Title}"
         Width="585" Height="796"
@@ -14,6 +15,7 @@
 
     <Window.Resources>
         <!-- Ресурсы удалены - используем глобальные стили -->
+        <loc:LocalizedStringConverter x:Key="LocalizedStringConverter"/>
     </Window.Resources>
 
     <Border Background="{DynamicResource SurfaceBrush}" CornerRadius="8" Margin="20">
@@ -62,13 +64,13 @@
                                      Margin="0,0,15,0"
                                      Checked="LoginMode_Changed"/>
                         <RadioButton x:Name="LocalModeRadio" 
-                                     Content="Локальные пользователи"
+                                     Content="{x:Static properties:Resources.LoginWindow_LocalMode}"
                                      GroupName="LoginMode"
                                      Style="{StaticResource MaterialRadioButtonStyle}"
                                      Margin="0,0,15,0"
                                      Checked="LoginMode_Changed"/>
                         <RadioButton x:Name="GuestModeRadio" 
-                                     Content="Гостевой вход"
+                                     Content="{x:Static properties:Resources.LoginWindow_GuestMode}"
                                      GroupName="LoginMode"
                                      Style="{StaticResource MaterialRadioButtonStyle}"
                                      Checked="LoginMode_Changed"/>

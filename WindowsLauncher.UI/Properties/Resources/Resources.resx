@@ -138,6 +138,12 @@
   <data name="LoginWindow_DomainMode" xml:space="preserve">
     <value>Domain Login</value>
   </data>
+  <data name="LoginWindow_LocalMode" xml:space="preserve">
+    <value>Local Users</value>
+  </data>
+  <data name="LoginWindow_GuestMode" xml:space="preserve">
+    <value>Guest Login</value>
+  </data>
   <data name="LoginWindow_ServiceMode" xml:space="preserve">
     <value>Service Administrator</value>
   </data>

@@ -138,6 +138,12 @@
   <data name="LoginWindow_DomainMode" xml:space="preserve">
     <value>Доменный вход</value>
   </data>
+  <data name="LoginWindow_LocalMode" xml:space="preserve">
+    <value>Локальные пользователи</value>
+  </data>
+  <data name="LoginWindow_GuestMode" xml:space="preserve">
+    <value>Гостевой вход</value>
+  </data>
   <data name="LoginWindow_ServiceMode" xml:space="preserve">
     <value>Сервисный администратор</value>
   </data>

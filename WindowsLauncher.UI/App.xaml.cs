@@ -56,6 +56,9 @@ namespace WindowsLauncher.UI
                 _host = CreateHostBuilder(e.Args).Build();
                 ServiceProvider = _host.Services;
 
+                // Инициализация языка через новый сервис
+                await InitializeLanguageServiceAsync();
+
                 // Инициализация базы данных
                 await InitializeDatabaseAsync();
 
@@ -367,6 +370,10 @@ namespace WindowsLauncher.UI
             // Сервис мониторинга системных событий сессии
             services.AddSingleton<WindowsLauncher.Services.SessionEventService>();
 
+            // Сервис конфигурации языка
+            services.AddSingleton<WindowsLauncher.Services.Configuration.ILanguageConfigurationService,
+                WindowsLauncher.Services.Configuration.LanguageConfigurationService>();
+
             // ViewModels
             services.AddTransient<MainViewModel>();
             services.AddTransient<AdminViewModel>();
@@ -390,7 +397,7 @@ namespace WindowsLauncher.UI
         {
             try
             {
-                // Загружаем настройки языка
+                // Загружаем настройки языка (fallback для совместимости)
                 LocalizationHelper.Instance.LoadLanguageSettings();
 
                 // Подписываемся на изменения языка для обновления UI
@@ -403,6 +410,43 @@ namespace WindowsLauncher.UI
 
                 // Логируем ошибку (если логгер доступен)
                 System.Diagnostics.Debug.WriteLine($"Localization initialization error: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// ✅ ИНИЦИАЛИЗАЦИЯ ЯЗЫКА ЧЕРЕЗ НОВЫЙ СЕРВИС (вызывается после создания ServiceProvider)
+        /// </summary>
+        private async Task InitializeLanguageServiceAsync()
+        {
+            try
+            {
+                var languageService = ServiceProvider.GetService<WindowsLauncher.Services.Configuration.ILanguageConfigurationService>();
+                if (languageService != null)
+                {
+                    var recommendedLanguage = await languageService.InitializeLanguageAsync();
+                    
+                    // Применяем рекомендованный язык через LocalizationHelper
+                    LocalizationHelper.Instance.SetLanguage(recommendedLanguage);
+                    
+                    var logger = ServiceProvider.GetService<ILogger<App>>();
+                    logger?.LogInformation("Language service initialized successfully with language: {Language}", recommendedLanguage);
+                }
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider.GetService<ILogger<App>>();
+                logger?.LogError(ex, "Error initializing language service");
+                
+                // Fallback - используем системный язык
+                try
+                {
+                    LocalizationHelper.Instance.SetSystemLanguage();
+                }
+                catch
+                {
+                    // Последний fallback - английский
+                    LocalizationHelper.Instance.SetLanguage("en");
+                }
             }
         }
 

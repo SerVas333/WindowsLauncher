@@ -91,17 +91,7 @@
                 </StackPanel>
 
                 <!-- Controls -->
-                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Width="250">
-                    <!-- Language Switcher -->
-                    <ComboBox x:Name="LanguageComboBox" 
-                              Width="50" Height="32" 
-                              Margin="4,0"
-                              SelectedIndex="0"
-                              SelectionChanged="LanguageComboBox_SelectionChanged">
-                        <ComboBoxItem Content="🇷🇺" Tag="ru-RU"/>
-                        <ComboBoxItem Content="🇺🇸" Tag="en-US"/>
-                    </ComboBox>
-
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Width="200">
                     <Button Content="👤"
                             Style="{StaticResource CorporateButtonSecondary}"
                             Command="{Binding SwitchUserCommand}"

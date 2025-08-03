@@ -128,7 +128,7 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
         /// <summary>
         /// Установка языка по коду
         /// </summary>
-        /// <param name="languageCode">Код языка (en, ru)</param>
+        /// <param name="languageCode">Код языка (en, ru, en-US, ru-RU)</param>
         public void SetLanguage(string languageCode)
         {
             if (string.IsNullOrEmpty(languageCode))
@@ -136,12 +136,33 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
 
             try
             {
+                // Сначала пробуем использовать код как есть
                 var culture = new CultureInfo(languageCode);
                 CurrentCulture = culture;
+                return;
             }
             catch (CultureNotFoundException)
             {
-                // Если культура не найдена, используем английский по умолчанию
+                // Если не удалось, пробуем извлечь двухбуквенный код
+                try
+                {
+                    if (languageCode.Contains("-"))
+                    {
+                        var twoLetterCode = languageCode.Split('-')[0];
+                        if (Array.Exists(AvailableLanguages, lang => lang == twoLetterCode))
+                        {
+                            var culture = new CultureInfo(twoLetterCode);
+                            CurrentCulture = culture;
+                            return;
+                        }
+                    }
+                }
+                catch
+                {
+                    // Игнорируем ошибки дополнительной обработки
+                }
+
+                // Если ничего не получилось, используем английский по умолчанию
                 CurrentCulture = new CultureInfo("en");
             }
         }
@@ -151,17 +172,47 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
         /// </summary>
         public void SetSystemLanguage()
         {
-            var systemLanguage = CultureInfo.CurrentUICulture.TwoLetterISOLanguageName;
+            var systemCulture = CultureInfo.CurrentUICulture;
+            var systemLanguage = systemCulture.Name; // Полный код культуры (ru-RU, en-US)
+            var twoLetterCode = systemCulture.TwoLetterISOLanguageName; // Двухбуквенный код (ru, en)
 
-            // Проверяем, поддерживается ли язык системы
-            if (Array.Exists(AvailableLanguages, lang => lang == systemLanguage))
+            // Проверяем полное совпадение культуры (приоритет)
+            if (IsLanguageSupportedByFullCode(systemLanguage))
             {
                 SetLanguage(systemLanguage);
+                return;
             }
-            else
+
+            // Проверяем совпадение по двухбуквенному коду
+            if (Array.Exists(AvailableLanguages, lang => lang == twoLetterCode))
             {
-                // Если язык не поддерживается, используем английский
-                SetLanguage("en");
+                SetLanguage(twoLetterCode);
+                return;
+            }
+
+            // Если язык не поддерживается, используем английский
+            SetLanguage("en");
+        }
+
+        /// <summary>
+        /// Проверка поддержки языка по полному коду культуры
+        /// </summary>
+        /// <param name="cultureCode">Код культуры (например, ru-RU)</param>
+        /// <returns>True если поддерживается</returns>
+        private bool IsLanguageSupportedByFullCode(string cultureCode)
+        {
+            if (string.IsNullOrEmpty(cultureCode)) return false;
+
+            // Преобразуем в двухбуквенный код для сравнения с AvailableLanguages
+            try
+            {
+                var culture = new CultureInfo(cultureCode);
+                var twoLetterCode = culture.TwoLetterISOLanguageName;
+                return Array.Exists(AvailableLanguages, lang => lang == twoLetterCode);
+            }
+            catch (CultureNotFoundException)
+            {
+                return false;
             }
         }
 
