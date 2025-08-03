@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "WindowsLauncher.UI (Normal)": {
+      "commandName": "Project",
+      "description": "Обычный режим Windows приложения"
+    },
+    "WindowsLauncher.UI (Shell)": {
+      "commandName": "Project",
+      "commandLineArgs": "--shell",
+      "description": "Режим Shell - замена проводника Windows"
+    },
+    "WindowsLauncher.UI (Shell Env)": {
+      "commandName": "Project",
+      "environmentVariables": {
+        "WINDOWSLAUNCHER_SHELL_MODE": "Shell"
+      },
+      "description": "Shell режим через переменную окружения"
+    }
+  }
+}

@@ -1,0 +1,211 @@
+<!-- ===== WindowsLauncher.UI/Styles/MaterialCompatibility.xaml - АЛИАСЫ СОВМЕСТИМОСТИ ===== -->
+<ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+
+    <!-- ========== АЛИАСЫ ДЛЯ СОВМЕСТИМОСТИ С MATERIAL DESIGN ========== -->
+    
+    <!-- Этот файл создает алиасы корпоративных стилей для обеспечения совместимости 
+         с существующим кодом, использующим Material Design терминологию -->
+
+    <!-- ========== ТЕНИ ========== -->
+    
+    <!-- Дублирующие ресурсы для теней MaterialDesignShadowDepth -->
+    <DropShadowEffect x:Key="MaterialDesignShadowDepth1" 
+                      Color="Black" Direction="270" ShadowDepth="1" BlurRadius="3" Opacity="0.26"/>
+    <DropShadowEffect x:Key="MaterialDesignShadowDepth2" 
+                      Color="Black" Direction="270" ShadowDepth="2" BlurRadius="6" Opacity="0.26"/>
+    <DropShadowEffect x:Key="MaterialDesignShadowDepth3" 
+                      Color="Black" Direction="270" ShadowDepth="4" BlurRadius="8" Opacity="0.26"/>
+    <DropShadowEffect x:Key="MaterialDesignShadowDepth4" 
+                      Color="Black" Direction="270" ShadowDepth="6" BlurRadius="12" Opacity="0.26"/>
+
+    <!-- ========== ЦВЕТА ========== -->
+    
+    <!-- Дублирующие ресурсы для цветов Material Design -->
+    <SolidColorBrush x:Key="MaterialDesignPaper" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignBody" Color="#333333"/>
+    <SolidColorBrush x:Key="MaterialDesignBodyLight" Color="#999999"/>
+    <SolidColorBrush x:Key="MaterialDesignBackground" Color="#FAFAFA"/>
+    <SolidColorBrush x:Key="MaterialDesignSurface" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="MaterialDesignOnSurface" Color="#333333"/>
+    
+    <!-- Дополнительные цветовые дубли -->
+    <SolidColorBrush x:Key="MaterialDesignDivider" Color="#EEEEEE"/>
+    <SolidColorBrush x:Key="MaterialDesignDisabled" Color="#BDBDBD"/>
+    <SolidColorBrush x:Key="MaterialDesignHint" Color="#999999"/>
+
+    <!-- ========== СТИЛИ КНОПОК ========== -->
+    
+    <!-- Дублирующий стиль для кнопки с иконкой -->
+    <Style x:Key="MaterialDesignIconButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="20"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter x:Name="contentPresenter"
+                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                        Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray100}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray200}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- Алиас для другой кнопки с иконкой -->
+    <Style x:Key="MaterialDesignIconForegroundButton" TargetType="Button" BasedOn="{StaticResource MaterialDesignIconButton}"/>
+
+    <!-- ========== СТИЛИ ТЕКСТА ========== -->
+    
+    <!-- Дублирующие стили для типографики -->
+    <Style x:Key="MaterialDesignCaptionTextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateBodyLight}"/>
+        <Setter Property="LineHeight" Value="16"/>
+    </Style>
+    
+    <Style x:Key="MaterialDesignBodyTextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+    </Style>
+    
+    <Style x:Key="MaterialDesignTitleTextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Light"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateWhite}"/>
+    </Style>
+    
+    <Style x:Key="MaterialDesignSubtitleTextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateTextLight}"/>
+    </Style>
+    
+    <Style x:Key="MaterialDesignHeadline1TextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="32"/>
+        <Setter Property="FontWeight" Value="Light"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="LineHeight" Value="40"/>
+    </Style>
+    
+    <Style x:Key="MaterialDesignHeadline2TextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="28"/>
+        <Setter Property="FontWeight" Value="Light"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="LineHeight" Value="36"/>
+    </Style>
+    
+    <Style x:Key="MaterialDesignHeadline3TextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="LineHeight" Value="32"/>
+    </Style>
+    
+    <Style x:Key="MaterialDesignOverlineTextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateTextMuted}"/>
+        <Setter Property="LineHeight" Value="14"/>
+    </Style>
+
+    <!-- ========== ДОПОЛНИТЕЛЬНЫЕ МАТЕРИАЛЬНЫЕ СТИЛИ ========== -->
+
+    <!-- Стиль для MaterialDesignFont - использует стандартный шрифт системы -->
+    <FontFamily x:Key="MaterialDesignFont">Segoe UI</FontFamily>
+
+    <!-- Дублирующие стили для элементов форм -->
+    <Style x:Key="MaterialDesignCheckBox" TargetType="CheckBox" BasedOn="{StaticResource MaterialCheckBoxStyle}"/>
+    <Style x:Key="MaterialDesignRadioButton" TargetType="RadioButton" BasedOn="{StaticResource MaterialRadioButtonStyle}"/>
+    <Style x:Key="MaterialDesignComboBox" TargetType="ComboBox" BasedOn="{StaticResource MaterialComboBoxStyle}"/>
+    <Style x:Key="MaterialDesignPasswordBox" TargetType="PasswordBox" BasedOn="{StaticResource MaterialPasswordBoxStyle}"/>
+    
+    <!-- Дублирующий стиль для TextBox -->
+    <Style x:Key="MaterialDesignTextBox" TargetType="TextBox">
+        <Setter Property="Background" Value="{StaticResource CorporateSurface}"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateOnSurface}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CorporateGray300}"/>
+        <Setter Property="BorderThickness" Value="0,0,0,1"/>
+        <Setter Property="Padding" Value="0,16,0,8"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="MinHeight" Value="56"/>
+        <Setter Property="VerticalContentAlignment" Value="Bottom"/>
+    </Style>
+    
+    <!-- Алиасы для других стилей TextBox -->
+    <Style x:Key="MaterialDesignFloatingHintTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}"/>
+    <Style x:Key="MaterialDesignFilledTextBox" TargetType="TextBox" BasedOn="{StaticResource MaterialDesignTextBox}"/>
+
+    <!-- ========== АНИМАЦИИ И ПЕРЕХОДЫ ========== -->
+    
+    <!-- Базовые анимации для Material Design эффектов -->
+    <Duration x:Key="MaterialDesignAnimationDuration">0:0:0.2</Duration>
+    <Duration x:Key="MaterialDesignAnimationDurationLong">0:0:0.3</Duration>
+    
+    <!-- Easing функции для плавных переходов -->
+    <CubicEase x:Key="MaterialDesignEaseOut" EasingMode="EaseOut"/>
+    <CubicEase x:Key="MaterialDesignEaseIn" EasingMode="EaseIn"/>
+    <CubicEase x:Key="MaterialDesignEaseInOut" EasingMode="EaseInOut"/>
+
+    <!-- ========== РАЗМЕРЫ И ОТСТУПЫ ========== -->
+    
+    <!-- Стандартные размеры Material Design -->
+    <system:Double x:Key="MaterialDesignDefaultMargin" xmlns:system="clr-namespace:System;assembly=mscorlib">8</system:Double>
+    <system:Double x:Key="MaterialDesignCompactMargin" xmlns:system="clr-namespace:System;assembly=mscorlib">4</system:Double>
+    <system:Double x:Key="MaterialDesignExtendedMargin" xmlns:system="clr-namespace:System;assembly=mscorlib">16</system:Double>
+    
+    <!-- Размеры иконок -->
+    <system:Double x:Key="MaterialDesignIconSize" xmlns:system="clr-namespace:System;assembly=mscorlib">24</system:Double>
+    <system:Double x:Key="MaterialDesignIconSizeSmall" xmlns:system="clr-namespace:System;assembly=mscorlib">16</system:Double>
+    <system:Double x:Key="MaterialDesignIconSizeLarge" xmlns:system="clr-namespace:System;assembly=mscorlib">32</system:Double>
+
+    <!-- ========== ОБРАТНАЯ СОВМЕСТИМОСТЬ ========== -->
+    
+    <!-- Дополнительные алиасы для специфичных элементов проекта -->
+    
+    <!-- Алиасы, найденные в существующем коде -->
+    <StaticResource x:Key="MaterialDesignPaperBrush" ResourceKey="CorporateSurface"/>
+    <StaticResource x:Key="MaterialDesignBackgroundBrush" ResourceKey="CorporateGray50"/>
+    
+    <!-- Алиасы для специальных состояний -->
+    <StaticResource x:Key="MaterialDesignSelection" ResourceKey="CorporateRed"/>
+    <StaticResource x:Key="MaterialDesignFocused" ResourceKey="CorporateRed"/>
+    <StaticResource x:Key="MaterialDesignHover" ResourceKey="CorporateGray100"/>
+
+</ResourceDictionary>

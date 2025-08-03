@@ -993,16 +993,19 @@ Services/
 
 ## Команды для типовых задач
 
-### Сборка и запуск
-```bash
-# Полная пересборка через PowerShell
-.\clean-build.ps1
+## Development Environment
+- **IDE:** Visual Studio 2022 (Windows-only builds)
+- **Source Control:** Git (операции через WSL допустимы)
+- **Build Platform:** Windows исключительно для C#/WPF
+- **Cross-Environment:** Общее хранилище /mnt/c/WindowsLauncher (WSL + Windows)
 
-# Или через dotnet CLI
-dotnet clean
-dotnet restore  
-dotnet build --configuration Debug
-```
+## Build & Publishing
+- **Build System:** MSBuild
+- **Package Manager:** NuGet
+- **Runtime Identifier:** win-x64
+- **Single File:** false (multi-file deployment)
+- **Self Contained:** false (требует .NET Runtime)
+- **Ready to Run:** false (JIT compilation)
 
 ### Работа с базой данных
 **📋 Команды и миграции:** см. [DATABASE_ARCHITECTURE.md](DATABASE_ARCHITECTURE.md)

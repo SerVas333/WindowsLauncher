@@ -625,20 +625,35 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
         {
             try
             {
-                var timeout = TimeSpan.FromSeconds(10);
+                // ИСПРАВЛЕНИЕ: Определяем тип процесса для оптимизации поиска окна
+                var process = await _processMonitor.GetProcessSafelyAsync(processId);
+                if (process == null)
+                    return null;
+                
+                bool isConsoleApp = false;
+                try
+                {
+                    using (process)
+                    {
+                        var processName = process.ProcessName?.ToLowerInvariant() ?? "";
+                        isConsoleApp = processName == "cmd" || processName == "powershell" || processName == "pwsh" ||
+                                     processName.EndsWith("console") || processName.Contains("terminal");
+                    }
+                }
+                catch
+                {
+                    // Если не можем определить тип, считаем обычным приложением
+                }
+                
+                var timeout = isConsoleApp ? TimeSpan.FromSeconds(3) : TimeSpan.FromSeconds(10);
                 var startTime = DateTime.Now;
+                var retryDelay = isConsoleApp ? 1000 : 500; // Для консоли реже проверяем
+                
+                _logger.LogDebug("Searching for main window: PID {ProcessId}, ConsoleApp: {IsConsole}, Timeout: {Timeout}s", 
+                    processId, isConsoleApp, timeout.TotalSeconds);
                 
                 while (DateTime.Now - startTime < timeout)
                 {
-                    // Метод 1: Process.MainWindowHandle (самый надежный)
-                    var window = await TryFindWindowViaProcessApi(processId);
-                    if (window != null && window.IsVisible)
-                    {
-                        _logger.LogDebug("Found main window via Process API: PID {ProcessId}, Title '{Title}'", 
-                            processId, window.Title);
-                        return window;
-                    }
-                    
                     // Проверяем что процесс еще жив
                     if (!await _processMonitor.IsProcessAliveAsync(processId))
                     {
@@ -646,12 +661,42 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                         break;
                     }
                     
-                    await Task.Delay(500);
+                    // Для консольных приложений сразу пробуем fallback (WindowManager энумерация)
+                    if (isConsoleApp)
+                    {
+                        var consoleWindow = await _windowManager.FindMainWindowAsync(processId);
+                        if (consoleWindow != null && consoleWindow.IsVisible)
+                        {
+                            _logger.LogDebug("Found console window via WindowManager: PID {ProcessId}, Title '{Title}'", 
+                                processId, consoleWindow.Title);
+                            return consoleWindow;
+                        }
+                    }
+                    else
+                    {
+                        // Для обычных приложений сначала пробуем Process API
+                        var window = await TryFindWindowViaProcessApi(processId);
+                        if (window != null && window.IsVisible)
+                        {
+                            _logger.LogDebug("Found main window via Process API: PID {ProcessId}, Title '{Title}'", 
+                                processId, window.Title);
+                            return window;
+                        }
+                    }
+                    
+                    await Task.Delay(retryDelay);
                 }
                 
-                // Fallback: Enumeration через WindowManager (для особых случаев)
-                _logger.LogDebug("Trying fallback window enumeration for PID {ProcessId}", processId);
-                return await _windowManager.FindMainWindowAsync(processId);
+                // Финальный fallback: Enumeration через WindowManager (если еще не пробовали)
+                if (!isConsoleApp)
+                {
+                    _logger.LogDebug("Trying fallback window enumeration for PID {ProcessId}", processId);
+                    return await _windowManager.FindMainWindowAsync(processId);
+                }
+                
+                _logger.LogDebug("No main window found for PID {ProcessId} after {Timeout}s timeout", 
+                    processId, timeout.TotalSeconds);
+                return null;
             }
             catch (Exception ex)
             {
@@ -682,27 +727,59 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                         return null;
                     
                     // Ждем инициализации UI если нужно
-                    if (process.MainWindowHandle == IntPtr.Zero)
+                    IntPtr mainWindowHandle = IntPtr.Zero;
+                    try
+                    {
+                        mainWindowHandle = process.MainWindowHandle;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // MainWindowHandle недоступно для консольных приложений - используем fallback
+                        return null;
+                    }
+                    
+                    if (mainWindowHandle == IntPtr.Zero)
                     {
                         try
                         {
                             if (process.WaitForInputIdle(2000))
                             {
                                 process.Refresh();
+                                try
+                                {
+                                    mainWindowHandle = process.MainWindowHandle;
+                                }
+                                catch (InvalidOperationException)
+                                {
+                                    // MainWindowHandle все еще недоступно
+                                    return null;
+                                }
                             }
                         }
                         catch (InvalidOperationException)
                         {
                             // WaitForInputIdle не поддерживается для консольных приложений
+                            return null;
                         }
                     }
                     
-                    if (process.HasExited || process.MainWindowHandle == IntPtr.Zero)
+                    if (process.HasExited || mainWindowHandle == IntPtr.Zero)
                         return null;
                     
+                    string mainWindowTitle = string.Empty;
+                    try
+                    {
+                        mainWindowTitle = process.MainWindowTitle ?? string.Empty;
+                    }
+                    catch (InvalidOperationException)
+                    {
+                        // MainWindowTitle недоступно для консольных приложений
+                        mainWindowTitle = string.Empty;
+                    }
+                    
                     var windowInfo = WindowInfo.CreateDetailed(
-                        process.MainWindowHandle,
-                        process.MainWindowTitle ?? string.Empty,
+                        mainWindowHandle,
+                        mainWindowTitle,
                         string.Empty,
                         (uint)processId,
                         0,

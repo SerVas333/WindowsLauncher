@@ -19,6 +19,7 @@ using System.Windows.Media;
 using System.Linq;
 using System.Collections.Generic;
 using System.Windows.Data;
+using WindowsLauncher.Core.Services;
 
 namespace WindowsLauncher.UI
 {

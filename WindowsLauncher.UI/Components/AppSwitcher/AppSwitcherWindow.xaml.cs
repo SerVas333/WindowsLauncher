@@ -132,19 +132,19 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
                 if (_selectedIndex >= 0 && _selectedIndex < _runningApplications.Count)
                 {
                     var selectedApp = _runningApplications[_selectedIndex];
-                    _logger.LogInformation("Switching to application: {Name} (PID: {ProcessId})", 
-                        selectedApp.Name, selectedApp.ProcessId);
+                    _logger.LogInformation("Switching to application: {Name} (PID: {ProcessId}, IsMinimized: {IsMinimized})", 
+                        selectedApp.Name, selectedApp.ProcessId, selectedApp.IsMinimized);
                     
                     // Переключаемся на приложение по InstanceId
                     var success = await _lifecycleService.SwitchToAsync(selectedApp.InstanceId);
                     
                     if (success)
                     {
-                        _logger.LogInformation("Successfully switched to {Name}", selectedApp.Name);
+                        _logger.LogInformation("Successfully switched to {Name} - window should be restored if was minimized", selectedApp.Name);
                     }
                     else
                     {
-                        _logger.LogWarning("Failed to switch to {Name}", selectedApp.Name);
+                        _logger.LogWarning("Failed to switch to {Name} (IsMinimized: {IsMinimized})", selectedApp.Name, selectedApp.IsMinimized);
                     }
                     
                     await HideWithAnimationAsync();

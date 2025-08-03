@@ -16,6 +16,9 @@ using System.ComponentModel;
 using WpfApplication = System.Windows.Application;
 using CoreApplication = WindowsLauncher.Core.Models.Application;
 using WindowsLauncher.UI.Views;
+using System.Windows;
+using WindowsLauncher.UI.Components.Dialogs;
+using WindowsLauncher.Core.Interfaces.Lifecycle;
 
 namespace WindowsLauncher.UI.ViewModels
 {
@@ -242,7 +245,7 @@ namespace WindowsLauncher.UI.ViewModels
 
             try
             {
-                Logger.LogInformation("=== STARTING MAINVIEWMODEL INITIALIZATION ===");
+                Logger.LogInformation("Initializing MainViewModel");
                 IsLoading = true;
                 StatusMessage = LocalizationHelper.Instance.GetString("Initializing");
 
@@ -250,7 +253,6 @@ namespace WindowsLauncher.UI.ViewModels
                 Logger.LogInformation("Created DI scope successfully");
 
                 // БД уже должна быть инициализирована на этапе запуска приложения
-                Logger.LogInformation("Step 1: Verifying database readiness...");
                 StatusMessage = LocalizationHelper.Instance.GetString("DatabaseInitializing");
 
                 var dbInitializer = scope.ServiceProvider.GetRequiredService<IDatabaseInitializer>();
@@ -259,12 +261,12 @@ namespace WindowsLauncher.UI.ViewModels
                 {
                     throw new InvalidOperationException("Database is not ready. This should have been resolved during application startup.");
                 }
-                Logger.LogInformation("Database verification completed");
+                Logger.LogDebug("Database verification completed");
 
-                // STEP 2: Authentication
+                // Authentication
                 if (CurrentUser == null)
                 {
-                    Logger.LogInformation("Step 2: Starting authentication...");
+                    Logger.LogInformation("Starting user authentication");
                     await AuthenticateUserAsync();
 
                     if (CurrentUser == null)
@@ -275,20 +277,19 @@ namespace WindowsLauncher.UI.ViewModels
                 }
                 else
                 {
-                    Logger.LogInformation("Step 2: Using existing authenticated user: {Username}", CurrentUser.Username);
+                    Logger.LogDebug("Using existing authenticated user: {Username}", CurrentUser.Username);
                 }
 
-                // STEP 3: Load user data
-                Logger.LogInformation("Step 3: Loading user data...");
+                // Load user data
                 await LoadUserDataAsync();
 
                 StatusMessage = LocalizationHelper.Instance.GetString("Ready");
                 _isInitialized = true;
-                Logger.LogInformation("=== MAINVIEWMODEL INITIALIZATION COMPLETED ===");
+                Logger.LogInformation("MainViewModel initialization completed");
             }
             catch (Exception ex)
             {
-                Logger.LogError(ex, "=== MAINVIEWMODEL INITIALIZATION FAILED ===");
+                Logger.LogError(ex, "MainViewModel initialization failed");
                 StatusMessage = LocalizationHelper.Instance.GetFormattedString("InitializationError", ex.Message);
                 await HandleErrorAsync(ex, "initialization");
             }
@@ -685,19 +686,24 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                using var scope = _serviceProvider.CreateScope();
-                var sessionManager = scope.ServiceProvider.GetRequiredService<ISessionManagementService>();
+                Logger.LogInformation("Logout process started");
+                // Показываем диалог подтверждения выхода
+                var confirmed = CorporateConfirmationDialog.ShowLogoutConfirmation(
+                    WpfApplication.Current.MainWindow);
                 
-                var confirmMessage = sessionManager.Configuration.LogoutConfirmationMessage;
-                var confirmTitle = LocalizationHelper.Instance.GetString("Confirmation");
-
-                if (!DialogService.ShowConfirmation(confirmMessage, confirmTitle))
+                if (!confirmed)
+                {
+                    Logger.LogInformation("Logout cancelled by user");
                     return;
+                }
 
+                Logger.LogInformation("User confirmed logout, processing...");
+                using var scope = _serviceProvider.CreateScope();
                 StatusMessage = LocalizationHelper.Instance.GetString("LoggingOut");
                 
                 // Используем SessionManagementService для обработки выхода
-                var success = await sessionManager.HandleLogoutRequestAsync();
+                var sessionManager = scope.ServiceProvider.GetRequiredService<ISessionManagementService>();
+                var success = await sessionManager.HandleLogoutRequestAsync().ConfigureAwait(false);
                 
                 if (success)
                 {
@@ -707,16 +713,20 @@ namespace WindowsLauncher.UI.ViewModels
                     // Закрываем MainWindow - это запустит HandleMainWindowClosedAsync в App.xaml.cs
                     System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
                     {
-                        System.Windows.Application.Current.MainWindow?.Close();
+                        var mainWindow = System.Windows.Application.Current.MainWindow;
+                        mainWindow?.Close();
                     });
                 }
                 else
                 {
+                    Logger.LogWarning("Logout failed");
                     StatusMessage = LocalizationHelper.Instance.GetString("LogoutFailed");
                 }
+                
             }
             catch (Exception ex)
             {
+                Logger.LogError(ex, "Logout process failed");
                 var errorMessage = LocalizationHelper.Instance.GetFormattedString("LogoutError", ex.Message);
                 StatusMessage = errorMessage;
                 DialogService.ShowError(errorMessage);
@@ -732,34 +742,86 @@ namespace WindowsLauncher.UI.ViewModels
                 LocalizationHelper.Instance.GetString("Settings"));
         }
 
-        private void SwitchUser()
+        private async void SwitchUser()
         {
             try
             {
-                // Создаем окно входа с нужными сервисами
-                var serviceProvider = _serviceProvider;
-                var loginWindow = new Views.LoginWindow(); // Указываем полный путь к классу
-                loginWindow.Owner = WpfApplication.Current.MainWindow;
+                // ИСПРАВЛЕНИЕ: Показываем диалог подтверждения смены пользователя
+                Logger.LogInformation("User switch requested by {Username}", CurrentUser?.Username);
 
-                if (loginWindow.ShowDialog() == true && loginWindow.AuthenticationResult?.User != null)
+                bool confirmed = Components.Dialogs.CorporateConfirmationDialog.ShowConfirmation(
+                    LocalizationHelper.Instance.GetString("Dialog_SwitchUserTitle"),
+                    LocalizationHelper.Instance.GetString("Dialog_SwitchUserMessage"),
+                    LocalizationHelper.Instance.GetString("Dialog_SwitchUserDetails"),
+                    LocalizationHelper.Instance.GetString("Dialog_Confirm"),
+                    LocalizationHelper.Instance.GetString("Common_Cancel"),
+                    MaterialDesignThemes.Wpf.PackIconKind.AccountSwitch,
+                    WpfApplication.Current.MainWindow);
+
+                if (!confirmed)
                 {
-                    Logger.LogInformation("Switching from user {OldUser} to {NewUser}",
-                        CurrentUser?.Username, loginWindow.AuthenticationResult.User.Username);
-
-                    CurrentUser = loginWindow.AuthenticationResult.User;
-                    UserSettings = null;
-
-                    _ = LoadUserDataAsync();
-                    StatusMessage = LocalizationHelper.Instance.GetFormattedString("SwitchedToUser", CurrentUser.DisplayName);
+                    Logger.LogInformation("User switch cancelled by user");
+                    StatusMessage = LocalizationHelper.Instance.GetString("UserSwitchCancelled");
+                    return;
                 }
+
+                // Завершаем сессию текущего пользователя (НЕ перезапускаем процесс)
+                await HandleUserSwitchAsync();
             }
             catch (Exception ex)
             {
                 var errorMessage = LocalizationHelper.Instance.GetFormattedString("SwitchUserError", ex.Message);
                 StatusMessage = errorMessage;
                 DialogService.ShowError(errorMessage);
+                Logger.LogError(ex, "Error during user switch");
             }
         }
+
+        private async Task HandleUserSwitchAsync()
+        {
+            try
+            {
+                Logger.LogInformation("Handling user switch for {Username}", CurrentUser?.Username);
+                StatusMessage = LocalizationHelper.Instance.GetString("SwitchingUser");
+
+                // Используем ту же логику что и в Logout - делегируем SessionManagementService
+                using (var scope = _serviceProvider.CreateScope())
+                {
+                    var sessionService = scope.ServiceProvider.GetRequiredService<ISessionManagementService>();
+                    
+                    // Завершаем сессию через тот же механизм что и Logout
+                    var success = await sessionService.HandleLogoutRequestAsync();
+                    
+                    if (success)
+                    {
+                        Logger.LogInformation("User switch successful for {Username}", CurrentUser?.Username);
+                        StatusMessage = LocalizationHelper.Instance.GetString("UserSwitchComplete");
+                        
+                        // Закрываем MainWindow - это запустит HandleMainWindowClosedAsync в App.xaml.cs
+                        // который покажет LoginWindow автоматически
+                        WpfApplication.Current.Dispatcher.BeginInvoke(() =>
+                        {
+                            var mainWindow = WpfApplication.Current.MainWindow;
+                            mainWindow?.Close();
+                        });
+                    }
+                    else
+                    {
+                        Logger.LogWarning("User switch failed for {Username}", CurrentUser?.Username);
+                        StatusMessage = LocalizationHelper.Instance.GetString("UserSwitchFailed");
+                        DialogService.ShowError("Не удалось выполнить смену пользователя");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error handling user switch for {Username}", CurrentUser?.Username);
+                var errorMessage = LocalizationHelper.Instance.GetFormattedString("SwitchUserError", ex.Message);
+                StatusMessage = errorMessage;
+                DialogService.ShowError(errorMessage);
+            }
+        }
+
 
         private void OpenAdminWindow()
         {

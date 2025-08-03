@@ -841,4 +841,50 @@
   <data name="TextEditor_FontSizeLabel" xml:space="preserve">
     <value>Размер:</value>
   </data>
+  <!-- Corporate Confirmation Dialog -->
+  <data name="Dialog_LogoutTitle" xml:space="preserve">
+    <value>Подтверждение выхода</value>
+  </data>
+  <data name="Dialog_LogoutMessage" xml:space="preserve">
+    <value>Вы действительно хотите выйти из системы?</value>
+  </data>
+  <data name="Dialog_LogoutDetails" xml:space="preserve">
+    <value>Все запущенные приложения будут закрыты.</value>
+  </data>
+  <data name="Dialog_SwitchUserTitle" xml:space="preserve">
+    <value>Подтверждение смены пользователя</value>
+  </data>
+  <data name="Dialog_SwitchUserMessage" xml:space="preserve">
+    <value>Вы действительно хотите сменить пользователя?</value>
+  </data>
+  <data name="Dialog_SwitchUserDetails" xml:space="preserve">
+    <value>Все запущенные приложения будут закрыты, и откроется окно входа в систему.</value>
+  </data>
+  <data name="UserSwitchComplete" xml:space="preserve">
+    <value>Смена пользователя выполняется...</value>
+  </data>
+  <data name="UserSwitchFailed" xml:space="preserve">
+    <value>Ошибка при смене пользователя</value>
+  </data>
+  <data name="Dialog_DeleteTitle" xml:space="preserve">
+    <value>Подтверждение удаления</value>
+  </data>
+  <data name="Dialog_DeleteMessage" xml:space="preserve">
+    <value>Вы действительно хотите удалить "{0}"?</value>
+  </data>
+  <data name="Dialog_DeleteDetails" xml:space="preserve">
+    <value>Это действие невозможно отменить.</value>
+  </data>
+  <data name="Dialog_Confirm" xml:space="preserve">
+    <value>Выйти</value>
+  </data>
+  <data name="Dialog_Delete" xml:space="preserve">
+    <value>Удалить</value>
+  </data>
+  <data name="Dialog_Yes" xml:space="preserve">
+    <value>Да</value>
+  </data>
+  <data name="Dialog_No" xml:space="preserve">
+    <value>Нет</value>
+  </data>
 </root>

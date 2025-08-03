@@ -25,6 +25,7 @@ using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.Infrastructure.Localization;
 using WindowsLauncher.UI.Views;
 using WindowsLauncher.Core.Configuration;
+using WindowsLauncher.Core.Models;
 
 // Новая архитектура ApplicationLifecycleService
 using WindowsLauncher.Services.Lifecycle;
@@ -67,6 +68,18 @@ namespace WindowsLauncher.UI
                 // ✅ ЗАПУСК ЧЕРЕЗ LoginWindow ВМЕСТО ПРЯМОГО ПОКАЗА MainWindow
                 await StartApplicationAsync();
 
+                // Запускаем мониторинг системных событий сессии
+                try
+                {
+                    var sessionEventService = ServiceProvider.GetService<WindowsLauncher.Services.SessionEventService>();
+                    sessionEventService?.StartMonitoring();
+                }
+                catch (Exception ex)
+                {
+                    var logger = ServiceProvider.GetService<ILogger<App>>();
+                    logger?.LogWarning(ex, "Failed to start session event monitoring");
+                }
+
                 await _host.StartAsync();
             }
             catch (Exception ex)
@@ -85,12 +98,41 @@ namespace WindowsLauncher.UI
                 var logger = ServiceProvider?.GetService<ILogger<App>>();
                 logger?.LogInformation("Application shutdown started");
 
+                // Останавливаем мониторинг системных событий сессии
+                try
+                {
+                    var sessionEventService = ServiceProvider?.GetService<WindowsLauncher.Services.SessionEventService>();
+                    sessionEventService?.StopMonitoring();
+                    
+                    if (sessionEventService is IDisposable disposableSessionService)
+                    {
+                        disposableSessionService.Dispose();
+                    }
+                }
+                catch (Exception ex)
+                {
+                    logger?.LogWarning(ex, "Error stopping session event monitoring");
+                }
+
                 // Останавливаем ApplicationLifecycleService
                 try
                 {
                     var lifecycleService = ServiceProvider?.GetService<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLifecycleService>();
                     if (lifecycleService != null)
                     {
+                        logger?.LogInformation("Closing all running applications before exit");
+                        
+                        // Комбинированное закрытие: graceful + force
+                        var shutdownResult = await lifecycleService.ShutdownAllAsync(gracefulTimeoutMs: 3000, finalTimeoutMs: 1000);
+                        
+                        logger?.LogInformation("Application shutdown completed: {Success}, {Total} apps, {Graceful} graceful, {Forced} forced, {Failed} failed", 
+                            shutdownResult.Success, 
+                            shutdownResult.TotalApplications,
+                            shutdownResult.Applications.Count(a => a.Success && a.Method == WindowsLauncher.Core.Models.Lifecycle.ShutdownMethod.Graceful),
+                            shutdownResult.Applications.Count(a => a.Success && a.Method == WindowsLauncher.Core.Models.Lifecycle.ShutdownMethod.Forced),
+                            shutdownResult.Applications.Count(a => !a.Success));
+                        
+                        // Останавливаем мониторинг и очищаем ресурсы
                         await lifecycleService.StopMonitoringAsync();
                         await lifecycleService.CleanupAsync();
                         
@@ -320,7 +362,10 @@ namespace WindowsLauncher.UI
             // Сервисы переключения приложений
             services.AddSingleton<WindowsLauncher.UI.Services.GlobalHotKeyService>();
             services.AddSingleton<WindowsLauncher.UI.Services.AppSwitcherService>();
-            services.AddSingleton<WindowsLauncher.UI.Services.ShellModeDetectionService>();
+            services.AddSingleton<WindowsLauncher.Core.Services.ShellModeDetectionService>();
+            
+            // Сервис мониторинга системных событий сессии
+            services.AddSingleton<WindowsLauncher.Services.SessionEventService>();
 
             // ViewModels
             services.AddTransient<MainViewModel>();
@@ -586,19 +631,18 @@ namespace WindowsLauncher.UI
         /// <summary>
         /// ✅ ПОКАЗ ОКНА ВХОДА
         /// </summary>
-        private async void ShowLoginWindow()
+        public async void ShowLoginWindow()
         {
             try
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogInformation("Showing login window");
+                
                 var loginWindow = new LoginWindow();
-
+                
                 // Показываем модально
                 var result = loginWindow.ShowDialog();
-
-                logger.LogInformation("LoginWindow closed with result: {Result}", result);
-                logger.LogInformation("AuthenticationResult: {AuthResult}", loginWindow.AuthenticationResult != null ? "not null" : "null");
-                logger.LogInformation("AuthenticatedUser: {AuthUser}", loginWindow.AuthenticatedUser?.Username ?? "null");
+                logger.LogDebug("LoginWindow closed with result: {Result}", result);
 
                 if (result == true && loginWindow.AuthenticatedUser != null)
                 {
@@ -634,9 +678,26 @@ namespace WindowsLauncher.UI
                     }
                     else
                     {
-                        // В обычном режиме завершаем приложение
-                        logger.LogInformation("Standard mode: login cancelled, shutting down");
-                        Shutdown(0);
+                        // В обычном режиме при отмене входа:
+                        // - Если есть MainWindow - показываем его (возврат к рабочему окну)
+                        // - Если нет MainWindow - завершаем приложение (закрытие крестиком при старте)
+                        if (MainWindow != null && !MainWindow.IsVisible)
+                        {
+                            logger.LogInformation("Normal mode: login cancelled, returning to MainWindow");
+                            MainWindow.Show();
+                            MainWindow.Activate();
+                        }
+                        else if (MainWindow == null)
+                        {
+                            logger.LogInformation("Normal mode: login cancelled at startup, shutting down");
+                            Shutdown(0);
+                        }
+                        else
+                        {
+                            // MainWindow уже видно, просто активируем его
+                            logger.LogInformation("Normal mode: login cancelled, activating existing MainWindow");
+                            MainWindow.Activate();
+                        }
                     }
                 }
             }
@@ -657,7 +718,7 @@ namespace WindowsLauncher.UI
             try
             {
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
-                logger.LogInformation("=== STARTING ShowMainWindow for user {Username} ===", authenticatedUser.Username);
+                logger.LogInformation("Starting MainWindow for user {Username}", authenticatedUser.Username);
 
                 // Инициализируем сессию через SessionManagementService
                 var sessionManager = ServiceProvider.GetRequiredService<ISessionManagementService>();
@@ -842,55 +903,96 @@ namespace WindowsLauncher.UI
         {
             try
             {
-                logger.LogInformation("MainWindow closed, checking shell mode configuration");
+                logger.LogInformation("MainWindow closed, handling cleanup");
 
-                // Получаем конфигурацию сессии
+                // Определяем режим Shell через ShellModeDetectionService
+                var shellModeDetectionService = ServiceProvider?.GetService<WindowsLauncher.Core.Services.ShellModeDetectionService>();
+                var currentShellMode = ShellMode.Normal;
+                
+                if (shellModeDetectionService != null)
+                {
+                    currentShellMode = await shellModeDetectionService.DetectShellModeAsync();
+                    var modeDescription = shellModeDetectionService.GetModeDescription(currentShellMode);
+                    logger.LogDebug("Detected shell mode: {ModeDescription}", modeDescription);
+                }
+                else
+                {
+                    logger.LogWarning("ShellModeDetectionService is null, using Normal mode");
+                }
+
+                // Также получаем конфигурацию сессии для дополнительных настроек
+                logger.LogInformation("App Step 4: Getting SessionManagementService");
                 var sessionManager = ServiceProvider?.GetService<ISessionManagementService>();
                 if (sessionManager != null)
                 {
+                    logger.LogInformation("App Step 5: Loading session configuration");
                     await sessionManager.LoadConfigurationAsync();
-                    var config = sessionManager.Configuration;
-
-                    logger.LogInformation("Shell mode configuration - RunAsShell: {RunAsShell}, ReturnToLoginOnLogout: {ReturnToLogin}", 
-                        config.RunAsShell, config.ReturnToLoginOnLogout);
-
-                    if (config.RunAsShell && config.ReturnToLoginOnLogout)
-                    {
-                        logger.LogInformation("Shell mode: ending current session and returning to login window");
-                        
-                        // ВАЖНО: Явно завершаем сессию перед переходом к LoginWindow
-                        await sessionManager.EndSessionAsync("MainWindow closed in shell mode");
-                        logger.LogInformation("Session ended successfully");
-                        
-                        // Небольшая задержка для гарантии завершения всех операций
-                        await Task.Delay(200);
-                        
-                        // Сбрасываем MainWindow чтобы не было конфликтов
-                        MainWindow = null;
-                        
-                        // Возвращаемся к окну входа
-                        Dispatcher.BeginInvoke(() =>
-                        {
-                            try
-                            {
-                                ShowLoginWindow();
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.LogError(ex, "Error returning to login window in shell mode");
-                                Shutdown(1);
-                            }
-                        });
-                        return;
-                    }
+                }
+                else
+                {
+                    logger.LogWarning("App Step 5: SessionManagementService is null");
                 }
 
-                // Обычный режим - завершаем приложение
-                logger.LogInformation("Standard mode: shutting down application");
-                Shutdown(0);
+                // ИСПРАВЛЕНИЕ: Закрываем все запущенные приложения перед закрытием MainWindow
+                var lifecycleService = ServiceProvider?.GetService<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLifecycleService>();
+                if (lifecycleService != null)
+                {
+                    logger.LogInformation("Closing all applications before MainWindow closed");
+                    var shutdownResult = await lifecycleService.ShutdownAllAsync(gracefulTimeoutMs: 3000, finalTimeoutMs: 1000);
+                    
+                    logger.LogInformation("Application shutdown for MainWindow close: {Success}, {Total} apps, {Graceful} graceful, {Forced} forced", 
+                        shutdownResult.Success, 
+                        shutdownResult.TotalApplications,
+                        shutdownResult.Applications.Count(a => a.Success && a.Method == WindowsLauncher.Core.Models.Lifecycle.ShutdownMethod.Graceful),
+                        shutdownResult.Applications.Count(a => a.Success && a.Method == WindowsLauncher.Core.Models.Lifecycle.ShutdownMethod.Forced));
+                }
+
+                // ИСПРАВЛЕНИЕ: В любом режиме (Shell/Normal) возвращаемся к LoginWindow
+                logger.LogInformation("App Step 8: Returning to login window after logout (Mode: {Mode})", 
+                    currentShellMode == ShellMode.Shell ? "Shell" : "Normal");
+                
+                // ВАЖНО: Явно завершаем сессию если она еще активна
+                if (sessionManager != null && sessionManager.IsSessionActive)
+                {
+                    logger.LogInformation("App Step 9: Session is still active, ending session");
+                    await sessionManager.EndSessionAsync($"MainWindow closed in {currentShellMode} mode");
+                    logger.LogInformation("App Step 10: Session ended successfully");
+                }
+                else
+                {
+                    logger.LogInformation("App Step 9: No active session to end");
+                }
+                
+                // Небольшая задержка для гарантии завершения всех операций
+                logger.LogInformation("App Step 11: Waiting 200ms for cleanup");
+                await Task.Delay(200);
+                
+                // Сбрасываем MainWindow чтобы не было конфликтов
+                logger.LogInformation("App Step 12: Resetting MainWindow to null");
+                MainWindow = null;
+                
+                // Возвращаемся к окну входа (приложение НЕ завершается)
+                logger.LogInformation("App Step 13: Dispatching ShowLoginWindow");
+                Dispatcher.BeginInvoke(() =>
+                {
+                    try
+                    {
+                        logger.LogInformation("App Step 14: Inside Dispatcher - showing login window");
+                        ShowLoginWindow();
+                        logger.LogInformation("App Step 15: ShowLoginWindow called successfully");
+                    }
+                    catch (Exception ex)
+                    {
+                        logger.LogError(ex, "App Step 14 FAILED: Error returning to login window after logout");
+                        Shutdown(1);
+                    }
+                });
+                
+                logger.LogInformation("=== APP HANDLEMAINWINDOWCLOSED COMPLETED ===");
             }
             catch (Exception ex)
             {
+                logger.LogError(ex, "=== APP HANDLEMAINWINDOWCLOSED FAILED ===");
                 logger.LogError(ex, "Error handling MainWindow close");
                 Shutdown(1);
             }

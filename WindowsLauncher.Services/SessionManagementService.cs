@@ -239,28 +239,27 @@ namespace WindowsLauncher.Services
         {
             try
             {
-                _logger.LogInformation("Handling logout request");
+                _logger.LogInformation("Session logout requested for user: {User}", _currentUser?.Username ?? "null");
 
                 if (!_isSessionActive)
                 {
-                    _logger.LogDebug("No active session for logout");
+                    _logger.LogDebug("No active session found, logout completed");
                     return true;
                 }
 
                 // Завершаем сессию
-                await EndSessionAsync("User logout request");
-
-                // Возвращаемся к окну входа (отключено - этим занимается App.xaml.cs)
-                if (_sessionConfig.ReturnToLoginOnLogout)
+                var endResult = await EndSessionAsync("User logout request");
+                
+                // Возвращение к окну входа обрабатывается в App.xaml.cs HandleMainWindowClosedAsync
+                if (!_sessionConfig.ReturnToLoginOnLogout)
                 {
-                    _logger.LogInformation("Login window will be shown by App.xaml.cs HandleMainWindowClosedAsync");
-                    // await ShowLoginWindowAsync(); // ОТКЛЮЧЕНО - предотвращает конфликт с App.xaml.cs
+                    _logger.LogWarning("ReturnToLoginOnLogout is disabled - login window may not appear");
                 }
-
                 return true;
             }
             catch (Exception ex)
             {
+                _logger.LogError(ex, "=== SESSIONMANAGEMENT LOGOUT FAILED ===");
                 _logger.LogError(ex, "Error handling logout request");
                 return false;
             }

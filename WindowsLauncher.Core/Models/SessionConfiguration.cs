@@ -48,6 +48,11 @@ namespace WindowsLauncher.Core.Models
         public bool MinimizeInsteadOfClose { get; set; } = false;
 
         /// <summary>
+        /// Тип выхода из системы
+        /// </summary>
+        public SessionLogoutType LogoutType { get; set; } = SessionLogoutType.ApplicationLogout;
+
+        /// <summary>
         /// Валидация конфигурации сессии
         /// </summary>
         public SessionValidationResult Validate()
@@ -97,6 +102,22 @@ namespace WindowsLauncher.Core.Models
         SessionExpired,
         ForceLogout,
         ShellRestart
+    }
+
+    /// <summary>
+    /// Типы выхода из системы
+    /// </summary>
+    public enum SessionLogoutType
+    {
+        /// <summary>
+        /// Выход из приложения WindowsLauncher (возврат к LoginWindow)
+        /// </summary>
+        ApplicationLogout,
+        
+        /// <summary>
+        /// Системный выход из Windows (устаревший)
+        /// </summary>
+        SystemLogout
     }
 
     /// <summary>

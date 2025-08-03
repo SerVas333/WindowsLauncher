@@ -16,13 +16,35 @@
                 <!-- 2. Потом базовые Material стили -->
                 <ResourceDictionary Source="Styles/MaterialStyles.xaml"/>
 
-                <!-- 3. Затем корпоративные стили -->
+                <!-- 3. Затем корпоративные стили (расширенные) -->
                 <ResourceDictionary Source="Styles/CorporateStyles.xaml"/>
+
+                <!-- 4. Современные UI компоненты -->
+                <ResourceDictionary Source="Styles/ModernComponents.xaml"/>
+
+                <!-- 5. Алиасы для совместимости с Material Design -->
+                <ResourceDictionary Source="Styles/MaterialCompatibility.xaml"/>
 
             </ResourceDictionary.MergedDictionaries>
 
             <!-- Глобальные конвертеры -->
             <loc:LocalizedStringConverter x:Key="LocalizedStringConverter"/>
+            
+            <!-- Системные конвертеры для современного UI -->
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+            <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+            
+            <!-- Конвертер для инвертирования булевых значений -->
+            <Style x:Key="InverseBooleanToVisibilityConverter" TargetType="FrameworkElement">
+                <Style.Triggers>
+                    <DataTrigger Binding="{Binding}" Value="True">
+                        <Setter Property="Visibility" Value="Collapsed"/>
+                    </DataTrigger>
+                    <DataTrigger Binding="{Binding}" Value="False">
+                        <Setter Property="Visibility" Value="Visible"/>
+                    </DataTrigger>
+                </Style.Triggers>
+            </Style>
 
             <!-- Глобальные fallback ресурсы -->
 

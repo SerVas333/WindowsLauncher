@@ -71,6 +71,27 @@ namespace WindowsLauncher.Core.Interfaces.Lifecycle
         /// <returns>true если процесс завершен</returns>
         Task<bool> KillAsync(string instanceId);
         
+        /// <summary>
+        /// Корректно закрыть все запущенные приложения (graceful shutdown)
+        /// </summary>
+        /// <param name="timeoutMs">Максимальное время ожидания закрытия каждого приложения (мс)</param>
+        /// <returns>Результат операции с детальной информацией</returns>
+        Task<ShutdownResult> CloseAllAsync(int timeoutMs = 5000);
+        
+        /// <summary>
+        /// Принудительно завершить все запущенные приложения (kill всех процессов)
+        /// </summary>
+        /// <returns>Количество завершенных приложений</returns>
+        Task<int> KillAllAsync();
+        
+        /// <summary>
+        /// Комбинированное закрытие: сначала graceful, затем kill для несговорчивых
+        /// </summary>
+        /// <param name="gracefulTimeoutMs">Время на graceful закрытие</param>
+        /// <param name="finalTimeoutMs">Время ожидания перед принудительным завершением</param>
+        /// <returns>Результат операции</returns>
+        Task<ShutdownResult> ShutdownAllAsync(int gracefulTimeoutMs = 5000, int finalTimeoutMs = 2000);
+        
         #endregion
 
         #region Получение информации

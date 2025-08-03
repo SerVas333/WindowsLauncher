@@ -2,6 +2,7 @@
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using System;
+using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Controls;
@@ -221,6 +222,10 @@ namespace WindowsLauncher.UI.Views
 
                 if (result.IsSuccess)
                 {
+                    // УПРОЩЕНИЕ: При рестарте процесса все приложения автоматически закроются
+                    // Нет необходимости в сложной логике закрытия отдельных экземпляров
+                    _logger?.LogInformation("User authentication successful: {Username}", result.User?.Username);
+                    
                     AuthenticationResult = result;
                     DialogResult = true;
                     Close();

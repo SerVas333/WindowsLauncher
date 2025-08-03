@@ -382,6 +382,234 @@
     <Geometry x:Key="Icon_FormatColorHighlight">M18.5,1.15L17.97,1.68L16.17,3.48L15.11,2.42L14.4,3.13L15.46,4.19L6.87,12.78C6.27,13.38 6,14.2 6,15.04C6,15.88 6.27,16.7 6.87,17.3L7.71,18.14C8.31,18.74 9.13,19 9.97,19C10.81,19 11.63,18.74 12.23,18.14L20.82,9.55L21.88,10.61L22.59,9.9L21.53,8.84L23.33,7.04L22.8,6.51L18.5,1.15M9.97,17C9.58,17 9.21,16.85 8.95,16.59L8.11,15.75C7.85,15.49 7.7,15.12 7.7,14.73C7.7,14.34 7.85,13.97 8.11,13.71L10.5,11.32L14.68,15.5L12.29,17.89C12.03,18.15 11.66,18.3 11.27,18.3H9.97V17Z</Geometry>
     <Geometry x:Key="Icon_FormatFont">M9,10V12H7V10A5,5 0 0,1 12,5A5,5 0 0,1 17,10V12H15V10A3,3 0 0,0 12,7A3,3 0 0,0 9,10M12,2A8,8 0 0,1 20,10V16H16V14H20V10A8,8 0 0,0 12,2A8,8 0 0,0 4,10V14H8V16H4V10A8,8 0 0,1 12,2Z</Geometry>
 
+    <!-- ========== СОВРЕМЕННЫЕ UI КОМПОНЕНТЫ ========== -->
+
+    <!-- Система теней для современных карточек и диалогов -->
+    <DropShadowEffect x:Key="CorporateShadowDepth1" 
+                      Color="Black" 
+                      Direction="270" 
+                      ShadowDepth="1" 
+                      BlurRadius="3" 
+                      Opacity="0.26"/>
+    
+    <DropShadowEffect x:Key="CorporateShadowDepth2" 
+                      Color="Black" 
+                      Direction="270" 
+                      ShadowDepth="2" 
+                      BlurRadius="6" 
+                      Opacity="0.26"/>
+    
+    <DropShadowEffect x:Key="CorporateShadowDepth3" 
+                      Color="Black" 
+                      Direction="270" 
+                      ShadowDepth="4" 
+                      BlurRadius="8" 
+                      Opacity="0.26"/>
+    
+    <DropShadowEffect x:Key="CorporateShadowDepth4" 
+                      Color="Black" 
+                      Direction="270" 
+                      ShadowDepth="6" 
+                      BlurRadius="12" 
+                      Opacity="0.26"/>
+
+    <!-- Расширенная цветовая палитра для современного UI -->
+    
+    <!-- Статусные цвета -->
+    <SolidColorBrush x:Key="CorporateSuccess" Color="#4CAF50"/>
+    <SolidColorBrush x:Key="CorporateWarning" Color="#FF9800"/>
+    <SolidColorBrush x:Key="CorporateError" Color="#F44336"/>
+    <SolidColorBrush x:Key="CorporateInfo" Color="#2196F3"/>
+    
+    <!-- Расширенная градация серого -->
+    <SolidColorBrush x:Key="CorporateGray50" Color="#FAFAFA"/>
+    <SolidColorBrush x:Key="CorporateGray100" Color="#F5F5F5"/>
+    <SolidColorBrush x:Key="CorporateGray200" Color="#EEEEEE"/>
+    <SolidColorBrush x:Key="CorporateGray300" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="CorporateGray400" Color="#BDBDBD"/>
+    <SolidColorBrush x:Key="CorporateGray500" Color="#9E9E9E"/>
+    <SolidColorBrush x:Key="CorporateGray600" Color="#757575"/>
+    <SolidColorBrush x:Key="CorporateGray700" Color="#616161"/>
+    <SolidColorBrush x:Key="CorporateGray800" Color="#424242"/>
+    <SolidColorBrush x:Key="CorporateGray900" Color="#212121"/>
+    
+    <!-- Алиасы для совместимости с Material Design терминологией -->
+    <SolidColorBrush x:Key="CorporateBodyLight" Color="#999999"/>
+    <SolidColorBrush x:Key="CorporateOnSurface" Color="#333333"/>
+    <SolidColorBrush x:Key="CorporateSurface" Color="#FFFFFF"/>
+
+    <!-- ========== СОВРЕМЕННАЯ ТИПОГРАФИКА ========== -->
+    
+    <!-- Заголовки разных уровней -->
+    <Style x:Key="CorporateHeadline1" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="32"/>
+        <Setter Property="FontWeight" Value="Light"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="LineHeight" Value="40"/>
+    </Style>
+    
+    <Style x:Key="CorporateHeadline2" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="28"/>
+        <Setter Property="FontWeight" Value="Light"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="LineHeight" Value="36"/>
+    </Style>
+    
+    <Style x:Key="CorporateHeadline3" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="LineHeight" Value="32"/>
+    </Style>
+    
+    <!-- Подписи и второстепенный текст -->
+    <Style x:Key="CorporateCaptionText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateBodyLight}"/>
+        <Setter Property="LineHeight" Value="16"/>
+    </Style>
+    
+    <Style x:Key="CorporateOverlineText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateTextMuted}"/>
+        <Setter Property="LineHeight" Value="14"/>
+    </Style>
+
+    <!-- ========== СОВРЕМЕННЫЕ КНОПКИ ========== -->
+    
+    <!-- Кнопка только с иконкой (аналог MaterialDesignIconButton) -->
+    <Style x:Key="CorporateIconButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="20"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter x:Name="contentPresenter"
+                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                        Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray100}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray200}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- Кнопка с иконкой и текстом -->
+    <Style x:Key="CorporateIconTextButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Margin" Value="4,2"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="4"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter x:Name="contentPresenter"
+                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                        Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray100}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray200}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+    
+    <!-- Плавающая кнопка действия (FAB) -->
+    <Style x:Key="CorporateFloatingActionButton" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource CorporateRed}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Width" Value="56"/>
+        <Setter Property="Height" Value="56"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Effect" Value="{StaticResource CorporateShadowDepth2}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="28"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter x:Name="contentPresenter"
+                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                        Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateRedLight}"/>
+                            <Setter Property="Effect" Value="{StaticResource CorporateShadowDepth3}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateRedDark}"/>
+                            <Setter Property="Effect" Value="{StaticResource CorporateShadowDepth1}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray400}"/>
+                            <Setter Property="Effect" Value="{x:Null}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- Прочие -->
     <Geometry x:Key="Icon_Lock">M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z</Geometry>
     <Geometry x:Key="Icon_FileDocumentMultiple">M15,7H20.5L15,1.5V7M8,0H16L22,6V18A2,2 0 0,1 20,20H8C6.89,20 6,19.1 6,18V2A2,2 0 0,1 8,0M4,4V22H20V24H4A2,2 0 0,1 2,22V4H4Z</Geometry>

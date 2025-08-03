@@ -117,21 +117,53 @@ namespace WindowsLauncher.Services.Lifecycle
                 _logger.LogDebug("Using launcher: {LauncherType} for application {AppName}", 
                     launcher.GetType().Name, application.Name);
                 
-                // Проверяем, не запущено ли приложение уже (для некоторых типов)
-                var existingInstance = await launcher.FindExistingInstanceAsync(application);
-                if (existingInstance != null && !AllowMultipleInstances(application))
+                // ИСПРАВЛЕНИЕ: Сначала проверяем зарегистрированные экземпляры в ApplicationInstanceManager
+                if (!AllowMultipleInstances(application))
                 {
-                    _logger.LogInformation("Application {AppName} is already running (Instance: {InstanceId})", 
-                        application.Name, existingInstance.InstanceId);
+                    var registeredInstances = await _instanceManager.GetInstancesByApplicationIdAsync(application.Id);
+                    var activeRegisteredInstance = registeredInstances.FirstOrDefault(i => i.State.CanSwitchTo());
                     
-                    // Пытаемся активировать существующий экземпляр
-                    bool activated = await SwitchToAsync(existingInstance.InstanceId);
+                    if (activeRegisteredInstance != null)
+                    {
+                        _logger.LogInformation("Found registered instance of {AppName} (Instance: {InstanceId})", 
+                            application.Name, activeRegisteredInstance.InstanceId);
+                        
+                        // Пытаемся активировать зарегистрированный экземпляр
+                        bool activated = await SwitchToAsync(activeRegisteredInstance.InstanceId);
+                        
+                        var launchDuration = DateTime.Now - startTime;
+                        await _auditService.LogApplicationLaunchAsync(
+                            application.Id, application.Name, launchedBy, true, "Activated registered instance");
+                        
+                        return LaunchResult.AlreadyRunning(activeRegisteredInstance, activated);
+                    }
                     
-                    var launchDuration = DateTime.Now - startTime;
-                    await _auditService.LogApplicationLaunchAsync(
-                        application.Id, application.Name, launchedBy, true, "Activated existing instance");
-                    
-                    return LaunchResult.AlreadyRunning(existingInstance, activated);
+                    // Только если нет зарегистрированных экземпляров, проверяем системные процессы
+                    var existingSystemInstance = await launcher.FindExistingInstanceAsync(application);
+                    if (existingSystemInstance != null)
+                    {
+                        _logger.LogInformation("Found unregistered system process for {AppName} (PID: {ProcessId}), registering it", 
+                            application.Name, existingSystemInstance.ProcessId);
+                        
+                        // Регистрируем найденный системный процесс
+                        bool registered = await _instanceManager.AddInstanceAsync(existingSystemInstance);
+                        if (registered)
+                        {
+                            // Теперь можем переключиться на зарегистрированный экземпляр
+                            bool activated = await SwitchToAsync(existingSystemInstance.InstanceId);
+                            
+                            var launchDuration = DateTime.Now - startTime;
+                            await _auditService.LogApplicationLaunchAsync(
+                                application.Id, application.Name, launchedBy, true, "Registered and activated existing system process");
+                            
+                            return LaunchResult.AlreadyRunning(existingSystemInstance, activated);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to register existing system process for {AppName}, will launch new instance", 
+                                application.Name);
+                        }
+                    }
                 }
                 
                 // Запускаем приложение
@@ -396,15 +428,17 @@ namespace WindowsLauncher.Services.Lifecycle
                 if (switched)
                 {
                     var previousState = instance.State;
+                    var previousMinimized = instance.IsMinimized;
+                    
                     instance.State = ApplicationState.Active;
                     instance.IsActive = true;
-                    instance.IsMinimized = false;
+                    instance.IsMinimized = false; // Принудительно сбрасываем флаг после успешного переключения
                     instance.LastUpdate = DateTime.Now;
                     
                     await _instanceManager.UpdateInstanceAsync(instance);
                     
-                    _logger.LogInformation("Successfully switched to instance {InstanceId} ({AppName})", 
-                        instanceId, instance.Application?.Name);
+                    _logger.LogInformation("Successfully switched to instance {InstanceId} ({AppName}) - restored from minimized: {WasMinimized}", 
+                        instanceId, instance.Application?.Name, previousMinimized);
                     
                     // Генерируем события
                     RaiseInstanceActivated(instance);
@@ -412,6 +446,12 @@ namespace WindowsLauncher.Services.Lifecycle
                     if (previousState != ApplicationState.Active)
                     {
                         RaiseInstanceStateChanged(instance, previousState, ApplicationState.Active, "Switched to window");
+                    }
+                    
+                    // Дополнительно генерируем событие изменения состояния если окно было восстановлено
+                    if (previousMinimized)
+                    {
+                        RaiseInstanceStateChanged(instance, ApplicationState.Active, ApplicationState.Active, "Window restored from minimized");
                     }
                     
                     return true;
@@ -469,17 +509,66 @@ namespace WindowsLauncher.Services.Lifecycle
                 await _instanceManager.UpdateInstanceAsync(instance);
                 RaiseInstanceStateChanged(instance, previousState, ApplicationState.Closing, "Close requested");
                 
-                // Пытаемся закрыть корректно
+                // ИСПРАВЛЕНИЕ: Для WebView2 приложений используем специальную логику закрытия
+                // WebView2 приложения работают внутри основного процесса лаунчера, поэтому
+                // закрытие процесса через ProcessMonitor может привести к проблемам
+                if (instanceId.StartsWith("webview2_"))
+                {
+                    _logger.LogInformation("Closing WebView2 instance {InstanceId} via launcher (not process close)", instanceId);
+                    
+                    var launcher = FindLauncherForApplication(instance.Application);
+                    if (launcher != null && launcher.GetType().Name == "WebView2ApplicationLauncher")
+                    {
+                        try
+                        {
+                            // Используем рефлексию для вызова TerminateAsync с force=false (graceful close)
+                            var terminateMethod = launcher.GetType().GetMethod("TerminateAsync");
+                            if (terminateMethod != null)
+                            {
+                                var task = (Task<bool>)terminateMethod.Invoke(launcher, new object[] { instanceId, false });
+                                bool terminated = await task;
+                                
+                                if (terminated)
+                                {
+                                    _logger.LogInformation("WebView2 instance {InstanceId} closed gracefully via launcher", instanceId);
+                                    return true;
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("WebView2 launcher failed to close instance {InstanceId} gracefully", instanceId);
+                                    return false;
+                                }
+                            }
+                        }
+                        catch (Exception launcherEx)
+                        {
+                            _logger.LogError(launcherEx, "Error closing WebView2 instance {InstanceId} via launcher", instanceId);
+                        }
+                    }
+                    
+                    _logger.LogWarning("No WebView2 launcher found for instance {InstanceId}, cannot close safely", instanceId);
+                    return false;
+                }
+                
+                // Для внешних приложений используем стандартную логику через ProcessMonitor
+                // Проверяем что это НЕ основной процесс лаунчера
+                if (instance.ProcessId == Environment.ProcessId)
+                {
+                    _logger.LogError("Attempted to close main launcher process for instance {InstanceId}! This could terminate the entire application.", instanceId);
+                    return false;
+                }
+                
+                // Пытаемся закрыть внешний процесс корректно
                 bool closed = await _processMonitor.CloseProcessGracefullyAsync(instance.ProcessId, 5000);
                 
                 if (closed)
                 {
-                    _logger.LogInformation("Instance {InstanceId} closed gracefully", instanceId);
+                    _logger.LogInformation("External process instance {InstanceId} closed gracefully", instanceId);
                     return true;
                 }
                 else
                 {
-                    _logger.LogWarning("Failed to close instance {InstanceId} gracefully", instanceId);
+                    _logger.LogWarning("Failed to close external process instance {InstanceId} gracefully", instanceId);
                     return false;
                 }
             }
@@ -516,17 +605,71 @@ namespace WindowsLauncher.Services.Lifecycle
                 await _instanceManager.UpdateInstanceAsync(instance);
                 RaiseInstanceStateChanged(instance, previousState, ApplicationState.Closing, "Force kill requested");
                 
-                // Принудительно завершаем
+                // ИСПРАВЛЕНИЕ: Для WebView2 приложений используем специальную логику закрытия
+                // WebView2 приложения работают внутри основного процесса лаунчера, поэтому
+                // убийство процесса через ProcessMonitor завершит весь лаунчер
+                if (instanceId.StartsWith("webview2_"))
+                {
+                    _logger.LogInformation("Killing WebView2 instance {InstanceId} via launcher (not process kill)", instanceId);
+                    
+                    var launcher = FindLauncherForApplication(instance.Application);
+                    if (launcher != null && launcher.GetType().Name == "WebView2ApplicationLauncher")
+                    {
+                        try
+                        {
+                            // Используем рефлексию для вызова TerminateAsync (WebView2ApplicationLauncher не реализует общий интерфейс для kill)
+                            var terminateMethod = launcher.GetType().GetMethod("TerminateAsync");
+                            if (terminateMethod != null)
+                            {
+                                var task = (Task<bool>)terminateMethod.Invoke(launcher, new object[] { instanceId, true });
+                                bool terminated = await task;
+                                
+                                if (terminated)
+                                {
+                                    _logger.LogInformation("WebView2 instance {InstanceId} terminated via launcher", instanceId);
+                                    return true;
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("WebView2 launcher failed to terminate instance {InstanceId}", instanceId);
+                                    return false;
+                                }
+                            }
+                        }
+                        catch (Exception launcherEx)
+                        {
+                            _logger.LogError(launcherEx, "Error terminating WebView2 instance {InstanceId} via launcher", instanceId);
+                        }
+                    }
+                    
+                    _logger.LogWarning("No WebView2 launcher found for instance {InstanceId}, cannot terminate safely", instanceId);
+                    return false;
+                }
+                
+                // Для внешних приложений используем стандартную логику через ProcessMonitor
+                // Проверяем что это НЕ основной процесс лаунчера
+                if (instance.ProcessId == Environment.ProcessId)
+                {
+                    _logger.LogError("Attempted to kill main launcher process for instance {InstanceId}! This would terminate the entire application.", instanceId);
+                    return false;
+                }
+                
+                // Принудительно завершаем внешний процесс
                 bool killed = await _processMonitor.KillProcessAsync(instance.ProcessId, 3000);
                 
                 if (killed)
                 {
-                    _logger.LogInformation("Instance {InstanceId} killed successfully", instanceId);
+                    _logger.LogInformation("External process instance {InstanceId} killed successfully", instanceId);
+                    
+                    // ИСПРАВЛЕНИЕ: Удаляем экземпляр из менеджера после успешного убийства
+                    await _instanceManager.RemoveInstanceAsync(instanceId);
+                    _logger.LogInformation("Removed killed instance {InstanceId} from manager", instanceId);
+                    
                     return true;
                 }
                 else
                 {
-                    _logger.LogError("Failed to kill instance {InstanceId}", instanceId);
+                    _logger.LogError("Failed to kill external process instance {InstanceId}", instanceId);
                     return false;
                 }
             }
@@ -1159,6 +1302,268 @@ namespace WindowsLauncher.Services.Lifecycle
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error raising InstanceUpdated event for {InstanceId}", instance.InstanceId);
+            }
+        }
+        
+        #endregion
+        
+        #region Массовое закрытие приложений
+        
+        public async Task<ShutdownResult> CloseAllAsync(int timeoutMs = 5000)
+        {
+            var startTime = DateTime.Now;
+            var applications = new List<ApplicationShutdownInfo>();
+            var errors = new List<string>();
+            
+            try
+            {
+                _logger.LogInformation("Starting graceful shutdown of all applications (timeout: {TimeoutMs}ms)", timeoutMs);
+                
+                var runningInstances = await GetRunningAsync();
+                if (runningInstances.Count == 0)
+                {
+                    _logger.LogInformation("No running applications to close");
+                    return ShutdownResult.AllClosed(DateTime.Now - startTime, applications);
+                }
+                
+                _logger.LogInformation("Found {Count} running applications to close", runningInstances.Count);
+                
+                // Параллельное закрытие всех приложений с timeout
+                var closeTasks = runningInstances.Select(async instance =>
+                {
+                    var appStartTime = DateTime.Now;
+                    var appInfo = new ApplicationShutdownInfo
+                    {
+                        InstanceId = instance.InstanceId,
+                        ApplicationName = instance.Application?.Name ?? "Unknown",
+                        ProcessId = instance.ProcessId,
+                        Method = ShutdownMethod.Graceful
+                    };
+                    
+                    try
+                    {
+                        _logger.LogDebug("Attempting graceful close of {AppName} (PID: {ProcessId})", 
+                            appInfo.ApplicationName, appInfo.ProcessId);
+                        
+                        using var cts = new CancellationTokenSource(timeoutMs);
+                        var closeTask = CloseAsync(instance.InstanceId);
+                        
+                        if (await closeTask.WaitAsync(cts.Token))
+                        {
+                            bool success = await closeTask;
+                            appInfo.Success = success;
+                            appInfo.Duration = DateTime.Now - appStartTime;
+                            
+                            if (success)
+                            {
+                                _logger.LogDebug("Successfully closed {AppName} gracefully", appInfo.ApplicationName);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("Failed to close {AppName} gracefully", appInfo.ApplicationName);
+                                appInfo.ErrorMessage = "Graceful close failed";
+                            }
+                        }
+                        else
+                        {
+                            appInfo.Success = false;
+                            appInfo.Duration = DateTime.Now - appStartTime;
+                            appInfo.ErrorMessage = $"Timeout after {timeoutMs}ms";
+                            _logger.LogWarning("Timeout closing {AppName} after {TimeoutMs}ms", 
+                                appInfo.ApplicationName, timeoutMs);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        appInfo.Success = false;
+                        appInfo.Duration = DateTime.Now - appStartTime;
+                        appInfo.ErrorMessage = ex.Message;
+                        _logger.LogError(ex, "Error closing {AppName}", appInfo.ApplicationName);
+                    }
+                    
+                    return appInfo;
+                });
+                
+                applications = (await Task.WhenAll(closeTasks)).ToList();
+                
+                var totalDuration = DateTime.Now - startTime;
+                var successCount = applications.Count(a => a.Success);
+                var failureCount = applications.Count - successCount;
+                
+                _logger.LogInformation("Graceful shutdown completed: {Success}/{Total} closed successfully in {Duration}ms", 
+                    successCount, applications.Count, (int)totalDuration.TotalMilliseconds);
+                
+                if (failureCount == 0)
+                {
+                    return ShutdownResult.AllClosed(totalDuration, applications);
+                }
+                else
+                {
+                    errors.Add($"{failureCount} applications failed to close gracefully");
+                    return ShutdownResult.PartialFailure(totalDuration, applications, errors);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during graceful shutdown of all applications");
+                return ShutdownResult.Failed(ex.Message, DateTime.Now - startTime);
+            }
+        }
+        
+        public async Task<int> KillAllAsync()
+        {
+            try
+            {
+                _logger.LogWarning("Starting forced termination of all applications");
+                
+                var runningInstances = await GetRunningAsync();
+                if (runningInstances.Count == 0)
+                {
+                    _logger.LogInformation("No running applications to kill");
+                    return 0;
+                }
+                
+                _logger.LogWarning("Force killing {Count} running applications", runningInstances.Count);
+                
+                int killedCount = 0;
+                
+                // Параллельное принудительное завершение
+                var killTasks = runningInstances.Select(async instance =>
+                {
+                    try
+                    {
+                        _logger.LogWarning("Force killing {AppName} (PID: {ProcessId})", 
+                            instance.Application?.Name, instance.ProcessId);
+                        
+                        bool killed = await KillAsync(instance.InstanceId);
+                        if (killed)
+                        {
+                            Interlocked.Increment(ref killedCount);
+                            _logger.LogWarning("Successfully killed {AppName}", instance.Application?.Name);
+                        }
+                        else
+                        {
+                            _logger.LogError("Failed to kill {AppName}", instance.Application?.Name);
+                        }
+                        
+                        return killed;
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error killing {AppName}", instance.Application?.Name);
+                        return false;
+                    }
+                });
+                
+                await Task.WhenAll(killTasks);
+                
+                _logger.LogWarning("Forced termination completed: {Killed}/{Total} applications killed", 
+                    killedCount, runningInstances.Count);
+                
+                return killedCount;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during forced termination of all applications");
+                return 0;
+            }
+        }
+        
+        public async Task<ShutdownResult> ShutdownAllAsync(int gracefulTimeoutMs = 5000, int finalTimeoutMs = 2000)
+        {
+            var startTime = DateTime.Now;
+            
+            try
+            {
+                _logger.LogInformation("Starting complete shutdown: graceful ({GracefulTimeout}ms) + forced ({FinalTimeout}ms)", 
+                    gracefulTimeoutMs, finalTimeoutMs);
+                
+                // Этап 1: Попытка graceful закрытия
+                var gracefulResult = await CloseAllAsync(gracefulTimeoutMs);
+                
+                if (gracefulResult.Success)
+                {
+                    _logger.LogInformation("All applications closed gracefully");
+                    return gracefulResult;
+                }
+                
+                // Этап 2: Проверка оставшихся приложений
+                await Task.Delay(finalTimeoutMs); // Даем время приложениям завершиться
+                
+                var remainingInstances = await GetRunningAsync();
+                if (remainingInstances.Count == 0)
+                {
+                    _logger.LogInformation("All applications closed after waiting period");
+                    gracefulResult.Success = true;
+                    gracefulResult.Duration = DateTime.Now - startTime;
+                    return gracefulResult;
+                }
+                
+                // Этап 3: Принудительное завершение оставшихся
+                _logger.LogWarning("Found {Count} applications still running, forcing termination", remainingInstances.Count);
+                
+                var forcedApplications = new List<ApplicationShutdownInfo>();
+                
+                foreach (var instance in remainingInstances)
+                {
+                    var appStartTime = DateTime.Now;
+                    var appInfo = new ApplicationShutdownInfo
+                    {
+                        InstanceId = instance.InstanceId,
+                        ApplicationName = instance.Application?.Name ?? "Unknown",
+                        ProcessId = instance.ProcessId,
+                        Method = ShutdownMethod.Forced
+                    };
+                    
+                    try
+                    {
+                        bool killed = await KillAsync(instance.InstanceId);
+                        appInfo.Success = killed;
+                        appInfo.Duration = DateTime.Now - appStartTime;
+                        
+                        if (!killed)
+                        {
+                            appInfo.Method = ShutdownMethod.Failed;
+                            appInfo.ErrorMessage = "Failed to kill process";
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        appInfo.Success = false;
+                        appInfo.Method = ShutdownMethod.Failed;
+                        appInfo.Duration = DateTime.Now - appStartTime;
+                        appInfo.ErrorMessage = ex.Message;
+                    }
+                    
+                    forcedApplications.Add(appInfo);
+                }
+                
+                // Объединяем результаты
+                var allApplications = gracefulResult.Applications.Concat(forcedApplications).ToList();
+                var totalDuration = DateTime.Now - startTime;
+                
+                var errors = new List<string>(gracefulResult.Errors);
+                var stillRunning = allApplications.Count(a => !a.Success);
+                
+                if (stillRunning > 0)
+                {
+                    errors.Add($"{stillRunning} applications could not be terminated");
+                }
+                
+                _logger.LogInformation("Complete shutdown finished: {Total} apps, {Graceful} graceful, {Forced} forced, {Failed} failed", 
+                    allApplications.Count, 
+                    allApplications.Count(a => a.Success && a.Method == ShutdownMethod.Graceful),
+                    allApplications.Count(a => a.Success && a.Method == ShutdownMethod.Forced),
+                    allApplications.Count(a => !a.Success));
+                
+                return stillRunning == 0 
+                    ? ShutdownResult.AllClosed(totalDuration, allApplications)
+                    : ShutdownResult.PartialFailure(totalDuration, allApplications, errors);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error during complete shutdown");
+                return ShutdownResult.Failed(ex.Message, DateTime.Now - startTime);
             }
         }
         

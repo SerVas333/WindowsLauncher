@@ -5,7 +5,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.Win32;
 using WindowsLauncher.Core.Models;
 
-namespace WindowsLauncher.UI.Services
+namespace WindowsLauncher.Core.Services
 {
     /// <summary>
     /// Сервис для определения режима работы приложения (Shell vs Normal)

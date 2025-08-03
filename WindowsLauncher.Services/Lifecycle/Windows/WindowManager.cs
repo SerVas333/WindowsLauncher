@@ -617,7 +617,16 @@ namespace WindowsLauncher.Services.Lifecycle.Windows
             
             try
             {
-                return IsWindow(windowHandle) && IsIconic(windowHandle);
+                bool isValid = IsWindow(windowHandle);
+                if (!isValid)
+                {
+                    _logger.LogDebug("Window {Handle:X} is not valid when checking minimized state", (long)windowHandle);
+                    return false;
+                }
+                
+                bool isMinimized = IsIconic(windowHandle);
+                _logger.LogTrace("Window {Handle:X} minimized state: {IsMinimized}", (long)windowHandle, isMinimized);
+                return isMinimized;
             }
             catch (Exception ex)
             {
@@ -688,23 +697,43 @@ namespace WindowsLauncher.Services.Lifecycle.Windows
                 
                 _logger.LogDebug("Attempting to force window {Handle:X} to foreground", (long)windowHandle);
                 
+                // Проверяем текущее состояние окна ДО переключения
+                bool isMinimizedBeforeSwitch = IsIconic(windowHandle);
+                bool isVisibleBeforeSwitch = IsWindowVisible(windowHandle);
+                _logger.LogInformation("Window {Handle:X} state before switch - IsMinimized: {IsMinimized}, IsVisible: {IsVisible}", 
+                    (long)windowHandle, isMinimizedBeforeSwitch, isVisibleBeforeSwitch);
+                
+                // ВАЖНО: Если окно свернуто, СНАЧАЛА восстанавливаем его
+                if (isMinimizedBeforeSwitch)
+                {
+                    _logger.LogInformation("Window {Handle:X} is minimized, restoring before SetForegroundWindow", (long)windowHandle);
+                    ShowWindow(windowHandle, SW_RESTORE);
+                    await Task.Delay(150); // Даем время на завершение анимации восстановления
+                }
+                
                 // Метод 1: Стандартный SetForegroundWindow
                 if (SetForegroundWindow(windowHandle))
                 {
-                    _logger.LogDebug("Window brought to foreground via SetForegroundWindow");
+                    _logger.LogInformation("Window {Handle:X} brought to foreground via SetForegroundWindow (was minimized: {WasMinimized})", 
+                        (long)windowHandle, isMinimizedBeforeSwitch);
                     return true;
                 }
                 
                 // Метод 2: Восстановить если свернуто, затем SetForegroundWindow
                 if (IsIconic(windowHandle))
                 {
+                    _logger.LogInformation("Window {Handle:X} is minimized, attempting to restore", (long)windowHandle);
                     ShowWindow(windowHandle, SW_RESTORE);
                     await Task.Delay(100); // Небольшая задержка для завершения анимации
                     
                     if (SetForegroundWindow(windowHandle))
                     {
-                        _logger.LogDebug("Window brought to foreground after restore");
+                        _logger.LogInformation("Successfully restored and brought minimized window {Handle:X} to foreground", (long)windowHandle);
                         return true;
+                    }
+                    else
+                    {
+                        _logger.LogWarning("Failed to bring restored window {Handle:X} to foreground", (long)windowHandle);
                     }
                 }
                 

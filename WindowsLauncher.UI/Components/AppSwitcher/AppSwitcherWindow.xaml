@@ -52,6 +52,7 @@
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Width" Value="150"/>
             <Setter Property="Height" Value="110"/>
+            <Setter Property="Opacity" Value="1"/>
             <Setter Property="Effect">
                 <Setter.Value>
                     <DropShadowEffect Color="Black" Opacity="0.1" ShadowDepth="1" BlurRadius="6"/>
@@ -67,6 +68,11 @@
                         </Setter.Value>
                     </Setter>
                 </Trigger>
+                <!-- Визуальная индикация свернутых приложений -->
+                <DataTrigger Binding="{Binding IsMinimized}" Value="True">
+                    <Setter Property="Opacity" Value="0.7"/>
+                    <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
+                </DataTrigger>
             </Style.Triggers>
         </Style>
         </ResourceDictionary>
@@ -132,11 +138,24 @@
                                                     CornerRadius="18" 
                                                     HorizontalAlignment="Center"
                                                     Margin="0,0,0,6">
-                                                <TextBlock Text="{Binding IconText, FallbackValue='📱'}" 
-                                                           FontSize="18" 
-                                                           HorizontalAlignment="Center" 
-                                                           VerticalAlignment="Center"
-                                                           Foreground="White"/>
+                                                <Grid>
+                                                    <TextBlock Text="{Binding IconText, FallbackValue='📱'}" 
+                                                               FontSize="18" 
+                                                               HorizontalAlignment="Center" 
+                                                               VerticalAlignment="Center"
+                                                               Foreground="White"/>
+                                                    
+                                                    <!-- Индикатор свернутого состояния -->
+                                                    <Border Background="#80000000" 
+                                                            CornerRadius="18"
+                                                            Visibility="{Binding IsMinimized, Converter={x:Static local:BooleanToVisibilityConverter.Instance}}">
+                                                        <TextBlock Text="🗕" 
+                                                                   FontSize="12" 
+                                                                   HorizontalAlignment="Center" 
+                                                                   VerticalAlignment="Center"
+                                                                   Foreground="White"/>
+                                                    </Border>
+                                                </Grid>
                                             </Border>
 
                                             <!-- Название приложения (компактное) -->
