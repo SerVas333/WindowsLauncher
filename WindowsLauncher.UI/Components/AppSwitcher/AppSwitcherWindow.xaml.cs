@@ -13,6 +13,7 @@ using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Interfaces.Lifecycle;
 using WindowsLauncher.Core.Models;
+using LocalResources = WindowsLauncher.UI.Properties.Resources.Resources;
 
 // ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы
 using WpfApplication = System.Windows.Application;
@@ -106,9 +107,10 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
             {
                 var modeText = _shellMode switch
                 {
-                    ShellMode.Shell => "Режим: Shell (Alt+Tab, Ctrl+Alt+Tab)",
-                    ShellMode.Normal => "Режим: Обычный Windows (Win+`, Win+Shift+`)",
-                    _ => "Режим: Неизвестный"
+                    ShellMode.Shell => LocalResources.AppSwitcher_ShellMode,
+                    ShellMode.Normal => LocalResources.AppSwitcher_NormalMode,
+                    _ => LocalResources.AppSwitcher_UnknownMode
+                    
                 };
 
                 if (ModeInfoTextBlock != null)
@@ -305,21 +307,28 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
                 var parentWidth = mainWindow?.Width ?? screenWidth;
                 var parentHeight = mainWindow?.Height ?? screenHeight;
 
-                // Размеры карточки приложения (компактные, соответствуют XAML)
-                const double cardWidth = 150; // Ширина карточки (из XAML Style)
-                const double cardHeight = 110; // Высота карточки (из XAML Style)
-                const double cardMargin = 12; // Отступы вокруг карточки (6px с каждой стороны)
+                // ✅ ИСПРАВЛЕННЫЕ КОНСТАНТЫ: Точное соответствие XAML
+                const double cardWidth = 150; // Ширина карточки (Width="150" в AppSwitcherCard)
+                const double cardHeight = 110; // Высота карточки (Height="110" в AppSwitcherCard)
+                const double cardMargin = 6; // Отступы карточки (Margin="6" в AppSwitcherCard)
                 
-                // Отступы из XAML структуры:
-                // Border Margin="2" + Grid Margin="20" = 44px с каждой стороны
-                const double windowPadding = 88; // 44px * 2 (слева+справа или сверху+снизу)
-                const double headerFooterHeight = 120; // Заголовок (20px margin) + подсказки (20px margin) + дополнительные отступы
+                // ✅ ТОЧНЫЕ ОТСТУПЫ: Border Margin="2" + Grid Margin="20" = 22px с каждой стороны
+                const double containerPadding = 44; // 22px * 2 (слева+справа или сверху+снизу)
+                
+                // ✅ РЕАЛЬНЫЕ РАЗМЕРЫ ЗАГОЛОВКА И ПОДВАЛА:
+                // Заголовок: иконка (24px) + текст (~20px) + margin (20px) = ~64px
+                // Подсказки: 2 строки текста (~50px) + margin (20px) = ~70px
+                const double headerFooterHeight = 140; // Увеличено для корректного расчета
+                
+                // ✅ МИНИМАЛЬНАЯ ШИРИНА: Для полного отображения подсказок управления
+                const double minimumWidth = 520; // Минимум для "↑↓←→ навигация Enter переключить Esc отмена"
                 
                 // Максимальная ширина окна (80% от родительского окна)
                 var maxWidth = parentWidth * 0.8;
                 
-                // Количество колонок, которое поместится по ширине
-                var maxColumnsWidth = (int)Math.Floor((maxWidth - windowPadding) / (cardWidth + cardMargin));
+                // Количество колонок, которое поместится по ширине с учетом минимума
+                var availableWidth = Math.Max(minimumWidth, maxWidth) - containerPadding;
+                var maxColumnsWidth = (int)Math.Floor(availableWidth / (cardWidth + cardMargin * 2));
                 maxColumnsWidth = Math.Max(1, Math.Min(maxColumnsWidth, 6)); // От 1 до 6 колонок
                 
                 // Определяем количество колонок на основе количества приложений
@@ -328,9 +337,14 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
                 // Количество строк
                 var rows = (int)Math.Ceiling((double)appCount / columns);
                 
-                // Рассчитываем итоговые размеры с учетом всех отступов
-                var calculatedWidth = Math.Min(maxWidth, columns * (cardWidth + cardMargin) + windowPadding);
-                var calculatedHeight = rows * (cardHeight + cardMargin) + headerFooterHeight + windowPadding;
+                // ✅ КОРРЕКТНЫЙ РАСЧЕТ: Ширина с учетом минимума
+                var contentWidth = columns * cardWidth + (columns * cardMargin * 2);
+                var calculatedWidth = Math.Max(minimumWidth, contentWidth + containerPadding);
+                calculatedWidth = Math.Min(calculatedWidth, maxWidth);
+                
+                // ✅ КОРРЕКТНЫЙ РАСЧЕТ: Высота с точными отступами
+                var contentHeight = rows * cardHeight + (rows * cardMargin * 2);
+                var calculatedHeight = contentHeight + headerFooterHeight + containerPadding;
                 
                 // Ограничиваем высоту экрана (максимум 80% высоты экрана)
                 var maxHeight = parentHeight * 0.8;
@@ -353,13 +367,13 @@ namespace WindowsLauncher.UI.Components.AppSwitcher
                     AppsItemsControl.ItemsPanel = newTemplate;
                 }
                 
-                _logger.LogDebug("AppSwitcher size calculated: {Width}x{Height}, {Columns} columns, {Rows} rows for {AppCount} apps", 
-                    Width, Height, columns, rows, appCount);
+                _logger.LogDebug("AppSwitcher size calculated: {Width:F0}x{Height:F0}, {Columns} columns, {Rows} rows for {AppCount} apps (min width: {MinWidth})", 
+                    Width, Height, columns, rows, appCount, minimumWidth);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "Error calculating dynamic size, using default");
-                Width = 600;
+                _logger.LogWarning(ex, "Error calculating dynamic size, using safe defaults");
+                Width = 600; // Безопасная ширина по умолчанию
                 Height = 400;
             }
         }

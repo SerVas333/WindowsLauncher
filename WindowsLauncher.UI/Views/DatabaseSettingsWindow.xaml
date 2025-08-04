@@ -19,17 +19,17 @@
             </Grid.RowDefinitions>
 
             <!-- Заголовок -->
-            <Border Grid.Row="0" Background="{StaticResource CorporateHeaderGradient}" 
+            <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}" 
                     CornerRadius="8,8,0,0" Padding="20">
                 <StackPanel HorizontalAlignment="Center">
                     <TextBlock Text="🗄️" FontSize="32" HorizontalAlignment="Center" Margin="0,0,0,8"/>
                     <TextBlock Text="Настройки базы данных" 
                                FontSize="20" FontWeight="Bold" 
-                               Foreground="{StaticResource CorporateWhite}"
+                               Foreground="{StaticResource OnPrimaryBrush}"
                                HorizontalAlignment="Center"/>
                     <TextBlock Text="Выберите тип и настройки подключения к базе данных" 
                                FontSize="12" 
-                               Foreground="{StaticResource CorporateWhite}"
+                               Foreground="{StaticResource OnPrimaryBrush}"
                                HorizontalAlignment="Center"
                                Opacity="0.9"
                                Margin="0,5,0,0"/>
@@ -46,31 +46,31 @@
                                          Content="SQLite (рекомендуется)" 
                                          GroupName="DatabaseType"
                                          IsChecked="True"
-                                         Style="{StaticResource MaterialRadioButtonStyle}"
+                                         Style="{StaticResource RadioButtonStyle}"
                                          Margin="0,0,0,10"
                                          Checked="DatabaseType_Changed"/>
                             <TextBlock Text="• Легкая локальная база данных" 
                                        FontSize="11" 
-                                       Foreground="{StaticResource CorporateTextLight}"
+                                       Foreground="{StaticResource OnPrimaryBrush}"
                                        Margin="20,0,0,5"/>
                             <TextBlock Text="• Не требует установки сервера" 
                                        FontSize="11" 
-                                       Foreground="{StaticResource CorporateTextLight}"
+                                       Foreground="{StaticResource OnPrimaryBrush}"
                                        Margin="20,0,0,15"/>
 
                             <RadioButton x:Name="FirebirdRadio" 
                                          Content="Firebird (для корпоративного использования)" 
                                          GroupName="DatabaseType"
-                                         Style="{StaticResource MaterialRadioButtonStyle}"
+                                         Style="{StaticResource RadioButtonStyle}"
                                          Margin="0,0,0,10"
                                          Checked="DatabaseType_Changed"/>
                             <TextBlock Text="• Профессиональная СУБД" 
                                        FontSize="11" 
-                                       Foreground="{StaticResource CorporateTextLight}"
+                                       Foreground="{StaticResource OnPrimaryBrush}"
                                        Margin="20,0,0,5"/>
                             <TextBlock Text="• Поддержка клиент-серверной архитектуры" 
                                        FontSize="11" 
-                                       Foreground="{StaticResource CorporateTextLight}"
+                                       Foreground="{StaticResource OnPrimaryBrush}"
                                        Margin="20,0,0,0"/>
                         </StackPanel>
                     </GroupBox>
@@ -95,13 +95,13 @@
                                        Margin="0,0,10,0"/>
                             <TextBox x:Name="SQLitePathTextBox" 
                                      Grid.Row="0" Grid.Column="1" 
-                                     Style="{StaticResource MaterialTextBoxStyle}"
+                                     Style="{StaticResource TextBoxStyle}"
                                      Text="launcher.db"
                                      Margin="0,0,10,0"/>
                             <Button x:Name="BrowseSQLiteButton" 
                                     Grid.Row="0" Grid.Column="2" 
                                     Content="📁"
-                                    Style="{StaticResource CorporateButtonSecondary}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
                                     Width="40"
                                     ToolTip="Выбрать файл"
                                     Click="BrowseSQLite_Click"
@@ -109,7 +109,7 @@
                             <Button x:Name="DefaultSQLiteButton" 
                                     Grid.Row="0" Grid.Column="3" 
                                     Content="⚙️"
-                                    Style="{StaticResource CorporateButtonSecondary}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
                                     Width="40"
                                     ToolTip="Значения по умолчанию"
                                     Click="DefaultSQLite_Click"/>
@@ -117,7 +117,7 @@
                             <TextBlock Grid.Row="1" Grid.Column="0" Grid.ColumnSpan="4" 
                                        Text="💡 База данных будет создана автоматически при первом запуске" 
                                        FontSize="11" 
-                                       Foreground="{StaticResource CorporateTextMuted}"
+                                       Foreground="{StaticResource SecondaryTextBrush}"
                                        Margin="0,10,0,0"/>
                         </Grid>
                     </GroupBox>
@@ -132,13 +132,13 @@
                                              Content="Embedded (локальная БД)" 
                                              GroupName="FirebirdMode"
                                              IsChecked="True"
-                                             Style="{StaticResource MaterialRadioButtonStyle}"
+                                             Style="{StaticResource RadioButtonStyle}"
                                              Margin="0,0,20,0"
                                              Checked="FirebirdMode_Changed"/>
                                 <RadioButton x:Name="ClientServerRadio" 
                                              Content="Client-Server (сетевая БД)" 
                                              GroupName="FirebirdMode"
-                                             Style="{StaticResource MaterialRadioButtonStyle}"
+                                             Style="{StaticResource RadioButtonStyle}"
                                              Checked="FirebirdMode_Changed"/>
                             </StackPanel>
 
@@ -162,13 +162,13 @@
                                                Margin="0,0,10,0"/>
                                     <TextBox x:Name="FirebirdPathTextBox" 
                                              Grid.Row="0" Grid.Column="1" 
-                                             Style="{StaticResource MaterialTextBoxStyle}"
+                                             Style="{StaticResource TextBoxStyle}"
                                              Text="launcher.fdb"
                                              Margin="0,0,10,0"/>
                                     <Button x:Name="BrowseFirebirdButton" 
                                             Grid.Row="0" Grid.Column="2" 
                                             Content="📁"
-                                            Style="{StaticResource CorporateButtonSecondary}"
+                                            Style="{StaticResource SecondaryButtonStyle}"
                                             Width="40"
                                             ToolTip="Выбрать файл"
                                             Click="BrowseFirebird_Click"
@@ -176,7 +176,7 @@
                                     <Button x:Name="DefaultFirebirdButton" 
                                             Grid.Row="0" Grid.Column="3" 
                                             Content="⚙️"
-                                            Style="{StaticResource CorporateButtonSecondary}"
+                                            Style="{StaticResource SecondaryButtonStyle}"
                                             Width="40"
                                             ToolTip="Значения по умолчанию"
                                             Click="DefaultFirebird_Click"/>
@@ -203,7 +203,7 @@
                                                VerticalAlignment="Center"/>
                                     <TextBox x:Name="ServerTextBox" 
                                              Grid.Row="0" Grid.Column="1" 
-                                             Style="{StaticResource MaterialTextBoxStyle}"
+                                             Style="{StaticResource TextBoxStyle}"
                                              Text="localhost"
                                              Margin="0,0,10,0"/>
                                     <TextBlock Grid.Row="0" Grid.Column="2" 
@@ -212,7 +212,7 @@
                                                Margin="0,0,5,0"/>
                                     <TextBox x:Name="PortTextBox" 
                                              Grid.Row="0" Grid.Column="3" 
-                                             Style="{StaticResource MaterialTextBoxStyle}"
+                                             Style="{StaticResource TextBoxStyle}"
                                              Text="3050"/>
 
                                     <TextBlock Grid.Row="1" Grid.Column="0" 
@@ -221,7 +221,7 @@
                                                Margin="0,10,0,0"/>
                                     <TextBox x:Name="DatabaseNameTextBox" 
                                              Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="3"
-                                             Style="{StaticResource MaterialTextBoxStyle}"
+                                             Style="{StaticResource TextBoxStyle}"
                                              Text="LAUNCHER"
                                              ToolTip="Имя базы данных на сервере (без расширения)"
                                              Margin="0,10,0,0"/>
@@ -232,7 +232,7 @@
                             <TextBlock Text="Учетные данные:" FontWeight="SemiBold" Margin="0,20,0,10"/>
                             <TextBlock Text="💡 Для безопасности используйте надежные пароли. Примеры скриптов развертывания с безопасными паролями находятся в папке Scripts/" 
                                        FontSize="10" 
-                                       Foreground="{StaticResource CorporateTextMuted}"
+                                       Foreground="{StaticResource SecondaryTextBrush}"
                                        TextWrapping="Wrap"
                                        Margin="0,0,0,10"/>
                             <Grid>
@@ -250,7 +250,7 @@
                                            VerticalAlignment="Center"/>
                                 <TextBox x:Name="UsernameTextBox" 
                                          Grid.Row="0" Grid.Column="1" 
-                                         Style="{StaticResource MaterialTextBoxStyle}"
+                                         Style="{StaticResource TextBoxStyle}"
                                          Text="SYSDBA"
                                          Margin="0,0,0,10"/>
 
@@ -259,7 +259,7 @@
                                            VerticalAlignment="Center"/>
                                 <PasswordBox x:Name="PasswordBox" 
                                              Grid.Row="1" Grid.Column="1" 
-                                             Style="{StaticResource MaterialPasswordBoxStyle}"
+                                             Style="{StaticResource PasswordBoxStyle}"
                                              ToolTip="Рекомендуется использовать надежный пароль (например: KDV_Launcher_2025!)"/>
                             </Grid>
 
@@ -281,7 +281,7 @@
                                                VerticalAlignment="Center"/>
                                     <ComboBox x:Name="CharsetComboBox" 
                                               Grid.Row="0" Grid.Column="1" 
-                                              Style="{StaticResource MaterialComboBoxStyle}"
+                                              Style="{StaticResource ComboBoxStyle}"
                                               Margin="0,0,0,10">
                                         <ComboBoxItem Content="UTF8" IsSelected="True"/>
                                         <ComboBoxItem Content="WIN1251"/>
@@ -293,7 +293,7 @@
                                                VerticalAlignment="Center"/>
                                     <ComboBox x:Name="DialectComboBox" 
                                               Grid.Row="1" Grid.Column="1" 
-                                              Style="{StaticResource MaterialComboBoxStyle}"
+                                              Style="{StaticResource ComboBoxStyle}"
                                               Margin="0,0,0,10">
                                         <ComboBoxItem Content="3" IsSelected="True"/>
                                         <ComboBoxItem Content="1"/>
@@ -304,7 +304,7 @@
                                                VerticalAlignment="Center"/>
                                     <TextBox x:Name="TimeoutTextBox" 
                                              Grid.Row="2" Grid.Column="1" 
-                                             Style="{StaticResource MaterialTextBoxStyle}"
+                                             Style="{StaticResource TextBoxStyle}"
                                              Text="30"/>
                                 </Grid>
                             </Expander>
@@ -348,7 +348,7 @@
                             <Button x:Name="InitializeDatabaseButton" 
                                     Grid.Row="1" Grid.Column="2"
                                     Content="🔧 Инициализировать БД"
-                                    Style="{StaticResource CorporateButtonSecondary}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
                                     Click="InitializeDatabase_Click"
                                     Margin="10,5,0,0"
                                     Visibility="Collapsed"/>
@@ -370,20 +370,20 @@
                         <StackPanel Orientation="Horizontal">
                             <Ellipse x:Name="StatusIndicator" 
                                      Width="12" Height="12" 
-                                     Fill="{StaticResource CorporateTextMuted}"
+                                     Fill="{StaticResource SecondaryTextBrush}"
                                      Margin="0,0,10,0"
                                      VerticalAlignment="Center"/>
                             <TextBlock x:Name="StatusText" 
                                        Text="Настройки не применены" 
                                        VerticalAlignment="Center"
-                                       Foreground="{StaticResource CorporateText}"/>
+                                       Foreground="{StaticResource PrimaryTextBrush}"/>
                         </StackPanel>
                     </Border>
                 </StackPanel>
             </ScrollViewer>
 
             <!-- Кнопки действий -->
-            <Border Grid.Row="2" BorderBrush="{StaticResource CorporateBorder}" 
+            <Border Grid.Row="2" BorderBrush="{StaticResource BorderBrush}" 
                     BorderThickness="0,1,0,0" Padding="20">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -398,7 +398,7 @@
                     <Button x:Name="TestConnectionButton" 
                             Grid.Column="0"
                             Content="🔍 Тест подключения"
-                            Style="{StaticResource CorporateButtonSecondary}"
+                            Style="{StaticResource SecondaryButtonStyle}"
                             Margin="0,0,15,0"
                             Click="TestConnection_Click"/>
 
@@ -406,7 +406,7 @@
                     <Button x:Name="CancelButton" 
                             Grid.Column="2"
                             Content="Отмена"
-                            Style="{StaticResource CorporateButtonSecondary}"
+                            Style="{StaticResource SecondaryButtonStyle}"
                             Width="100"
                             Margin="0,0,10,0"
                             Click="Cancel_Click"/>
@@ -414,7 +414,7 @@
                     <Button x:Name="ResetButton" 
                             Grid.Column="3"
                             Content="Сброс"
-                            Style="{StaticResource CorporateButtonSecondary}"
+                            Style="{StaticResource SecondaryButtonStyle}"
                             Width="100"
                             Margin="0,0,10,0"
                             Click="Reset_Click"/>
@@ -422,7 +422,7 @@
                     <Button x:Name="SaveButton" 
                             Grid.Column="4"
                             Content="Сохранить"
-                            Style="{StaticResource CorporateButton}"
+                            Style="{StaticResource PrimaryButtonStyle}"
                             Width="120"
                             FontWeight="SemiBold"
                             Click="Save_Click"/>

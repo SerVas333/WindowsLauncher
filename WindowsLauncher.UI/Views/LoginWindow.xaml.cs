@@ -87,6 +87,10 @@ namespace WindowsLauncher.UI.Views
                 // Устанавливаем фокус при загрузке
                 Loaded += (s, e) =>
                 {
+                    // ✅ Гостевой режим выбран по умолчанию в XAML (GuestModeRadio IsChecked="True")
+                    // Инициализируем видимость панелей согласно выбранному режиму
+                    LoginMode_Changed(this, new RoutedEventArgs());
+                    
                     if (DomainModeRadio?.IsChecked == true)
                     {
                         UsernameTextBox?.Focus();
@@ -113,13 +117,14 @@ namespace WindowsLauncher.UI.Views
         {
             try
             {
-                if (DomainLoginPanel == null || LocalLoginPanel == null || GuestLoginPanel == null) return;
+                if (DomainLoginPanel == null || LocalLoginPanel == null || GuestLoginPanel == null || ConnectionStatusPanel == null) return;
 
                 if (DomainModeRadio?.IsChecked == true)
                 {
                     DomainLoginPanel.Visibility = Visibility.Visible;
                     LocalLoginPanel.Visibility = Visibility.Collapsed;
                     GuestLoginPanel.Visibility = Visibility.Collapsed;
+                    ConnectionStatusPanel.Visibility = Visibility.Visible; // ✅ Показываем статус подключения
                     UsernameTextBox?.Focus();
                 }
                 else if (LocalModeRadio?.IsChecked == true)
@@ -127,6 +132,7 @@ namespace WindowsLauncher.UI.Views
                     DomainLoginPanel.Visibility = Visibility.Collapsed;
                     LocalLoginPanel.Visibility = Visibility.Visible;
                     GuestLoginPanel.Visibility = Visibility.Collapsed;
+                    ConnectionStatusPanel.Visibility = Visibility.Collapsed; // ✅ Скрываем статус подключения
                     LocalUsernameTextBox?.Focus();
                 }
                 else if (GuestModeRadio?.IsChecked == true)
@@ -134,6 +140,7 @@ namespace WindowsLauncher.UI.Views
                     DomainLoginPanel.Visibility = Visibility.Collapsed;
                     LocalLoginPanel.Visibility = Visibility.Collapsed;
                     GuestLoginPanel.Visibility = Visibility.Visible;
+                    ConnectionStatusPanel.Visibility = Visibility.Collapsed; // ✅ Скрываем статус подключения
                     // Для гостевого режима фокус устанавливать не нужно
                 }
             }

@@ -430,6 +430,24 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на 🎨 UI Demo.
+        /// </summary>
+        public static string AdminWindow_UIDemoButton {
+            get {
+                return ResourceManager.GetString("AdminWindow_UIDemoButton", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Demonstration of UI elements and Touch Mode (Ctrl+Shift+U).
+        /// </summary>
+        public static string AdminWindow_UIDemoTooltip {
+            get {
+                return ResourceManager.GetString("AdminWindow_UIDemoTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Unsaved Changes.
         /// </summary>
         public static string AdminWindow_UnsavedChanges {
@@ -462,6 +480,69 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string AllCategories {
             get {
                 return ResourceManager.GetString("AllCategories", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на cancel.
+        /// </summary>
+        public static string AppSwitcher_Cancel {
+            get {
+                return ResourceManager.GetString("AppSwitcher_Cancel", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на navigation.
+        /// </summary>
+        public static string AppSwitcher_Navigation {
+            get {
+                return ResourceManager.GetString("AppSwitcher_Navigation", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Mode: Normal Windows (Win+`, Win+Shift+`).
+        /// </summary>
+        public static string AppSwitcher_NormalMode {
+            get {
+                return ResourceManager.GetString("AppSwitcher_NormalMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Mode: Shell (Alt+Tab, Ctrl+Alt+Tab).
+        /// </summary>
+        public static string AppSwitcher_ShellMode {
+            get {
+                return ResourceManager.GetString("AppSwitcher_ShellMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на switch.
+        /// </summary>
+        public static string AppSwitcher_Switch {
+            get {
+                return ResourceManager.GetString("AppSwitcher_Switch", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Application Switcher.
+        /// </summary>
+        public static string AppSwitcher_Title {
+            get {
+                return ResourceManager.GetString("AppSwitcher_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Mode: Unknown.
+        /// </summary>
+        public static string AppSwitcher_UnknownMode {
+            get {
+                return ResourceManager.GetString("AppSwitcher_UnknownMode", resourceCulture);
             }
         }
         
@@ -1168,6 +1249,24 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Click &apos;Login&apos; to enter in guest mode.
+        /// </summary>
+        public static string LoginWindow_GuestDescription {
+            get {
+                return ResourceManager.GetString("LoginWindow_GuestDescription", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на ⚠️ Limited access to applications.
+        /// </summary>
+        public static string LoginWindow_GuestLimitationWarning {
+            get {
+                return ResourceManager.GetString("LoginWindow_GuestLimitationWarning", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Guest Login.
         /// </summary>
         public static string LoginWindow_GuestMode {
@@ -1177,11 +1276,38 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Guest Login.
+        /// </summary>
+        public static string LoginWindow_GuestWelcome {
+            get {
+                return ResourceManager.GetString("LoginWindow_GuestWelcome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Local Users.
         /// </summary>
         public static string LoginWindow_LocalMode {
             get {
                 return ResourceManager.GetString("LoginWindow_LocalMode", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Password.
+        /// </summary>
+        public static string LoginWindow_LocalPassword {
+            get {
+                return ResourceManager.GetString("LoginWindow_LocalPassword", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Username.
+        /// </summary>
+        public static string LoginWindow_LocalUsername {
+            get {
+                return ResourceManager.GetString("LoginWindow_LocalUsername", resourceCulture);
             }
         }
         
@@ -1272,6 +1398,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string LoginWindow_Username {
             get {
                 return ResourceManager.GetString("LoginWindow_Username", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Virtual Keyboard.
+        /// </summary>
+        public static string LoginWindow_VirtualKeyboardTooltip {
+            get {
+                return ResourceManager.GetString("LoginWindow_VirtualKeyboardTooltip", resourceCulture);
             }
         }
         

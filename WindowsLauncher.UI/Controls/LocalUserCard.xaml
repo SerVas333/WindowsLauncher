@@ -21,7 +21,7 @@
                     <Setter Property="Fill" Value="Green"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsActive}" Value="False">
-                    <Setter Property="Fill" Value="{StaticResource CorporateRed}"/>
+                    <Setter Property="Fill" Value="{StaticResource PrimaryBrush}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding IsLocked}" Value="True">
                     <Setter Property="Fill" Value="Orange"/>
@@ -36,13 +36,13 @@
             <Setter Property="Margin" Value="4,0"/>
             <Style.Triggers>
                 <DataTrigger Binding="{Binding Role}" Value="Administrator">
-                    <Setter Property="Background" Value="{StaticResource CorporateRed}"/>
+                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Role}" Value="PowerUser">
-                    <Setter Property="Background" Value="{StaticResource CorporateRedLight}"/>
+                    <Setter Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Role}" Value="Standard">
-                    <Setter Property="Background" Value="{StaticResource CorporateGrayDark}"/>
+                    <Setter Property="Background" Value="{StaticResource CorporateGrayDarkBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -62,7 +62,7 @@
                     <Setter Property="Text" Value="ОПЫТНЫЙ"/>
                 </DataTrigger>
                 <DataTrigger Binding="{Binding Role}" Value="Standard">
-                    <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+                    <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
                     <Setter Property="Text" Value="ОБЫЧНЫЙ"/>
                 </DataTrigger>
             </Style.Triggers>
@@ -71,7 +71,7 @@
 
     <!-- Основная карточка пользователя -->
     <Border Background="{StaticResource SurfaceBrush}"
-            BorderBrush="{StaticResource OutlineBrush}"
+            BorderBrush="{StaticResource LightGrayBrush}"
             BorderThickness="1"
             CornerRadius="8"
             Margin="4,2"
@@ -100,7 +100,7 @@
             <Grid Grid.Column="0">
                 <!-- Аватар-заглушка -->
                 <Border Width="32" Height="32" 
-                        Background="{StaticResource CorporateRed}"
+                        Background="{StaticResource PrimaryBrush}"
                         CornerRadius="16">
                     <TextBlock Text="{Binding Username, Converter={StaticResource FirstLetterConverter}}"
                                Foreground="White"
@@ -123,7 +123,7 @@
                 <TextBlock Text="{Binding DisplayName}"
                            FontSize="14"
                            FontWeight="SemiBold"
-                           Foreground="{StaticResource CorporateText}">
+                           Foreground="{StaticResource PrimaryTextBrush}">
                     <TextBlock.Style>
                         <Style TargetType="TextBlock">
                             <Style.Triggers>
@@ -142,14 +142,14 @@
                 <!-- Логин (всегда показываем если есть DisplayName) -->
                 <TextBlock Text="{Binding Username, StringFormat='@{0}'}"
                            FontSize="12"
-                           Foreground="{StaticResource CorporateTextLight}"
+                           Foreground="{StaticResource WhiteTextBrush}"
                            Margin="0,2,0,0"
                            Visibility="{Binding DisplayName, Converter={StaticResource StringToVisibilityConverter}}"/>
 
                 <!-- Email -->
                 <TextBlock Text="{Binding Email}"
                            FontSize="11"
-                           Foreground="{StaticResource CorporateTextLight}"
+                           Foreground="{StaticResource WhiteTextBrush}"
                            Margin="0,1,0,0"
                            Visibility="{Binding Email, Converter={StaticResource StringToVisibilityConverter}}"/>
 
@@ -198,7 +198,7 @@
                         VerticalAlignment="Center">
                 
                 <!-- Редактировать -->
-                <Button Style="{StaticResource CorporateButtonSecondary}"
+                <Button Style="{StaticResource SecondaryButtonStyle}"
                         ToolTip="Редактировать пользователя"
                         Padding="8,6"
                         Margin="2,0"
@@ -208,7 +208,7 @@
                 </Button>
 
                 <!-- Сбросить пароль -->
-                <Button Style="{StaticResource CorporateButtonSecondary}"
+                <Button Style="{StaticResource SecondaryButtonStyle}"
                         ToolTip="Сбросить пароль"
                         Padding="8,6"
                         Margin="2,0"
@@ -223,7 +223,7 @@
                         Command="{Binding DataContext.ToggleUserActiveCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                         CommandParameter="{Binding}">
                     <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource CorporateButtonSecondary}">
+                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsActive}" Value="True">
                                     <Setter Property="ToolTip" Value="Деактивировать пользователя"/>
@@ -257,7 +257,7 @@
                         Command="{Binding DataContext.DeleteLocalUserCommand, RelativeSource={RelativeSource AncestorType=Window}}"
                         CommandParameter="{Binding}">
                     <Button.Style>
-                        <Style TargetType="Button" BasedOn="{StaticResource CorporateButtonSecondary}">
+                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                             <Setter Property="BorderBrush" Value="{StaticResource ErrorBrush}"/>
                             <Setter Property="Foreground" Value="{StaticResource ErrorBrush}"/>
                             <Style.Triggers>

@@ -39,7 +39,7 @@
     <!-- Дублирующий стиль для кнопки с иконкой -->
     <Style x:Key="MaterialDesignIconButton" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Padding" Value="8"/>
         <Setter Property="Margin" Value="0"/>
@@ -63,10 +63,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray100}"/>
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource LightGrayBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray200}"/>
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource MediumGrayBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
                             <Setter Property="Opacity" Value="0.5"/>
@@ -95,7 +95,7 @@
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="13"/>
         <Setter Property="FontWeight" Value="Normal"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
     </Style>
     
     <Style x:Key="MaterialDesignTitleTextBlock" TargetType="TextBlock">
@@ -109,14 +109,14 @@
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="14"/>
         <Setter Property="FontWeight" Value="Normal"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateTextLight}"/>
+        <Setter Property="Foreground" Value="{StaticResource WhiteTextBrush}"/>
     </Style>
     
     <Style x:Key="MaterialDesignHeadline1TextBlock" TargetType="TextBlock">
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="32"/>
         <Setter Property="FontWeight" Value="Light"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
         <Setter Property="LineHeight" Value="40"/>
     </Style>
     
@@ -124,7 +124,7 @@
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="28"/>
         <Setter Property="FontWeight" Value="Light"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
         <Setter Property="LineHeight" Value="36"/>
     </Style>
     
@@ -132,7 +132,7 @@
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="24"/>
         <Setter Property="FontWeight" Value="Normal"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
         <Setter Property="LineHeight" Value="32"/>
     </Style>
     
@@ -140,7 +140,7 @@
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="10"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateTextMuted}"/>
+        <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
         <Setter Property="LineHeight" Value="14"/>
     </Style>
 
@@ -159,7 +159,7 @@
     <Style x:Key="MaterialDesignTextBox" TargetType="TextBox">
         <Setter Property="Background" Value="{StaticResource CorporateSurface}"/>
         <Setter Property="Foreground" Value="{StaticResource CorporateOnSurface}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource CorporateGray300}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CorporateGrayBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
         <Setter Property="Padding" Value="0,16,0,8"/>
         <Setter Property="FontFamily" Value="Segoe UI"/>

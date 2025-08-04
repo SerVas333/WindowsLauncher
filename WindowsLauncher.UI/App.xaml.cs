@@ -397,19 +397,31 @@ namespace WindowsLauncher.UI
         {
             try
             {
-                // Загружаем настройки языка (fallback для совместимости)
-                LocalizationHelper.Instance.LoadLanguageSettings();
+                System.Diagnostics.Debug.WriteLine("🌐 App: Starting localization initialization");
+
+                // ✅ ИСПРАВЛЕНИЕ: Устанавливаем системный язык сразу для правильного старта UI
+                LocalizationHelper.Instance.SetSystemLanguage();
+                System.Diagnostics.Debug.WriteLine($"🌐 App: System language set to {LocalizationHelper.Instance.CurrentLanguage}");
 
                 // Подписываемся на изменения языка для обновления UI
                 LocalizationHelper.Instance.LanguageChanged += OnLanguageChanged;
+                
+                System.Diagnostics.Debug.WriteLine("🌐 App: Localization initialization completed");
             }
             catch (Exception ex)
             {
-                // При ошибке используем системный язык
-                LocalizationHelper.Instance.SetSystemLanguage();
-
-                // Логируем ошибку (если логгер доступен)
-                System.Diagnostics.Debug.WriteLine($"Localization initialization error: {ex.Message}");
+                // При ошибке устанавливаем английский как fallback
+                System.Diagnostics.Debug.WriteLine($"🌐 App: Localization initialization error: {ex.Message}");
+                
+                try
+                {
+                    LocalizationHelper.Instance.SetLanguage("en");
+                    System.Diagnostics.Debug.WriteLine("🌐 App: Fallback to English language set");
+                }
+                catch
+                {
+                    System.Diagnostics.Debug.WriteLine("🌐 App: Failed to set fallback language");
+                }
             }
         }
 

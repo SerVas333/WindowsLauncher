@@ -1,0 +1,318 @@
+<Window x:Class="WindowsLauncher.UI.Views.UIDemoWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        xmlns:icons="clr-namespace:WindowsLauncher.UI.Infrastructure.Icons"
+        mc:Ignorable="d"
+        Title="UI Demo - Демонстрация интерфейса" 
+        Width="1000" Height="700"
+        WindowStartupLocation="CenterScreen"
+        Style="{StaticResource WindowStyle}">
+
+    <Window.Resources>
+        <!-- Локальные ресурсы для демонстрации -->
+        <x:Array x:Key="SampleEmojis" Type="System:String" xmlns:System="clr-namespace:System;assembly=mscorlib">
+            <System:String>👤</System:String>
+            <System:String>🛠️</System:String>
+            <System:String>⚙️</System:String>
+            <System:String>🔄</System:String>
+            <System:String>🚪</System:String>
+            <System:String>📱</System:String>
+            <System:String>🌐</System:String>
+            <System:String>💻</System:String>
+            <System:String>📝</System:String>
+            <System:String>🔑</System:String>
+            <System:String>⌨️</System:String>
+            <System:String>⚠️</System:String>
+        </x:Array>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок -->
+        <Border Grid.Row="0" Background="{DynamicResource PrimaryBrush}" Padding="20">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <fa:ImageAwesome Icon="Cogs" 
+                               Foreground="{DynamicResource WhiteTextBrush}" 
+                               Width="32" Height="32" 
+                               Margin="0,0,15,0"/>
+                <StackPanel>
+                    <TextBlock Text="UI Demo Window" 
+                               FontSize="24" FontWeight="Bold" 
+                               Foreground="{DynamicResource WhiteTextBrush}"/>
+                    <TextBlock Text="Демонстрация всех элементов интерфейса с FontAwesome иконками" 
+                               FontSize="14" 
+                               Foreground="{DynamicResource WhiteTextBrush}" 
+                               Opacity="0.9"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <!-- Основной контент -->
+        <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" Padding="20">
+            <StackPanel>
+
+                <!-- Touch Mode переключатель -->
+                <GroupBox Header="Touch Mode Configuration" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,20">
+                    <StackPanel>
+                        <CheckBox x:Name="TouchModeCheckBox" 
+                                Content="Включить Touch Mode (сенсорный режим)" 
+                                Style="{StaticResource CheckBoxStyle}"
+                                Checked="TouchModeCheckBox_Checked"
+                                Unchecked="TouchModeCheckBox_Unchecked"/>
+                        <TextBlock Text="Touch Mode увеличивает размеры элементов для использования на сенсорных терминалах" 
+                                 Style="{StaticResource CaptionTextStyle}" 
+                                 Margin="25,5,0,0"/>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- Демонстрация кнопок -->
+                <GroupBox Header="Кнопки с FontAwesome иконками" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                            <TextBlock Text="Основные кнопки:" Style="{StaticResource SubHeadingTextStyle}"/>
+                            
+                            <Button Style="{StaticResource FontAwesomeButtonPrimary}" Margin="0,5">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome Icon="User" Style="{StaticResource FontAwesomeIconWhite}" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Пользователи" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource FontAwesomeButtonSecondary}" Margin="0,5">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome Icon="Cog" Style="{StaticResource FontAwesomeIconPrimary}" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Настройки" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource SuccessButtonStyle}" Margin="0,5">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome Icon="Check" Style="{StaticResource FontAwesomeIconWhite}" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Сохранить" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+
+                            <Button Style="{StaticResource DangerButtonStyle}" Margin="0,5">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome Icon="Trash" Style="{StaticResource FontAwesomeIconWhite}" Margin="0,0,8,0"/>
+                                    <TextBlock Text="Удалить" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="Иконочные кнопки:" Style="{StaticResource SubHeadingTextStyle}"/>
+                            
+                            <StackPanel Orientation="Horizontal" Margin="0,5">
+                                <Button Style="{StaticResource FontAwesomeButtonPrimary}" ToolTip="Обновить">
+                                    <fa:ImageAwesome Icon="Refresh" Style="{StaticResource FontAwesomeIconWhite}"/>
+                                </Button>
+                                <Button Style="{StaticResource FontAwesomeButtonSecondary}" ToolTip="Редактировать" Margin="5,0,0,0">
+                                    <fa:ImageAwesome Icon="Edit" Style="{StaticResource FontAwesomeIconPrimary}"/>
+                                </Button>
+                                <Button Style="{StaticResource FontAwesomeButtonSecondary}" ToolTip="Поиск" Margin="5,0,0,0">
+                                    <fa:ImageAwesome Icon="Search" Style="{StaticResource FontAwesomeIconPrimary}"/>
+                                </Button>
+                                <Button Style="{StaticResource DangerButtonStyle}" ToolTip="Удалить" Margin="5,0,0,0">
+                                    <fa:ImageAwesome Icon="Times" Style="{StaticResource FontAwesomeIconWhite}"/>
+                                </Button>
+                            </StackPanel>
+
+                            <TextBlock Text="Touch Mode кнопки:" Style="{StaticResource SubHeadingTextStyle}" Margin="0,15,0,5"/>
+                            <StackPanel Orientation="Horizontal" Margin="0,5">
+                                <Button x:Name="TouchButton1" Style="{StaticResource FontAwesomeButtonTouch}" ToolTip="Touch Mode - большая кнопка">
+                                    <fa:ImageAwesome Icon="User" Style="{StaticResource FontAwesomeIconWhite}"/>
+                                </Button>
+                                <Button x:Name="TouchButton2" Style="{StaticResource FontAwesomeButtonTouch}" ToolTip="Touch Mode - большая кнопка" Margin="5,0,0,0">
+                                    <fa:ImageAwesome Icon="Cog" Style="{StaticResource FontAwesomeIconWhite}"/>
+                                </Button>
+                            </StackPanel>
+                        </StackPanel>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Демонстрация иконок -->
+                <GroupBox Header="FontAwesome иконки" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,20">
+                    <StackPanel>
+                        <TextBlock Text="Конвертация emoji в FontAwesome иконки:" Style="{StaticResource SubHeadingTextStyle}"/>
+                        
+                        <Grid Margin="0,10">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="50"/>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="Emoji:" VerticalAlignment="Center" FontWeight="Bold"/>
+                            <TextBlock Grid.Column="2" Text="FontAwesome:" VerticalAlignment="Center" FontWeight="Bold"/>
+                        </Grid>
+
+                        <ItemsControl ItemsSource="{StaticResource SampleEmojis}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Grid Margin="0,5">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="50"/>
+                                            <ColumnDefinition Width="50"/>
+                                            <ColumnDefinition Width="50"/>
+                                            <ColumnDefinition Width="*"/>
+                                        </Grid.ColumnDefinitions>
+
+                                        <!-- Исходный emoji -->
+                                        <TextBlock Grid.Column="0" Text="{Binding}" FontSize="20" HorizontalAlignment="Center"/>
+                                        
+                                        <!-- Стрелка -->
+                                        <fa:ImageAwesome Grid.Column="1" Icon="ArrowRight" Style="{StaticResource FontAwesomeIconSecondary}" HorizontalAlignment="Center"/>
+                                        
+                                        <!-- Конвертированная FontAwesome иконка -->
+                                        <ContentPresenter Grid.Column="2" 
+                                                        Content="{Binding Converter={StaticResource EmojiToFontAwesomeConverter}, ConverterParameter=20:PrimaryBrush}" 
+                                                        HorizontalAlignment="Center"/>
+                                        
+                                        <!-- Описание -->
+                                        <TextBlock Grid.Column="3" Text="{Binding StringFormat='Emoji: {0}'}" VerticalAlignment="Center" Margin="10,0,0,0"/>
+                                    </Grid>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- Демонстрация форм -->
+                <GroupBox Header="Элементы форм" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+
+                        <StackPanel Grid.Column="0" Margin="0,0,10,0">
+                            <TextBlock Text="Текстовые поля:" Style="{StaticResource SubHeadingTextStyle}"/>
+                            <TextBox Style="{StaticResource TextBoxStyle}" Text="Обычное текстовое поле" Margin="0,5"/>
+                            <TextBox Style="{StaticResource TextBoxStyle}" Text="Поле с иконкой" Margin="0,5"/>
+                            
+                            <TextBlock Text="Выпадающие списки:" Style="{StaticResource SubHeadingTextStyle}" Margin="0,15,0,5"/>
+                            <ComboBox Style="{StaticResource ComboBoxStyle}" SelectedIndex="0" Margin="0,5">
+                                <ComboBoxItem Content="Опция 1"/>
+                                <ComboBoxItem Content="Опция 2"/>
+                                <ComboBoxItem Content="Опция 3"/>
+                            </ComboBox>
+                        </StackPanel>
+
+                        <StackPanel Grid.Column="1" Margin="10,0,0,0">
+                            <TextBlock Text="Флажки:" Style="{StaticResource SubHeadingTextStyle}"/>
+                            <CheckBox Style="{StaticResource CheckBoxStyle}" Content="Обычный флажок" IsChecked="True" Margin="0,5"/>
+                            <CheckBox Style="{StaticResource CheckBoxStyle}" Content="Неотмеченный флажок" Margin="0,5"/>
+                            <CheckBox Style="{StaticResource CheckBoxStyle}" Content="Отключенный флажок" IsEnabled="False" Margin="0,5"/>
+                            
+                            <TextBlock Text="Индикатор прогресса:" Style="{StaticResource SubHeadingTextStyle}" Margin="0,15,0,5"/>
+                            <ProgressBar Style="{StaticResource ProgressBarStyle}" Value="75" Margin="0,5"/>
+                        </StackPanel>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Демонстрация цветов -->
+                <GroupBox Header="Корпоративная цветовая палитра" Style="{StaticResource GroupBoxStyle}" Margin="0,0,0,20">
+                    <StackPanel>
+                        <Grid>
+                            <Grid.RowDefinitions>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                                <RowDefinition/>
+                            </Grid.RowDefinitions>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Основные цвета -->
+                            <Border Grid.Row="0" Grid.Column="0" Background="{DynamicResource PrimaryBrush}" Height="40" Margin="2">
+                                <TextBlock Text="Primary" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold"/>
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="1" Background="{DynamicResource SuccessBrush}" Height="40" Margin="2">
+                                <TextBlock Text="Success" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold"/>
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="2" Background="{DynamicResource WarningBrush}" Height="40" Margin="2">
+                                <TextBlock Text="Warning" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Black" FontWeight="Bold"/>
+                            </Border>
+                            <Border Grid.Row="0" Grid.Column="3" Background="{DynamicResource DangerBrush}" Height="40" Margin="2">
+                                <TextBlock Text="Danger" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold"/>
+                            </Border>
+
+                            <!-- Серые цвета -->
+                            <Border Grid.Row="1" Grid.Column="0" Background="{DynamicResource CorporateGrayBrush}" Height="40" Margin="2">
+                                <TextBlock Text="Gray" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="White" FontWeight="Bold"/>
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="1" Background="{DynamicResource CorporateGrayLightBrush}" Height="40" Margin="2">
+                                <TextBlock Text="Light Gray" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Black" FontWeight="Bold"/>
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="2" Background="{DynamicResource LightGrayBrush}" Height="40" Margin="2">
+                                <TextBlock Text="Background" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Black" FontWeight="Bold"/>
+                            </Border>
+                            <Border Grid.Row="1" Grid.Column="3" Background="{DynamicResource WhiteBrush}" BorderBrush="{DynamicResource MediumGrayBrush}" BorderThickness="1" Height="40" Margin="2">
+                                <TextBlock Text="White" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="Black" FontWeight="Bold"/>
+                            </Border>
+                        </Grid>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- Демонстрация типографики -->
+                <GroupBox Header="Типографика" Style="{StaticResource GroupBoxStyle}">
+                    <StackPanel>
+                        <TextBlock Text="Заголовок" Style="{StaticResource HeadingTextStyle}"/>
+                        <TextBlock Text="Подзаголовок" Style="{StaticResource SubHeadingTextStyle}"/>
+                        <TextBlock Text="Обычный текст для основного контента. Этот текст показывает как выглядит стандартный текст в приложении с правильным межстрочным интервалом и цветом." Style="{StaticResource BodyTextStyle}"/>
+                        <TextBlock Text="Мелкий текст для подписей и дополнительной информации" Style="{StaticResource CaptionTextStyle}"/>
+                    </StackPanel>
+                </GroupBox>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Статус бар -->
+        <Border Grid.Row="2" BorderBrush="{DynamicResource MediumGrayBrush}" BorderThickness="0,1,0,0" Background="{DynamicResource OffWhiteBrush}" Padding="20,10">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <StackPanel Grid.Column="0" Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="InfoCircle" Style="{StaticResource FontAwesomeIconInfo}" Margin="0,0,8,0"/>
+                    <TextBlock x:Name="StatusText" Text="Демонстрация UI элементов WindowsLauncher" VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <TextBlock Text="FontAwesome v4.7.0" Style="{StaticResource CaptionTextStyle}" VerticalAlignment="Center" Margin="0,0,15,0"/>
+                    <Button Content="Закрыть" Style="{StaticResource FontAwesomeButtonSecondary}" Click="CloseButton_Click">
+                        <Button.ContentTemplate>
+                            <DataTemplate>
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome Icon="Times" Style="{StaticResource FontAwesomeIconPrimary}" Margin="0,0,5,0"/>
+                                    <TextBlock Text="{Binding}" VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </DataTemplate>
+                        </Button.ContentTemplate>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+
+    </Grid>
+</Window>

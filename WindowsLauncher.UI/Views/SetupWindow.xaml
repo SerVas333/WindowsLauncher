@@ -105,21 +105,21 @@
                                 <TextBox x:Name="DomainTextBox" Grid.Row="1" Grid.Column="0" 
                                          Margin="0,0,10,15"
                                          Text="company.local"
-                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                         Style="{DynamicResource TextBoxStyle}"
                                          TextChanged="DomainSettings_Changed"/>
 
                                 <TextBlock Text="LDAP Сервер:" Grid.Row="0" Grid.Column="1" Margin="10,0,0,5"/>
                                 <TextBox x:Name="LdapServerTextBox" Grid.Row="1" Grid.Column="1" 
                                          Margin="10,0,0,15"
                                          Text="dc.company.local"
-                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                         Style="{DynamicResource TextBoxStyle}"
                                          TextChanged="DomainSettings_Changed"/>
 
                                 <TextBlock Text="Порт:" Grid.Row="2" Grid.Column="0" Margin="0,0,10,5"/>
                                 <TextBox x:Name="PortTextBox" Grid.Row="3" Grid.Column="0" 
                                          Margin="0,0,10,15"
                                          Text="389"
-                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                         Style="{DynamicResource TextBoxStyle}"
                                          TextChanged="DomainSettings_Changed"/>
 
                                 <CheckBox x:Name="UseTlsCheckBox" Grid.Row="3" Grid.Column="1" 
@@ -127,7 +127,7 @@
                                           IsChecked="True"
                                           Margin="10,0,0,15"
                                           VerticalAlignment="Center"
-                                          Style="{DynamicResource MaterialCheckBoxStyle}"
+                                          Style="{DynamicResource CheckBoxStyle}"
                                           Checked="DomainSettings_Changed"
                                           Unchecked="DomainSettings_Changed"/>
                             </Grid>
@@ -136,7 +136,7 @@
                                     Content="Проверить подключение"
                                     Width="150" Height="45"
                                     HorizontalAlignment="Left"
-                                    Style="{DynamicResource MaterialOutlineButtonStyle}"
+                                    Style="{DynamicResource SecondaryButtonStyle}"
                                     Click="TestConnectionButton_Click"/>
 
                             <StackPanel x:Name="ConnectionStatusPanel" 
@@ -175,7 +175,7 @@
                                     <ComboBox x:Name="DatabaseTypeComboBox" 
                                               Width="200" Height="45"
                                               SelectionChanged="DatabaseTypeComboBox_SelectionChanged"
-                                              Style="{DynamicResource MaterialComboBoxStyle}">
+                                              Style="{DynamicResource ComboBoxStyle}">
                                         <ComboBoxItem Content="SQLite (по умолчанию)" Tag="SQLite" IsSelected="True"/>
                                         <ComboBoxItem Content="Firebird" Tag="Firebird"/>
                                     </ComboBox>
@@ -195,7 +195,7 @@
                                             <ComboBox x:Name="FirebirdModeComboBox" 
                                                       Width="200" Height="40"
                                                       SelectionChanged="FirebirdModeComboBox_SelectionChanged"
-                                                      Style="{DynamicResource MaterialComboBoxStyle}">
+                                                      Style="{DynamicResource ComboBoxStyle}">
                                                 <ComboBoxItem Content="Встроенный (Embedded)" Tag="Embedded" IsSelected="True"/>
                                                 <ComboBoxItem Content="Клиент-сервер" Tag="ClientServer"/>
                                             </ComboBox>
@@ -210,12 +210,12 @@
                                             <TextBlock x:Name="DatabasePathLabel" Text="Путь к базе данных:" Margin="0,0,0,5"/>
                                             <TextBox x:Name="DatabasePathTextBox" Grid.Row="1" 
                                                      Text="launcher.fdb"
-                                                     Style="{DynamicResource MaterialTextBoxStyle}"
+                                                     Style="{DynamicResource TextBoxStyle}"
                                                      TextChanged="DatabaseSettings_Changed"
                                                      Margin="0,5,10,0"/>
                                             <Button x:Name="BrowseDatabasePathButton" Grid.Column="1" Grid.Row="1" 
                                                     Content="..." Width="40" Height="40" Margin="0,5,0,0"
-                                                    Style="{DynamicResource MaterialOutlineButtonStyle}"
+                                                    Style="{DynamicResource SecondaryButtonStyle}"
                                                     Click="BrowseDatabasePathButton_Click"/>
                                         </Grid>
 
@@ -236,25 +236,25 @@
                                                 <TextBlock Text="Сервер:" Grid.Row="0" Grid.Column="0" Margin="0,0,10,5"/>
                                                 <TextBox x:Name="FirebirdServerTextBox" Grid.Row="1" Grid.Column="0" 
                                                          Text="localhost" Margin="0,0,10,10"
-                                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                                         Style="{DynamicResource TextBoxStyle}"
                                                          TextChanged="DatabaseSettings_Changed"/>
 
                                                 <TextBlock Text="Порт:" Grid.Row="0" Grid.Column="1" Margin="0,0,0,5"/>
                                                 <TextBox x:Name="FirebirdPortTextBox" Grid.Row="1" Grid.Column="1" 
                                                          Text="3050" Margin="0,0,0,10"
-                                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                                         Style="{DynamicResource TextBoxStyle}"
                                                          TextChanged="DatabaseSettings_Changed"/>
 
                                                 <TextBlock Text="Пользователь:" Grid.Row="2" Grid.Column="0" Margin="0,0,10,5"/>
                                                 <TextBox x:Name="FirebirdUserTextBox" Grid.Row="3" Grid.Column="0" 
                                                          Text="SYSDBA" Margin="0,0,10,10"
-                                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                                         Style="{DynamicResource TextBoxStyle}"
                                                          TextChanged="DatabaseSettings_Changed"/>
 
                                                 <TextBlock Text="Пароль:" Grid.Row="2" Grid.Column="1" Margin="0,0,0,5"/>
                                                 <PasswordBox x:Name="FirebirdPasswordBox" Grid.Row="3" Grid.Column="1" 
                                                              Margin="0,0,0,10"
-                                                             Style="{DynamicResource MaterialPasswordBoxStyle}"
+                                                             Style="{DynamicResource PasswordBoxStyle}"
                                                              PasswordChanged="DatabaseSettings_Changed"/>
                                             </Grid>
                                         </StackPanel>
@@ -264,7 +264,7 @@
                                                 Content="Проверить подключение к БД"
                                                 Width="200" Height="40"
                                                 HorizontalAlignment="Left"
-                                                Style="{DynamicResource MaterialOutlineButtonStyle}"
+                                                Style="{DynamicResource SecondaryButtonStyle}"
                                                 Click="TestDatabaseButton_Click"/>
 
                                         <StackPanel x:Name="DatabaseStatusPanel" 
@@ -311,26 +311,26 @@
                                 <TextBox x:Name="ServiceUsernameTextBox" Grid.Row="1" Grid.Column="0" 
                                          Margin="0,0,10,15"
                                          Text="serviceadmin"
-                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                         Style="{DynamicResource TextBoxStyle}"
                                          TextChanged="ServiceAdmin_Changed"/>
 
                                 <TextBlock Text="Время сессии (мин):" Grid.Row="0" Grid.Column="1" Margin="10,0,0,5"/>
                                 <TextBox x:Name="SessionTimeoutTextBox" Grid.Row="1" Grid.Column="1" 
                                          Margin="10,0,0,15"
                                          Text="60"
-                                         Style="{DynamicResource MaterialTextBoxStyle}"
+                                         Style="{DynamicResource TextBoxStyle}"
                                          TextChanged="ServiceAdmin_Changed"/>
 
                                 <TextBlock Text="Пароль:" Grid.Row="2" Grid.Column="0" Margin="0,0,10,5"/>
                                 <PasswordBox x:Name="ServicePasswordBox" Grid.Row="3" Grid.Column="0" 
                                              Margin="0,0,10,15"
-                                             Style="{DynamicResource MaterialPasswordBoxStyle}"
+                                             Style="{DynamicResource PasswordBoxStyle}"
                                              PasswordChanged="ServiceAdmin_Changed"/>
 
                                 <TextBlock Text="Подтверждение:" Grid.Row="2" Grid.Column="1" Margin="10,0,0,5"/>
                                 <PasswordBox x:Name="ServicePasswordConfirmBox" Grid.Row="3" Grid.Column="1" 
                                              Margin="10,0,0,15"
-                                             Style="{DynamicResource MaterialPasswordBoxStyle}"
+                                             Style="{DynamicResource PasswordBoxStyle}"
                                              PasswordChanged="ServiceAdmin_Changed"/>
                             </Grid>
 
@@ -377,19 +377,19 @@
                                           Content="Включить аудит действий пользователей"
                                           IsChecked="True"
                                           Margin="0,0,0,10"
-                                          Style="{DynamicResource MaterialCheckBoxStyle}"/>
+                                          Style="{DynamicResource CheckBoxStyle}"/>
 
                                 <CheckBox x:Name="AutoStartCheckBox" 
                                           Content="Запускать с Windows"
                                           IsChecked="False"
                                           Margin="0,0,0,10"
-                                          Style="{DynamicResource MaterialCheckBoxStyle}"/>
+                                          Style="{DynamicResource CheckBoxStyle}"/>
 
                                 <CheckBox x:Name="CheckUpdatesCheckBox" 
                                           Content="Проверять обновления автоматически"
                                           IsChecked="True"
                                           Margin="0,0,0,10"
-                                          Style="{DynamicResource MaterialCheckBoxStyle}"/>
+                                          Style="{DynamicResource CheckBoxStyle}"/>
 
                                 <StackPanel Orientation="Horizontal" Margin="0,10,0,0">
                                     <TextBlock Text="Язык интерфейса:" 
@@ -398,7 +398,7 @@
                                     <ComboBox x:Name="LanguageComboBox" 
                                               Width="150" Height="45"
                                               SelectedIndex="0"
-                                              Style="{DynamicResource MaterialComboBoxStyle}">
+                                              Style="{DynamicResource ComboBoxStyle}">
                                         <ComboBoxItem Content="Русский" Tag="ru-RU"/>
                                         <ComboBoxItem Content="English" Tag="en-US"/>
                                     </ComboBox>
@@ -431,7 +431,7 @@
 
             <!-- Кнопки действий -->
             <Border Grid.Row="2" 
-                    BorderBrush="{DynamicResource OutlineBrush}" 
+                    BorderBrush="{DynamicResource LightGrayBrush}" 
                     BorderThickness="0,1,0,0" 
                     Padding="40,20"
                     Background="{DynamicResource SurfaceBrush}">
@@ -455,7 +455,7 @@
                                 ToolTip="Виртуальная клавиатура"
                                 Width="32" Height="28" FontSize="14" Padding="0"
                                 Margin="20,0,0,0"
-                                Style="{DynamicResource MaterialOutlineButtonStyle}"
+                                Style="{DynamicResource SecondaryButtonStyle}"
                                 Click="VirtualKeyboardButton_Click"/>
                     </StackPanel>
 
@@ -465,14 +465,14 @@
                             Content="Пропустить"
                             Width="100" Height="40"
                             Margin="0,0,15,0"
-                            Style="{DynamicResource MaterialOutlineButtonStyle}"
+                            Style="{DynamicResource SecondaryButtonStyle}"
                             Click="SkipButton_Click"/>
 
                     <Button x:Name="CompleteSetupButton" 
                             Grid.Column="2"
                             Content="Завершить настройку"
                             Width="150" Height="40"
-                            Style="{DynamicResource MaterialButtonStyle}"
+                            Style="{DynamicResource PrimaryButtonStyle}"
                             IsEnabled="False"
                             Click="CompleteSetupButton_Click"/>
                 </Grid>

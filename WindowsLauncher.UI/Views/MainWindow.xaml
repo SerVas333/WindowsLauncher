@@ -7,6 +7,7 @@
         xmlns:local="clr-namespace:WindowsLauncher.UI"
         xmlns:converters="clr-namespace:WindowsLauncher.UI.Converters"
         xmlns:loc="clr-namespace:WindowsLauncher.UI.Infrastructure.Localization"
+        xmlns:icons="clr-namespace:WindowsLauncher.UI.Infrastructure.Icons"
         mc:Ignorable="d"
         Title="{Binding WindowTitle, FallbackValue='Windows Launcher'}" 
         d:Title="Windows Launcher - Design Time"
@@ -24,7 +25,15 @@
         
         <!-- Localization converter -->
         <loc:LocalizedStringConverter x:Key="LocalizedStringConverter"/>
+        
+        <!-- Font Awesome Icon converters -->
+        <icons:EmojiToFontAwesome32Converter x:Key="EmojiToFontAwesome32Converter"/>
     </Window.Resources>
+
+    <Window.InputBindings>
+        <!-- Горячие клавиши для UI Demo -->
+        <KeyBinding Key="U" Modifiers="Ctrl+Shift" Command="{Binding ShowUIDemoCommand}"/>
+    </Window.InputBindings>
 
     <Grid>
         <Grid.RowDefinitions>
@@ -39,7 +48,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header с корпоративным дизайном -->
-        <Border Grid.Row="0" Background="{StaticResource CorporateHeaderGradient}">
+        <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}">
             <Grid Margin="24,0">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="Auto"/>
@@ -75,7 +84,7 @@
 
                 <!-- Search -->
                 <TextBox Grid.Column="2" 
-                         Style="{StaticResource CorporateSearchBox}"
+                         Style="{StaticResource TextBoxStyle}"
                          Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
                          VerticalAlignment="Center"
                          Margin="20,0"/>
@@ -92,39 +101,44 @@
 
                 <!-- Controls -->
                 <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Width="200">
-                    <Button Content="👤"
-                            Style="{StaticResource CorporateButtonSecondary}"
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
                             Command="{Binding SwitchUserCommand}"
                             ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_SwitchUserTooltip}"
-                            Width="40" Height="32" FontSize="16" Padding="0"/>
+                            Width="40" Height="32" Padding="4">
+                        <ContentPresenter Content="{Binding Source='👤', Converter={StaticResource EmojiToFontAwesome32Converter}}"/>
+                    </Button>
                     
-                    <Button Content="🛠️" 
-                            Style="{StaticResource CorporateButtonSecondary}" 
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
                             Command="{Binding OpenAdminCommand}"
                             ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_ManageApplicationsTooltip}"
-                            Width="40" Height="32" FontSize="16" Padding="0"
+                            Width="40" Height="32" Padding="4"
                             Visibility="{Binding CurrentUser.Role, 
                                        Converter={StaticResource RoleToVisibilityConverter}, 
-                                       ConverterParameter=Administrator}"/>
+                                       ConverterParameter=Administrator}">
+                        <ContentPresenter Content="{Binding Source='🛠️', Converter={StaticResource EmojiToFontAwesome32Converter}}"/>
+                    </Button>
 
-                    <Button Content="⚙️" 
-                            Style="{StaticResource CorporateButtonSecondary}" 
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
                             Command="{Binding OpenSettingsCommand}"
                             ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_SettingsTooltip}"
-                            Width="40" Height="32" FontSize="16" Padding="0"/>
+                            Width="40" Height="32" Padding="4">
+                        <ContentPresenter Content="{Binding Source='⚙️', Converter={StaticResource EmojiToFontAwesome32Converter}}"/>
+                    </Button>
 
-                    <Button Content="🔄" 
-                            Style="{StaticResource CorporateButtonSecondary}" 
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
                             Command="{Binding RefreshCommand}"
                             ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_UpdateTooltip}"
-                            Width="40" Height="32" FontSize="16" Padding="0"/>
+                            Width="40" Height="32" Padding="4">
+                        <ContentPresenter Content="{Binding Source='🔄', Converter={StaticResource EmojiToFontAwesome32Converter}}"/>
+                    </Button>
 
-                    <Button Content="🚪" 
-                            Style="{StaticResource CorporateButtonSecondary}" 
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
                             Command="{Binding LogoutCommand}"
                             ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_ExitTooltip}"
-                            Width="40" Height="32" FontSize="16" Padding="0"
-                            Margin="8,0,0,0"/>
+                            Width="40" Height="32" Padding="4"
+                            Margin="8,0,0,0">
+                        <ContentPresenter Content="{Binding Source='🚪', Converter={StaticResource EmojiToFontAwesome32Converter}}"/>
+                    </Button>
                 </StackPanel>
             </Grid>
         </Border>
@@ -132,7 +146,7 @@
         <!-- Categories Bar - ИСПРАВЛЕНО -->
         <Border Grid.Row="1" Background="White" Padding="24,12"
                 BorderThickness="0,0,0,1"
-                BorderBrush="{StaticResource OutlineBrush}"
+                BorderBrush="{StaticResource LightGrayBrush}"
                 Visibility="{Binding ShowCategories, Converter={StaticResource BoolToVisConverter}}">
 
             <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
@@ -145,7 +159,7 @@
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
                             <Button Content="{Binding DisplayName}" 
-                                    Style="{StaticResource CorporateCategoryButton}"
+                                    Style="{StaticResource SecondaryButtonStyle}"
                                     Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, 
                                             Path=DataContext.SelectCategoryCommand}"
                                     CommandParameter="{Binding Key}"/>
@@ -156,19 +170,19 @@
         </Border>
 
         <!-- Main Content -->
-        <ScrollViewer Grid.Row="2" Padding="24" Background="{StaticResource CorporateGray}">
+        <ScrollViewer Grid.Row="2" Padding="24" Background="{StaticResource SurfaceVariantBrush}">
             <Grid>
                 <!-- Loading Indicator -->
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
                            Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}">
-                    <Border Width="60" Height="60" Background="{StaticResource CorporateRed}" 
+                    <Border Width="60" Height="60" Background="{StaticResource PrimaryBrush}" 
                             CornerRadius="30" Margin="0,0,0,20">
-                        <TextBlock Text="⏳" FontSize="30" HorizontalAlignment="Center" 
-                                  VerticalAlignment="Center" Foreground="White">
-                            <TextBlock.RenderTransform>
+                        <ContentPresenter Content="{Binding Source='⏳', Converter={StaticResource EmojiToFontAwesome32Converter}}"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center">
+                            <ContentPresenter.RenderTransform>
                                 <RotateTransform/>
-                            </TextBlock.RenderTransform>
-                            <TextBlock.Triggers>
+                            </ContentPresenter.RenderTransform>
+                            <ContentPresenter.Triggers>
                                 <EventTrigger RoutedEvent="Loaded">
                                     <BeginStoryboard>
                                         <Storyboard RepeatBehavior="Forever">
@@ -177,11 +191,11 @@
                                         </Storyboard>
                                     </BeginStoryboard>
                                 </EventTrigger>
-                            </TextBlock.Triggers>
-                        </TextBlock>
+                            </ContentPresenter.Triggers>
+                        </ContentPresenter>
                     </Border>
                     <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_LoadingApplications}" 
-                               FontSize="14" Foreground="{StaticResource CorporateTextLight}"/>
+                               FontSize="14" Foreground="{StaticResource WhiteTextBrush}"/>
                 </StackPanel>
 
                 <!-- Applications Grid -->
@@ -194,7 +208,7 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Style="{StaticResource CorporateAppCard}" 
+                            <Border Style="{StaticResource CardStyle}" 
                                     Width="220" x:Name="AppTileBorder">
                                 <Grid x:Name="AppTileContent">
                                     <Grid.RowDefinitions>
@@ -222,24 +236,24 @@
                                                   FontWeight="SemiBold" FontSize="12"
                                                   TextAlignment="Center" TextWrapping="Wrap"
                                                   Margin="0,0,0,6"
-                                                  Foreground="{StaticResource CorporateText}"/>
+                                                  Foreground="{StaticResource PrimaryTextBrush}"/>
                                         <TextBlock Text="{Binding DisplayDescription}" 
                                                   FontSize="11" 
-                                                  Foreground="{StaticResource CorporateTextMuted}"
+                                                  Foreground="{StaticResource MutedTextBrush}"
                                                   TextAlignment="Center" TextWrapping="Wrap"
                                                   LineHeight="16"/>
                                     </StackPanel>
 
                                     <!-- Category Badge -->
                                     <Border Grid.Row="2" 
-                                           Background="{StaticResource CorporateGrayDark}" 
+                                           Background="{StaticResource CorporateGrayDarkBrush}" 
                                            CornerRadius="12"
                                            Padding="8,3" 
                                            HorizontalAlignment="Center" 
                                            Margin="0,8,0,0">
                                         <TextBlock Text="{Binding LocalizedCategory}" 
                                                   FontSize="9" 
-                                                  Foreground="{StaticResource CorporateTextMuted}"
+                                                  Foreground="{StaticResource MutedTextBrush}"
                                                   FontWeight="SemiBold"/>
                                     </Border>
                                 </Grid>
@@ -258,18 +272,18 @@
                 <!-- No Applications Message -->
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
                            Visibility="{Binding HasNoApplications, Converter={StaticResource BoolToVisConverter}}">
-                    <Border Width="80" Height="80" Background="{StaticResource CorporateGrayDark}" 
+                    <Border Width="80" Height="80" Background="{StaticResource CorporateGrayDarkBrush}" 
                             CornerRadius="40" Margin="0,0,0,20">
-                        <TextBlock Text="📱" FontSize="40" HorizontalAlignment="Center" 
-                                  VerticalAlignment="Center" Opacity="0.6"/>
+                        <ContentPresenter Content="{Binding Source='📱', Converter={StaticResource EmojiToFontAwesome32Converter}}"
+                                         HorizontalAlignment="Center" VerticalAlignment="Center" Opacity="0.6"/>
                     </Border>
                     <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_NoApplicationsFound}" 
                               FontSize="18" FontWeight="SemiBold" 
-                              Foreground="{StaticResource CorporateText}"
+                              Foreground="{StaticResource PrimaryTextBrush}"
                               HorizontalAlignment="Center"/>
                     <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_NoApplicationsHint}" 
                               FontSize="13" 
-                              Foreground="{StaticResource CorporateTextMuted}"
+                              Foreground="{StaticResource MutedTextBrush}"
                               HorizontalAlignment="Center" 
                               Margin="0,8,0,0"
                               TextAlignment="Center"/>
@@ -280,7 +294,7 @@
         <!-- Status Bar - ИСПРАВЛЕНО -->
         <Border Grid.Row="3" Background="White"
                 BorderThickness="0,1,0,0"
-                BorderBrush="{StaticResource OutlineBrush}">
+                BorderBrush="{StaticResource LightGrayBrush}">
 
             <Grid Margin="24,0">
                 <Grid.ColumnDefinitions>
@@ -290,7 +304,7 @@
 
                 <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" 
                           VerticalAlignment="Center" 
-                          Foreground="{StaticResource CorporateText}"
+                          Foreground="{StaticResource PrimaryTextBrush}"
                           FontFamily="Segoe UI"
                           FontSize="12"/>
 
@@ -298,9 +312,9 @@
                     <!-- Application Count -->
                     <TextBlock Text="{Binding ApplicationCount}" 
                               FontSize="12" FontWeight="SemiBold"
-                              Foreground="{StaticResource CorporateRed}"/>
+                              Foreground="{StaticResource PrimaryBrush}"/>
                     <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_ApplicationsCount}" FontSize="12" 
-                              Foreground="{StaticResource CorporateTextMuted}"/>
+                              Foreground="{StaticResource MutedTextBrush}"/>
 
 
                     <!-- App Switcher Button -->
@@ -315,24 +329,25 @@
                             </StackPanel>
                         </Button.ToolTip>
                         <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource CorporateButtonSecondary}">
+                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                                 <Setter Property="Opacity" Value="0.7"/>
                                 <Style.Triggers>
                                     <Trigger Property="IsEnabled" Value="True">
                                         <Setter Property="Opacity" Value="1.0"/>
                                     </Trigger>
                                     <Trigger Property="IsMouseOver" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource CorporateRedLight}"/>
+                                        <Setter Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </Trigger>
                                 </Style.Triggers>
                             </Style>
                         </Button.Style>
                         <Grid>
-                            <TextBlock Text="🔄" HorizontalAlignment="Center" VerticalAlignment="Center" FontSize="12"/>
+                            <ContentPresenter Content="{Binding Source='🔄', Converter={StaticResource EmojiToFontAwesome32Converter}}"
+                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <!-- Индикатор количества приложений -->
                             <Border x:Name="AppCountBadge" 
-                                    Background="{StaticResource CorporateRed}" 
+                                    Background="{StaticResource PrimaryBrush}" 
                                     CornerRadius="8" 
                                     Width="14" Height="14"
                                     HorizontalAlignment="Right" 
@@ -356,16 +371,17 @@
                             Width="32" Height="28" FontSize="14" Padding="0"
                             Margin="8,0,0,0">
                         <Button.Style>
-                            <Style TargetType="Button" BasedOn="{StaticResource CorporateButtonSecondary}">
+                            <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                                 <Style.Triggers>
                                     <DataTrigger Binding="{Binding IsVirtualKeyboardVisible}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource CorporateRed}"/>
+                                        <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
                                         <Setter Property="Foreground" Value="White"/>
                                     </DataTrigger>
                                 </Style.Triggers>
                             </Style>
                         </Button.Style>
-                        <TextBlock Text="⌨️" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                        <ContentPresenter Content="{Binding Source='⌨️', Converter={StaticResource EmojiToFontAwesome32Converter}}"
+                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                 </StackPanel>
             </Grid>

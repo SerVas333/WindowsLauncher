@@ -52,6 +52,8 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
             {
                 if (!Equals(value, Thread.CurrentThread.CurrentUICulture))
                 {
+                    System.Diagnostics.Debug.WriteLine($"🌐 LocalizationHelper: Changing language from {Thread.CurrentThread.CurrentUICulture.Name} to {value.Name}");
+                    
                     Thread.CurrentThread.CurrentUICulture = value;
                     Thread.CurrentThread.CurrentCulture = value;
 
@@ -60,6 +62,7 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
                     CultureInfo.DefaultThreadCurrentCulture = value;
 
                     OnPropertyChanged(nameof(CurrentCulture));
+                    NotifyAllPropertiesChanged();
                     OnLanguageChanged();
                 }
             }
@@ -133,6 +136,8 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
         {
             if (string.IsNullOrEmpty(languageCode))
                 return;
+
+            System.Diagnostics.Debug.WriteLine($"🌐 LocalizationHelper: SetLanguage called with '{languageCode}'");
 
             try
             {
@@ -273,18 +278,23 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
                     var savedLanguage = languageProperty.GetValue(settings) as string;
                     if (!string.IsNullOrEmpty(savedLanguage))
                     {
+                        System.Diagnostics.Debug.WriteLine($"🌐 LocalizationHelper: Found saved language '{savedLanguage}' in settings");
                         SetLanguage(savedLanguage);
                         return;
                     }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("🌐 LocalizationHelper: No saved language found in settings");
+                    }
                 }
 
-                // Если настройка не найдена или пустая, используем системный язык
-                SetSystemLanguage();
+                // Если настройка не найдена или пустая, не устанавливаем язык
+                // Язык будет установлен через LanguageConfigurationService
             }
             catch (Exception ex)
             {
                 System.Diagnostics.Debug.WriteLine($"Failed to load language settings: {ex.Message}");
-                SetSystemLanguage();
+                // Не устанавливаем fallback язык - это делает LanguageConfigurationService
             }
         }
 
@@ -323,6 +333,25 @@ namespace WindowsLauncher.UI.Infrastructure.Localization
         private void OnLanguageChanged()
         {
             LanguageChanged?.Invoke(this, EventArgs.Empty);
+        }
+
+        /// <summary>
+        /// Свойства для привязки в XAML - AppSwitcher
+        /// </summary>
+        public string AppSwitcher_Title => GetString("AppSwitcher_Title");
+        public string AppSwitcher_Navigation => GetString("AppSwitcher_Navigation");
+        public string AppSwitcher_Switch => GetString("AppSwitcher_Switch");
+        public string AppSwitcher_Cancel => GetString("AppSwitcher_Cancel");
+
+        /// <summary>
+        /// Уведомить об изменении всех свойств локализации
+        /// </summary>
+        private void NotifyAllPropertiesChanged()
+        {
+            OnPropertyChanged(nameof(AppSwitcher_Title));
+            OnPropertyChanged(nameof(AppSwitcher_Navigation));
+            OnPropertyChanged(nameof(AppSwitcher_Switch));
+            OnPropertyChanged(nameof(AppSwitcher_Cancel));
         }
     }
 

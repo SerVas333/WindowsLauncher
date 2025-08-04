@@ -56,23 +56,23 @@
                 <StackPanel>
                     <!-- Переключатель режимов -->
                     <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-                        <RadioButton x:Name="DomainModeRadio" 
-                                     Content="{x:Static properties:Resources.LoginWindow_DomainMode}"
+                        <RadioButton x:Name="GuestModeRadio" 
+                                     Content="{x:Static properties:Resources.LoginWindow_GuestMode}"
                                      IsChecked="True"
                                      GroupName="LoginMode"
-                                     Style="{StaticResource MaterialRadioButtonStyle}"
+                                     Style="{StaticResource RadioButtonStyle}"
+                                     Margin="0,0,15,0"
+                                     Checked="LoginMode_Changed"/>
+                        <RadioButton x:Name="DomainModeRadio" 
+                                     Content="{x:Static properties:Resources.LoginWindow_DomainMode}"
+                                     GroupName="LoginMode"
+                                     Style="{StaticResource RadioButtonStyle}"
                                      Margin="0,0,15,0"
                                      Checked="LoginMode_Changed"/>
                         <RadioButton x:Name="LocalModeRadio" 
                                      Content="{x:Static properties:Resources.LoginWindow_LocalMode}"
                                      GroupName="LoginMode"
-                                     Style="{StaticResource MaterialRadioButtonStyle}"
-                                     Margin="0,0,15,0"
-                                     Checked="LoginMode_Changed"/>
-                        <RadioButton x:Name="GuestModeRadio" 
-                                     Content="{x:Static properties:Resources.LoginWindow_GuestMode}"
-                                     GroupName="LoginMode"
-                                     Style="{StaticResource MaterialRadioButtonStyle}"
+                                     Style="{StaticResource RadioButtonStyle}"
                                      Checked="LoginMode_Changed"/>
                     </StackPanel>
 
@@ -83,7 +83,7 @@
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <TextBox x:Name="DomainTextBox" 
-                                 Style="{StaticResource MaterialTextBoxStyle}"
+                                 Style="{StaticResource TextBoxStyle}"
                                  Margin="0,0,0,15"
                                  MinHeight="45"
                                  Text="kdvm" TextChanged="DomainTextBox_TextChanged"/>
@@ -93,7 +93,7 @@
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <TextBox x:Name="UsernameTextBox" 
-                                 Style="{StaticResource MaterialTextBoxStyle}"
+                                 Style="{StaticResource TextBoxStyle}"
                                  Margin="0,0,0,15"
                                  MinHeight="45"
                                  KeyDown="Input_KeyDown"/>
@@ -103,7 +103,7 @@
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <PasswordBox x:Name="PasswordBox" 
-                                     Style="{StaticResource MaterialPasswordBoxStyle}"
+                                     Style="{StaticResource PasswordBoxStyle}"
                                      Margin="0,0,0,15"
                                      MinHeight="45"
                                      KeyDown="Input_KeyDown"/>
@@ -111,29 +111,29 @@
 
                     <!-- Панель локальных пользователей -->
                     <StackPanel x:Name="LocalLoginPanel" Visibility="Collapsed">
-                        <TextBlock Text="Имя пользователя" 
+                        <TextBlock Text="{x:Static properties:Resources.LoginWindow_LocalUsername}" 
                                    Margin="0,0,0,5" 
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <TextBox x:Name="LocalUsernameTextBox" 
-                                 Style="{StaticResource MaterialTextBoxStyle}"
+                                 Style="{StaticResource TextBoxStyle}"
                                  Margin="0,0,0,15"
                                  MinHeight="45"
                                  KeyDown="Input_KeyDown"/>
 
-                        <TextBlock Text="Пароль" 
+                        <TextBlock Text="{x:Static properties:Resources.LoginWindow_LocalPassword}" 
                                    Margin="0,0,0,5" 
                                    FontWeight="Medium"
                                    Foreground="{DynamicResource OnSurfaceBrush}"/>
                         <PasswordBox x:Name="LocalPasswordBox" 
-                                     Style="{StaticResource MaterialPasswordBoxStyle}"
+                                     Style="{StaticResource PasswordBoxStyle}"
                                      Margin="0,0,0,15"
                                      MinHeight="45"
                                      KeyDown="Input_KeyDown"/>
                     </StackPanel>
 
                     <!-- Панель гостевого входа -->
-                    <StackPanel x:Name="GuestLoginPanel" Visibility="Collapsed">
+                    <StackPanel x:Name="GuestLoginPanel">
                         <Border Background="{DynamicResource SurfaceVariantBrush}" 
                                 CornerRadius="8" 
                                 Padding="20" 
@@ -143,19 +143,19 @@
                                           FontSize="48" 
                                           HorizontalAlignment="Center" 
                                           Margin="0,0,0,10"/>
-                                <TextBlock Text="Гостевой вход" 
+                                <TextBlock Text="{x:Static properties:Resources.LoginWindow_GuestWelcome}" 
                                           FontSize="18" 
                                           FontWeight="Bold" 
                                           HorizontalAlignment="Center"
                                           Foreground="{DynamicResource OnSurfaceBrush}"
                                           Margin="0,0,0,5"/>
-                                <TextBlock Text="Нажмите 'Войти' для входа в гостевом режиме" 
+                                <TextBlock Text="{x:Static properties:Resources.LoginWindow_GuestDescription}" 
                                           FontSize="14" 
                                           HorizontalAlignment="Center"
                                           Foreground="{DynamicResource OnSurfaceVariantBrush}"
                                           TextWrapping="Wrap"
                                           TextAlignment="Center"/>
-                                <TextBlock Text="⚠️ Ограниченный доступ к приложениям" 
+                                <TextBlock Text="{x:Static properties:Resources.LoginWindow_GuestLimitationWarning}" 
                                           FontSize="12" 
                                           HorizontalAlignment="Center"
                                           Foreground="{DynamicResource OnSurfaceVariantBrush}"
@@ -165,11 +165,6 @@
                         </Border>
                     </StackPanel>
 
-                    <!-- Дополнительные опции -->
-                    <CheckBox x:Name="RememberCredentialsCheckBox" 
-                              Content="{x:Static properties:Resources.LoginWindow_RememberCredentials}"
-                              Style="{StaticResource MaterialCheckBoxStyle}"
-                              Margin="0,10,0,0"/>
 
                     <!-- Сообщение об ошибке -->
                     <Border x:Name="ErrorPanel" 
@@ -191,11 +186,12 @@
                         </StackPanel>
                     </Border>
 
-                    <!-- Статус подключения -->
+                    <!-- Статус подключения (только для доменного режима) -->
                     <StackPanel x:Name="ConnectionStatusPanel" 
                                 Orientation="Horizontal" 
                                 Margin="0,15,0,0"
-                                HorizontalAlignment="Center">
+                                HorizontalAlignment="Center"
+                                Visibility="Collapsed">
                         <Ellipse x:Name="ConnectionStatusIndicator" 
                                  Width="8" Height="8" 
                                  Fill="{DynamicResource SuccessBrush}"
@@ -210,7 +206,7 @@
             </ScrollViewer>
 
             <!-- Кнопки действий -->
-            <Border Grid.Row="2" BorderBrush="{DynamicResource OutlineBrush}" BorderThickness="0,1,0,0" Padding="30,20">
+            <Border Grid.Row="2" BorderBrush="{DynamicResource LightGrayBrush}" BorderThickness="0,1,0,0" Padding="30,20">
                 <Grid>
                     <Grid.ColumnDefinitions>
                         <ColumnDefinition Width="*"/>
@@ -222,7 +218,7 @@
                     <StackPanel Grid.Column="0" Orientation="Horizontal">
                         <Button x:Name="SettingsButton" 
                                 Content="{x:Static properties:Resources.Common_Settings}"
-                                Style="{StaticResource MaterialOutlineButtonStyle}"
+                                Style="{StaticResource SecondaryButtonStyle}"
                                 MinHeight="45"
                                 FontSize="14"
                                 Width="128"
@@ -230,26 +226,26 @@
                         
                         <Button x:Name="VirtualKeyboardButton" 
                                 Content="⌨️"
-                                Style="{StaticResource MaterialOutlineButtonStyle}"
+                                Style="{StaticResource SecondaryButtonStyle}"
                                 MinHeight="45"
                                 FontSize="18"
                                 Width="63"
                                 Margin="10,0,0,0"
-                                ToolTip="Виртуальная клавиатура"
+                                ToolTip="{x:Static properties:Resources.LoginWindow_VirtualKeyboardTooltip}"
                                 Click="VirtualKeyboardButton_Click"/>
                     </StackPanel>
 
                     <!-- Основные кнопки -->
                     <Button x:Name="CancelButton"
                             Content="{x:Static properties:Resources.Common_Cancel}"
-                            Style="{StaticResource MaterialOutlineButtonStyle}"
+                            Style="{StaticResource SecondaryButtonStyle}"
                             Margin="221,0,23,1"
                             Click="CancelButton_Click"/>
 
                     <Button x:Name="LoginButton" 
                             Grid.Column="2"
                             Content="{x:Static properties:Resources.LoginWindow_Login}"
-                            Style="{StaticResource MaterialButtonStyle}"
+                            Style="{StaticResource PrimaryButtonStyle}"
                             MinHeight="45"
                             FontSize="14"
                             FontWeight="SemiBold"

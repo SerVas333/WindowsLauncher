@@ -236,5 +236,22 @@ namespace WindowsLauncher.UI.Views
         {
 
         }
+
+        /// <summary>
+        /// Обработчик кнопки UI Demo
+        /// </summary>
+        private void UIDemoButton_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                // Открываем UI Demo окно как дочернее
+                UIDemoWindow.ShowDemo(this);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show($"Ошибка открытия UI Demo: {ex.Message}", 
+                    "Ошибка", MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
     }
 }

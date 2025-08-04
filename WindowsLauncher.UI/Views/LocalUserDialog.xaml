@@ -9,9 +9,9 @@
         MinHeight="600" MinWidth="500"
         WindowStartupLocation="CenterOwner"
         ResizeMode="CanResize"
-        Background="{DynamicResource MaterialDesignPaper}"
-        FontFamily="{DynamicResource MaterialDesignFont}"
-        TextElement.Foreground="{DynamicResource MaterialDesignBody}"
+        Background="{DynamicResource WhiteBrush}"
+        FontFamily="{DynamicResource PrimaryFontFamily}"
+        TextElement.Foreground="{DynamicResource PrimaryTextBrush}"
         TextElement.FontWeight="Medium"
         TextElement.FontSize="14"
         TextOptions.TextFormattingMode="Ideal"
@@ -23,10 +23,10 @@
         <converters:EnumToStringConverter x:Key="EnumToStringConverter"/>
         
         <!-- Корпоративный стиль для TextBox -->
-        <Style x:Key="CorporateTextBox" TargetType="TextBox">
-            <Setter Property="Background" Value="{StaticResource CorporateWhite}"/>
-            <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource CorporateBorder}"/>
+        <Style x:Key="TextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
@@ -47,7 +47,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter Property="BorderBrush" Value="{StaticResource CorporateRed}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -56,10 +56,10 @@
         </Style>
 
         <!-- Корпоративный стиль для PasswordBox -->
-        <Style x:Key="CorporatePasswordBox" TargetType="PasswordBox">
-            <Setter Property="Background" Value="{StaticResource CorporateWhite}"/>
-            <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
-            <Setter Property="BorderBrush" Value="{StaticResource CorporateBorder}"/>
+        <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource BorderBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Padding" Value="12,8"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
@@ -80,7 +80,7 @@
                         </Border>
                         <ControlTemplate.Triggers>
                             <Trigger Property="IsFocused" Value="True">
-                                <Setter Property="BorderBrush" Value="{StaticResource CorporateRed}"/>
+                                <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
                             </Trigger>
                         </ControlTemplate.Triggers>
                     </ControlTemplate>
@@ -90,7 +90,7 @@
 
         <!-- Корпоративный стиль для CheckBox -->
         <Style x:Key="CorporateCheckBox" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
             <Setter Property="FontFamily" Value="Segoe UI"/>
             <Setter Property="FontSize" Value="14"/>
             <Setter Property="Margin" Value="0,8,0,8"/>
@@ -106,7 +106,7 @@
 
         <!-- Header -->
         <Border Grid.Row="0" Margin="0,0,0,16" 
-                Background="{StaticResource CorporateRed}"
+                Background="{StaticResource PrimaryBrush}"
                 CornerRadius="4">
             <Grid>
                 <TextBlock Text="{Binding DialogTitle}"
@@ -125,14 +125,14 @@
 
         <!-- Main Content -->
         <ScrollViewer Grid.Row="1" VerticalScrollBarVisibility="Auto" 
-                      Background="{StaticResource CorporateWhite}">
-            <StackPanel Margin="24,0,24,16" Background="{StaticResource CorporateWhite}">
+                      Background="{StaticResource SurfaceBrush}">
+            <StackPanel Margin="24,0,24,16" Background="{StaticResource SurfaceBrush}">
                 
                 <!-- Loading Indicator -->
                 <Border Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}"
                         Margin="0,0,0,16"
-                        Background="{StaticResource CorporateGray}"
-                        BorderBrush="{StaticResource CorporateBorder}"
+                        Background="{StaticResource CorporateGrayBrush}"
+                        BorderBrush="{StaticResource BorderBrush}"
                         BorderThickness="1"
                         CornerRadius="4">
                     <StackPanel Orientation="Horizontal" Margin="16">
@@ -141,7 +141,7 @@
                                    Style="{StaticResource CorporateProgressBar}"/>
                         <TextBlock Text="{Binding LoadingMessage}"
                                  VerticalAlignment="Center"
-                                 Foreground="{StaticResource CorporateText}"/>
+                                 Foreground="{StaticResource PrimaryTextBrush}"/>
                     </StackPanel>
                 </Border>
 
@@ -174,37 +174,37 @@
 
                 <!-- Form Fields -->
                 <StackPanel Visibility="{Binding IsLoading, Converter={StaticResource InverseBoolToVisConverter}}"
-                           Background="{StaticResource CorporateWhite}">
+                           Background="{StaticResource SurfaceBrush}">
                     
                     <!-- Username -->
                     <Label Content="Имя пользователя" Margin="0,8,0,0"/>
                     <TextBox x:Name="UsernameTextBox"
-                             Style="{StaticResource CorporateTextBox}"
+                             Style="{StaticResource TextBoxStyle}"
                              Text="{Binding Username, UpdateSourceTrigger=PropertyChanged}"
                              IsEnabled="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisConverter}}"/>
 
                     <!-- Display Name -->
                     <Label Content="Отображаемое имя" Margin="0,8,0,0"/>
-                    <TextBox Style="{StaticResource CorporateTextBox}"
+                    <TextBox Style="{StaticResource TextBoxStyle}"
                              Text="{Binding DisplayName, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <!-- Email -->
                     <Label Content="Email" Margin="0,8,0,0"/>
-                    <TextBox Style="{StaticResource CorporateTextBox}"
+                    <TextBox Style="{StaticResource TextBoxStyle}"
                              Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"/>
 
                     <!-- Password (only in Create mode) -->
                     <Label Content="Пароль" Margin="0,8,0,0"
                            Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisConverter}}"/>
                     <PasswordBox x:Name="PasswordBox"
-                                Style="{StaticResource CorporatePasswordBox}"
+                                Style="{StaticResource PasswordBoxStyle}"
                                 Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisConverter}}"/>
 
                     <!-- Confirm Password (only in Create mode) -->
                     <Label Content="Подтверждение пароля" Margin="0,8,0,0"
                            Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisConverter}}"/>
                     <PasswordBox x:Name="ConfirmPasswordBox"
-                                Style="{StaticResource CorporatePasswordBox}"
+                                Style="{StaticResource PasswordBoxStyle}"
                                 Visibility="{Binding IsEditMode, Converter={StaticResource InverseBoolToVisConverter}}"/>
 
                     <!-- Role -->
@@ -239,11 +239,11 @@
                                 <Button Content="Сменить пароль"
                                         Command="{Binding ChangePasswordCommand}"
                                         Margin="0,0,8,0"
-                                        Style="{StaticResource CorporateButtonSecondary}"/>
+                                        Style="{StaticResource SecondaryButtonStyle}"/>
                                 
                                 <Button Content="Сбросить пароль"
                                         Command="{Binding ResetPasswordCommand}"
-                                        Style="{StaticResource CorporateButtonSecondary}"/>
+                                        Style="{StaticResource SecondaryButtonStyle}"/>
                             </StackPanel>
                         </StackPanel>
                     </GroupBox>
@@ -269,7 +269,7 @@
                                 <Button Grid.Column="1"
                                         Content="Сбросить"
                                         Command="{Binding ResetFailedAttemptsCommand}"
-                                        Style="{StaticResource CorporateButtonSecondary}"/>
+                                        Style="{StaticResource SecondaryButtonStyle}"/>
                             </Grid>
                             
                             <CheckBox Content="Учетная запись заблокирована"
@@ -323,8 +323,8 @@
 
         <!-- Footer Buttons -->
         <Border Grid.Row="2" 
-                Background="{StaticResource CorporateGray}"
-                BorderBrush="{StaticResource CorporateBorder}"
+                Background="{StaticResource CorporateGrayBrush}"
+                BorderBrush="{StaticResource BorderBrush}"
                 BorderThickness="1,1,1,0"
                 Margin="0,16,0,0">
             <Grid Margin="24,16">
@@ -340,7 +340,7 @@
                         ToolTip="Виртуальная клавиатура"
                         Width="32" Height="28" FontSize="14" Padding="0"
                         HorizontalAlignment="Left"
-                        Style="{StaticResource CorporateButtonSecondary}"
+                        Style="{StaticResource SecondaryButtonStyle}"
                         Click="VirtualKeyboardButton_Click"/>
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal"
@@ -348,13 +348,13 @@
                     
                     <Button Content="Отмена"
                             Command="{Binding CancelCommand}"
-                            Style="{StaticResource CorporateButtonSecondary}"
+                            Style="{StaticResource SecondaryButtonStyle}"
                             Margin="0,0,16,0"
                             MinWidth="100"/>
                     
                     <Button Content="{Binding SaveButtonText}"
                             Command="{Binding SaveCommand}"
-                            Style="{StaticResource CorporateButton}"
+                            Style="{StaticResource PrimaryButtonStyle}"
                             IsDefault="True"
                             MinWidth="100"/>
                 </StackPanel>

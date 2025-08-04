@@ -1,25 +1,86 @@
 <ResourceDictionary xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">
+                    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+                    xmlns:fa="http://schemas.fontawesome.io/icons/"
+                    xmlns:icons="clr-namespace:WindowsLauncher.UI.Infrastructure.Icons"
+                    xmlns:converters="clr-namespace:WindowsLauncher.UI.Converters"
+                    xmlns:controls="clr-namespace:WindowsLauncher.UI.Controls">
+
+    <!-- =============================================== -->
+    <!-- КОНВЕРТЕРЫ -->
+    <!-- =============================================== -->
+    
+    <!-- FontAwesome конвертеры -->
+    <icons:EmojiToFontAwesomeConverter x:Key="EmojiToFontAwesomeConverter"/>
+    <icons:EmojiToFontAwesome32Converter x:Key="EmojiToFontAwesome32Converter"/>
+    
+    <!-- UI конвертеры -->
+    <converters:BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
+    <converters:InverseBooleanToVisibilityConverter x:Key="InverseBooleanToVisibilityConverter"/>
+    <converters:NullToVisibilityConverter x:Key="NullToVisibilityConverter"/>
+    <converters:InverseNullToVisibilityConverter x:Key="InverseNullToVisibilityConverter"/>
+    <converters:CountToVisibilityConverter x:Key="CountToVisibilityConverter"/>
+    <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
+    <converters:EqualityToBooleanConverter x:Key="EqualityToBooleanConverter"/>
+    <converters:RoleToVisibilityConverter x:Key="RoleToVisibilityConverter"/>
+
+    <!-- =============================================== -->
+    <!-- TOUCH MODE КОНФИГУРАЦИЯ -->
+    <!-- =============================================== -->
+    
+    <!-- Touch Mode - увеличенные размеры для сенсорных терминалов -->
+    <sys:Double x:Key="TouchModeScale" xmlns:sys="clr-namespace:System;assembly=mscorlib">1.2</sys:Double>
+    <sys:Double x:Key="TouchModeButtonMinSize" xmlns:sys="clr-namespace:System;assembly=mscorlib">48</sys:Double>
+    <sys:Double x:Key="TouchModeFontSizeMultiplier" xmlns:sys="clr-namespace:System;assembly=mscorlib">1.1</sys:Double>
+    
+    <!-- Touch Mode - размеры иконок -->
+    <sys:Double x:Key="TouchModeIconSmall" xmlns:sys="clr-namespace:System;assembly=mscorlib">18</sys:Double>
+    <sys:Double x:Key="TouchModeIconNormal" xmlns:sys="clr-namespace:System;assembly=mscorlib">24</sys:Double>
+    <sys:Double x:Key="TouchModeIconLarge" xmlns:sys="clr-namespace:System;assembly=mscorlib">32</sys:Double>
+    <sys:Double x:Key="TouchModeIconExtraLarge" xmlns:sys="clr-namespace:System;assembly=mscorlib">40</sys:Double>
 
     <!-- =============================================== -->
     <!-- КОРПОРАТИВНЫЕ ЦВЕТА -->
     <!-- =============================================== -->
     
-    <!-- Основные цвета -->
-    <SolidColorBrush x:Key="CorporateRedBrush" Color="#C41E3A"/>
-    <SolidColorBrush x:Key="CorporateRedLightBrush" Color="#E8324F"/>
-    <SolidColorBrush x:Key="CorporateRedDarkBrush" Color="#A01729"/>
     
+
+    <!-- Primary Colors -  KDV -->
+    <SolidColorBrush x:Key="PrimaryBrush" Color="#C41E3A"/>
+    <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#A01729"/>
+    <SolidColorBrush x:Key="PrimaryLightBrush" Color="#E8324F"/>
+    <SolidColorBrush x:Key="OnPrimaryBrush" Color="#FFFFFF"/>
+
+        
     <!-- Дополнительные цвета -->
     <SolidColorBrush x:Key="CorporateGrayBrush" Color="#6C757D"/>
     <SolidColorBrush x:Key="CorporateGrayLightBrush" Color="#ADB5BD"/>
     <SolidColorBrush x:Key="CorporateGrayDarkBrush" Color="#495057"/>
-    
+    <SolidColorBrush x:Key="CorporateWhite" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="CorporateText" Color="#333333"/>
+    <SolidColorBrush x:Key="CorporateTextLight" Color="#666666"/>
+    <SolidColorBrush x:Key="CorporateTextMuted" Color="#999999"/>
+
+    <!-- Расширенная градация серого -->
+    <SolidColorBrush x:Key="CorporateGray50" Color="#FAFAFA"/>
+    <SolidColorBrush x:Key="CorporateGray100" Color="#F5F5F5"/>
+    <SolidColorBrush x:Key="CorporateGray200" Color="#EEEEEE"/>
+    <SolidColorBrush x:Key="CorporateGray300" Color="#E0E0E0"/>
+    <SolidColorBrush x:Key="CorporateGray400" Color="#BDBDBD"/>
+    <SolidColorBrush x:Key="CorporateGray500" Color="#9E9E9E"/>
+    <SolidColorBrush x:Key="CorporateGray600" Color="#757575"/>
+    <SolidColorBrush x:Key="CorporateGray700" Color="#616161"/>
+    <SolidColorBrush x:Key="CorporateGray800" Color="#424242"/>
+    <SolidColorBrush x:Key="CorporateGray900" Color="#212121"/>
+
+    <!-- Surface Colors -->
+    <SolidColorBrush x:Key="SurfaceBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="SurfaceVariantBrush" Color="#F5F5F5"/>
+    <SolidColorBrush x:Key="OnSurfaceBrush" Color="#333333"/>
+    <SolidColorBrush x:Key="OnSurfaceVariantBrush" Color="#666666"/>
+
     <!-- Функциональные цвета -->
-    <SolidColorBrush x:Key="SuccessBrush" Color="#28A745"/>
-    <SolidColorBrush x:Key="WarningBrush" Color="#FFC107"/>
+    
     <SolidColorBrush x:Key="DangerBrush" Color="#DC3545"/>
-    <SolidColorBrush x:Key="InfoBrush" Color="#17A2B8"/>
     
     <!-- Нейтральные цвета -->
     <SolidColorBrush x:Key="WhiteBrush" Color="#FFFFFF"/>
@@ -35,6 +96,57 @@
     <SolidColorBrush x:Key="MutedTextBrush" Color="#868E96"/>
     <SolidColorBrush x:Key="WhiteTextBrush" Color="#FFFFFF"/>
 
+    <!-- State Colors -->
+    <SolidColorBrush x:Key="ErrorBrush" Color="#F44336"/>
+    <SolidColorBrush x:Key="ErrorLightBrush" Color="#FFCDD2"/>
+    <SolidColorBrush x:Key="OnErrorBrush" Color="#FFFFFF"/>
+
+    <SolidColorBrush x:Key="SuccessBrush" Color="#4CAF50"/>
+    <SolidColorBrush x:Key="SuccessLightBrush" Color="#C8E6C9"/>
+    <SolidColorBrush x:Key="OnSuccessBrush" Color="#FFFFFF"/>
+
+    <SolidColorBrush x:Key="WarningBrush" Color="#FF9800"/>
+    <SolidColorBrush x:Key="OnWarningBrush" Color="#FFFFFF"/>
+
+    <SolidColorBrush x:Key="InfoBrush" Color="#2196F3"/>
+    <SolidColorBrush x:Key="OnInfoBrush" Color="#FFFFFF"/>
+
+    <!-- Disabled/Hint Colors -->
+    <SolidColorBrush x:Key="DisabledBrush" Color="#CCCCCC"/>
+    <SolidColorBrush x:Key="HintBrush" Color="#999999"/>
+
+    <!-- === ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ TEXTEDITIOR === -->
+
+    <!-- Эмуляция MaterialDesignPaper для фонов меню и панелей -->
+    <SolidColorBrush x:Key="MaterialDesignPaper" Color="#FFFFFF"/>
+
+    <!-- Эмуляция PrimaryHueMidBrush для выделения -->
+    <SolidColorBrush x:Key="PrimaryHueMidBrush" Color="#C41E3A"/>
+
+    <!-- Эмуляция SecondaryHueMidBrush для второстепенных элементов -->
+    <SolidColorBrush x:Key="SecondaryHueMidBrush" Color="#666666"/>
+
+    <!-- Эмуляция ValidationErrorBrush для ошибок -->
+    <SolidColorBrush x:Key="ValidationErrorBrush" Color="#F44336"/>
+
+    <!-- Полупрозрачные overlay цвета -->
+    <SolidColorBrush x:Key="OverlayBrush" Color="#80000000"/>
+
+    <!-- Границы -->
+    <SolidColorBrush x:Key="BorderBrush" Color="#DEE2E6"/>
+
+    <!-- Корпоративные тени -->
+    <DropShadowEffect x:Key="CorporateShadowDepth1" Color="Black" Direction="270" ShadowDepth="1"  BlurRadius="3" Opacity="0.26"/>
+    <DropShadowEffect x:Key="CorporateShadowDepth2" Color="Black" Direction="270" ShadowDepth="2"  BlurRadius="6" Opacity="0.26"/>
+    <DropShadowEffect x:Key="CorporateShadowDepth3" Color="Black" Direction="270" ShadowDepth="4"  BlurRadius="8" Opacity="0.26"/>
+    <DropShadowEffect x:Key="CorporateShadowDepth4" Color="Black" Direction="270" ShadowDepth="6"  BlurRadius="8" Opacity="0.26"/>
+
+    <!-- Алиасы для совместимости с Material Design терминологией -->
+    <SolidColorBrush x:Key="CorporateBodyLight" Color="#999999"/>
+    <SolidColorBrush x:Key="CorporateOnSurface" Color="#333333"/>
+    <SolidColorBrush x:Key="CorporateSurface" Color="#FFFFFF"/>
+    
+    
     <!-- =============================================== -->
     <!-- КОРПОРАТИВНЫЕ ШРИФТЫ -->
     <!-- =============================================== -->
@@ -49,6 +161,28 @@
     <sys:Double x:Key="FontSizeHeading" xmlns:sys="clr-namespace:System;assembly=mscorlib">20</sys:Double>
     <sys:Double x:Key="FontSizeTitle" xmlns:sys="clr-namespace:System;assembly=mscorlib">24</sys:Double>
 
+    <!-- Текстовые стили -->
+    <Style x:Key="CorporateTitle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Light"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateWhite}"/>
+    </Style>
+
+    <Style x:Key="CorporateSubtitle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateTextLight}"/>
+    </Style>
+
+    <Style x:Key="CorporateBodyText" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+    </Style>
+
     <!-- =============================================== -->
     <!-- РАЗМЕРЫ И ОТСТУПЫ -->
     <!-- =============================================== -->
@@ -61,9 +195,11 @@
     <Thickness x:Key="NormalPadding">12,8</Thickness>
     <Thickness x:Key="LargePadding">20,12</Thickness>
     
-    <sys:Double x:Key="BorderRadiusSmall" xmlns:sys="clr-namespace:System;assembly=mscorlib">3</sys:Double>
-    <sys:Double x:Key="BorderRadiusNormal" xmlns:sys="clr-namespace:System;assembly=mscorlib">5</sys:Double>
-    <sys:Double x:Key="BorderRadiusLarge" xmlns:sys="clr-namespace:System;assembly=mscorlib">8</sys:Double>
+    <!-- Радиусы скругления -->
+    <CornerRadius x:Key="BorderRadiusSmall">3</CornerRadius>
+    <CornerRadius x:Key="BorderRadiusNormal">5</CornerRadius>
+    <CornerRadius x:Key="BorderRadiusLarge">8</CornerRadius>
+    <CornerRadius x:Key="SmallCornerRadius">3</CornerRadius>
 
     <!-- =============================================== -->
     <!-- СТИЛИ КНОПОК -->
@@ -71,9 +207,9 @@
     
     <!-- Основная кнопка -->
     <Style x:Key="PrimaryButtonStyle" TargetType="Button">
-        <Setter Property="Background" Value="{StaticResource CorporateRedBrush}"/>
+        <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource WhiteTextBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource CorporateRedDarkBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource PrimaryDarkBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Padding" Value="{StaticResource NormalPadding}"/>
         <Setter Property="Margin" Value="{StaticResource SmallMargin}"/>
@@ -101,10 +237,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateRedLightBrush}"/>
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource PrimaryLightBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="true">
-                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateRedDarkBrush}"/>
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource PrimaryDarkBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
                             <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGrayLightBrush}"/>
@@ -119,8 +255,8 @@
     <!-- Вторичная кнопка -->
     <Style x:Key="SecondaryButtonStyle" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
         <Setter Property="Background" Value="{StaticResource WhiteBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateRedBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource CorporateRedBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
     </Style>
 
     <!-- Кнопка успеха -->
@@ -135,11 +271,141 @@
         <Setter Property="BorderBrush" Value="#BD2130"/>
     </Style>
 
+    <!-- ========== СОВРЕМЕННЫЕ КНОПКИ ========== -->
+
+    <!-- Кнопка только с иконкой (аналог MaterialDesignIconButton) -->
+    <Style x:Key="CorporateIconButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="8"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="20"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter x:Name="contentPresenter"
+                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                        Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray100}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray200}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Кнопка с иконкой и текстом -->
+    <Style x:Key="CorporateIconTextButton" TargetType="Button">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="12,8"/>
+        <Setter Property="Margin" Value="4,2"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="4"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter x:Name="contentPresenter"
+                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                        Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray100}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray200}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Opacity" Value="0.5"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Плавающая кнопка действия (FAB) -->
+    <Style x:Key="CorporateFloatingActionButton" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+        <Setter Property="Foreground" Value="White"/>
+        <Setter Property="BorderThickness" Value="0"/>
+        <Setter Property="Padding" Value="16"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Width" Value="56"/>
+        <Setter Property="Height" Value="56"/>
+        <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Effect" Value="{StaticResource CorporateShadowDepth2}"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border"
+                            Background="{TemplateBinding Background}"
+                            CornerRadius="28"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}">
+                        <ContentPresenter x:Name="contentPresenter"
+                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                        Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource PrimaryLightBrush}"/>
+                            <Setter Property="Effect" Value="{StaticResource CorporateShadowDepth3}"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource PrimaryDarkBrush}"/>
+                            <Setter Property="Effect" Value="{StaticResource CorporateShadowDepth1}"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter Property="Background" TargetName="border" Value="{StaticResource CorporateGray400}"/>
+                            <Setter Property="Effect" Value="{x:Null}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+
+
     <!-- =============================================== -->
     <!-- СТИЛИ ТЕКСТОВЫХ ПОЛЕЙ -->
     <!-- =============================================== -->
     
-    <Style x:Key="CorporateTextBoxStyle" TargetType="TextBox">
+    <Style x:Key="TextBoxStyle" TargetType="TextBox">
         <Setter Property="Background" Value="{StaticResource WhiteBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource MediumGrayBrush}"/>
@@ -166,10 +432,10 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource CorporateRedLightBrush}"/>
+                            <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource PrimaryLightBrush}"/>
                         </Trigger>
                         <Trigger Property="IsFocused" Value="true">
-                            <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource CorporateRedBrush}"/>
+                            <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource PrimaryBrush}"/>
                             <Setter Property="BorderThickness" TargetName="border" Value="2"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
@@ -182,11 +448,118 @@
         </Setter>
     </Style>
 
+    <!-- Поле пароля -->
+    <Style x:Key="PasswordBoxStyle" TargetType="PasswordBox">
+        <Setter Property="Background" Value="{StaticResource WhiteBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource MediumGrayBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="{StaticResource SmallPadding}"/>
+        <Setter Property="Margin" Value="{StaticResource SmallMargin}"/>
+        <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}"/>
+        <Setter Property="MinHeight" Value="36"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="HorizontalContentAlignment" Value="Left"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="PasswordBox">
+                    <Border x:Name="border" 
+                            Background="{TemplateBinding Background}" 
+                            BorderBrush="{TemplateBinding BorderBrush}" 
+                            BorderThickness="{TemplateBinding BorderThickness}" 
+                            CornerRadius="{StaticResource SmallCornerRadius}"
+                            SnapsToDevicePixels="True">
+                        <ScrollViewer x:Name="PART_ContentHost" 
+                                    Focusable="false" 
+                                    HorizontalScrollBarVisibility="Hidden" 
+                                    VerticalScrollBarVisibility="Hidden"
+                                    Margin="{TemplateBinding Padding}"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="Opacity" TargetName="border" Value="0.56"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="true">
+                            <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource PrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsFocused" Value="true">
+                            <Setter Property="BorderBrush" TargetName="border" Value="{StaticResource PrimaryBrush}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- Дублирующие стили для типографики -->
+    <Style x:Key="CaptionTextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateTextMuted}"/>
+        <Setter Property="LineHeight" Value="16"/>
+    </Style>
+
+    <Style x:Key="BodyTextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+    </Style>
+
+    <Style x:Key="TitleTextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Light"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateWhite}"/>
+    </Style>
+
+    <Style x:Key="SubtitleTextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="14"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource WhiteTextBrush}"/>
+    </Style>
+
+    <Style x:Key="Headline1TextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="32"/>
+        <Setter Property="FontWeight" Value="Light"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+        <Setter Property="LineHeight" Value="40"/>
+    </Style>
+
+    <Style x:Key="Headline2TextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="28"/>
+        <Setter Property="FontWeight" Value="Light"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+        <Setter Property="LineHeight" Value="36"/>
+    </Style>
+
+    <Style x:Key="Headline3TextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="24"/>
+        <Setter Property="FontWeight" Value="Normal"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+        <Setter Property="LineHeight" Value="32"/>
+    </Style>
+
+    <Style x:Key="OverlineTextBlock" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="Segoe UI"/>
+        <Setter Property="FontSize" Value="10"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+        <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
+        <Setter Property="LineHeight" Value="14"/>
+    </Style>
+
+
     <!-- =============================================== -->
     <!-- СТИЛИ ВЫПАДАЮЩИХ СПИСКОВ -->
     <!-- =============================================== -->
     
-    <Style x:Key="CorporateComboBoxStyle" TargetType="ComboBox">
+    <Style x:Key="ComboBoxStyle" TargetType="ComboBox">
         <Setter Property="Background" Value="{StaticResource WhiteBrush}"/>
         <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource MediumGrayBrush}"/>
@@ -262,10 +635,10 @@
                                                 </Border>
                                                 <ControlTemplate.Triggers>
                                                     <Trigger Property="IsMouseOver" Value="true">
-                                                        <Setter Property="BorderBrush" TargetName="templateRoot" Value="{StaticResource CorporateRedLightBrush}"/>
+                                                        <Setter Property="BorderBrush" TargetName="templateRoot" Value="{StaticResource PrimaryLightBrush}"/>
                                                     </Trigger>
                                                     <Trigger Property="IsPressed" Value="true">
-                                                        <Setter Property="BorderBrush" TargetName="templateRoot" Value="{StaticResource CorporateRedBrush}"/>
+                                                        <Setter Property="BorderBrush" TargetName="templateRoot" Value="{StaticResource PrimaryBrush}"/>
                                                     </Trigger>
                                                 </ControlTemplate.Triggers>
                                             </ControlTemplate>
@@ -294,7 +667,7 @@
     <!-- СТИЛИ ФЛАЖКОВ -->
     <!-- =============================================== -->
     
-    <Style x:Key="CorporateCheckBoxStyle" TargetType="CheckBox">
+    <Style x:Key="CheckBoxStyle" TargetType="CheckBox">
         <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
         <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}"/>
         <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}"/>
@@ -320,7 +693,7 @@
                             <Grid x:Name="markGrid">
                                 <Path x:Name="optionMark" 
                                       Data="F1 M 9.97498,1.22334L 4.6983,9.09834L 4.52164,9.09834L 0,5.19331L 1.27664,3.52165L 4.255,6.08833L 8.33331,1.52588e-005L 9.97498,1.22334 Z" 
-                                      Fill="{StaticResource CorporateRedBrush}" 
+                                      Fill="{StaticResource PrimaryBrush}" 
                                       Margin="1" 
                                       Opacity="0" 
                                       Stretch="None"/>
@@ -340,7 +713,7 @@
                             <Setter Property="Opacity" TargetName="optionMark" Value="1"/>
                         </Trigger>
                         <Trigger Property="IsMouseOver" Value="true">
-                            <Setter Property="BorderBrush" TargetName="checkBoxBorder" Value="{StaticResource CorporateRedLightBrush}"/>
+                            <Setter Property="BorderBrush" TargetName="checkBoxBorder" Value="{StaticResource PrimaryLightBrush}"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="false">
                             <Setter Property="Background" TargetName="checkBoxBorder" Value="{StaticResource LightGrayBrush}"/>
@@ -394,7 +767,7 @@
     <!-- СТИЛИ ОКОН -->
     <!-- =============================================== -->
     
-    <Style x:Key="CorporateWindowStyle" TargetType="Window">
+    <Style x:Key="WindowStyle" TargetType="Window">
         <Setter Property="Background" Value="{StaticResource OffWhiteBrush}"/>
         <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}"/>
         <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}"/>
@@ -432,7 +805,7 @@
     </Style>
 
     <!-- Группа -->
-    <Style x:Key="CorporateGroupBoxStyle" TargetType="GroupBox">
+    <Style x:Key="GroupBoxStyle" TargetType="GroupBox">
         <Setter Property="Background" Value="{StaticResource WhiteBrush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource MediumGrayBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
@@ -487,9 +860,9 @@
     <!-- СТИЛИ ИНДИКАТОРА ПРОГРЕССА -->
     <!-- =============================================== -->
     
-    <Style x:Key="CorporateProgressBarStyle" TargetType="ProgressBar">
+    <Style x:Key="ProgressBarStyle" TargetType="ProgressBar">
         <Setter Property="Background" Value="{StaticResource LightGrayBrush}"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateRedBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
         <Setter Property="BorderBrush" Value="{StaticResource MediumGrayBrush}"/>
         <Setter Property="BorderThickness" Value="1"/>
         <Setter Property="Height" Value="20"/>
@@ -512,5 +885,283 @@
             </Setter.Value>
         </Setter>
     </Style>
+
+    <!-- =============================================== -->
+    <!-- FONTAWESOME ИКОНКИ СТИЛИ -->
+    <!-- =============================================== -->
+    
+    <!-- Базовый стиль для FontAwesome иконок -->
+    <Style x:Key="FontAwesomeIconBase" TargetType="fa:ImageAwesome">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryTextBrush}"/>
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- Размеры иконок -->
+    <Style x:Key="FontAwesomeIconSmall" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Width" Value="12"/>
+        <Setter Property="Height" Value="12"/>
+    </Style>
+
+    <Style x:Key="FontAwesomeIconNormal" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+    </Style>
+
+    <Style x:Key="FontAwesomeIconLarge" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Width" Value="20"/>
+        <Setter Property="Height" Value="20"/>
+    </Style>
+
+    <Style x:Key="FontAwesomeIconExtraLarge" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Width" Value="24"/>
+        <Setter Property="Height" Value="24"/>
+    </Style>
+
+    <!-- Корпоративные цвета для иконок -->
+    <Style x:Key="FontAwesomeIconPrimary" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Foreground" Value="{DynamicResource PrimaryBrush}"/>
+    </Style>
+
+    <Style x:Key="FontAwesomeIconSuccess" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Foreground" Value="{DynamicResource SuccessBrush}"/>
+    </Style>
+
+    <Style x:Key="FontAwesomeIconWarning" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Foreground" Value="{DynamicResource WarningBrush}"/>
+    </Style>
+
+    <Style x:Key="FontAwesomeIconDanger" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Foreground" Value="{DynamicResource DangerBrush}"/>
+    </Style>
+
+    <Style x:Key="FontAwesomeIconInfo" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Foreground" Value="{DynamicResource InfoBrush}"/>
+    </Style>
+
+    <Style x:Key="FontAwesomeIconWhite" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Foreground" Value="{DynamicResource WhiteTextBrush}"/>
+    </Style>
+
+    <Style x:Key="FontAwesomeIconSecondary" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Foreground" Value="{DynamicResource SecondaryTextBrush}"/>
+    </Style>
+
+    <!-- Touch Mode иконки -->
+    <Style x:Key="FontAwesomeIconTouch" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Width" Value="{DynamicResource TouchModeIconNormal}"/>
+        <Setter Property="Height" Value="{DynamicResource TouchModeIconNormal}"/>
+    </Style>
+
+    <Style x:Key="FontAwesomeIconTouchLarge" TargetType="fa:ImageAwesome" BasedOn="{StaticResource FontAwesomeIconBase}">
+        <Setter Property="Width" Value="{DynamicResource TouchModeIconLarge}"/>
+        <Setter Property="Height" Value="{DynamicResource TouchModeIconLarge}"/>
+    </Style>
+
+    <!-- =============================================== -->
+    <!-- КНОПКИ С FONTAWESOME ИКОНКАМИ -->
+    <!-- =============================================== -->
+
+    <!-- Кнопка с иконкой - основная -->
+    <Style x:Key="FontAwesomeButtonPrimary" TargetType="Button" BasedOn="{StaticResource PrimaryButtonStyle}">
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="MinWidth" Value="32"/>
+        <Setter Property="MinHeight" Value="32"/>
+    </Style>
+
+    <!-- Кнопка с иконкой - вторичная -->
+    <Style x:Key="FontAwesomeButtonSecondary" TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+        <Setter Property="Padding" Value="8,6"/>
+        <Setter Property="MinWidth" Value="32"/>
+        <Setter Property="MinHeight" Value="32"/>
+    </Style>
+
+    <!-- Touch Mode кнопки -->
+    <Style x:Key="FontAwesomeButtonTouch" TargetType="Button" BasedOn="{StaticResource FontAwesomeButtonPrimary}">
+        <Setter Property="Padding" Value="12,10"/>
+        <Setter Property="MinWidth" Value="{DynamicResource TouchModeButtonMinSize}"/>
+        <Setter Property="MinHeight" Value="{DynamicResource TouchModeButtonMinSize}"/>
+        <Setter Property="FontSize" Value="16"/>
+    </Style>
+
+    <!-- =============================================== -->
+    <!-- ТЕМПЛЕЙТЫ ДЛЯ ИКОНОК С ТЕКСТОМ -->
+    <!-- =============================================== -->
+
+    <!-- Темплейт: Иконка + Текст (горизонтально) -->
+    <DataTemplate x:Key="IconTextHorizontalTemplate">
+        <StackPanel Orientation="Horizontal" VerticalAlignment="Center">
+            <ContentPresenter Content="{Binding IconText, Converter={StaticResource EmojiToFontAwesomeConverter}, ConverterParameter=16:PrimaryBrush}" 
+                            Margin="0,0,8,0"/>
+            <TextBlock Text="{Binding Text}" VerticalAlignment="Center"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- Темплейт: Иконка + Текст (вертикально) -->
+    <DataTemplate x:Key="IconTextVerticalTemplate">
+        <StackPanel Orientation="Vertical" HorizontalAlignment="Center">
+            <ContentPresenter Content="{Binding IconText, Converter={StaticResource EmojiToFontAwesomeConverter}, ConverterParameter=20:PrimaryBrush}" 
+                            HorizontalAlignment="Center" Margin="0,0,0,4"/>
+            <TextBlock Text="{Binding Text}" HorizontalAlignment="Center" TextAlignment="Center"/>
+        </StackPanel>
+    </DataTemplate>
+
+    <!-- Темплейт: Только иконка -->
+    <DataTemplate x:Key="IconOnlyTemplate">
+        <ContentPresenter Content="{Binding IconText, Converter={StaticResource EmojiToFontAwesomeConverter}, ConverterParameter=16:PrimaryBrush}" 
+                        HorizontalAlignment="Center" VerticalAlignment="Center"/>
+    </DataTemplate>
+
+    <!-- =============================================== -->
+    <!-- СТИЛИ РАДИО-КНОПОК -->
+    <!-- =============================================== -->
+    
+    <Style x:Key="RadioButtonStyle" TargetType="RadioButton">
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+        <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}"/>
+        <Setter Property="Margin" Value="{StaticResource SmallMargin}"/>
+        <Setter Property="VerticalContentAlignment" Value="Center"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="RadioButton">
+                    <Grid x:Name="templateRoot" Background="Transparent" SnapsToDevicePixels="True">
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border x:Name="radioButtonBorder" 
+                                Background="{StaticResource WhiteBrush}" 
+                                BorderBrush="{StaticResource MediumGrayBrush}" 
+                                BorderThickness="1" 
+                                HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                Margin="1" 
+                                VerticalAlignment="{TemplateBinding VerticalContentAlignment}"
+                                Width="18" Height="18"
+                                CornerRadius="9">
+                            <Grid x:Name="markGrid">
+                                <Ellipse x:Name="optionMark" 
+                                        Fill="{StaticResource PrimaryBrush}" 
+                                        Margin="3" 
+                                        Opacity="0"/>
+                            </Grid>
+                        </Border>
+                        <ContentPresenter x:Name="contentPresenter" 
+                                        Grid.Column="1" 
+                                        Focusable="False" 
+                                        HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}" 
+                                        Margin="{TemplateBinding Padding}" 
+                                        RecognizesAccessKey="True" 
+                                        SnapsToDevicePixels="{TemplateBinding SnapsToDevicePixels}" 
+                                        VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+                    </Grid>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="HasContent" Value="true">
+                            <Setter Property="Margin" TargetName="contentPresenter" Value="4,-1,0,0"/>
+                        </Trigger>
+                        <Trigger Property="IsMouseOver" Value="true">
+                            <Setter Property="BorderBrush" TargetName="radioButtonBorder" Value="{StaticResource PrimaryBrush}"/>
+                        </Trigger>
+                        <Trigger Property="IsChecked" Value="true">
+                            <Setter Property="Opacity" TargetName="optionMark" Value="1"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="false">
+                            <Setter Property="Opacity" TargetName="templateRoot" Value="0.56"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
+    <!-- =============================================== -->
+    <!-- СТИЛИ МЕНЮ И ПАНЕЛЕЙ ИНСТРУМЕНТОВ -->
+    <!-- =============================================== -->
+    
+    <!-- Стиль для Menu -->
+    <Style x:Key="MenuStyle" TargetType="Menu">
+        <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+        <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeNormal}"/>
+    </Style>
+
+    <!-- Стиль для MenuItem -->
+    <Style x:Key="MenuItemStyle" TargetType="MenuItem">
+        <Setter Property="Background" Value="Transparent"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+        <Setter Property="Padding" Value="8,4"/>
+        <Setter Property="Margin" Value="0"/>
+        <Style.Triggers>
+            <Trigger Property="IsHighlighted" Value="True">
+                <Setter Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
+                <Setter Property="Foreground" Value="White"/>
+            </Trigger>
+        </Style.Triggers>
+    </Style>
+
+    <!-- Стиль для иконок в меню -->
+    <Style x:Key="MenuIcon" TargetType="Path">
+        <Setter Property="Fill" Value="{StaticResource SecondaryTextBrush}"/>
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+        <Setter Property="Stretch" Value="Uniform"/>
+    </Style>
+
+    <!-- Стиль для иконок в панели инструментов -->
+    <Style x:Key="ToolbarIcon" TargetType="Path">
+        <Setter Property="Fill" Value="{StaticResource PrimaryBrush}"/>
+        <Setter Property="Width" Value="16"/>
+        <Setter Property="Height" Value="16"/>
+        <Setter Property="Stretch" Value="Uniform"/>
+    </Style>
+
+    <!-- Стиль для меток (labels) -->
+    <Style x:Key="LabelStyle" TargetType="TextBlock">
+        <Setter Property="FontFamily" Value="{StaticResource PrimaryFontFamily}"/>
+        <Setter Property="FontSize" Value="{StaticResource FontSizeSmall}"/>
+        <Setter Property="Foreground" Value="{StaticResource SecondaryTextBrush}"/>
+        <Setter Property="VerticalAlignment" Value="Center"/>
+    </Style>
+
+    <!-- =============================================== -->
+    <!-- ICON DATA ДЛЯ TEXTEDITOR -->
+    <!-- =============================================== -->
+    
+    <!-- Файловые операции -->
+    <PathGeometry x:Key="Icon_FileNew">M14,2H6A2,2 0 0,0 4,4V20A2,2 0 0,0 6,22H18A2,2 0 0,0 20,20V8L14,2M18,20H6V4H13V9H18V20Z</PathGeometry>
+    <PathGeometry x:Key="Icon_FolderOpen">M19,20H4C2.89,20 2,19.1 2,18V6C2,4.89 2.89,4 4,4H10L12,6H19A2,2 0 0,1 21,8H21L4,8V18L6.14,10H23.21L20.93,18.5C20.7,19.37 19.92,20 19,20Z</PathGeometry>
+    <PathGeometry x:Key="Icon_ContentSave">M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3Z</PathGeometry>
+    <PathGeometry x:Key="Icon_ContentSaveAs">M17,3H5C3.89,3 3,3.9 3,5V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V7L17,3M15,9H5V5H15M12,19A3,3 0 0,1 9,16A3,3 0 0,1 12,13A3,3 0 0,1 15,16A3,3 0 0,1 12,19Z</PathGeometry>
+    <PathGeometry x:Key="Icon_Printer">M18,3H6V7H18M19,12A1,1 0 0,1 18,11A1,1 0 0,1 19,10A1,1 0 0,1 20,11A1,1 0 0,1 19,12M16,19H8V14H16M19,8H5A3,3 0 0,0 2,11V17H6V21H18V17H22V11A3,3 0 0,0 19,8Z</PathGeometry>
+    <PathGeometry x:Key="Icon_PrinterEye">M18,3H6V7H18M19,12A1,1 0 0,1 18,11A1,1 0 0,1 19,10A1,1 0 0,1 20,11A1,1 0 0,1 19,12M16,19H8V14H16M19,8H5A3,3 0 0,0 2,11V17H6V21H18V17H22V11A3,3 0 0,0 19,8Z</PathGeometry>
+    <PathGeometry x:Key="Icon_FileDocumentMultiple">M16,0H8A2,2 0 0,0 6,2V18A2,2 0 0,0 8,20H20A2,2 0 0,0 22,18V6L16,0M20,18H8V2H15V7H20V18Z</PathGeometry>
+    <PathGeometry x:Key="Icon_ExitToApp">M19,3H5C3.89,3 3,3.89 3,5V9H5V5H19V19H5V15H3V19A2,2 0 0,0 5,21H19A2,2 0 0,0 21,19V5C21,3.89 20.1,3 19,3M10.08,15.58L11.5,17L16.5,12L11.5,7L10.08,8.41L12.67,11H3V13H12.67L10.08,15.58Z</PathGeometry>
+
+    <!-- Редактирование -->
+    <PathGeometry x:Key="Icon_Undo">M12.5,8C9.85,8 7.45,9 5.6,10.6L2,7V16H11L7.38,12.38C8.77,11.22 10.54,10.5 12.5,10.5C16.04,10.5 19.05,12.81 20.1,16L22.47,15.22C21.08,11.03 17.15,8 12.5,8Z</PathGeometry>
+    <PathGeometry x:Key="Icon_Redo">M18.4,10.6C16.55,9 14.15,8 11.5,8C6.85,8 2.92,11.03 1.53,15.22L3.9,16C4.95,12.81 7.96,10.5 11.5,10.5C13.46,10.5 15.23,11.22 16.62,12.38L13,16H22V7L18.4,10.6Z</PathGeometry>
+    <PathGeometry x:Key="Icon_ContentCut">M9.64,7.64C10.37,6.9 10.37,5.73 9.64,5C8.9,4.27 7.73,4.27 7,5C6.27,5.73 6.27,6.9 7,7.64C7.73,8.37 8.9,8.37 9.64,7.64M21.64,2.64L10.5,13.78L9.64,12.92C10.37,12.19 10.37,11.02 9.64,10.29C8.9,9.56 7.73,9.56 7,10.29C6.27,11.02 6.27,12.19 7,12.92L2,17.92L3.41,19.34L8.41,14.34L9.64,15.57C10.37,14.84 11.54,14.84 12.27,15.57C13,16.3 13,17.47 12.27,18.2C11.54,18.93 10.37,18.93 9.64,18.2L8.83,17.39L7.42,18.8L8.23,19.61C9.7,21.08 12.05,21.08 13.52,19.61C14.25,18.88 14.58,17.92 14.5,16.97L22,9.46L21.64,2.64Z</PathGeometry>
+    <PathGeometry x:Key="Icon_ContentCopy">M19,21H8V7H19M19,5H8A2,2 0 0,0 6,7V21A2,2 0 0,0 8,23H19A2,2 0 0,0 21,21V7A2,2 0 0,0 19,5M16,1H4A2,2 0 0,0 2,3V17H4V3H16V1Z</PathGeometry>
+    <PathGeometry x:Key="Icon_ContentPaste">M19,20H5V4H7V7H17V4H19M12,2A1,1 0 0,1 13,3A1,1 0 0,1 12,4A1,1 0 0,1 11,3A1,1 0 0,1 12,2M19,2H14.82C14.4,0.84 13.3,0 12,0C10.7,0 9.6,0.84 9.18,2H5A2,2 0 0,0 3,4V20A2,2 0 0,0 5,22H19A2,2 0 0,0 21,20V4A2,2 0 0,0 19,2Z</PathGeometry>
+    <PathGeometry x:Key="Icon_SelectAll">M9,9H15V15H9M7,17H17V7H7M15,5H17V3H15M15,21H17V19H15M19,17H21V15H19M19,9H21V7H19M19,21A2,2 0 0,0 21,19H19M19,13H21V11H19M11,21H13V19H11M9,3H11V5H9M19,3V5H21A2,2 0 0,0 19,3M7,21H9V19H7M3,17H5V15H3M5,7H3V9H5M3,13H5V11H3A2,2 0 0,0 3,13M5,3H7V5H5M3,19H5V21A2,2 0 0,0 5,19H3V17Z</PathGeometry>
+    <PathGeometry x:Key="Icon_Magnify">M9.5,3A6.5,6.5 0 0,1 16,9.5C16,11.11 15.41,12.59 14.44,13.73L14.71,14H15.5L20.5,19L19,20.5L14,15.5V14.71L13.73,14.44C12.59,15.41 11.11,16 9.5,16A6.5,6.5 0 0,1 3,9.5A6.5,6.5 0 0,1 9.5,3M9.5,5C7,5 5,7 5,9.5C5,12 7,14 9.5,14C12,14 14,12 14,9.5C14,7 12,5 9.5,5Z</PathGeometry>
+
+    <!-- Форматирование -->
+    <PathGeometry x:Key="Icon_FormatBold">M13.5,15.5H10V12.5H13.5A1.5,1.5 0 0,1 15,14A1.5,1.5 0 0,1 13.5,15.5M10,6.5H13A1.5,1.5 0 0,1 14.5,8A1.5,1.5 0 0,1 13,9.5H10M15.6,10.79C16.57,10.11 17.25,9.02 17.25,8C17.25,5.74 15.5,4 13.25,4H7V18H14.04C16.14,18 17.75,16.3 17.75,14.21C17.75,12.69 16.89,11.39 15.6,10.79Z</PathGeometry>
+    <PathGeometry x:Key="Icon_FormatItalic">M10,4V7H12.21L8.79,15H6V18H14V15H11.79L15.21,7H18V4H10Z</PathGeometry>
+    <PathGeometry x:Key="Icon_FormatUnderline">M5,21H19V19H5V21M12,17A6,6 0 0,0 18,11V3H15.5V11A3.5,3.5 0 0,1 12,14.5A3.5,3.5 0 0,1 8.5,11V3H6V11A6,6 0 0,0 12,17Z</PathGeometry>
+    <PathGeometry x:Key="Icon_FormatColorText">M9.62,12L12,5.67L14.38,12M11,3L5.5,17H7.75L8.87,14H15.13L16.25,17H18.5L13,3H11Z</PathGeometry>
+    <PathGeometry x:Key="Icon_FormatColorHighlight">M18.5,4L19.66,8.35L18.7,8.61C18.25,7.74 17.79,6.87 17.26,6.43C16.73,6 16.11,6 15.5,6H13V16.5C13,17 13,17.5 13.33,17.75C13.67,18 14.33,18 15,18V19H9V18C9.67,18 10.33,18 10.67,17.75C11,17.5 11,17 11,16.5V6H8.5C7.89,6 7.27,6 6.74,6.43C6.21,6.87 5.75,7.74 5.3,8.61L4.34,8.35L5.5,4H18.5Z</PathGeometry>
+    <PathGeometry x:Key="Icon_FormatFont">M9,10V12H7V10A5,5 0 0,1 12,5A5,5 0 0,1 17,10V12H15V10A3,3 0 0,0 12,7A3,3 0 0,0 9,10M12,2A8,8 0 0,1 20,10V18A4,4 0 0,1 16,22H8A4,4 0 0,1 4,18V10A8,8 0 0,1 12,2Z</PathGeometry>
+    <PathGeometry x:Key="Icon_Lock">M12,17A2,2 0 0,0 14,15C14,13.89 13.1,13 12,13A2,2 0 0,0 10,15A2,2 0 0,0 12,17M18,8A2,2 0 0,1 20,10V20A2,2 0 0,1 18,22H6A2,2 0 0,1 4,20V10C4,8.89 4.9,8 6,8H7V6A5,5 0 0,1 12,1A5,5 0 0,1 17,6V8H18M12,3A3,3 0 0,0 9,6V8H15V6A3,3 0 0,0 12,3Z</PathGeometry>
+
+    <!-- =============================================== -->
+    <!-- АЛИАСЫ СТИЛЕЙ (для обратной совместимости) -->
+    <!-- =============================================== -->
+    
+    <!-- Все стили теперь имеют прямые имена без префикса Corporate -->
 
 </ResourceDictionary>

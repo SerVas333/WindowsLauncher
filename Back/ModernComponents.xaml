@@ -30,7 +30,7 @@
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
                 <Setter Property="Effect" Value="{StaticResource CorporateShadowDepth2}"/>
-                <Setter Property="Background" Value="{StaticResource CorporateGray50}"/>
+                <Setter Property="Background" Value="{StaticResource OffWhiteBrush}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -39,7 +39,7 @@
     
     <!-- Базовый Chip -->
     <Style x:Key="CorporateChip" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource CorporateGray100}"/>
+        <Setter Property="Background" Value="{StaticResource LightGrayBrush}"/>
         <Setter Property="CornerRadius" Value="16"/>
         <Setter Property="Padding" Value="12,6"/>
         <Setter Property="Margin" Value="4,2"/>
@@ -50,7 +50,7 @@
     
     <!-- Активный Chip -->
     <Style x:Key="CorporateChipActive" TargetType="Border" BasedOn="{StaticResource CorporateChip}">
-        <Setter Property="Background" Value="{StaticResource CorporateRed}"/>
+        <Setter Property="Background" Value="{StaticResource CorporateRedBrush}"/>
     </Style>
     
     <!-- Badge для счетчиков -->
@@ -83,7 +83,7 @@
     <Style x:Key="CorporateFloatingLabelTextBox" TargetType="TextBox">
         <Setter Property="Background" Value="{StaticResource CorporateSurface}"/>
         <Setter Property="Foreground" Value="{StaticResource CorporateOnSurface}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource CorporateGray300}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CorporateGrayBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
         <Setter Property="Padding" Value="0,16,0,8"/>
         <Setter Property="FontFamily" Value="Segoe UI"/>
@@ -106,7 +106,7 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsFocused" Value="True">
-                            <Setter Property="BorderBrush" Value="{StaticResource CorporateRed}"/>
+                            <Setter Property="BorderBrush" Value="{StaticResource CorporateRedBrush}"/>
                             <Setter Property="BorderThickness" Value="0,0,0,2"/>
                         </Trigger>
                         <Trigger Property="IsEnabled" Value="False">
@@ -123,7 +123,7 @@
     <!-- Кнопки табов -->
     <Style x:Key="CorporateTabButton" TargetType="Button">
         <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateTextMuted}"/>
+        <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
         <Setter Property="BorderThickness" Value="0,0,0,2"/>
         <Setter Property="BorderBrush" Value="Transparent"/>
         <Setter Property="Padding" Value="16,12"/>
@@ -146,11 +146,11 @@
                     </Border>
                     <ControlTemplate.Triggers>
                         <Trigger Property="IsMouseOver" Value="True">
-                            <Setter Property="Foreground" Value="{StaticResource CorporateText}"/>
-                            <Setter Property="Background" Value="{StaticResource CorporateGray50}"/>
+                            <Setter Property="Foreground" Value="{StaticResource PrimaryTextBrush}"/>
+                            <Setter Property="Background" Value="{StaticResource OffWhiteBrush}"/>
                         </Trigger>
                         <Trigger Property="IsPressed" Value="True">
-                            <Setter Property="Background" Value="{StaticResource CorporateGray100}"/>
+                            <Setter Property="Background" Value="{StaticResource LightGrayBrush}"/>
                         </Trigger>
                     </ControlTemplate.Triggers>
                 </ControlTemplate>
@@ -160,8 +160,8 @@
     
     <!-- Активная кнопка таба -->
     <Style x:Key="CorporateTabButtonActive" TargetType="Button" BasedOn="{StaticResource CorporateTabButton}">
-        <Setter Property="Foreground" Value="{StaticResource CorporateRed}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource CorporateRed}"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateRedBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource CorporateRedBrush}"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
     </Style>
 
@@ -194,8 +194,8 @@
         <Setter Property="IsIndeterminate" Value="True"/>
         <Setter Property="Width" Value="32"/>
         <Setter Property="Height" Value="32"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateRed}"/>
-        <Setter Property="Background" Value="{StaticResource CorporateGray200}"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateRedBrush}"/>
+        <Setter Property="Background" Value="{StaticResource MediumGrayBrush}"/>
         <Setter Property="Template">
             <Setter.Value>
                 <ControlTemplate TargetType="ProgressBar">
@@ -212,8 +212,8 @@
     <!-- Линейный прогресс -->
     <Style x:Key="CorporateProgressBar" TargetType="ProgressBar">
         <Setter Property="Height" Value="4"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateRed}"/>
-        <Setter Property="Background" Value="{StaticResource CorporateGray200}"/>
+        <Setter Property="Foreground" Value="{StaticResource CorporateRedBrush}"/>
+        <Setter Property="Background" Value="{StaticResource MediumGrayBrush}"/>
         <Setter Property="BorderThickness" Value="0"/>
         <Setter Property="Template">
             <Setter.Value>
@@ -243,11 +243,11 @@
         <Setter Property="Padding" Value="16,12"/>
         <Setter Property="Margin" Value="0"/>
         <Setter Property="BorderThickness" Value="0,0,0,1"/>
-        <Setter Property="BorderBrush" Value="{StaticResource CorporateGray200}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource MediumGrayBrush}"/>
         <Setter Property="Cursor" Value="Hand"/>
         <Style.Triggers>
             <Trigger Property="IsMouseOver" Value="True">
-                <Setter Property="Background" Value="{StaticResource CorporateGray50}"/>
+                <Setter Property="Background" Value="{StaticResource OffWhiteBrush}"/>
             </Trigger>
         </Style.Triggers>
     </Style>
@@ -257,7 +257,7 @@
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="12"/>
         <Setter Property="FontWeight" Value="SemiBold"/>
-        <Setter Property="Foreground" Value="{StaticResource CorporateTextMuted}"/>
+        <Setter Property="Foreground" Value="{StaticResource MutedTextBrush}"/>
         <Setter Property="Margin" Value="16,16,16,8"/>
     </Style>
 
@@ -266,7 +266,7 @@
     <!-- Горизонтальный разделитель -->
     <Style x:Key="CorporateHorizontalDivider" TargetType="Rectangle">
         <Setter Property="Height" Value="1"/>
-        <Setter Property="Fill" Value="{StaticResource CorporateGray200}"/>
+        <Setter Property="Fill" Value="{StaticResource MediumGrayBrush}"/>
         <Setter Property="Margin" Value="0,8"/>
         <Setter Property="HorizontalAlignment" Value="Stretch"/>
     </Style>
@@ -274,7 +274,7 @@
     <!-- Вертикальный разделитель -->
     <Style x:Key="CorporateVerticalDivider" TargetType="Rectangle">
         <Setter Property="Width" Value="1"/>
-        <Setter Property="Fill" Value="{StaticResource CorporateGray200}"/>
+        <Setter Property="Fill" Value="{StaticResource MediumGrayBrush}"/>
         <Setter Property="Margin" Value="8,0"/>
         <Setter Property="VerticalAlignment" Value="Stretch"/>
     </Style>
@@ -283,7 +283,7 @@
     
     <!-- Современный tooltip -->
     <Style x:Key="CorporateTooltip" TargetType="ToolTip">
-        <Setter Property="Background" Value="{StaticResource CorporateGray800}"/>
+        <Setter Property="Background" Value="{StaticResource DarkGrayBrush}"/>
         <Setter Property="Foreground" Value="White"/>
         <Setter Property="FontFamily" Value="Segoe UI"/>
         <Setter Property="FontSize" Value="12"/>

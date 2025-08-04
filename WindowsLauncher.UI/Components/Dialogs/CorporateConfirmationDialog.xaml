@@ -11,9 +11,9 @@
         Background="Transparent"
         ResizeMode="NoResize">
 
-    <Border Background="{StaticResource CorporateWhite}"
+    <Border Background="{StaticResource WhiteBrush}"
             CornerRadius="8"
-            Effect="{StaticResource MaterialDesignShadowDepth3}">
+            Effect="{StaticResource CorporateShadowDepth3}">
         
         <Grid>
             <Grid.RowDefinitions>
@@ -24,7 +24,7 @@
 
             <!-- Header with corporate gradient -->
             <Border Grid.Row="0"
-                    Background="{StaticResource CorporateHeaderGradient}"
+                    Background="{StaticResource PrimaryBrush}"
                     CornerRadius="8,8,0,0">
                 <Grid>
                     <Grid.ColumnDefinitions>
@@ -43,7 +43,7 @@
                     <Button Grid.Column="1"
                             Name="CloseButton"
                             Click="CloseButton_Click"
-                            Style="{StaticResource MaterialDesignIconButton}"
+                            Style="{StaticResource CorporateIconButton}"
                             Width="40"
                             Height="40"
                             Margin="0,0,8,0"
@@ -67,7 +67,7 @@
                                  Kind="AlertCircleOutline"
                                  Width="32"
                                  Height="32"
-                                 Foreground="{StaticResource CorporateRed}"
+                                 Foreground="{StaticResource PrimaryBrush}"
                                  VerticalAlignment="Top"
                                  Margin="0,0,16,0"/>
                     
@@ -83,8 +83,8 @@
                 <TextBlock Grid.Row="1"
                            Name="DetailsTextBlock"
                            Text="{Binding DialogDetails}"
-                           Style="{StaticResource MaterialDesignCaptionTextBlock}"
-                           Foreground="{StaticResource MaterialDesignBodyLight}"
+                           Style="{StaticResource CaptionTextBlock}"
+                           Foreground="{StaticResource CorporateBodyLight}"
                            TextWrapping="Wrap"
                            Visibility="{Binding HasDetails, Converter={StaticResource BooleanToVisibilityConverter}}"
                            Margin="48,0,0,0"/>
@@ -99,7 +99,7 @@
                 
                 <Button Name="CancelButton"
                         Click="CancelButton_Click"
-                        Style="{StaticResource CorporateButtonSecondary}"
+                        Style="{StaticResource SecondaryButtonStyle}"
                         Content="{Binding CancelButtonText}"
                         Width="100"
                         Height="36"
@@ -107,7 +107,7 @@
                 
                 <Button Name="ConfirmButton"
                         Click="ConfirmButton_Click"
-                        Style="{StaticResource CorporateButton}"
+                        Style="{StaticResource PrimaryButtonStyle}"
                         Content="{Binding ConfirmButtonText}"
                         Width="100"
                         Height="36"/>

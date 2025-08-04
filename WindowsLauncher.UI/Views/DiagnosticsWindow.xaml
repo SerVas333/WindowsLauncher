@@ -15,7 +15,7 @@
         </Grid.RowDefinitions>
 
         <!-- Header -->
-        <Border Grid.Row="0" Background="{StaticResource CorporateHeaderGradient}" Padding="16">
+        <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}" Padding="16">
             <TextBlock Text="🔧 Диагностика системы" 
                        FontSize="18" FontWeight="SemiBold"
                        Foreground="White" 
@@ -41,24 +41,24 @@
         </ScrollViewer>
 
         <!-- Footer -->
-        <Border Grid.Row="2" Background="{StaticResource CorporateGrayLight}" 
+        <Border Grid.Row="2" Background="{StaticResource CorporateGrayLightBrush}" 
                 BorderThickness="0,1,0,0" BorderBrush="{StaticResource CorporateBorder}"
                 Padding="16">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" >
                 <Button Content="📋 Копировать в буфер" 
                         Click="CopyToClipboard_Click"
-                        Style="{StaticResource CorporateButtonSecondary}"
+                        Style="{StaticResource SecondaryButtonStyle}"
                         Margin="0,0,8,0"/>
                 
                 <Button Content="💾 Сохранить в файл" 
                         Click="SaveToFile_Click"
-                        Style="{StaticResource CorporateButton}"
+                        Style="{StaticResource PrimaryButtonStyle}"
                         Margin="0,0,8,0"/>
                 
                 <Button Content="Закрыть" 
                         IsCancel="True"
                         Click="Close_Click"
-                        Style="{StaticResource CorporateButtonSecondary}"/>
+                        Style="{StaticResource SecondaryButtonStyle}"/>
             </StackPanel>
         </Border>
     </Grid>

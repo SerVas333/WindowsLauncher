@@ -8,24 +8,6 @@
 
     <!-- Ресурсы окна -->
     <Window.Resources>
-        <!-- Стили для элементов интерфейса -->
-        <Style x:Key="ToolbarButtonStyle" TargetType="Button">
-            <Setter Property="Padding" Value="8,4,8,4"/>
-            <Setter Property="Margin" Value="2,0,2,0"/>
-            <Setter Property="FontSize" Value="14"/>
-            <Setter Property="ToolTipService.ShowOnDisabled" Value="True"/>
-        </Style>
-
-        <Style x:Key="MenuItemStyle" TargetType="MenuItem">
-            <Setter Property="Height" Value="32"/>
-        </Style>
-
-        <Style x:Key="StatusBarTextStyle" TargetType="TextBlock">
-            <Setter Property="Margin" Value="5,2,5,2"/>
-            <Setter Property="VerticalAlignment" Value="Center"/>
-            <Setter Property="FontSize" Value="11"/>
-        </Style>
-
         <!-- Конвертер для видимости элементов -->
         <BooleanToVisibilityConverter x:Key="BoolToVisibilityConverter"/>
     </Window.Resources>
@@ -70,10 +52,10 @@
         </Grid.RowDefinitions>
 
         <!-- МЕНЮ БАР -->
-        <Menu Grid.Row="0" Style="{StaticResource CorporateMenu}">
+        <Menu Grid.Row="0" Style="{StaticResource MenuStyle}">
             
             <!-- Меню "Файл" -->
-            <MenuItem Header="{x:Static properties:Resources.TextEditor_File}" Style="{StaticResource CorporateMenuItem}">
+            <MenuItem Header="{x:Static properties:Resources.TextEditor_File}" Style="{StaticResource MenuItemStyle}">
                 <MenuItem x:Name="NewMenuItem" 
                           Header="{x:Static properties:Resources.TextEditor_New}" 
                           Command="ApplicationCommands.New"
@@ -158,7 +140,7 @@
             </MenuItem>
             
             <!-- Меню "Правка" -->
-            <MenuItem Header="{x:Static properties:Resources.TextEditor_Edit}" Style="{StaticResource CorporateMenuItem}">
+            <MenuItem Header="{x:Static properties:Resources.TextEditor_Edit}" Style="{StaticResource MenuItemStyle}">
                 <MenuItem Header="{x:Static properties:Resources.TextEditor_Undo}" 
                           Command="ApplicationCommands.Undo"
                           InputGestureText="Ctrl+Z">
@@ -215,7 +197,7 @@
             
             <!-- Меню "Формат" (условно показывается) -->
             <MenuItem Header="{x:Static properties:Resources.TextEditor_Format}" 
-                      Style="{StaticResource CorporateMenuItem}"
+                      Style="{StaticResource MenuItemStyle}"
                       Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}">
                 <MenuItem Header="{x:Static properties:Resources.TextEditor_Bold}" 
                           Command="EditingCommands.ToggleBold"
@@ -264,7 +246,7 @@
             </MenuItem>
             
             <!-- Меню "Вид" -->
-            <MenuItem Header="{x:Static properties:Resources.TextEditor_View}" Style="{StaticResource CorporateMenuItem}">
+            <MenuItem Header="{x:Static properties:Resources.TextEditor_View}" Style="{StaticResource MenuItemStyle}">
                 <MenuItem x:Name="ReadOnlyMenuItem" 
                           Header="{x:Static properties:Resources.TextEditor_ReadOnly}" 
                           IsCheckable="True"
@@ -296,14 +278,14 @@
                 <Button x:Name="NewButton"
                         ToolTip="Создать (Ctrl+N)"
                         Command="ApplicationCommands.New"
-                        Style="{StaticResource CorporateToolbarButton}">
+                        Style="{StaticResource SecondaryButtonStyle}">
                     <Path Data="{StaticResource Icon_FileNew}" Style="{StaticResource ToolbarIcon}"/>
                 </Button>
                 
                 <Button x:Name="OpenButton"
                         ToolTip="Открыть (Ctrl+O)"
                         Command="ApplicationCommands.Open"
-                        Style="{StaticResource CorporateToolbarButton}"
+                        Style="{StaticResource SecondaryButtonStyle}"
                         Visibility="{Binding AllowOpenFiles, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path Data="{StaticResource Icon_FolderOpen}" Style="{StaticResource ToolbarIcon}"/>
                 </Button>
@@ -311,7 +293,7 @@
                 <Button x:Name="SaveButton"
                         ToolTip="Сохранить (Ctrl+S)"
                         Command="ApplicationCommands.Save"
-                        Style="{StaticResource CorporateToolbarButton}"
+                        Style="{StaticResource SecondaryButtonStyle}"
                         Visibility="{Binding AllowSaveFiles, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path Data="{StaticResource Icon_ContentSave}" Style="{StaticResource ToolbarIcon}"/>
                 </Button>
@@ -319,7 +301,7 @@
                 <Button x:Name="PrintButton"
                         ToolTip="Печать (Ctrl+P)"
                         Command="ApplicationCommands.Print"
-                        Style="{StaticResource CorporateToolbarButton}"
+                        Style="{StaticResource SecondaryButtonStyle}"
                         Visibility="{Binding AllowPrint, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path Data="{StaticResource Icon_Printer}" Style="{StaticResource ToolbarIcon}"/>
                 </Button>
@@ -329,19 +311,19 @@
                 <!-- Операции редактирования -->
                 <Button ToolTip="Вырезать (Ctrl+X)"
                         Command="ApplicationCommands.Cut"
-                        Style="{StaticResource CorporateToolbarButton}">
+                        Style="{StaticResource SecondaryButtonStyle}">
                     <Path Data="{StaticResource Icon_ContentCut}" Style="{StaticResource ToolbarIcon}"/>
                 </Button>
                 
                 <Button ToolTip="Копировать (Ctrl+C)"
                         Command="ApplicationCommands.Copy"
-                        Style="{StaticResource CorporateToolbarButton}">
+                        Style="{StaticResource SecondaryButtonStyle}">
                     <Path Data="{StaticResource Icon_ContentCopy}" Style="{StaticResource ToolbarIcon}"/>
                 </Button>
                 
                 <Button ToolTip="Вставить (Ctrl+V)"
                         Command="ApplicationCommands.Paste"
-                        Style="{StaticResource CorporateToolbarButton}">
+                        Style="{StaticResource SecondaryButtonStyle}">
                     <Path Data="{StaticResource Icon_ContentPaste}" Style="{StaticResource ToolbarIcon}"/>
                 </Button>
                 
@@ -351,7 +333,7 @@
                 <Button x:Name="BoldButton"
                         ToolTip="Полужирный (Ctrl+B)"
                         Command="EditingCommands.ToggleBold"
-                        Style="{StaticResource CorporateToolbarButton}"
+                        Style="{StaticResource SecondaryButtonStyle}"
                         Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path Data="{StaticResource Icon_FormatBold}" Style="{StaticResource ToolbarIcon}"/>
                 </Button>
@@ -359,7 +341,7 @@
                 <Button x:Name="ItalicButton"
                         ToolTip="Курсив (Ctrl+I)"
                         Command="EditingCommands.ToggleItalic"
-                        Style="{StaticResource CorporateToolbarButton}"
+                        Style="{StaticResource SecondaryButtonStyle}"
                         Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path Data="{StaticResource Icon_FormatItalic}" Style="{StaticResource ToolbarIcon}"/>
                 </Button>
@@ -367,7 +349,7 @@
                 <Button x:Name="UnderlineButton"
                         ToolTip="Подчеркнутый (Ctrl+U)"
                         Command="EditingCommands.ToggleUnderline"
-                        Style="{StaticResource CorporateToolbarButton}"
+                        Style="{StaticResource SecondaryButtonStyle}"
                         Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}">
                     <Path Data="{StaticResource Icon_FormatUnderline}" Style="{StaticResource ToolbarIcon}"/>
                 </Button>
@@ -383,7 +365,7 @@
                           SelectedValue="12"
                           SelectionChanged="FontSizeComboBox_SelectionChanged"
                           Visibility="{Binding AllowFormatting, Converter={StaticResource BoolToVisibilityConverter}}"
-                          Style="{StaticResource CorporateComboBox}">
+                          Style="{StaticResource ComboBoxStyle}">
                     <ComboBoxItem Content="8"/>
                     <ComboBoxItem Content="9"/>
                     <ComboBoxItem Content="10"/>
@@ -442,7 +424,7 @@
             <StatusBarItem>
                 <TextBlock x:Name="StatusText" 
                            Text="{x:Static properties:Resources.TextEditor_Ready}"
-                           Style="{StaticResource StatusBarTextStyle}"/>
+                           Style="{StaticResource LabelStyle}"/>
             </StatusBarItem>
             
             <Separator/>
@@ -450,7 +432,7 @@
             <StatusBarItem>
                 <TextBlock x:Name="LineColumnText" 
                            Text="Строка 1, Столбец 1"
-                           Style="{StaticResource StatusBarTextStyle}"/>
+                           Style="{StaticResource LabelStyle}"/>
             </StatusBarItem>
             
             <Separator/>
@@ -461,7 +443,7 @@
                            Foreground="{StaticResource PrimaryBrush}"
                            FontWeight="Bold">
                     <TextBlock.Style>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource StatusBarTextStyle}">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource LabelStyle}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsReadOnlyMode}" Value="True">
                                     <Setter Property="Text" Value="{x:Static properties:Resources.TextEditor_ReadOnlyIndicator}"/>
@@ -480,7 +462,7 @@
                            Foreground="{StaticResource PrimaryBrush}"
                            FontWeight="Bold">
                     <TextBlock.Style>
-                        <Style TargetType="TextBlock" BasedOn="{StaticResource StatusBarTextStyle}">
+                        <Style TargetType="TextBlock" BasedOn="{StaticResource LabelStyle}">
                             <Style.Triggers>
                                 <DataTrigger Binding="{Binding IsModified}" Value="True">
                                     <Setter Property="Text" Value="{x:Static properties:Resources.TextEditor_ModifiedIndicator}"/>

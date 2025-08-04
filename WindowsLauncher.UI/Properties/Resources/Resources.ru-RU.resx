@@ -893,4 +893,50 @@
   <data name="Dialog_No" xml:space="preserve">
     <value>Нет</value>
   </data>
+  <data name="AdminWindow_UIDemoButton" xml:space="preserve">
+    <value>🎨 UI Demo</value>
+  </data>
+  <data name="AdminWindow_UIDemoTooltip" xml:space="preserve">
+    <value>Демонстрация UI элементов и Touch Mode (Ctrl+Shift+U)</value>
+  </data>
+  <data name="AppSwitcher_Title" xml:space="preserve">
+    <value>Переключение приложений</value>
+  </data>
+  <data name="AppSwitcher_Navigation" xml:space="preserve">
+    <value>навигация</value>
+  </data>
+  <data name="AppSwitcher_Switch" xml:space="preserve">
+    <value>переключить</value>
+  </data>
+  <data name="AppSwitcher_Cancel" xml:space="preserve">
+    <value>отмена</value>
+  </data>
+  <data name="AppSwitcher_ShellMode" xml:space="preserve">
+    <value>Режим: Shell (Alt+Tab, Ctrl+Alt+Tab)</value>
+  </data>
+  <data name="AppSwitcher_NormalMode" xml:space="preserve">
+    <value>Режим: Обычный Windows (Win+`, Win+Shift+`)</value>
+  </data>
+  <data name="AppSwitcher_UnknownMode" xml:space="preserve">
+    <value>Режим: Неизвестный</value>
+  </data>
+  <!-- LoginWindow additional localization keys -->
+  <data name="LoginWindow_LocalUsername" xml:space="preserve">
+    <value>Имя пользователя</value>
+  </data>
+  <data name="LoginWindow_LocalPassword" xml:space="preserve">
+    <value>Пароль</value>
+  </data>
+  <data name="LoginWindow_GuestWelcome" xml:space="preserve">
+    <value>Гостевой вход</value>
+  </data>
+  <data name="LoginWindow_GuestDescription" xml:space="preserve">
+    <value>Нажмите 'Войти' для входа в гостевом режиме</value>
+  </data>
+  <data name="LoginWindow_GuestLimitationWarning" xml:space="preserve">
+    <value>⚠️ Ограниченный доступ к приложениям</value>
+  </data>
+  <data name="LoginWindow_VirtualKeyboardTooltip" xml:space="preserve">
+    <value>Виртуальная клавиатура</value>
+  </data>
 </root>

@@ -1,8 +1,11 @@
 <Window x:Class="WindowsLauncher.UI.Components.AppSwitcher.AppSwitcherWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
-        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-        xmlns:materialDesign="http://materialdesigninxaml.net/winfx/xaml/themes"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"        
         xmlns:local="clr-namespace:WindowsLauncher.UI.Components.AppSwitcher"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        xmlns:properties="clr-namespace:WindowsLauncher.UI.Properties.Resources"
+        xmlns:localization="clr-namespace:WindowsLauncher.UI.Infrastructure.Localization"
+
         Title="App Switcher" 
         SizeToContent="Manual"
         WindowStyle="None" 
@@ -18,10 +21,8 @@
     <Window.Resources>
         <ResourceDictionary>
             <!-- Подключение корпоративных ресурсов -->
-            <ResourceDictionary.MergedDictionaries>
-                <ResourceDictionary Source="/Styles/MaterialColors.xaml"/>
-                <ResourceDictionary Source="/Styles/MaterialStyles.xaml"/>
-                <ResourceDictionary Source="/Styles/CorporateStyles.xaml"/>
+            <ResourceDictionary.MergedDictionaries>                
+                <ResourceDictionary Source="/Styles/CorporateStylesFull.xaml"/>
             </ResourceDictionary.MergedDictionaries>
             
             <!-- Локальные конвертеры для AppSwitcher -->
@@ -44,11 +45,11 @@
 
         <!-- Стиль для карточек приложений (компактный) -->
         <Style x:Key="AppSwitcherCard" TargetType="Border">
-            <Setter Property="Background" Value="{DynamicResource MaterialDesignCardBackground}"/>
+                <Setter Property="Background" Value="{DynamicResource WhiteBrush}"/>
             <Setter Property="CornerRadius" Value="6"/>
             <Setter Property="Margin" Value="6"/>
             <Setter Property="Padding" Value="8"/>
-            <Setter Property="BorderBrush" Value="{DynamicResource MaterialDesignDivider}"/>
+                <Setter Property="BorderBrush" Value="{DynamicResource LightGrayBrush}"/>
             <Setter Property="BorderThickness" Value="1"/>
             <Setter Property="Width" Value="150"/>
             <Setter Property="Height" Value="110"/>
@@ -60,7 +61,7 @@
             </Setter>
             <Style.Triggers>
                 <Trigger Property="Tag" Value="Selected">
-                    <Setter Property="BorderBrush" Value="{StaticResource CorporateRed}"/>
+                    <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
                     <Setter Property="BorderThickness" Value="2"/>
                     <Setter Property="Effect">
                         <Setter.Value>
@@ -71,7 +72,7 @@
                 <!-- Визуальная индикация свернутых приложений -->
                 <DataTrigger Binding="{Binding IsMinimized}" Value="True">
                     <Setter Property="Opacity" Value="0.7"/>
-                    <Setter Property="Background" Value="{DynamicResource MaterialDesignDivider}"/>
+                        <Setter Property="Background" Value="{DynamicResource LightGrayBrush}"/>
                 </DataTrigger>
             </Style.Triggers>
         </Style>
@@ -82,10 +83,10 @@
     <Border Background="#FAFAFA" CornerRadius="12">
         <Grid>
             <!-- Основной контейнер -->
-            <Border Background="{StaticResource CorporateGrayDark}" 
+            <Border Background="{StaticResource MediumGrayBrush}" 
                     CornerRadius="12" 
                     Margin="2"
-                    Effect="{DynamicResource MaterialDesignShadowDepth3}"
+                    Effect="{DynamicResource CorporateShadowDepth3}"
                     RenderTransformOrigin="0.5,0.5">
                 <Border.RenderTransform>
                     <ScaleTransform ScaleX="1" ScaleY="1"/>
@@ -100,11 +101,11 @@
 
                     <!-- Заголовок -->
                     <StackPanel Grid.Row="0" Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,20">
-                        <materialDesign:PackIcon Kind="ApplicationOutline" 
-                                               Foreground="{StaticResource CorporateRed}" 
+                        <fa:ImageAwesome Icon="WindowMaximize"
+                                               Foreground="{StaticResource PrimaryBrush}" 
                                                Width="24" Height="24" 
                                                VerticalAlignment="Center" Margin="0,0,8,0"/>
-                        <TextBlock Text="Переключение приложений" 
+                        <TextBlock Text="{Binding Source={x:Static localization:LocalizationHelper.Instance}, Path=AppSwitcher_Title}" 
                                    Style="{StaticResource CorporateSubtitle}"
                                    VerticalAlignment="Center"/>
                     </StackPanel>
@@ -134,7 +135,7 @@
                                             <!-- Иконка приложения (уменьшенная) -->
                                             <Border Grid.Row="0" 
                                                     Width="36" Height="36" 
-                                                    Background="{StaticResource CorporateRed}" 
+                                                    Background="{StaticResource PrimaryBrush}" 
                                                     CornerRadius="18" 
                                                     HorizontalAlignment="Center"
                                                     Margin="0,0,0,6">
@@ -206,14 +207,14 @@
                     <StackPanel Grid.Row="2" Orientation="Vertical" HorizontalAlignment="Center" Margin="0,20,0,0">
                         <!-- Навигация -->
                         <StackPanel Orientation="Horizontal" HorizontalAlignment="Center" Margin="0,0,0,8">
-                            <TextBlock Text="↑↓←→" FontFamily="Segoe UI Symbol" Foreground="{StaticResource CorporateRed}" Margin="0,0,4,0"/>
-                            <TextBlock Text="навигация" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,16,0"/>
+                            <TextBlock Text="↑↓←→" FontFamily="Segoe UI Symbol" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding Source={x:Static localization:LocalizationHelper.Instance}, Path=AppSwitcher_Navigation}" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,16,0"/>
                             
-                            <TextBlock Text="Enter" FontFamily="Consolas" Foreground="{StaticResource CorporateRed}" Margin="0,0,4,0"/>
-                            <TextBlock Text="переключить" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,16,0"/>
+                            <TextBlock Text="Enter" FontFamily="Consolas" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding Source={x:Static localization:LocalizationHelper.Instance}, Path=AppSwitcher_Switch}" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}" Margin="0,0,16,0"/>
                             
-                            <TextBlock Text="Esc" FontFamily="Consolas" Foreground="{StaticResource CorporateRed}" Margin="0,0,4,0"/>
-                            <TextBlock Text="отмена" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
+                            <TextBlock Text="Esc" FontFamily="Consolas" Foreground="{StaticResource PrimaryBrush}" Margin="0,0,4,0"/>
+                            <TextBlock Text="{Binding Source={x:Static localization:LocalizationHelper.Instance}, Path=AppSwitcher_Cancel}" FontSize="11" Foreground="{DynamicResource MaterialDesignBodyLight}"/>
                         </StackPanel>
                         
                         <!-- Информация о режиме -->

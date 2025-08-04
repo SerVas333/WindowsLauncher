@@ -893,4 +893,50 @@
   <data name="Dialog_No" xml:space="preserve">
     <value>No</value>
   </data>
+  <data name="AdminWindow_UIDemoButton" xml:space="preserve">
+    <value>🎨 UI Demo</value>
+  </data>
+  <data name="AdminWindow_UIDemoTooltip" xml:space="preserve">
+    <value>Demonstration of UI elements and Touch Mode (Ctrl+Shift+U)</value>
+  </data>
+  <data name="AppSwitcher_Title" xml:space="preserve">
+    <value>Application Switcher</value>
+  </data>
+  <data name="AppSwitcher_Navigation" xml:space="preserve">
+    <value>navigation</value>
+  </data>
+  <data name="AppSwitcher_Switch" xml:space="preserve">
+    <value>switch</value>
+  </data>
+  <data name="AppSwitcher_Cancel" xml:space="preserve">
+    <value>cancel</value>
+  </data>
+  <data name="AppSwitcher_ShellMode" xml:space="preserve">
+    <value>Mode: Shell (Alt+Tab, Ctrl+Alt+Tab)</value>
+  </data>
+  <data name="AppSwitcher_NormalMode" xml:space="preserve">
+    <value>Mode: Normal Windows (Win+`, Win+Shift+`)</value>
+  </data>
+  <data name="AppSwitcher_UnknownMode" xml:space="preserve">
+    <value>Mode: Unknown</value>
+  </data>
+  <!-- LoginWindow additional localization keys -->
+  <data name="LoginWindow_LocalUsername" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="LoginWindow_LocalPassword" xml:space="preserve">
+    <value>Password</value>
+  </data>
+  <data name="LoginWindow_GuestWelcome" xml:space="preserve">
+    <value>Guest Login</value>
+  </data>
+  <data name="LoginWindow_GuestDescription" xml:space="preserve">
+    <value>Click 'Login' to enter in guest mode</value>
+  </data>
+  <data name="LoginWindow_GuestLimitationWarning" xml:space="preserve">
+    <value>⚠️ Limited access to applications</value>
+  </data>
+  <data name="LoginWindow_VirtualKeyboardTooltip" xml:space="preserve">
+    <value>Virtual Keyboard</value>
+  </data>
 </root>
