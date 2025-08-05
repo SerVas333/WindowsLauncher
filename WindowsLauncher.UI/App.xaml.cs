@@ -295,6 +295,7 @@ namespace WindowsLauncher.UI
             services.AddScoped<IAuthenticationService, AuthenticationService>();
             services.AddScoped<IAuthorizationService, AuthorizationService>();
             services.AddScoped<IApplicationService, ApplicationService>();
+            services.AddScoped<ICategoryManagementService, WindowsLauncher.Services.Categories.CategoryManagementService>();
             services.AddScoped<IAuditService, AuditService>();
             
             // Новый сервис локальных пользователей

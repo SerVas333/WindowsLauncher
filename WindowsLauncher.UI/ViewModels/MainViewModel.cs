@@ -38,6 +38,7 @@ namespace WindowsLauncher.UI.ViewModels
         private bool _isLoading = false;
         private bool _isInitialized = false;
         private bool _isVirtualKeyboardVisible = false;
+        private bool _isSidebarVisible = false;
 
         #endregion
 
@@ -397,48 +398,123 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                var categories = await appService.GetCategoriesAsync();
-                var hiddenCategories = UserSettings?.HiddenCategories ?? new List<string>();
-
+                // Используем CategoryManagementService для получения видимых категорий с полными метаданными
+                using var scope = _serviceProvider.CreateScope();
+                var categoryService = scope.ServiceProvider.GetService<ICategoryManagementService>();
+                
                 LocalizedCategories.Clear();
 
-                // Add "All" category
+                // Add "All" category first
                 LocalizedCategories.Add(new CategoryViewModel
                 {
                     Key = "All",
                     DisplayName = LocalizationHelper.Instance.GetString("CategoryAll"),
-                    IsSelected = SelectedCategory == "All"
+                    IsSelected = SelectedCategory == "All",
+                    Color = "#2196F3", // Default blue for "All" category
+                    Icon = "ViewGridOutline" // Grid icon for all items view
                 });
 
-                // Add other categories
-                foreach (var category in categories.Where(c => !hiddenCategories.Contains(c)))
+                if (categoryService != null && CurrentUser != null)
                 {
-                    var localizedName = GetLocalizedCategoryName(category);
-                    LocalizedCategories.Add(new CategoryViewModel
+                    // Получаем видимые категории с метаданными через CategoryManagementService
+                    var categoryDefinitions = await categoryService.GetVisibleCategoriesAsync(CurrentUser);
+                    
+                    foreach (var categoryDef in categoryDefinitions)
                     {
-                        Key = category,
-                        DisplayName = localizedName,
-                        IsSelected = SelectedCategory == category
-                    });
+                        // Используем CategoryManagementService для получения базового имени
+                        var baseName = categoryService.GetLocalizedCategoryName(categoryDef);
+                        
+                        // Применяем UI-слойную локализацию через LocalizationHelper
+                        var localizedName = GetLocalizedCategoryName(categoryDef.LocalizationKey, baseName);
+                        
+                        LocalizedCategories.Add(new CategoryViewModel
+                        {
+                            Key = categoryDef.Key,
+                            DisplayName = localizedName,
+                            IsSelected = SelectedCategory == categoryDef.Key,
+                            Color = categoryDef.Color,
+                            Icon = categoryDef.Icon
+                        });
+                    }
+                    
+                    Logger.LogInformation("Loaded {Count} categories via CategoryManagementService (predefined + dynamic)", LocalizedCategories.Count - 1);
                 }
+                else
+                {
+                    // Fallback: используем старый метод через ApplicationService
+                    Logger.LogWarning("CategoryManagementService not available, falling back to ApplicationService");
+                    
+                    var categories = await appService.GetCategoriesAsync();
+                    var hiddenCategories = UserSettings?.HiddenCategories ?? new List<string>();
 
-                Logger.LogInformation("Loaded {Count} localized categories", LocalizedCategories.Count);
+                    // Add other categories with defaults
+                    foreach (var category in categories.Where(c => !hiddenCategories.Contains(c)))
+                    {
+                        var localizedName = GetLocalizedCategoryName($"Category_{category}", category);
+                        LocalizedCategories.Add(new CategoryViewModel
+                        {
+                            Key = category,
+                            DisplayName = localizedName,
+                            IsSelected = SelectedCategory == category,
+                            Color = "#666666", // Default gray
+                            Icon = "FolderOpen" // Default folder icon
+                        });
+                    }
+                    
+                    Logger.LogInformation("Loaded {Count} categories via ApplicationService fallback", LocalizedCategories.Count - 1);
+                }
             }
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Failed to load categories");
+                
+                // Добавляем минимальную категорию "All" для стабильности UI
+                if (LocalizedCategories.Count == 0)
+                {
+                    LocalizedCategories.Add(new CategoryViewModel
+                    {
+                        Key = "All",
+                        DisplayName = LocalizationHelper.Instance.GetString("CategoryAll") ?? "All",
+                        IsSelected = true,
+                        Color = "#2196F3",
+                        Icon = "ViewGridOutline"
+                    });
+                }
             }
         }
 
+        private string GetLocalizedCategoryName(string localizationKey, string fallbackName)
+        {
+            if (string.IsNullOrEmpty(localizationKey)) 
+                return fallbackName ?? "";
+
+            try
+            {
+                var localized = LocalizationHelper.Instance.GetString(localizationKey);
+                
+                // Если локализация найдена и отличается от ключа, используем её
+                if (!string.IsNullOrEmpty(localized) && localized != localizationKey)
+                {
+                    return localized;
+                }
+                
+                // Fallback на оригинальное название
+                return fallbackName ?? localizationKey;
+            }
+            catch (Exception ex)
+            {
+                Logger.LogDebug(ex, "Error getting localized name for key {Key}, using fallback", localizationKey);
+                return fallbackName ?? localizationKey;
+            }
+        }
+
+        // Перегрузка для обратной совместимости
         private string GetLocalizedCategoryName(string category)
         {
             if (string.IsNullOrEmpty(category)) return category;
 
-            var key = $"Category{category}";
-            var localized = LocalizationHelper.Instance.GetString(key);
-
-            // Если локализация не найдена, возвращаем оригинальное название
-            return !string.IsNullOrEmpty(localized) && localized != key ? localized : category;
+            var key = $"Category_{category}";
+            return GetLocalizedCategoryName(key, category);
         }
 
         private UserSettings CreateDefaultSettings()
@@ -519,31 +595,39 @@ namespace WindowsLauncher.UI.ViewModels
                 Applications.Add(new ApplicationViewModel(app));
             }
 
-            // Load test categories
+            // Load test categories with icons and colors
             LocalizedCategories.Clear();
             LocalizedCategories.Add(new CategoryViewModel
             {
                 Key = "All",
                 DisplayName = LocalizationHelper.Instance.GetString("CategoryAll"),
-                IsSelected = true
+                IsSelected = true,
+                Color = "#2196F3",
+                Icon = "ViewGridOutline"
             });
             LocalizedCategories.Add(new CategoryViewModel
             {
                 Key = "Utilities",
                 DisplayName = LocalizationHelper.Instance.GetString("Category_Utilities"),
-                IsSelected = false
+                IsSelected = false,
+                Color = "#4CAF50",
+                Icon = "Wrench"
             });
             LocalizedCategories.Add(new CategoryViewModel
             {
                 Key = "System",
                 DisplayName = LocalizationHelper.Instance.GetString("CategorySystem"),
-                IsSelected = false
+                IsSelected = false,
+                Color = "#2196F3",
+                Icon = "Cogs"
             });
             LocalizedCategories.Add(new CategoryViewModel
             {
                 Key = "Web",
                 DisplayName = LocalizationHelper.Instance.GetString("CategoryWeb"),
-                IsSelected = false
+                IsSelected = false,
+                Color = "#9C27B0",
+                Icon = "Globe"
             });
 
             FilterApplications();
@@ -562,7 +646,7 @@ namespace WindowsLauncher.UI.ViewModels
             OnPropertyChanged(nameof(WindowTitle));
             OnPropertyChanged(nameof(LocalizedRole));
 
-            // Обновляем категории
+            // Обновляем категории с учетом новой системы CategoryManagementService
             foreach (var category in LocalizedCategories)
             {
                 if (category.Key == "All")
@@ -571,7 +655,44 @@ namespace WindowsLauncher.UI.ViewModels
                 }
                 else
                 {
-                    category.DisplayName = GetLocalizedCategoryName(category.Key);
+                    // Используем CategoryManagementService для получения правильного ключа локализации
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            using var scope = _serviceProvider.CreateScope();
+                            var categoryService = scope.ServiceProvider.GetService<ICategoryManagementService>();
+                            
+                            if (categoryService != null)
+                            {
+                                var categoryDef = await categoryService.GetCategoryByKeyAsync(category.Key);
+                                if (categoryDef != null)
+                                {
+                                    var baseName = categoryService.GetLocalizedCategoryName(categoryDef);
+                                    var localizedName = GetLocalizedCategoryName(categoryDef.LocalizationKey, baseName);
+                                    
+                                    // Обновляем в UI потоке
+                                    System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
+                                    {
+                                        category.DisplayName = localizedName;
+                                    });
+                                }
+                            }
+                            else
+                            {
+                                // Fallback на старую логику
+                                var localizedName = GetLocalizedCategoryName(category.Key);
+                                System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
+                                {
+                                    category.DisplayName = localizedName;
+                                });
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Logger.LogError(ex, "Error updating category localization for {Key}", category.Key);
+                        }
+                    });
                 }
             }
 
@@ -909,6 +1030,8 @@ namespace WindowsLauncher.UI.ViewModels
     {
         private string _displayName = "";
         private bool _isSelected;
+        private string _color = "#666666";
+        private string _icon = "FolderOpen";
 
         public string Key { get; set; } = "";
 
@@ -933,6 +1056,38 @@ namespace WindowsLauncher.UI.ViewModels
                 if (_isSelected != value)
                 {
                     _isSelected = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Цвет категории в hex формате
+        /// </summary>
+        public string Color
+        {
+            get => _color;
+            set
+            {
+                if (_color != value)
+                {
+                    _color = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Иконка FontAwesome
+        /// </summary>
+        public string Icon
+        {
+            get => _icon;
+            set
+            {
+                if (_icon != value)
+                {
+                    _icon = value;
                     OnPropertyChanged();
                 }
             }

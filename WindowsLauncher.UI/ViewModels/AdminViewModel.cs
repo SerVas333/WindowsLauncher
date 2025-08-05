@@ -10,10 +10,12 @@ using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using System.Windows.Data;
 using Microsoft.Win32;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
+using WindowsLauncher.Core.Models.Configuration;
 using WindowsLauncher.Core.Enums;
 using WindowsLauncher.UI.Infrastructure.Commands;
 using WindowsLauncher.UI.Infrastructure.Services;
@@ -516,17 +518,8 @@ namespace WindowsLauncher.UI.ViewModels
                 Applications.Add(editVm);
             }
 
-            // Обновляем список категорий
-            var categories = Applications.Select(a => a.Category)
-                .Where(c => !string.IsNullOrEmpty(c))
-                .Distinct()
-                .OrderBy(c => c);
-
-            AvailableCategories.Clear();
-            foreach (var category in categories)
-            {
-                AvailableCategories.Add(category);
-            }
+            // Обновляем список категорий через CategoryManagementService
+            await LoadAvailableCategoriesAsync();
 
             OnPropertyChanged(nameof(TotalApplications));
             OnPropertyChanged(nameof(EnabledApplications));
@@ -552,6 +545,77 @@ namespace WindowsLauncher.UI.ViewModels
             foreach (var group in testGroups.OrderBy(g => g))
             {
                 AvailableGroups.Add(group);
+            }
+        }
+
+        private async Task LoadAvailableCategoriesAsync()
+        {
+            try
+            {
+                AvailableCategories.Clear();
+                
+                using var scope = _serviceProvider.CreateScope();
+                var categoryService = scope.ServiceProvider.GetService<ICategoryManagementService>();
+                
+                if (categoryService != null)
+                {
+                    // Получаем все категории (для админа показываем все)
+                    var categories = await categoryService.GetAllCategoriesAsync();
+                    
+                    foreach (var category in categories.OrderBy(c => c.SortOrder).ThenBy(c => c.DefaultName))
+                    {
+                        AvailableCategories.Add(category.Key);
+                    }
+                    
+                    Logger.LogInformation("Loaded {Count} categories for AdminWindow", AvailableCategories.Count);
+                }
+                else
+                {
+                    // Fallback - берем категории из существующих приложений
+                    Logger.LogWarning("CategoryManagementService not available, using fallback category loading");
+                    
+                    var categoriesFromApps = Applications.Select(a => a.Category)
+                        .Where(c => !string.IsNullOrEmpty(c))
+                        .Distinct()
+                        .OrderBy(c => c);
+
+                    foreach (var category in categoriesFromApps)
+                    {
+                        AvailableCategories.Add(category);
+                    }
+                    
+                    // Добавляем предустановленные категории из конфигурации
+                    try
+                    {
+                        var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
+                        var predefinedCategories = configuration.GetSection("Categories:PredefinedCategories").Get<List<CategoryDefinition>>();
+                        
+                        if (predefinedCategories != null)
+                        {
+                            foreach (var predefinedCategory in predefinedCategories)
+                            {
+                                if (!AvailableCategories.Contains(predefinedCategory.Key))
+                                {
+                                    AvailableCategories.Add(predefinedCategory.Key);
+                                }
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        Logger.LogWarning(ex, "Could not load predefined categories from configuration");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error loading available categories");
+                
+                // Minimal fallback
+                if (AvailableCategories.Count == 0)
+                {
+                    AvailableCategories.Add("General");
+                }
             }
         }
 

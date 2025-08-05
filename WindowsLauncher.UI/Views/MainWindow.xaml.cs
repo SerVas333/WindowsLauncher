@@ -260,6 +260,9 @@ namespace WindowsLauncher.UI
 
                 // Обновляем UI кнопки переключателя
                 UpdateAppSwitcherButtonState(modeDescription, hotKeysDescription);
+                
+                // Адаптируем интерфейс под Shell режим
+                AdaptUIForShellMode(_currentShellMode);
             }
             catch (Exception ex)
             {
@@ -731,6 +734,56 @@ namespace WindowsLauncher.UI
             }
             
             return null;
+        }
+
+        /// <summary>
+        /// Адаптация интерфейса MainWindow под Shell режим
+        /// </summary>
+        private void AdaptUIForShellMode(ShellMode shellMode)
+        {
+            try
+            {
+                if (shellMode == ShellMode.Shell)
+                {
+                    _logger?.LogInformation("Adapting MainWindow for Shell mode");
+                    
+                    // 1. Полноэкранный режим при старте
+                    WindowState = WindowState.Maximized;
+                    WindowStyle = WindowStyle.None;
+                    ResizeMode = ResizeMode.NoResize;
+                    
+                    // 2. Скрываем статус бар (он есть на SystemTaskbar)
+                    if (FindName("StatusBar") is Border statusBar)
+                    {
+                        statusBar.Visibility = Visibility.Collapsed;
+                    }
+                    
+                    // Альтернативно, если статус бар находится в Grid.Row="3"
+                    var grid = Content as Grid;
+                    if (grid != null && grid.Children.Count > 3)
+                    {
+                        // Скрываем последний элемент (статус бар в Row="3")
+                        foreach (UIElement child in grid.Children)
+                        {
+                            if (Grid.GetRow(child) == 3)
+                            {
+                                child.Visibility = Visibility.Collapsed;
+                                break;
+                            }
+                        }
+                    }
+                    
+                    _logger?.LogDebug("MainWindow adapted for Shell mode: fullscreen, no chrome, no status bar");
+                }
+                else
+                {
+                    _logger?.LogInformation("MainWindow running in Normal mode - no adaptations needed");
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error adapting UI for Shell mode");
+            }
         }
     }
 }

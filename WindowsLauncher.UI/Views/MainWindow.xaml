@@ -144,7 +144,7 @@
             </Grid>
         </Border>
 
-        <!-- Categories Bar - ИСПРАВЛЕНО -->
+        <!-- Categories Bar -->
         <Border Grid.Row="1" Background="White" Padding="24,12"
                 BorderThickness="0,0,0,1"
                 BorderBrush="{StaticResource LightGrayBrush}"
@@ -293,7 +293,7 @@
         </ScrollViewer>
 
         <!-- Status Bar - ИСПРАВЛЕНО -->
-        <Border Grid.Row="3" Background="White"
+        <Border x:Name="StatusBar" Grid.Row="3" Background="White"
                 BorderThickness="0,1,0,0"
                 BorderBrush="{StaticResource LightGrayBrush}">
 
