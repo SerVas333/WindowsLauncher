@@ -336,7 +336,7 @@
                                 <Grid x:Name="AppTileContent">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
-                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="*"/>
                                         <RowDefinition Height="Auto"/>
                                     </Grid.RowDefinitions>
 
@@ -354,7 +354,8 @@
                                     </Border>
 
                                     <!-- App Info -->
-                                    <StackPanel Grid.Row="1" x:Name="AppInfoPanel" Margin="0,0,0,12">
+                                    <StackPanel Grid.Row="1" x:Name="AppInfoPanel" 
+                                               VerticalAlignment="Top" Margin="0,0,0,0">
                                         <TextBlock Text="{Binding Name}" 
                                                   FontWeight="SemiBold" FontSize="12"
                                                   TextAlignment="Center" TextWrapping="Wrap"
@@ -367,18 +368,15 @@
                                                   LineHeight="16"/>
                                     </StackPanel>
 
-                                    <!-- Category Badge -->
-                                    <Border Grid.Row="2" 
-                                           Background="{StaticResource CorporateGrayDarkBrush}" 
-                                           CornerRadius="12"
-                                           Padding="8,3" 
-                                           HorizontalAlignment="Center" 
-                                           Margin="0,8,0,0">
-                                        <TextBlock Text="{Binding LocalizedCategory}" 
-                                                  FontSize="9" 
-                                                  Foreground="{StaticResource MutedTextBrush}"
-                                                  FontWeight="SemiBold"/>
-                                    </Border>
+                                    <!-- Category Label -->
+                                    <TextBlock Grid.Row="2" 
+                                              Text="{Binding LocalizedCategory}" 
+                                              FontSize="10" 
+                                              Foreground="{StaticResource PrimaryLightBrush}"
+                                              FontWeight="SemiBold"
+                                              HorizontalAlignment="Center"
+                                              VerticalAlignment="Bottom"
+                                              Margin="0,0,0,8"/>
                                 </Grid>
 
                                 <Border.InputBindings>

@@ -332,7 +332,7 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                 FileName = resolvedPath,
                 UseShellExecute = true, // Важно для desktop приложений
                 CreateNoWindow = false,
-                WindowStyle = ProcessWindowStyle.Normal
+                WindowStyle = ProcessWindowStyle.Maximized // Открываем приложения в полноэкранном режиме
             };
             
             // Добавляем аргументы если есть
@@ -641,6 +641,25 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                         instance.State = ApplicationState.Running;
                         _logger.LogInformation("Found UWP application window: {AppName} (Launcher PID: {LauncherPid}, App PID: {AppPid}, Title: '{Title}')", 
                             application.Name, process.Id, (int)uwpWindow.ProcessId, uwpWindow.Title);
+                        
+                        // Принудительно максимизируем UWP окно через Windows API
+                        try
+                        {
+                            var maximized = await _windowManager.MaximizeWindowAsync(uwpWindow.Handle);
+                            if (maximized)
+                            {
+                                _logger.LogDebug("Successfully maximized UWP window for {AppName}", application.Name);
+                            }
+                            else
+                            {
+                                _logger.LogWarning("Failed to maximize UWP window for {AppName}", application.Name);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogWarning(ex, "Error maximizing UWP window for {AppName}", application.Name);
+                        }
+                        
                         return instance;
                     }
                     else
@@ -657,6 +676,24 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                     instance.State = ApplicationState.Running;
                     _logger.LogDebug("Created instance with main window: {AppName} '{WindowTitle}'", 
                         application.Name, mainWindow.Title);
+                    
+                    // Принудительно максимизируем окно через Windows API
+                    try
+                    {
+                        var maximized = await _windowManager.MaximizeWindowAsync(mainWindow.Handle);
+                        if (maximized)
+                        {
+                            _logger.LogDebug("Successfully maximized window for {AppName}", application.Name);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to maximize window for {AppName}", application.Name);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error maximizing window for {AppName}", application.Name);
+                    }
                 }
                 else
                 {

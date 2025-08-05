@@ -4,7 +4,8 @@
         xmlns:properties="clr-namespace:WindowsLauncher.UI.Properties.Resources"
         Title="{x:Static properties:Resources.TextEditor_Title}"
         Width="900" Height="700"
-        WindowStartupLocation="CenterScreen">
+        WindowStartupLocation="CenterScreen"
+        WindowState="Maximized">
 
     <!-- Ресурсы окна -->
     <Window.Resources>

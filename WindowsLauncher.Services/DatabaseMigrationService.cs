@@ -31,10 +31,11 @@ namespace WindowsLauncher.Services
             _dbConfigService = dbConfigService;
             _logger = logger;
             
-            // Список миграций версии 1.0.0
+            // Список всех миграций по порядку версий
             _migrations = new List<IDatabaseMigration>
             {
-                new InitialSchema()
+                new InitialSchema(),        // v1.0.0.001
+                new AddEmailSupport()       // v1.1.0.001
             };
         }
         

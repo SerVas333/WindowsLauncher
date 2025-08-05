@@ -282,13 +282,14 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                 FileName = chromePath,
                 UseShellExecute = false,
                 CreateNoWindow = false,
-                WindowStyle = ProcessWindowStyle.Normal
+                WindowStyle = ProcessWindowStyle.Maximized // Открываем Chrome App в полноэкранном режиме
             };
             
             // Строим аргументы для Chrome App
             var args = new List<string>
             {
                 $"--app={application.ExecutablePath}",  // Главный аргумент для Chrome App
+                "--start-maximized",         // Запускаем в полноэкранном режиме
                 "--no-first-run",            // Пропускаем первоначальную настройку
                 "--no-default-browser-check", // Не проверяем браузер по умолчанию
                 "--disable-default-apps",    // Отключаем дефолтные приложения

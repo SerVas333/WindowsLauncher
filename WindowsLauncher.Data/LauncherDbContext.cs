@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using WindowsLauncher.Core.Models;
+using WindowsLauncher.Core.Models.Email;
 using WindowsLauncher.Data.Configurations;
 using WindowsLauncher.Core.Interfaces;
 
@@ -24,6 +25,10 @@ namespace WindowsLauncher.Data
         public DbSet<Application> Applications { get; set; }
         public DbSet<UserSettings> UserSettings { get; set; }
         public DbSet<AuditLog> AuditLogs { get; set; }
+        
+        // Email функциональность
+        public DbSet<Contact> Contacts { get; set; }
+        public DbSet<SmtpSettings> SmtpSettings { get; set; }
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -49,6 +54,10 @@ namespace WindowsLauncher.Data
             modelBuilder.ApplyConfiguration(new ApplicationConfiguration());
             modelBuilder.ApplyConfiguration(new UserSettingsConfiguration());
             modelBuilder.ApplyConfiguration(new AuditLogConfiguration());
+            
+            // Email функциональность
+            modelBuilder.ApplyConfiguration(new ContactConfiguration());
+            modelBuilder.ApplyConfiguration(new SmtpSettingsConfiguration());
 
             // Применяем общие настройки для всех БД
             ApplyUniversalConfiguration(modelBuilder);

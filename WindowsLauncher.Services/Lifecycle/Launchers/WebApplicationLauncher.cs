@@ -95,7 +95,7 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                     FileName = normalizedUrl,
                     UseShellExecute = true, // Важно для запуска через браузер по умолчанию
                     CreateNoWindow = false,
-                    WindowStyle = ProcessWindowStyle.Normal
+                    WindowStyle = ProcessWindowStyle.Maximized // Открываем браузер в полноэкранном режиме
                 };
                 
                 // Запускаем процесс
@@ -122,6 +122,24 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                             instance.Metadata["LaunchType"] = "WebApplication";
                             instance.Metadata["BrowserUrl"] = normalizedUrl;
                             instance.Metadata["WindowTitle"] = browserWindow.Title;
+                            
+                            // Принудительно максимизируем окно браузера через Windows API
+                            try
+                            {
+                                var maximized = await _windowManager.MaximizeWindowAsync(browserWindow.Handle);
+                                if (maximized)
+                                {
+                                    _logger.LogDebug("Successfully maximized browser window for {AppName}", application.Name);
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("Failed to maximize browser window for {AppName}", application.Name);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Error maximizing browser window for {AppName}", application.Name);
+                            }
                             
                             await _processMonitor.DisposeProcessSafelyAsync(browserProcess);
                             
@@ -167,6 +185,24 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                             instance.Metadata["LaunchType"] = "WebApplication";
                             instance.Metadata["BrowserUrl"] = normalizedUrl;
                             
+                            // Принудительно максимизируем окно браузера через Windows API
+                            try
+                            {
+                                var maximized = await _windowManager.MaximizeWindowAsync(browserWindow.Handle);
+                                if (maximized)
+                                {
+                                    _logger.LogDebug("Successfully maximized new browser window for {AppName}", application.Name);
+                                }
+                                else
+                                {
+                                    _logger.LogWarning("Failed to maximize new browser window for {AppName}", application.Name);
+                                }
+                            }
+                            catch (Exception ex)
+                            {
+                                _logger.LogWarning(ex, "Error maximizing new browser window for {AppName}", application.Name);
+                            }
+                            
                             await _processMonitor.DisposeProcessSafelyAsync(process);
                             await _processMonitor.DisposeProcessSafelyAsync(browserProcess);
                             
@@ -194,6 +230,24 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                     normalInstance.MainWindow = mainWindow;
                     normalInstance.State = ApplicationState.Running;
                     normalInstance.Metadata["WindowTitle"] = mainWindow.Title;
+                    
+                    // Принудительно максимизируем главное окно браузера через Windows API
+                    try
+                    {
+                        var maximized = await _windowManager.MaximizeWindowAsync(mainWindow.Handle);
+                        if (maximized)
+                        {
+                            _logger.LogDebug("Successfully maximized main browser window for {AppName}", application.Name);
+                        }
+                        else
+                        {
+                            _logger.LogWarning("Failed to maximize main browser window for {AppName}", application.Name);
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogWarning(ex, "Error maximizing main browser window for {AppName}", application.Name);
+                    }
                 }
                 
                 normalInstance.Metadata["LaunchType"] = "WebApplication";

@@ -6,6 +6,7 @@
         Height="600" Width="1024"
         MinHeight="400" MinWidth="640"
         WindowStartupLocation="CenterScreen"
+        WindowState="Maximized"
         Closing="Window_Closing">
 
     <Grid>

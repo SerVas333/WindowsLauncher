@@ -102,7 +102,7 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                     Arguments = $"\"{normalizedPath}\"",
                     UseShellExecute = false,
                     CreateNoWindow = false,
-                    WindowStyle = ProcessWindowStyle.Normal
+                    WindowStyle = ProcessWindowStyle.Maximized // Открываем проводник в полноэкранном режиме
                 };
                 
                 // Запускаем проводник

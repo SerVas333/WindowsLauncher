@@ -288,6 +288,10 @@ namespace WindowsLauncher.UI
             services.AddScoped<IUserRepository, UserRepository>();
             services.AddScoped<IAuditLogRepository, AuditLogRepository>();
             services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
+            
+            // Email репозитории
+            services.AddScoped<IContactRepository, WindowsLauncher.Data.Repositories.ContactRepository>();
+            services.AddScoped<ISmtpSettingsRepository, WindowsLauncher.Data.Repositories.SmtpSettingsRepository>();
 
             // Основные сервисы
             services.AddSingleton<IAuthenticationConfigurationService, AuthenticationConfigurationService>();
@@ -297,6 +301,10 @@ namespace WindowsLauncher.UI
             services.AddScoped<IApplicationService, ApplicationService>();
             services.AddScoped<ICategoryManagementService, WindowsLauncher.Services.Categories.CategoryManagementService>();
             services.AddScoped<IAuditService, AuditService>();
+            
+            // Email сервисы
+            services.AddScoped<WindowsLauncher.Core.Interfaces.Email.IEmailService, WindowsLauncher.Services.Email.EmailService>();
+            services.AddScoped<WindowsLauncher.Core.Interfaces.Email.IAddressBookService, WindowsLauncher.Services.Email.AddressBookService>();
             
             // Новый сервис локальных пользователей
             services.AddScoped<ILocalUserService, LocalUserService>();
