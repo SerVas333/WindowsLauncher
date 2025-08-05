@@ -40,10 +40,8 @@
         <Grid.RowDefinitions>
             <RowDefinition Height="70"/>
             <!-- Header -->
-            <RowDefinition Height="Auto"/>
-            <!-- Categories -->
             <RowDefinition Height="*"/>
-            <!-- Content -->
+            <!-- Content with Sidebar -->
             <RowDefinition Height="35"/>
             <!-- Status bar -->
         </Grid.RowDefinitions>
@@ -144,35 +142,159 @@
             </Grid>
         </Border>
 
-        <!-- Categories Bar -->
-        <Border Grid.Row="1" Background="White" Padding="24,12"
-                BorderThickness="0,0,0,1"
-                BorderBrush="{StaticResource LightGrayBrush}"
-                Visibility="{Binding ShowCategories, Converter={StaticResource BoolToVisConverter}}">
-
-            <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Hidden">
-                <ItemsControl ItemsSource="{Binding LocalizedCategories}">
-                    <ItemsControl.ItemsPanel>
-                        <ItemsPanelTemplate>
-                            <StackPanel Orientation="Horizontal"/>
-                        </ItemsPanelTemplate>
-                    </ItemsControl.ItemsPanel>
-                    <ItemsControl.ItemTemplate>
-                        <DataTemplate>
-                            <Button Content="{Binding DisplayName}" 
-                                    Style="{StaticResource SecondaryButtonStyle}"
-                                    Command="{Binding RelativeSource={RelativeSource AncestorType=ItemsControl}, 
-                                            Path=DataContext.SelectCategoryCommand}"
-                                    CommandParameter="{Binding Key}"/>
-                        </DataTemplate>
-                    </ItemsControl.ItemTemplate>
-                </ItemsControl>
-            </ScrollViewer>
-        </Border>
-
-        <!-- Main Content -->
-        <ScrollViewer Grid.Row="2" Padding="24" Background="{StaticResource SurfaceVariantBrush}">
-            <Grid>
+        <!-- Main Content with Sidebar -->
+        <Grid Grid.Row="1" Background="{StaticResource SurfaceVariantBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <!-- Sidebar -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Toggle Panel -->
+                <ColumnDefinition Width="*"/>
+                <!-- Content -->
+            </Grid.ColumnDefinitions>
+            
+            <!-- Sidebar -->
+            <Border Grid.Column="0" 
+                    Background="White" 
+                    BorderThickness="0,0,1,0" 
+                    BorderBrush="{StaticResource LightGrayBrush}"
+                    Width="280"
+                    Visibility="{Binding IsSidebarVisible, Converter={StaticResource BoolToVisConverter}}">
+                
+                <ScrollViewer VerticalScrollBarVisibility="Auto" 
+                              HorizontalScrollBarVisibility="Hidden" 
+                              Padding="16">
+                    <StackPanel>
+                        <!-- Sidebar Header -->
+                        <TextBlock Text="Категории" 
+                                   FontFamily="Segoe UI"
+                                   FontSize="16" 
+                                   FontWeight="SemiBold"
+                                   Foreground="{StaticResource PrimaryTextBrush}"
+                                   Margin="0,0,0,16"/>
+                        
+                        <!-- Categories List -->
+                        <ItemsControl ItemsSource="{Binding LocalizedCategories}">
+                            <ItemsControl.ItemTemplate>
+                                <DataTemplate>
+                                    <Border Margin="0,0,0,8" 
+                                            Background="Transparent"
+                                            CornerRadius="4">
+                                        <CheckBox IsChecked="{Binding IsChecked}"
+                                                  Content="{Binding DisplayName}"
+                                                  FontFamily="Segoe UI"
+                                                  FontSize="21"
+                                                  Padding="12,12"
+                                                  HorizontalAlignment="Stretch">
+                                            <CheckBox.Template>
+                                                <ControlTemplate TargetType="CheckBox">
+                                                    <Border Background="{TemplateBinding Background}"
+                                                            BorderBrush="{StaticResource LightGrayBrush}"
+                                                            BorderThickness="1"
+                                                            CornerRadius="4"
+                                                            Padding="18,12">
+                                                        <Grid>
+                                                            <Grid.ColumnDefinitions>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                                <ColumnDefinition Width="*"/>
+                                                                <ColumnDefinition Width="Auto"/>
+                                                            </Grid.ColumnDefinitions>
+                                                            
+                                                            <!-- Category Icon -->
+                                                            <fa:ImageAwesome Grid.Column="0"
+                                                                           Icon="{Binding Icon}"
+                                                                           Width="20" Height="20"
+                                                                           Foreground="{Binding Color}"
+                                                                           Margin="0,0,12,0"
+                                                                           VerticalAlignment="Center"/>
+                                                            
+                                                            <!-- Category Name -->
+                                                            <ContentPresenter Grid.Column="2"
+                                                                            Content="{TemplateBinding Content}"
+                                                                            VerticalAlignment="Center"
+                                                                            TextElement.Foreground="{StaticResource PrimaryTextBrush}"/>
+                                                            
+                                                            <!-- Checkbox -->
+                                                            <Border Grid.Column="3"
+                                                                    Width="27" Height="27"
+                                                                    Background="{StaticResource SurfaceBrush}"
+                                                                    BorderBrush="{StaticResource PrimaryBrush}"
+                                                                    BorderThickness="2"
+                                                                    CornerRadius="4"
+                                                                    VerticalAlignment="Center">
+                                                                <fa:ImageAwesome Icon="Check"
+                                                                               Width="15" Height="15"
+                                                                               Foreground="{StaticResource PrimaryBrush}"
+                                                                               HorizontalAlignment="Center"
+                                                                               VerticalAlignment="Center"
+                                                                               Visibility="{TemplateBinding IsChecked, Converter={StaticResource BoolToVisConverter}}"/>
+                                                            </Border>
+                                                        </Grid>
+                                                    </Border>
+                                                    
+                                                    <ControlTemplate.Triggers>
+                                                        <Trigger Property="IsMouseOver" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource SurfaceVariantBrush}"/>
+                                                        </Trigger>
+                                                        <Trigger Property="IsChecked" Value="True">
+                                                            <Setter Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
+                                                        </Trigger>
+                                                    </ControlTemplate.Triggers>
+                                                </ControlTemplate>
+                                            </CheckBox.Template>
+                                        </CheckBox>
+                                    </Border>
+                                </DataTemplate>
+                            </ItemsControl.ItemTemplate>
+                        </ItemsControl>
+                    </StackPanel>
+                </ScrollViewer>
+            </Border>
+            
+            <!-- Sidebar Toggle Panel -->
+            <Border Grid.Column="1" 
+                    Background="White" 
+                    BorderThickness="0,0,1,0" 
+                    BorderBrush="{StaticResource LightGrayBrush}"
+                    Width="80"
+                    Padding="20">
+                <Button Command="{Binding ToggleSidebarCommand}"
+                        ToolTip="Показать/скрыть боковую панель категорий"
+                        Width="32" Height="32" Padding="4"
+                        VerticalAlignment="Top"
+                        Margin="0,8,0,0">
+                    <Button.Style>
+                        <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
+                            <Style.Triggers>
+                                <!-- Индикация активного фильтра -->
+                                <DataTrigger Binding="{Binding HasActiveFilter}" Value="True">
+                                    <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                                </DataTrigger>
+                            </Style.Triggers>
+                        </Style>
+                    </Button.Style>
+                    <fa:ImageAwesome Icon="Sliders" 
+                                   Width="18" Height="18" 
+                                   HorizontalAlignment="Center" VerticalAlignment="Center">
+                        <fa:ImageAwesome.Style>
+                            <Style TargetType="fa:ImageAwesome">
+                                <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                                <Style.Triggers>
+                                    <!-- Изменяем цвет иконки при активном фильтре -->
+                                    <DataTrigger Binding="{Binding HasActiveFilter}" Value="True">
+                                        <Setter Property="Foreground" Value="{StaticResource OnPrimaryBrush}"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </fa:ImageAwesome.Style>
+                    </fa:ImageAwesome>
+                </Button>
+            </Border>
+            
+            <!-- Applications Content -->
+            <ScrollViewer Grid.Column="2" Padding="24" Background="{StaticResource SurfaceVariantBrush}">
+                <Grid>
                 <!-- Loading Indicator -->
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
                            Visibility="{Binding IsLoading, Converter={StaticResource BoolToVisConverter}}">
@@ -289,11 +411,12 @@
                               Margin="0,8,0,0"
                               TextAlignment="Center"/>
                 </StackPanel>
-            </Grid>
-        </ScrollViewer>
+                </Grid>
+            </ScrollViewer>
+        </Grid>
 
         <!-- Status Bar - ИСПРАВЛЕНО -->
-        <Border x:Name="StatusBar" Grid.Row="3" Background="White"
+        <Border x:Name="StatusBar" Grid.Row="2" Background="White"
                 BorderThickness="0,1,0,0"
                 BorderBrush="{StaticResource LightGrayBrush}">
 

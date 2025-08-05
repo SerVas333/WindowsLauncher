@@ -39,6 +39,7 @@ namespace WindowsLauncher.UI.ViewModels
         private bool _isInitialized = false;
         private bool _isVirtualKeyboardVisible = false;
         private bool _isSidebarVisible = false;
+        private bool _hasActiveFilter = false;
 
         #endregion
 
@@ -116,6 +117,7 @@ namespace WindowsLauncher.UI.ViewModels
                 if (SetProperty(ref _searchText, value))
                 {
                     FilterApplications();
+                    UpdateActiveFilterStatus(); // Обновляем индикатор при изменении поиска
                 }
             }
         }
@@ -191,6 +193,21 @@ namespace WindowsLauncher.UI.ViewModels
             set => SetProperty(ref _isVirtualKeyboardVisible, value);
         }
 
+        public bool IsSidebarVisible
+        {
+            get => _isSidebarVisible;
+            set => SetProperty(ref _isSidebarVisible, value);
+        }
+
+        /// <summary>
+        /// Индикатор активного фильтра для визуальной индикации на кнопке Sidebar
+        /// </summary>
+        public bool HasActiveFilter
+        {
+            get => _hasActiveFilter;
+            set => SetProperty(ref _hasActiveFilter, value);
+        }
+
         #endregion
 
         #region Commands
@@ -203,6 +220,7 @@ namespace WindowsLauncher.UI.ViewModels
         public RelayCommand SwitchUserCommand { get; private set; } = null!;
         public RelayCommand OpenAdminCommand { get; private set; } = null!;
         public AsyncRelayCommand ShowVirtualKeyboardCommand { get; private set; } = null!;
+        public RelayCommand ToggleSidebarCommand { get; private set; } = null!;
 
         private void InitializeCommands()
         {
@@ -234,6 +252,10 @@ namespace WindowsLauncher.UI.ViewModels
                 ToggleVirtualKeyboard, // Оставляем старое имя метода для совместимости
                 () => !IsLoading,
                 Logger);
+
+            ToggleSidebarCommand = new RelayCommand(
+                ToggleSidebar,
+                () => !IsLoading);
         }
 
         #endregion
@@ -405,14 +427,19 @@ namespace WindowsLauncher.UI.ViewModels
                 LocalizedCategories.Clear();
 
                 // Add "All" category first
-                LocalizedCategories.Add(new CategoryViewModel
+                var allCategory = new CategoryViewModel
                 {
                     Key = "All",
                     DisplayName = LocalizationHelper.Instance.GetString("CategoryAll"),
                     IsSelected = SelectedCategory == "All",
+                    IsChecked = true, // "Все" по умолчанию включено
                     Color = "#2196F3", // Default blue for "All" category
                     Icon = "ViewGridOutline" // Grid icon for all items view
-                });
+                };
+                
+                // Подписываемся на изменения чекбокса "Все"
+                allCategory.PropertyChanged += OnCategoryPropertyChanged;
+                LocalizedCategories.Add(allCategory);
 
                 if (categoryService != null && CurrentUser != null)
                 {
@@ -427,14 +454,19 @@ namespace WindowsLauncher.UI.ViewModels
                         // Применяем UI-слойную локализацию через LocalizationHelper
                         var localizedName = GetLocalizedCategoryName(categoryDef.LocalizationKey, baseName);
                         
-                        LocalizedCategories.Add(new CategoryViewModel
+                        var categoryViewModel = new CategoryViewModel
                         {
                             Key = categoryDef.Key,
                             DisplayName = localizedName,
                             IsSelected = SelectedCategory == categoryDef.Key,
+                            IsChecked = true, // По умолчанию все категории включены
                             Color = categoryDef.Color,
                             Icon = categoryDef.Icon
-                        });
+                        };
+                        
+                        // Подписываемся на изменения чекбоксов категорий
+                        categoryViewModel.PropertyChanged += OnCategoryPropertyChanged;
+                        LocalizedCategories.Add(categoryViewModel);
                     }
                     
                     Logger.LogInformation("Loaded {Count} categories via CategoryManagementService (predefined + dynamic)", LocalizedCategories.Count - 1);
@@ -451,14 +483,19 @@ namespace WindowsLauncher.UI.ViewModels
                     foreach (var category in categories.Where(c => !hiddenCategories.Contains(c)))
                     {
                         var localizedName = GetLocalizedCategoryName($"Category_{category}", category);
-                        LocalizedCategories.Add(new CategoryViewModel
+                        var categoryViewModel = new CategoryViewModel
                         {
                             Key = category,
                             DisplayName = localizedName,
                             IsSelected = SelectedCategory == category,
+                            IsChecked = true, // По умолчанию все категории включены
                             Color = "#666666", // Default gray
                             Icon = "FolderOpen" // Default folder icon
-                        });
+                        };
+                        
+                        // Подписываемся на изменения чекбоксов категорий
+                        categoryViewModel.PropertyChanged += OnCategoryPropertyChanged;
+                        LocalizedCategories.Add(categoryViewModel);
                     }
                     
                     Logger.LogInformation("Loaded {Count} categories via ApplicationService fallback", LocalizedCategories.Count - 1);
@@ -471,14 +508,19 @@ namespace WindowsLauncher.UI.ViewModels
                 // Добавляем минимальную категорию "All" для стабильности UI
                 if (LocalizedCategories.Count == 0)
                 {
-                    LocalizedCategories.Add(new CategoryViewModel
+                    var allCategory = new CategoryViewModel
                     {
                         Key = "All",
                         DisplayName = LocalizationHelper.Instance.GetString("CategoryAll") ?? "All",
                         IsSelected = true,
+                        IsChecked = true,
                         Color = "#2196F3",
                         Icon = "ViewGridOutline"
-                    });
+                    };
+                    
+                    // Подписываемся на изменения чекбокса "Все"
+                    allCategory.PropertyChanged += OnCategoryPropertyChanged;
+                    LocalizedCategories.Add(allCategory);
                 }
             }
         }
@@ -721,11 +763,18 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 var filtered = Applications.AsEnumerable();
 
-                // Filter by category
-                if (SelectedCategory != "All")
+                // Filter by checked categories (NEW LOGIC)
+                var checkedCategories = LocalizedCategories
+                    .Where(c => c.IsChecked)
+                    .Select(c => c.Key)
+                    .ToHashSet();
+                
+                // Если чекбокс "Все" не включен, фильтруем по выбранным категориям
+                if (!checkedCategories.Contains("All"))
                 {
-                    filtered = filtered.Where(a => a.Category == SelectedCategory);
+                    filtered = filtered.Where(a => checkedCategories.Contains(a.Category));
                 }
+                // Если "Все" включено, показываем все приложения
 
                 // Filter by search
                 if (!string.IsNullOrWhiteSpace(SearchText))
@@ -751,6 +800,113 @@ namespace WindowsLauncher.UI.ViewModels
             catch (Exception ex)
             {
                 Logger.LogError(ex, "Error filtering applications");
+            }
+        }
+
+        /// <summary>
+        /// Обработчик изменений чекбоксов категорий
+        /// </summary>
+        private void OnCategoryPropertyChanged(object? sender, PropertyChangedEventArgs e)
+        {
+            if (e.PropertyName != nameof(CategoryViewModel.IsChecked) || sender is not CategoryViewModel changedCategory)
+                return;
+
+            try
+            {
+                // Логика чекбокса "Все"
+                if (changedCategory.Key == "All")
+                {
+                    // При установке "Все" в True → все остальные чекбоксы становятся True
+                    if (changedCategory.IsChecked)
+                    {
+                        foreach (var category in LocalizedCategories.Where(c => c.Key != "All"))
+                        {
+                            category.PropertyChanged -= OnCategoryPropertyChanged; // Отключаем обработчик для избежания рекурсии
+                            category.IsChecked = true;
+                            category.PropertyChanged += OnCategoryPropertyChanged; // Включаем обратно
+                        }
+                        Logger.LogDebug("Чекбокс 'Все' установлен в True - все категории включены");
+                    }
+                    // При установке "Все" в False → все остальные чекбоксы становятся False
+                    else
+                    {
+                        foreach (var category in LocalizedCategories.Where(c => c.Key != "All"))
+                        {
+                            category.PropertyChanged -= OnCategoryPropertyChanged; // Отключаем обработчик для избежания рекурсии
+                            category.IsChecked = false;
+                            category.PropertyChanged += OnCategoryPropertyChanged; // Включаем обратно
+                        }
+                        Logger.LogDebug("Чекбокс 'Все' установлен в False - все категории отключены");
+                    }
+                }
+                else
+                {
+                    // При установке любого чекбокса в False → "Все" становится False
+                    if (!changedCategory.IsChecked)
+                    {
+                        var allCategory = LocalizedCategories.FirstOrDefault(c => c.Key == "All");
+                        if (allCategory != null && allCategory.IsChecked)
+                        {
+                            allCategory.PropertyChanged -= OnCategoryPropertyChanged; // Отключаем обработчик
+                            allCategory.IsChecked = false;
+                            allCategory.PropertyChanged += OnCategoryPropertyChanged; // Включаем обратно
+                            Logger.LogDebug("Категория '{CategoryName}' отключена - чекбокс 'Все' сброшен", changedCategory.DisplayName);
+                        }
+                    }
+                    // Проверяем, если все категории (кроме "Все") включены, то ставим "Все" в True
+                    else if (changedCategory.IsChecked)
+                    {
+                        var allNonAllCategoriesChecked = LocalizedCategories.Where(c => c.Key != "All").All(c => c.IsChecked);
+                        if (allNonAllCategoriesChecked)
+                        {
+                            var allCategory = LocalizedCategories.FirstOrDefault(c => c.Key == "All");
+                            if (allCategory != null && !allCategory.IsChecked)
+                            {
+                                allCategory.PropertyChanged -= OnCategoryPropertyChanged;
+                                allCategory.IsChecked = true;
+                                allCategory.PropertyChanged += OnCategoryPropertyChanged;
+                                Logger.LogDebug("Все категории включены - чекбокс 'Все' установлен в True");
+                            }
+                        }
+                    }
+                }
+
+                // Обновляем фильтрацию приложений
+                FilterApplications();
+                
+                // Обновляем индикатор активного фильтра
+                UpdateActiveFilterStatus();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Ошибка при обработке изменения чекбокса категории");
+            }
+        }
+
+        /// <summary>
+        /// Обновляет статус активного фильтра для визуальной индикации
+        /// </summary>
+        private void UpdateActiveFilterStatus()
+        {
+            try
+            {
+                // Фильтр активен, если:
+                // 1. Не все категории включены (чекбокс "Все" отключен или не все категории включены)
+                // 2. Есть активный поиск
+                
+                var allCategory = LocalizedCategories.FirstOrDefault(c => c.Key == "All");
+                var hasSearchFilter = !string.IsNullOrWhiteSpace(SearchText);
+                var allCategoriesSelected = allCategory?.IsChecked == true;
+                
+                // Фильтр активен, если есть поиск или не все категории выбраны
+                HasActiveFilter = hasSearchFilter || !allCategoriesSelected;
+                
+                Logger.LogDebug("Статус фильтра: HasActiveFilter={HasActiveFilter}, Поиск: '{SearchText}', Все категории: {AllSelected}", 
+                    HasActiveFilter, SearchText, allCategoriesSelected);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Ошибка при обновлении статуса активного фильтра");
             }
         }
 
@@ -1002,6 +1158,26 @@ namespace WindowsLauncher.UI.ViewModels
             }, "show virtual keyboard");
         }
 
+        private void ToggleSidebar()
+        {
+            try
+            {
+                IsSidebarVisible = !IsSidebarVisible;
+                
+                Logger.LogInformation("Sidebar toggled: {IsVisible}", IsSidebarVisible);
+                
+                // Обновляем статус
+                StatusMessage = IsSidebarVisible 
+                    ? LocalizationHelper.Instance.GetString("SidebarShown") 
+                    : LocalizationHelper.Instance.GetString("SidebarHidden");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error toggling sidebar");
+                DialogService.ShowError($"Ошибка переключения sidebar: {ex.Message}");
+            }
+        }
+
         #endregion
 
         #region Cleanup
@@ -1030,6 +1206,7 @@ namespace WindowsLauncher.UI.ViewModels
     {
         private string _displayName = "";
         private bool _isSelected;
+        private bool _isChecked = true; // По умолчанию все категории видимы
         private string _color = "#666666";
         private string _icon = "FolderOpen";
 
@@ -1056,6 +1233,22 @@ namespace WindowsLauncher.UI.ViewModels
                 if (_isSelected != value)
                 {
                     _isSelected = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Включена ли категория в фильтрацию (для чекбоксов в Sidebar)
+        /// </summary>
+        public bool IsChecked
+        {
+            get => _isChecked;
+            set
+            {
+                if (_isChecked != value)
+                {
+                    _isChecked = value;
                     OnPropertyChanged();
                 }
             }
