@@ -367,6 +367,10 @@ namespace WindowsLauncher.UI
             services.AddSingleton<WindowsLauncher.UI.Services.AppSwitcherService>();
             services.AddSingleton<WindowsLauncher.Core.Services.ShellModeDetectionService>();
             
+            // Системная панель задач для Shell-режима
+            services.AddSingleton<WindowsLauncher.UI.Components.SystemTaskbar.ISystemTaskbarService, 
+                WindowsLauncher.UI.Components.SystemTaskbar.SystemTaskbarService>();
+            
             // Сервис мониторинга системных событий сессии
             services.AddSingleton<WindowsLauncher.Services.SessionEventService>();
 
@@ -814,6 +818,9 @@ namespace WindowsLauncher.UI
                 // Запускаем мониторинг запущенных приложений
                 await InitializeRunningApplicationsMonitoringAsync();
                 
+                // Инициализируем системную панель задач для Shell-режима
+                await InitializeSystemTaskbarAsync();
+                
                 // Проверяем что окно действительно открыто
                 logger.LogInformation("MainWindow state - IsVisible: {IsVisible}, IsLoaded: {IsLoaded}", 
                                     mainWindow.IsVisible, mainWindow.IsLoaded);
@@ -867,6 +874,29 @@ namespace WindowsLauncher.UI
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
                 logger.LogError(ex, "Failed to start application monitoring services");
                 // Не прерываем работу приложения из-за ошибки мониторинга
+            }
+        }
+
+        /// <summary>
+        /// Инициализация системной панели задач
+        /// </summary>
+        private async Task InitializeSystemTaskbarAsync()
+        {
+            try
+            {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogInformation("Starting system taskbar initialization");
+
+                var taskbarService = ServiceProvider.GetRequiredService<WindowsLauncher.UI.Components.SystemTaskbar.ISystemTaskbarService>();
+                await taskbarService.InitializeAsync();
+                
+                logger.LogInformation("System taskbar initialized successfully");
+            }
+            catch (Exception ex)
+            {
+                var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
+                logger.LogError(ex, "Failed to initialize system taskbar");
+                // Не прерываем работу приложения из-за ошибки панели задач
             }
         }
 

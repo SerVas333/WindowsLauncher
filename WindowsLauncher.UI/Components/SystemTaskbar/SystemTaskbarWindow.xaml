@@ -1,0 +1,331 @@
+<!-- SystemTaskbarWindow.xaml - Системная панель задач для Shell-режима -->
+<Window x:Class="WindowsLauncher.UI.Components.SystemTaskbar.SystemTaskbarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        xmlns:properties="clr-namespace:WindowsLauncher.UI.Properties.Resources"
+        Title="System Taskbar"
+        Height="60" 
+        WindowStyle="None"
+        AllowsTransparency="True"
+        Background="Transparent"
+        ShowInTaskbar="False"
+        Topmost="True"
+        ResizeMode="NoResize">
+
+    <Window.Resources>
+        <!-- Подключение корпоративных стилей -->
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ResourceDictionary Source="/Styles/CorporateStylesFull.xaml"/>
+            </ResourceDictionary.MergedDictionaries>
+        </ResourceDictionary>
+    </Window.Resources>
+
+    <!-- Основная панель задач -->
+    <Border Background="{StaticResource PrimaryBrush}" 
+            CornerRadius="0" 
+            BorderBrush="{StaticResource PrimaryDarkBrush}" 
+            BorderThickness="0,1,0,0">
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <!-- Левая часть: Пуск -->
+                <ColumnDefinition Width="Auto"/>
+                <!-- Центральная часть: Растягивается -->
+                <ColumnDefinition Width="*"/>
+                <!-- Правая часть: AppSwitcher + Клавиатура + Время -->
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Кнопка "Пуск" с выпадающим меню -->
+            <Button x:Name="StartButton" 
+                    Grid.Column="0"
+                    Click="StartButton_Click"
+                    Width="120" Height="48" 
+                    Margin="8,6,4,6"
+                    ToolTip="Меню Пуск"
+                    Background="{StaticResource PrimaryLightBrush}"
+                    Foreground="{StaticResource OnPrimaryBrush}"
+                    BorderBrush="{StaticResource PrimaryBrush}"
+                    BorderThickness="1">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" 
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="4"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource PrimaryDarkBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource OnPrimaryBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                
+                <!-- Контекстное меню для кнопки Пуск - адаптированное для сенсорных экранов -->
+                <Button.ContextMenu>
+                    <ContextMenu x:Name="StartContextMenu" 
+                                 MinWidth="300" 
+                                 Background="{StaticResource SurfaceBrush}"
+                                 BorderBrush="{StaticResource PrimaryBrush}"
+                                 BorderThickness="2"
+                                 Padding="8">
+                        <ContextMenu.Resources>
+                            <!-- Стиль для пунктов меню - большие для сенсорного управления -->
+                            <Style TargetType="MenuItem">
+                                <Setter Property="Height" Value="60"/>
+                                <Setter Property="Padding" Value="16,12"/>
+                                <Setter Property="FontSize" Value="16"/>
+                                <Setter Property="FontWeight" Value="SemiBold"/>
+                                <Setter Property="Foreground" Value="{StaticResource OnSurfaceBrush}"/>
+                                <Setter Property="Background" Value="Transparent"/>
+                                <Setter Property="Template">
+                                    <Setter.Value>
+                                        <ControlTemplate TargetType="MenuItem">
+                                            <Border Background="{TemplateBinding Background}"
+                                                    BorderBrush="{TemplateBinding BorderBrush}"
+                                                    BorderThickness="{TemplateBinding BorderThickness}"
+                                                    Padding="{TemplateBinding Padding}">
+                                                <Grid>
+                                                    <Grid.ColumnDefinitions>
+                                                        <ColumnDefinition Width="Auto"/>
+                                                        <ColumnDefinition Width="*"/>
+                                                    </Grid.ColumnDefinitions>
+                                                    
+                                                    <ContentPresenter x:Name="Icon" 
+                                                                      Grid.Column="0"
+                                                                      Content="{TemplateBinding Icon}"
+                                                                      VerticalAlignment="Center"
+                                                                      Margin="0,0,16,0"/>
+                                                    
+                                                    <TextBlock x:Name="HeaderText"
+                                                               Grid.Column="1" 
+                                                               Text="{TemplateBinding Header}"
+                                                               FontSize="{TemplateBinding FontSize}"
+                                                               FontWeight="{TemplateBinding FontWeight}"
+                                                               Foreground="{TemplateBinding Foreground}"
+                                                               VerticalAlignment="Center"/>
+                                                </Grid>
+                                            </Border>
+                                            <ControlTemplate.Triggers>
+                                                <Trigger Property="IsHighlighted" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource OnPrimaryBrush}"/>
+                                                </Trigger>
+                                                <Trigger Property="IsPressed" Value="True">
+                                                    <Setter Property="Background" Value="{StaticResource PrimaryDarkBrush}"/>
+                                                    <Setter Property="Foreground" Value="{StaticResource OnPrimaryBrush}"/>
+                                                </Trigger>
+                                            </ControlTemplate.Triggers>
+                                        </ControlTemplate>
+                                    </Setter.Value>
+                                </Setter>
+                            </Style>
+                            
+                            <!-- Стиль для разделителей -->
+                            <Style TargetType="Separator">
+                                <Setter Property="Height" Value="2"/>
+                                <Setter Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
+                                <Setter Property="Margin" Value="8,4"/>
+                                <Setter Property="Opacity" Value="0.3"/>
+                            </Style>
+                        </ContextMenu.Resources>
+                        
+                        <!-- Главное окно приложений -->
+                        <MenuItem Header="Показать приложения" Click="ShowMainWindow_Click">
+                            <MenuItem.Icon>
+                                <fa:ImageAwesome Icon="Home" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        
+                        <Separator/>
+                        
+                        <!-- Смена пользователя -->
+                        <MenuItem Header="Сменить пользователя" Click="SwitchUser_Click">
+                            <MenuItem.Icon>
+                                <fa:ImageAwesome Icon="UserCircle" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        
+                        <!-- Админ панель -->
+                        <MenuItem x:Name="AdminMenuItem" Header="Управление" Click="OpenAdmin_Click">
+                            <MenuItem.Icon>
+                                <fa:ImageAwesome Icon="Cogs" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        
+                        <!-- Настройки -->
+                        <MenuItem Header="Настройки" Click="OpenSettings_Click">
+                            <MenuItem.Icon>
+                                <fa:ImageAwesome Icon="Cog" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        
+                        <Separator/>
+                        
+                        <!-- Обновить -->
+                        <MenuItem Header="Обновить" Click="Refresh_Click">
+                            <MenuItem.Icon>
+                                <fa:ImageAwesome Icon="Refresh" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                        
+                        <Separator/>
+                        
+                        <!-- Выход -->
+                        <MenuItem Header="Выйти" Click="Logout_Click">
+                            <MenuItem.Icon>
+                                <fa:ImageAwesome Icon="SignOut" Width="24" Height="24" Foreground="{StaticResource PrimaryBrush}"/>
+                            </MenuItem.Icon>
+                        </MenuItem>
+                    </ContextMenu>
+                </Button.ContextMenu>
+                
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome Icon="Home" 
+                                     Width="16" Height="16" 
+                                     Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"
+                                     VerticalAlignment="Center" 
+                                     Margin="0,0,8,0"/>
+                    <TextBlock Text="Пуск" 
+                               Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"
+                               FontSize="14" FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Кнопка переключения приложений -->
+            <Button x:Name="AppSwitcherButton"
+                    Grid.Column="2"
+                    Click="AppSwitcherButton_Click"
+                    Width="100" Height="48" 
+                    Margin="8,6,4,6"
+                    Background="{StaticResource PrimaryBrush}"
+                    BorderBrush="{StaticResource PrimaryBrush}"
+                    BorderThickness="0">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" 
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="4"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+                                <Setter Property="BorderThickness" Value="0"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="True">
+                                <Setter Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource OnPrimaryBrush}"/>
+                                <Setter Property="BorderThickness" Value="1"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource PrimaryDarkBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource OnPrimaryBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <Button.ToolTip>
+                    <StackPanel Orientation="Vertical">
+                        <TextBlock Text="Переключатель приложений" FontWeight="SemiBold"/>
+                        <TextBlock x:Name="AppSwitcherTooltipText" Text="Режим: Загрузка..." FontSize="11" Opacity="0.8"/>
+                    </StackPanel>
+                </Button.ToolTip>
+                <StackPanel Orientation="Horizontal">
+                    <fa:ImageAwesome x:Name="AppSwitcherIcon"
+                                     Icon="WindowRestore" 
+                                     Width="16" Height="16" 
+                                     Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"
+                                     VerticalAlignment="Center" 
+                                     Margin="0,0,6,0"/>
+                    <TextBlock x:Name="AppCountTextBlock" 
+                               Text="Apps(0)" 
+                               Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"
+                               FontSize="12" FontWeight="SemiBold"
+                               VerticalAlignment="Center"/>
+                </StackPanel>
+            </Button>
+
+            <!-- Кнопка виртуальной клавиатуры -->
+            <Button x:Name="VirtualKeyboardButton" 
+                    Grid.Column="3"
+                    Click="VirtualKeyboardButton_Click"
+                    Width="48" Height="48" 
+                    Margin="4,6,8,6"
+                    ToolTip="Виртуальная клавиатура"
+                    Background="{StaticResource PrimaryLightBrush}"
+                    Foreground="{StaticResource OnPrimaryBrush}"
+                    BorderBrush="{StaticResource PrimaryBrush}"
+                    BorderThickness="1">
+                <Button.Style>
+                    <Style TargetType="Button">
+                        <Setter Property="Template">
+                            <Setter.Value>
+                                <ControlTemplate TargetType="Button">
+                                    <Border Background="{TemplateBinding Background}" 
+                                            BorderBrush="{TemplateBinding BorderBrush}"
+                                            BorderThickness="{TemplateBinding BorderThickness}"
+                                            CornerRadius="4"
+                                            Padding="{TemplateBinding Padding}">
+                                        <ContentPresenter HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                                    </Border>
+                                </ControlTemplate>
+                            </Setter.Value>
+                        </Setter>
+                        <Style.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource PrimaryDarkBrush}"/>
+                                <Setter Property="Foreground" Value="{StaticResource OnPrimaryBrush}"/>
+                            </Trigger>
+                        </Style.Triggers>
+                    </Style>
+                </Button.Style>
+                <fa:ImageAwesome Icon="KeyboardOutline" 
+                                 Width="24" Height="18" 
+                                 Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"/>
+            </Button>
+
+            <!-- Системная информация (Время и дата) - крайнее правое положение -->
+            <Border Grid.Column="4" 
+                    Background="{StaticResource PrimaryDarkBrush}"
+                    CornerRadius="4" Margin="8,8,8,8" Padding="12,6">
+                <StackPanel Orientation="Vertical">
+                    <TextBlock x:Name="TimeTextBlock" 
+                               Text="14:25" 
+                               Foreground="{StaticResource OnPrimaryBrush}"
+                               FontSize="14" FontWeight="Bold"
+                               HorizontalAlignment="Center"/>
+                    <TextBlock x:Name="DateTextBlock" 
+                               Text="15.01.2025" 
+                               Foreground="{StaticResource OnPrimaryBrush}"
+                               FontSize="10" 
+                               HorizontalAlignment="Center"
+                               Opacity="0.9"/>
+                </StackPanel>
+            </Border>
+        </Grid>
+    </Border>
+</Window>

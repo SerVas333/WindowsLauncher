@@ -8,6 +8,7 @@
         xmlns:converters="clr-namespace:WindowsLauncher.UI.Converters"
         xmlns:loc="clr-namespace:WindowsLauncher.UI.Infrastructure.Localization"
         xmlns:icons="clr-namespace:WindowsLauncher.UI.Infrastructure.Icons"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
         mc:Ignorable="d"
         Title="{Binding WindowTitle, FallbackValue='Windows Launcher'}" 
         d:Title="Windows Launcher - Design Time"
@@ -343,8 +344,10 @@
                             </Style>
                         </Button.Style>
                         <Grid>
-                            <ContentPresenter Content="{Binding Source='🔄', Converter={StaticResource EmojiToFontAwesome32Converter}}"
-                                            HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                            <fa:ImageAwesome Icon="WindowRestore" 
+                                           Width="16" Height="16" 
+                                           Foreground="{StaticResource PrimaryBrush}"
+                                           HorizontalAlignment="Center" VerticalAlignment="Center"/>
                             <!-- Индикатор количества приложений -->
                             <Border x:Name="AppCountBadge" 
                                     Background="{StaticResource PrimaryBrush}" 

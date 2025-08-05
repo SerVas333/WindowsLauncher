@@ -49,6 +49,7 @@
     <SolidColorBrush x:Key="PrimaryDarkBrush" Color="#A01729"/>
     <SolidColorBrush x:Key="PrimaryLightBrush" Color="#E8324F"/>
     <SolidColorBrush x:Key="OnPrimaryBrush" Color="#FFFFFF"/>
+    <SolidColorBrush x:Key="BackgroundBrush" Color="#F5F5F5"/>
 
         
     <!-- Дополнительные цвета -->
