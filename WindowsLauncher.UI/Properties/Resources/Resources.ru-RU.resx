@@ -1197,4 +1197,25 @@
   <data name="Category_Feedback" xml:space="preserve">
     <value>Обратная связь</value>
   </data>
+  <data name="Help_WindowTitle" xml:space="preserve">
+    <value>Справка по работе с приложением</value>
+  </data>
+  <data name="Help_Back" xml:space="preserve">
+    <value>Назад</value>
+  </data>
+  <data name="Help_Forward" xml:space="preserve">
+    <value>Вперед</value>
+  </data>
+  <data name="Help_Home" xml:space="preserve">
+    <value>Главная</value>
+  </data>
+  <data name="Help_Close" xml:space="preserve">
+    <value>Закрыть</value>
+  </data>
+  <data name="Help_LoadingError" xml:space="preserve">
+    <value>Не удалось загрузить справочную систему</value>
+  </data>
+  <data name="MainWindow_HelpTooltip" xml:space="preserve">
+    <value>Справка и руководство пользователя</value>
+  </data>
 </root>

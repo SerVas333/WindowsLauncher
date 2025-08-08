@@ -1197,4 +1197,25 @@
   <data name="Category_Feedback" xml:space="preserve">
     <value>Feedback</value>
   </data>
+  <data name="Help_WindowTitle" xml:space="preserve">
+    <value>Windows Launcher Help</value>
+  </data>
+  <data name="Help_Back" xml:space="preserve">
+    <value>Back</value>
+  </data>
+  <data name="Help_Forward" xml:space="preserve">
+    <value>Forward</value>
+  </data>
+  <data name="Help_Home" xml:space="preserve">
+    <value>Home</value>
+  </data>
+  <data name="Help_Close" xml:space="preserve">
+    <value>Close</value>
+  </data>
+  <data name="Help_LoadingError" xml:space="preserve">
+    <value>Failed to load help system</value>
+  </data>
+  <data name="MainWindow_HelpTooltip" xml:space="preserve">
+    <value>Help and User Guide</value>
+  </data>
 </root>

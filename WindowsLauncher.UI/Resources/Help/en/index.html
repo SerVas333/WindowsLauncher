@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WindowsLauncher Help System</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-logo">
+                <h1>WindowsLauncher Help System</h1>
+                <p class="subtitle">KDV Group Corporate Portal</p>
+            </div>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Search help..." class="search-input">
+                <button id="clearSearch" class="clear-search">✕</button>
+            </div>
+        </header>
+
+        <!-- Navigation Sidebar -->
+        <aside class="sidebar">
+            <nav class="nav-menu">
+                <h3>Help Sections</h3>
+                <ul>
+                    <li><a href="#getting-started" class="nav-link active">🚀 Getting Started</a></li>
+                    <li><a href="#interface" class="nav-link">🖥️ Interface</a></li>
+                    <li><a href="#applications" class="nav-link">📱 Applications</a></li>
+                    <li><a href="#categories" class="nav-link">📂 Categories</a></li>
+                    <li><a href="#email" class="nav-link">📧 Email</a></li>
+                    <li><a href="#app-switcher" class="nav-link">🔄 App Switcher</a></li>
+                    <li><a href="#troubleshooting" class="nav-link">🔧 Troubleshooting</a></li>
+                    <li><a href="#shortcuts" class="nav-link">⌨️ Shortcuts</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Welcome Section -->
+            <section id="welcome" class="content-section active">
+                <div class="welcome-banner">
+                    <h2>Welcome to the Help System!</h2>
+                    <p class="lead">This guide will help KDV Group employees quickly learn how to work with the corporate WindowsLauncher on touch terminals.</p>
+                </div>
+                
+                <div class="quick-start-grid">
+                    <div class="quick-start-card" onclick="navigateToSection('getting-started')">
+                        <div class="card-icon">🚀</div>
+                        <h3>Getting Started</h3>
+                        <p>Login and first steps</p>
+                    </div>
+                    
+                    <div class="quick-start-card" onclick="navigateToSection('interface')">
+                        <div class="card-icon">🖥️</div>
+                        <h3>Interface</h3>
+                        <p>Main interface elements</p>
+                    </div>
+                    
+                    <div class="quick-start-card" onclick="navigateToSection('applications')">
+                        <div class="card-icon">📱</div>
+                        <h3>Applications</h3>
+                        <p>Launch and manage programs</p>
+                    </div>
+                    
+                    <div class="quick-start-card" onclick="navigateToSection('troubleshooting')">
+                        <div class="card-icon">🔧</div>
+                        <h3>Help</h3>
+                        <p>Common problem solutions</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Getting Started Section -->
+            <section id="getting-started" class="content-section">
+                <h2>🚀 Getting Started</h2>
+                
+                <div class="step-by-step">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>System Login</h3>
+                            <p>Use your corporate Active Directory credentials:</p>
+                            <ul>
+                                <li><strong>Username:</strong> your corporate login</li>
+                                <li><strong>Password:</strong> corporate password</li>
+                                <li><strong>Domain:</strong> kdvm.ru (filled automatically)</li>
+                            </ul>
+                            <div class="tip">
+                                <strong>💡 Tip:</strong> On touch terminals, the virtual keyboard appears automatically when you tap an input field.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>User Roles</h3>
+                            <p>After login, your role determines available functions:</p>
+                            <div class="roles-grid">
+                                <div class="role-card guest">
+                                    <h4>👤 Guest</h4>
+                                    <p>Basic access to information resources</p>
+                                </div>
+                                <div class="role-card standard">
+                                    <h4>👥 Employee</h4>
+                                    <p>Access to all work applications</p>
+                                </div>
+                                <div class="role-card admin">
+                                    <h4>⚙️ Administrator</h4>
+                                    <p>Full access and system management</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>First Launch</h3>
+                            <p>After successful login you will see:</p>
+                            <ul>
+                                <li>Main screen with application cards</li>
+                                <li>Category sidebar on the left</li>
+                                <li>Search bar at the top</li>
+                                <li>Control panel with your profile on the right</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interface Section -->
+            <section id="interface" class="content-section">
+                <h2>🖥️ System Interface</h2>
+                
+                <div class="interface-overview">
+                    <h3>Main Elements</h3>
+                    
+                    <div class="interface-item">
+                        <h4>📍 Application Header</h4>
+                        <p>Contains KDV Group logo, system name and application search bar.</p>
+                    </div>
+
+                    <div class="interface-item">
+                        <h4>👤 User Panel</h4>
+                        <p>Shows your name, role and provides access to:</p>
+                        <ul>
+                            <li><strong>👤</strong> Switch user</li>
+                            <li><strong>📧</strong> Compose email</li>
+                            <li><strong>📋</strong> Address book</li>
+                            <li><strong>❓</strong> Help (this window)</li>
+                            <li><strong>⚙️</strong> Settings (for administrators)</li>
+                        </ul>
+                    </div>
+
+                    <div class="interface-item">
+                        <h4>📂 Category Sidebar</h4>
+                        <p>Filter applications by type:</p>
+                        <ul>
+                            <li><strong>📄 Forms</strong> - Document forms and templates</li>
+                            <li><strong>📋 Instructions</strong> - Work instructions and regulations</li>
+                            <li><strong>🎥 Video Tutorials</strong> - Educational video materials</li>
+                            <li><strong>📊 Presentations</strong> - Presentations and reports</li>
+                            <li><strong>📝 Surveys</strong> - Survey forms and questionnaires</li>
+                            <li><strong>📋 Tests</strong> - Testing and knowledge verification</li>
+                            <li><strong>📱 Applications</strong> - Work programs</li>
+                            <li><strong>🔧 Utilities</strong> - Service tools</li>
+                        </ul>
+                    </div>
+
+                    <div class="interface-item">
+                        <h4>📱 Applications Area</h4>
+                        <p>Cards of available applications with information about name, description and category.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Applications Section -->
+            <section id="applications" class="content-section">
+                <h2>📱 Working with Applications</h2>
+                
+                <div class="app-management">
+                    <h3>Launching Applications</h3>
+                    <div class="instruction-block">
+                        <p>To launch an application:</p>
+                        <ol>
+                            <li>Find the needed application in the list</li>
+                            <li>Click on the application card</li>
+                            <li>Wait for loading (loading indicator will appear)</li>
+                        </ol>
+                    </div>
+
+                    <h3>Searching Applications</h3>
+                    <div class="instruction-block">
+                        <p>Use search for quick finding:</p>
+                        <ul>
+                            <li>Enter application name in the search bar</li>
+                            <li>Select category in the sidebar</li>
+                            <li>Use combination of search and filter</li>
+                        </ul>
+                    </div>
+
+                    <h3>Switching Between Applications</h3>
+                    <div class="instruction-block">
+                        <p>After launching several applications:</p>
+                        <ul>
+                            <li><strong>Alt + Tab</strong> - switch forward</li>
+                            <li><strong>Alt + Shift + Tab</strong> - switch backward</li>
+                            <li><strong>🔄</strong> button in status bar - visual switcher</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Email Section -->
+            <section id="email" class="content-section">
+                <h2>📧 Email</h2>
+                
+                <div class="email-guide">
+                    <h3>Creating Messages</h3>
+                    <div class="instruction-block">
+                        <p>To send email:</p>
+                        <ol>
+                            <li>Click <strong>📧</strong> button in header</li>
+                            <li>Fill recipient, subject and message fields</li>
+                            <li>Attach files if necessary</li>
+                            <li>Click <strong>Send</strong></li>
+                        </ol>
+                    </div>
+
+                    <h3>Address Book</h3>
+                    <div class="instruction-block">
+                        <p>Contact management:</p>
+                        <ul>
+                            <li><strong>📋</strong> button - open address book</li>
+                            <li>Search contacts by name or email</li>
+                            <li>Add new contacts</li>
+                            <li>Edit existing entries</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Troubleshooting Section -->
+            <section id="troubleshooting" class="content-section">
+                <h2>🔧 Troubleshooting</h2>
+                
+                <div class="troubleshooting-guide">
+                    <div class="problem-solution">
+                        <h3>❗ Cannot login to system</h3>
+                        <div class="solution">
+                            <p><strong>Solution:</strong></p>
+                            <ul>
+                                <li>Make sure username and password are correct</li>
+                                <li>Check network connection</li>
+                                <li>Contact system administrator</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="problem-solution">
+                        <h3>❗ Application won't start</h3>
+                        <div class="solution">
+                            <p><strong>Solution:</strong></p>
+                            <ul>
+                                <li>Wait a few seconds - there might be loading delay</li>
+                                <li>Try launching another application</li>
+                                <li>Refresh application list with refresh button</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="problem-solution">
+                        <h3>❗ Virtual keyboard doesn't appear</h3>
+                        <div class="solution">
+                            <p><strong>Solution:</strong></p>
+                            <ul>
+                                <li>Click keyboard button <strong>⌨️</strong> in status bar</li>
+                                <li>Try clicking on input field again</li>
+                                <li>Re-login to system</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="emergency-contact">
+                        <h3>📞 Technical Support</h3>
+                        <p>For serious problems contact system administrator or KDV Group IT department.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Shortcuts Section -->
+            <section id="shortcuts" class="content-section">
+                <h2>⌨️ Keyboard Shortcuts</h2>
+                
+                <div class="shortcuts-guide">
+                    <div class="shortcuts-group">
+                        <h3>Main Commands</h3>
+                        <div class="shortcuts-list">
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">Alt + Tab</span>
+                                <span class="shortcut-desc">Switch between applications</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">Alt + Shift + Tab</span>
+                                <span class="shortcut-desc">Switch backward</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">Ctrl + F</span>
+                                <span class="shortcut-desc">Search (in active application)</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">F5</span>
+                                <span class="shortcut-desc">Refresh application list</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shortcuts-group">
+                        <h3>System Commands</h3>
+                        <div class="shortcuts-list">
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">Alt + F4</span>
+                                <span class="shortcut-desc">Close active application</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">Win + L</span>
+                                <span class="shortcut-desc">Lock terminal</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="help-script.js"></script>
+</body>
+</html>

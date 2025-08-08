@@ -98,7 +98,7 @@
                 </StackPanel>
 
                 <!-- Controls -->
-                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Width="240">
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Width="280">
                     <Button Style="{StaticResource SecondaryButtonStyle}"
                             Command="{Binding SwitchUserCommand}"
                             ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_SwitchUserTooltip}"
@@ -123,6 +123,17 @@
                             ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_AddressBookTooltip}"
                             Width="40" Height="32" Padding="4">
                         <fa:ImageAwesome Icon="AddressBook" 
+                                       Width="16" Height="16" 
+                                       Foreground="{StaticResource CorporateGrayBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <!-- Help Button -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
+                            Command="{Binding OpenHelpCommand}"
+                            ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_HelpTooltip}"
+                            Width="40" Height="32" Padding="4">
+                        <fa:ImageAwesome Icon="QuestionCircle" 
                                        Width="16" Height="16" 
                                        Foreground="{StaticResource CorporateGrayBrush}"
                                        HorizontalAlignment="Center" VerticalAlignment="Center"/>

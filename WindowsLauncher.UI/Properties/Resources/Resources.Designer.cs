@@ -1555,6 +1555,60 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Back.
+        /// </summary>
+        public static string Help_Back {
+            get {
+                return ResourceManager.GetString("Help_Back", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Close.
+        /// </summary>
+        public static string Help_Close {
+            get {
+                return ResourceManager.GetString("Help_Close", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Forward.
+        /// </summary>
+        public static string Help_Forward {
+            get {
+                return ResourceManager.GetString("Help_Forward", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Home.
+        /// </summary>
+        public static string Help_Home {
+            get {
+                return ResourceManager.GetString("Help_Home", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Failed to load help system.
+        /// </summary>
+        public static string Help_LoadingError {
+            get {
+                return ResourceManager.GetString("Help_LoadingError", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Windows Launcher Help.
+        /// </summary>
+        public static string Help_WindowTitle {
+            get {
+                return ResourceManager.GetString("Help_WindowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Connecting....
         /// </summary>
         public static string Info_Connecting {
@@ -1929,6 +1983,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string MainWindow_ExitTooltip {
             get {
                 return ResourceManager.GetString("MainWindow_ExitTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Help and User Guide.
+        /// </summary>
+        public static string MainWindow_HelpTooltip {
+            get {
+                return ResourceManager.GetString("MainWindow_HelpTooltip", resourceCulture);
             }
         }
         

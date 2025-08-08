@@ -996,6 +996,47 @@
         <Setter Property="FontSize" Value="16"/>
     </Style>
 
+    <!-- Навигационные кнопки без Padding и вытянутые горизонтально -->
+    <Style x:Key="HelpNavigationButtonStyle" TargetType="Button">
+        <Setter Property="Background" Value="{StaticResource WhiteBrush}"/>
+        <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
+        <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="Padding" Value="0"/>
+        <Setter Property="Margin" Value="0"/>
+        <Setter Property="Cursor" Value="Hand"/>
+        <Setter Property="Template">
+            <Setter.Value>
+                <ControlTemplate TargetType="Button">
+                    <Border x:Name="border" 
+                            Background="{TemplateBinding Background}"
+                            BorderBrush="{TemplateBinding BorderBrush}"
+                            BorderThickness="{TemplateBinding BorderThickness}"
+                            CornerRadius="4">
+                        <ContentPresenter x:Name="contentPresenter"
+                                        HorizontalAlignment="Center"
+                                        VerticalAlignment="Center"
+                                        Focusable="False"/>
+                    </Border>
+                    <ControlTemplate.Triggers>
+                        <Trigger Property="IsMouseOver" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                        <Trigger Property="IsPressed" Value="True">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource PrimaryDarkBrush}"/>
+                            <Setter Property="Foreground" Value="White"/>
+                        </Trigger>
+                        <Trigger Property="IsEnabled" Value="False">
+                            <Setter TargetName="border" Property="Background" Value="{StaticResource CorporateGray200}"/>
+                            <Setter Property="Foreground" Value="{StaticResource CorporateGray500}"/>
+                        </Trigger>
+                    </ControlTemplate.Triggers>
+                </ControlTemplate>
+            </Setter.Value>
+        </Setter>
+    </Style>
+
     <!-- =============================================== -->
     <!-- ТЕМПЛЕЙТЫ ДЛЯ ИКОНОК С ТЕКСТОМ -->
     <!-- =============================================== -->

@@ -1,0 +1,149 @@
+<Window x:Class="WindowsLauncher.UI.Views.Dialogs.InputDialogWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:properties="clr-namespace:WindowsLauncher.UI.Properties.Resources"
+        Title="{Binding Title}"
+        Width="400" Height="250" MinHeight="200"
+        WindowStartupLocation="CenterOwner"
+        ResizeMode="NoResize"
+        WindowStyle="SingleBorderWindow"
+        ShowInTaskbar="False">
+
+    <Window.Resources>
+        <Style x:Key="InputDialogButtonStyle" TargetType="Button">
+            <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource OnPrimaryBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+            <Setter Property="BorderThickness" Value="1"/>
+            <Setter Property="Padding" Value="16,8"/>
+            <Setter Property="Margin" Value="4"/>
+            <Setter Property="MinWidth" Value="{StaticResource TouchModeButtonMinSize}"/>
+            <Setter Property="MinHeight" Value="{StaticResource TouchModeButtonMinSize}"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="FontWeight" Value="SemiBold"/>
+            <Setter Property="Cursor" Value="Hand"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="Button">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4"
+                                Padding="{TemplateBinding Padding}">
+                            <ContentPresenter HorizontalAlignment="Center"
+                                            VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="Background" Value="{StaticResource PrimaryLightBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsPressed" Value="True">
+                                <Setter Property="Background" Value="{StaticResource PrimaryDarkBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsEnabled" Value="False">
+                                <Setter Property="Background" Value="{StaticResource CorporateGray400}"/>
+                                <Setter Property="Foreground" Value="{StaticResource CorporateGray600}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+
+        <Style x:Key="SecondaryInputDialogButtonStyle" TargetType="Button" BasedOn="{StaticResource InputDialogButtonStyle}">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource OnSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CorporateGray300}"/>
+            <Style.Triggers>
+                <Trigger Property="IsMouseOver" Value="True">
+                    <Setter Property="Background" Value="{StaticResource CorporateGray100}"/>
+                </Trigger>
+                <Trigger Property="IsPressed" Value="True">
+                    <Setter Property="Background" Value="{StaticResource CorporateGray200}"/>
+                </Trigger>
+            </Style.Triggers>
+        </Style>
+
+        <Style x:Key="InputDialogTextBoxStyle" TargetType="TextBox">
+            <Setter Property="Background" Value="{StaticResource SurfaceBrush}"/>
+            <Setter Property="Foreground" Value="{StaticResource OnSurfaceBrush}"/>
+            <Setter Property="BorderBrush" Value="{StaticResource CorporateGray300}"/>
+            <Setter Property="BorderThickness" Value="2"/>
+            <Setter Property="Padding" Value="12,8"/>
+            <Setter Property="FontSize" Value="14"/>
+            <Setter Property="MinHeight" Value="{StaticResource TouchModeButtonMinSize}"/>
+            <Setter Property="Template">
+                <Setter.Value>
+                    <ControlTemplate TargetType="TextBox">
+                        <Border Background="{TemplateBinding Background}"
+                                BorderBrush="{TemplateBinding BorderBrush}"
+                                BorderThickness="{TemplateBinding BorderThickness}"
+                                CornerRadius="4">
+                            <ScrollViewer x:Name="PART_ContentHost"
+                                        Padding="{TemplateBinding Padding}"
+                                        VerticalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsFocused" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource PrimaryBrush}"/>
+                            </Trigger>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter Property="BorderBrush" Value="{StaticResource PrimaryLightBrush}"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Setter.Value>
+            </Setter>
+        </Style>
+    </Window.Resources>
+
+    <Grid Background="{StaticResource SurfaceBrush}">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*" MinHeight="60"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Заголовок с сообщением -->
+        <Border Grid.Row="0" 
+                Background="{StaticResource SurfaceVariantBrush}"
+                Padding="20,16">
+            <TextBlock Text="{Binding Message}"
+                       Foreground="{StaticResource OnSurfaceBrush}"
+                       FontSize="14"
+                       FontWeight="Normal"
+                       TextWrapping="Wrap"
+                       HorizontalAlignment="Left"
+                       VerticalAlignment="Center"/>
+        </Border>
+
+        <!-- Поле ввода -->
+        <Border Grid.Row="1" 
+                Padding="20">
+            <TextBox x:Name="InputTextBox"
+                     Text="{Binding InputValue, UpdateSourceTrigger=PropertyChanged}"
+                     Style="{StaticResource InputDialogTextBoxStyle}"
+                     KeyDown="InputTextBox_KeyDown"/>
+        </Border>
+
+        <!-- Кнопки -->
+        <Border Grid.Row="2"
+                Background="{StaticResource SurfaceVariantBrush}"
+                Padding="20,8">
+            <StackPanel Orientation="Horizontal"
+                        HorizontalAlignment="Right">
+                <Button Content="Отмена"
+                        Style="{StaticResource SecondaryInputDialogButtonStyle}"
+                        Click="CancelButton_Click"
+                        IsCancel="True"
+                        MinWidth="80"/>
+                <Button Content="ОК"
+                        Style="{StaticResource InputDialogButtonStyle}"
+                        Click="OkButton_Click"
+                        IsDefault="True"
+                        IsEnabled="{Binding IsValid}"
+                        MinWidth="80"/>
+            </StackPanel>
+        </Border>
+    </Grid>
+</Window>

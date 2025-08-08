@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Справочная система WindowsLauncher</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-logo">
+                <h1>Справочная система</h1>
+                <p class="subtitle">Корпоративный портал KDV Group</p>
+            </div>
+            <div class="search-container">
+                <input type="text" id="searchInput" placeholder="Поиск по справке..." class="search-input">
+                <button id="clearSearch" class="clear-search">✕</button>
+            </div>
+        </header>
+
+        <!-- Navigation Sidebar -->
+        <aside class="sidebar">
+            <nav class="nav-menu">
+                <h3>Разделы справки</h3>
+                <ul>
+                    <li><a href="#getting-started" class="nav-link active">🚀 Начало работы</a></li>
+                    <li><a href="#interface" class="nav-link">🖥️ Интерфейс</a></li>
+                    <li><a href="#applications" class="nav-link">📱 Приложения</a></li>
+                    <li><a href="#categories" class="nav-link">📂 Категории</a></li>
+                    <li><a href="#email" class="nav-link">📧 Электронная почта</a></li>
+                    <li><a href="#app-switcher" class="nav-link">🔄 Переключатель</a></li>
+                    <li><a href="#troubleshooting" class="nav-link">🔧 Решение проблем</a></li>
+                    <li><a href="#shortcuts" class="nav-link">⌨️ Горячие клавиши</a></li>
+                </ul>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Welcome Section -->
+            <section id="welcome" class="content-section active">
+                <div class="welcome-banner">
+                    <h2>Добро пожаловать в справочную систему!</h2>
+                    <p class="lead">Данное руководство поможет вам быстро освоить работу с корпоративным лаунчером WindowsLauncher на сенсорных терминалах KDV Group.</p>
+                </div>
+                
+                <div class="quick-start-grid">
+                    <div class="quick-start-card" onclick="navigateToSection('getting-started')">
+                        <div class="card-icon">🚀</div>
+                        <h3>Начало работы</h3>
+                        <p>Вход в систему и первые шаги</p>
+                    </div>
+                    
+                    <div class="quick-start-card" onclick="navigateToSection('interface')">
+                        <div class="card-icon">🖥️</div>
+                        <h3>Интерфейс</h3>
+                        <p>Основные элементы управления</p>
+                    </div>
+                    
+                    <div class="quick-start-card" onclick="navigateToSection('applications')">
+                        <div class="card-icon">📱</div>
+                        <h3>Приложения</h3>
+                        <p>Запуск и управление программами</p>
+                    </div>
+                    
+                    <div class="quick-start-card" onclick="navigateToSection('troubleshooting')">
+                        <div class="card-icon">🔧</div>
+                        <h3>Помощь</h3>
+                        <p>Решение типовых проблем</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Getting Started Section -->
+            <section id="getting-started" class="content-section">
+                <h2>🚀 Начало работы</h2>
+                
+                <div class="step-by-step">
+                    <div class="step">
+                        <div class="step-number">1</div>
+                        <div class="step-content">
+                            <h3>Вход в систему</h3>
+                            <p>Используйте ваши корпоративные учетные данные Active Directory:</p>
+                            <ul>
+                                <li><strong>Имя пользователя:</strong> ваш корпоративный логин</li>
+                                <li><strong>Пароль:</strong> корпоративный пароль</li>
+                                <li><strong>Домен:</strong> kdvm.ru (заполняется автоматически)</li>
+                            </ul>
+                            <div class="tip">
+                                <strong>💡 Совет:</strong> На сенсорных терминалах виртуальная клавиатура появляется автоматически при нажатии на поле ввода.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">2</div>
+                        <div class="step-content">
+                            <h3>Роли пользователей</h3>
+                            <p>После входа ваша роль определяет доступные функции:</p>
+                            <div class="roles-grid">
+                                <div class="role-card guest">
+                                    <h4>👤 Гость</h4>
+                                    <p>Базовый доступ к информационным ресурсам</p>
+                                </div>
+                                <div class="role-card standard">
+                                    <h4>👥 Сотрудник</h4>
+                                    <p>Доступ ко всем рабочим приложениям</p>
+                                </div>
+                                <div class="role-card admin">
+                                    <h4>⚙️ Администратор</h4>
+                                    <p>Полный доступ и управление системой</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="step">
+                        <div class="step-number">3</div>
+                        <div class="step-content">
+                            <h3>Первый запуск</h3>
+                            <p>После успешного входа вы увидите:</p>
+                            <ul>
+                                <li>Главный экран с карточками приложений</li>
+                                <li>Боковую панель категорий слева</li>
+                                <li>Строку поиска в верхней части</li>
+                                <li>Панель управления с вашим профилем справа</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Interface Section -->
+            <section id="interface" class="content-section">
+                <h2>🖥️ Интерфейс системы</h2>
+                
+                <div class="interface-overview">
+                    <h3>Основные элементы</h3>
+                    
+                    <div class="interface-item">
+                        <h4>📍 Заголовок приложения</h4>
+                        <p>Содержит логотип KDV Group, название системы и строку поиска приложений.</p>
+                    </div>
+
+                    <div class="interface-item">
+                        <h4>👤 Панель пользователя</h4>
+                        <p>Показывает ваше имя, роль и предоставляет доступ к:</p>
+                        <ul>
+                            <li><strong>👤</strong> Смена пользователя</li>
+                            <li><strong>📧</strong> Создание email</li>
+                            <li><strong>📋</strong> Адресная книга</li>
+                            <li><strong>❓</strong> Справка (это окно)</li>
+                            <li><strong>⚙️</strong> Настройки (для администраторов)</li>
+                        </ul>
+                    </div>
+
+                    <div class="interface-item">
+                        <h4>📂 Боковая панель категорий</h4>
+                        <p>Фильтрация приложений по типам:</p>
+                        <ul>
+                            <li><strong>📄 Бланки</strong> - Формы и шаблоны документов</li>
+                            <li><strong>📋 Инструкции</strong> - Рабочие инструкции и регламенты</li>
+                            <li><strong>🎥 Видеоинструкции</strong> - Обучающие видеоматериалы</li>
+                            <li><strong>📊 Презентации</strong> - Презентации и отчеты</li>
+                            <li><strong>📝 Анкеты</strong> - Формы опросов и анкеты</li>
+                            <li><strong>📋 Тесты</strong> - Тестирование и проверка знаний</li>
+                            <li><strong>📱 Приложения</strong> - Рабочие программы</li>
+                            <li><strong>🔧 Утилиты</strong> - Служебные инструменты</li>
+                        </ul>
+                    </div>
+
+                    <div class="interface-item">
+                        <h4>📱 Область приложений</h4>
+                        <p>Карточки доступных приложений с информацией о названии, описании и категории.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Applications Section -->
+            <section id="applications" class="content-section">
+                <h2>📱 Работа с приложениями</h2>
+                
+                <div class="app-management">
+                    <h3>Запуск приложений</h3>
+                    <div class="instruction-block">
+                        <p>Для запуска приложения:</p>
+                        <ol>
+                            <li>Найдите нужное приложение в списке</li>
+                            <li>Нажмите на карточку приложения</li>
+                            <li>Дождитесь загрузки (появится индикатор)</li>
+                        </ol>
+                    </div>
+
+                    <h3>Поиск приложений</h3>
+                    <div class="instruction-block">
+                        <p>Используйте поиск для быстрого нахождения:</p>
+                        <ul>
+                            <li>Введите название приложения в строку поиска</li>
+                            <li>Выберите категорию в боковой панели</li>
+                            <li>Используйте комбинацию поиска и фильтра</li>
+                        </ul>
+                    </div>
+
+                    <h3>Переключение между приложениями</h3>
+                    <div class="instruction-block">
+                        <p>После запуска нескольких приложений:</p>
+                        <ul>
+                            <li><strong>Alt + Tab</strong> - переключение вперед</li>
+                            <li><strong>Alt + Shift + Tab</strong> - переключение назад</li>
+                            <li>Кнопка <strong>🔄</strong> в статус-баре - визуальный переключатель</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Email Section -->
+            <section id="email" class="content-section">
+                <h2>📧 Электронная почта</h2>
+                
+                <div class="email-guide">
+                    <h3>Создание сообщений</h3>
+                    <div class="instruction-block">
+                        <p>Для отправки email:</p>
+                        <ol>
+                            <li>Нажмите кнопку <strong>📧</strong> в заголовке</li>
+                            <li>Заполните поля получателя, темы и сообщения</li>
+                            <li>При необходимости прикрепите файлы</li>
+                            <li>Нажмите <strong>Отправить</strong></li>
+                        </ol>
+                    </div>
+
+                    <h3>Адресная книга</h3>
+                    <div class="instruction-block">
+                        <p>Управление контактами:</p>
+                        <ul>
+                            <li>Кнопка <strong>📋</strong> - открыть адресную книгу</li>
+                            <li>Поиск контактов по имени или email</li>
+                            <li>Добавление новых контактов</li>
+                            <li>Редактирование существующих записей</li>
+                        </ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Troubleshooting Section -->
+            <section id="troubleshooting" class="content-section">
+                <h2>🔧 Решение проблем</h2>
+                
+                <div class="troubleshooting-guide">
+                    <div class="problem-solution">
+                        <h3>❗ Не могу войти в систему</h3>
+                        <div class="solution">
+                            <p><strong>Решение:</strong></p>
+                            <ul>
+                                <li>Убедитесь в правильности имени пользователя и пароля</li>
+                                <li>Проверьте подключение к сети</li>
+                                <li>Обратитесь к системному администратору</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="problem-solution">
+                        <h3>❗ Приложение не запускается</h3>
+                        <div class="solution">
+                            <p><strong>Решение:</strong></p>
+                            <ul>
+                                <li>Подождите несколько секунд - возможна задержка загрузки</li>
+                                <li>Попробуйте запустить другое приложение</li>
+                                <li>Обновите список приложений кнопкой обновления</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="problem-solution">
+                        <h3>❗ Виртуальная клавиатура не появляется</h3>
+                        <div class="solution">
+                            <p><strong>Решение:</strong></p>
+                            <ul>
+                                <li>Нажмите кнопку клавиатуры <strong>⌨️</strong> в статус-баре</li>
+                                <li>Попробуйте нажать на поле ввода повторно</li>
+                                <li>Перезайдите в систему</li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="emergency-contact">
+                        <h3>📞 Техническая поддержка</h3>
+                        <p>При серьезных проблемах обращайтесь к системному администратору или в IT-отдел KDV Group.</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Shortcuts Section -->
+            <section id="shortcuts" class="content-section">
+                <h2>⌨️ Горячие клавиши</h2>
+                
+                <div class="shortcuts-guide">
+                    <div class="shortcuts-group">
+                        <h3>Основные команды</h3>
+                        <div class="shortcuts-list">
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">Alt + Tab</span>
+                                <span class="shortcut-desc">Переключение между приложениями</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">Alt + Shift + Tab</span>
+                                <span class="shortcut-desc">Переключение назад</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">Ctrl + F</span>
+                                <span class="shortcut-desc">Поиск (в активном приложении)</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">F5</span>
+                                <span class="shortcut-desc">Обновить список приложений</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="shortcuts-group">
+                        <h3>Системные команды</h3>
+                        <div class="shortcuts-list">
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">Alt + F4</span>
+                                <span class="shortcut-desc">Закрыть активное приложение</span>
+                            </div>
+                            <div class="shortcut-item">
+                                <span class="shortcut-keys">Win + L</span>
+                                <span class="shortcut-desc">Заблокировать терминал</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="help-script.js"></script>
+</body>
+</html>

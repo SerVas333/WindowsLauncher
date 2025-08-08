@@ -2,6 +2,7 @@
 using System.Threading.Tasks;
 using System.Windows;
 using Microsoft.Extensions.Logging;
+using WindowsLauncher.UI.Views.Dialogs;
 
 namespace WindowsLauncher.UI.Infrastructure.Services
 {
@@ -64,16 +65,42 @@ namespace WindowsLauncher.UI.Infrastructure.Services
 
         public string? ShowInputDialog(string message, string title = "Input", string defaultValue = "")
         {
-            // Простая реализация через InputBox (можно заменить на custom dialog)
-            // Для этого нужно добавить using Microsoft.VisualBasic;
-            // Пока используем простой MessageBox
-            var result = string.Empty;
+            _logger.LogInformation("Showing input dialog: {Message}", message);
+
+            string? result = null;
             Application.Current.Dispatcher.Invoke(() =>
             {
-                // TODO: Реализовать proper input dialog
-                // Пока используем заглушку
-                result = defaultValue;
+                try
+                {
+                    // Определяем owner window
+                    Window? owner = null;
+                    if (Application.Current.MainWindow != null && Application.Current.MainWindow.IsVisible)
+                    {
+                        owner = Application.Current.MainWindow;
+                    }
+                    else
+                    {
+                        // Ищем активное окно
+                        foreach (Window window in Application.Current.Windows)
+                        {
+                            if (window.IsActive)
+                            {
+                                owner = window;
+                                break;
+                            }
+                        }
+                    }
+
+                    result = InputDialogWindow.ShowDialog(message, title, defaultValue, owner);
+                    _logger.LogInformation("Input dialog result: {HasResult}", result != null ? "provided" : "cancelled");
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error showing input dialog");
+                    result = null;
+                }
             });
+
             return result;
         }
 

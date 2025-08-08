@@ -223,6 +223,7 @@ namespace WindowsLauncher.UI.ViewModels
         public RelayCommand ToggleSidebarCommand { get; private set; } = null!;
         public RelayCommand ComposeEmailCommand { get; private set; } = null!;
         public RelayCommand OpenAddressBookCommand { get; private set; } = null!;
+        public RelayCommand OpenHelpCommand { get; private set; } = null!;
 
         private void InitializeCommands()
         {
@@ -261,6 +262,7 @@ namespace WindowsLauncher.UI.ViewModels
 
             ComposeEmailCommand = new RelayCommand(ComposeEmail);
             OpenAddressBookCommand = new RelayCommand(OpenAddressBook);
+            OpenHelpCommand = new RelayCommand(OpenHelp);
         }
 
         #endregion
@@ -1292,6 +1294,30 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 Logger.LogError(ex, "Error opening address book window");
                 MessageBox.Show($"{LocalizationHelper.Instance.GetString("Error_AddressBookUnavailable")}: {ex.Message}", 
+                    LocalizationHelper.Instance.GetString("Error"), 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Открыть справочную систему
+        /// </summary>
+        private void OpenHelp()
+        {
+            try
+            {
+                var helpWindow = new HelpWindow()
+                {
+                    Owner = WpfApplication.Current.MainWindow
+                };
+
+                helpWindow.Show();
+                Logger.LogInformation("Opened help system window");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error opening help window");
+                MessageBox.Show($"{LocalizationHelper.Instance.GetString("Help_LoadingError")}: {ex.Message}", 
                     LocalizationHelper.Instance.GetString("Error"), 
                     MessageBoxButton.OK, MessageBoxImage.Error);
             }
