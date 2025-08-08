@@ -35,7 +35,8 @@ namespace WindowsLauncher.Services
             _migrations = new List<IDatabaseMigration>
             {
                 new InitialSchema(),        // v1.0.0.001
-                new AddEmailSupport()       // v1.1.0.001
+                new AddEmailSupport(),      // v1.1.0.001
+                new UpdateCategories()      // v1.1.0.002
             };
         }
         
@@ -53,7 +54,7 @@ namespace WindowsLauncher.Services
             
             var sql = config.DatabaseType switch
             {
-                DatabaseType.SQLite => "SELECT Version FROM __MigrationHistory ORDER BY Version",
+                DatabaseType.SQLite => "SELECT VERSION FROM MIGRATION_HISTORY ORDER BY VERSION",
                 DatabaseType.Firebird => "SELECT VERSION FROM MIGRATION_HISTORY ORDER BY VERSION",
                 _ => throw new NotSupportedException($"Database type {config.DatabaseType} not supported")
             };
@@ -171,7 +172,7 @@ namespace WindowsLauncher.Services
             
             var tableName = config.DatabaseType switch
             {
-                DatabaseType.SQLite => "__MigrationHistory",
+                DatabaseType.SQLite => "MIGRATION_HISTORY",
                 DatabaseType.Firebird => "MIGRATION_HISTORY",
                 _ => throw new NotSupportedException($"Database type {config.DatabaseType} not supported")
             };
@@ -184,11 +185,11 @@ namespace WindowsLauncher.Services
             var createTableSql = config.DatabaseType switch
             {
                 DatabaseType.SQLite => @"
-                    CREATE TABLE IF NOT EXISTS __MigrationHistory (
-                        Version TEXT PRIMARY KEY NOT NULL,
-                        Name TEXT NOT NULL,
-                        Description TEXT,
-                        AppliedAt TEXT NOT NULL
+                    CREATE TABLE IF NOT EXISTS MIGRATION_HISTORY (
+                        VERSION TEXT PRIMARY KEY NOT NULL,
+                        NAME TEXT NOT NULL,
+                        DESCRIPTION TEXT,
+                        APPLIED_AT TEXT NOT NULL
                     )",
                 DatabaseType.Firebird => @"
                     CREATE TABLE MIGRATION_HISTORY (
@@ -222,7 +223,7 @@ namespace WindowsLauncher.Services
             var sql = databaseType switch
             {
                 DatabaseType.SQLite => @"
-                    INSERT INTO __MigrationHistory (Version, Name, Description, AppliedAt)
+                    INSERT INTO MIGRATION_HISTORY (VERSION, NAME, DESCRIPTION, APPLIED_AT)
                     VALUES (@p0, @p1, @p2, @p3)",
                 DatabaseType.Firebird => @"
                     INSERT INTO MIGRATION_HISTORY (VERSION, NAME, DESCRIPTION, APPLIED_AT)

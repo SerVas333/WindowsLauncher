@@ -103,7 +103,7 @@ namespace WindowsLauncher.Services.Email
             try
             {
                 // Настраиваем SMTP сервер используя стандартный MailKit
-                var password = _encryptionService.Decrypt(settings.EncryptedPassword);
+                var password = _encryptionService.DecryptSecure(settings.EncryptedPassword);
                 
                 using var client = new SmtpClient();
                 
@@ -116,9 +116,13 @@ namespace WindowsLauncher.Services.Email
                 // Создаем MimeMessage
                 var mimeMessage = new MimeMessage();
                 
-                // Настраиваем отправителя
-                var fromEmail = !string.IsNullOrEmpty(message.From) ? message.From : settings.DefaultFromEmail ?? settings.Username;
+                // Настраиваем отправителя - используем безопасный адрес, соответствующий SMTP аутентификации
+                var fromEmail = DetermineValidFromAddress(message, settings);
                 var fromName = !string.IsNullOrEmpty(message.FromDisplayName) ? message.FromDisplayName : settings.DefaultFromName;
+                
+                // Логируем информацию о отправителе для диагностики
+                _logger.LogDebug("Email From address determined: {FromEmail} (Original: {OriginalFrom}, Username: {Username})", 
+                    fromEmail, message.From, settings.Username);
                 
                 if (!string.IsNullOrEmpty(fromName))
                 {
@@ -241,59 +245,263 @@ namespace WindowsLauncher.Services.Email
             
             return await SendEmailAsync(message);
         }
-        
+
         /// <summary>
-        /// Тестировать SMTP подключение используя MailKitSimplified
+        /// Преобразовать SmtpCapabilities в список строк с названиями поддерживаемых возможностей
+        /// </summary>
+        private List<string> GetCapabilityList(SmtpCapabilities capabilities)
+        {
+            var list = new List<string>();
+
+            if (capabilities.HasFlag(SmtpCapabilities.Authentication))
+                list.Add("Authentication");
+            if (capabilities.HasFlag(SmtpCapabilities.Size))
+                list.Add("Size");
+            if (capabilities.HasFlag(SmtpCapabilities.Dsn))
+                list.Add("Delivery Status Notifications");
+            if (capabilities.HasFlag(SmtpCapabilities.StartTLS))
+                list.Add("StartTLS");
+            if (capabilities.HasFlag(SmtpCapabilities.UTF8))
+                list.Add("UTF8");
+            if (capabilities.HasFlag(SmtpCapabilities.BinaryMime))
+                list.Add("Binary MIME");
+            if (capabilities.HasFlag(SmtpCapabilities.EnhancedStatusCodes))
+                list.Add("Enhanced Status Codes");
+            // Добавьте другие флаги, если нужно
+
+            return list;
+        }
+
+        /// <summary>
+        /// Тестировать SMTP подключение с детальной диагностикой
         /// </summary>
         public async Task<EmailTestResult> TestSmtpConnectionAsync(SmtpSettings settings)
         {
             var startTime = DateTime.Now;
-            
+
             try
             {
-                var password = _encryptionService.Decrypt(settings.EncryptedPassword);
-                
-                // Создаем SMTP клиент для тестирования
+                var password = _encryptionService.DecryptSecure(settings.EncryptedPassword);
+
+                // Определяем email адрес для тестирования
+                var testEmail = DetermineTestEmailAddress(settings);
+
+                _logger.LogInformation("=== SMTP CONNECTION TEST START ===");
+                _logger.LogInformation("Host: {Host}:{Port}", settings.Host, settings.Port);
+                _logger.LogInformation("SSL: {UseSSL}, StartTLS: {UseStartTLS}", settings.UseSSL, settings.UseStartTLS);
+                _logger.LogInformation("Username: {Username}", settings.Username);
+                _logger.LogInformation("Test Email: {TestEmail}", testEmail);
+                _logger.LogInformation("Security Options: {SecurityOptions}", GetSecureSocketOptions(settings));
+
                 using var client = new SmtpClient();
-                
-                // Подключаемся к SMTP серверу
+
+                // Для тестирования пропускаем проверку сертификата (НЕ используйте в продакшене)
+                client.ServerCertificateValidationCallback = (s, c, h, e) => true;
+
+                _logger.LogInformation("Connecting to SMTP server...");
+
                 await client.ConnectAsync(settings.Host, settings.Port, GetSecureSocketOptions(settings));
-                
-                // Аутентификация
+
+                var capabilitiesList = GetCapabilityList(client.Capabilities);
+
+                _logger.LogInformation("Connected successfully. Server capabilities: {Capabilities}",
+                    string.Join(", ", capabilitiesList));
+
+                _logger.LogInformation("Authenticating with username: {Username}", settings.Username);
+
                 await client.AuthenticateAsync(settings.Username, password);
-                
-                // Создаем тестовое сообщение
-                var testMessage = new MimeMessage();
-                var testEmail = settings.DefaultFromEmail ?? settings.Username;
-                
-                testMessage.From.Add(new MailboxAddress(testEmail, testEmail));
-                testMessage.To.Add(new MailboxAddress(testEmail, testEmail));
-                testMessage.Subject = "SMTP Connection Test";
-                testMessage.Body = new TextPart("plain")
-                {
-                    Text = "This is a test message to verify SMTP connection."
-                };
-                
-                // Отправляем тестовое сообщение
-                await client.SendAsync(testMessage);
+
+                _logger.LogInformation("Authentication successful");
+
+                _logger.LogInformation("SMTP test completed - connection and authentication successful");
+
                 await client.DisconnectAsync(true);
-                
+
                 var duration = DateTime.Now - startTime;
-                var serverInfo = $"Connected to {settings.Host}:{settings.Port} (MailKit)";
-                
-                _logger.LogInformation("SMTP connection test successful for {Host}:{Port} in {Duration}ms", 
+
+                // Предполагаю, BuildServerInfoString теперь принимает список строк capabilitiesList
+                var serverInfo = BuildServerInfoString(settings, testEmail, capabilitiesList);
+
+                _logger.LogInformation("SMTP connection test successful for {Host}:{Port} in {Duration}ms",
                     settings.Host, settings.Port, duration.TotalMilliseconds);
-                
+                _logger.LogInformation("=== SMTP CONNECTION TEST END (SUCCESS) ===");
+
                 return EmailTestResult.Success(duration, serverInfo);
             }
             catch (Exception ex)
             {
                 var duration = DateTime.Now - startTime;
-                _logger.LogError(ex, "SMTP connection test failed for {Host}:{Port} in {Duration}ms", 
+                var errorMessage = FormatSmtpError(ex);
+
+                _logger.LogError(ex, "SMTP connection test failed for {Host}:{Port} in {Duration}ms",
                     settings.Host, settings.Port, duration.TotalMilliseconds);
-                
-                return EmailTestResult.Failure(ex.Message, duration);
+                _logger.LogError("=== SMTP CONNECTION TEST END (FAILED) ===");
+
+                return EmailTestResult.Failure(errorMessage, duration);
             }
+        }
+
+
+        /// <summary>
+        /// Определить email адрес для тестирования
+        /// </summary>
+        private string DetermineTestEmailAddress(SmtpSettings settings)
+        {
+            // Приоритет: DefaultFromEmail -> Username (если это email) -> Username@domain
+            if (!string.IsNullOrEmpty(settings.DefaultFromEmail) && IsValidEmail(settings.DefaultFromEmail))
+            {
+                return settings.DefaultFromEmail;
+            }
+            
+            if (!string.IsNullOrEmpty(settings.Username) && IsValidEmail(settings.Username))
+            {
+                return settings.Username;
+            }
+            
+            // Если Username не email, пытаемся создать email из домена хоста
+            if (!string.IsNullOrEmpty(settings.Username) && !string.IsNullOrEmpty(settings.Host))
+            {
+                var domain = settings.Host.StartsWith("smtp.") ? settings.Host.Substring(5) : 
+                            settings.Host.StartsWith("mail.") ? settings.Host.Substring(5) : settings.Host;
+                return $"{settings.Username}@{domain}";
+            }
+            
+            return settings.Username ?? "test@example.com";
+        }
+        
+        /// <summary>
+        /// Определить валидный From адрес для реальной отправки email
+        /// Использует только адреса, соответствующие SMTP аутентификации
+        /// </summary>
+        private string DetermineValidFromAddress(EmailMessage message, SmtpSettings settings)
+        {
+            // Логируем исходные данные для диагностики
+            _logger.LogDebug("Determining valid From address - Message.From: {MessageFrom}, DefaultFromEmail: {DefaultFromEmail}, Username: {Username}",
+                message.From, settings.DefaultFromEmail, settings.Username);
+            
+            // Используем ту же логику, что и для тестирования, но с учетом пожеланий пользователя
+            // 1. Если пользователь указал From и он соответствует настройкам SMTP - используем его
+            if (!string.IsNullOrEmpty(message.From) && IsValidEmail(message.From))
+            {
+                // Проверяем, может ли этот адрес использоваться с текущими SMTP настройками
+                if (CanUseFromAddress(message.From, settings))
+                {
+                    _logger.LogDebug("Using user-specified From address: {FromEmail}", message.From);
+                    return message.From;
+                }
+                else
+                {
+                    _logger.LogWarning("User-specified From address '{FromEmail}' cannot be used with SMTP settings, using safe alternative", message.From);
+                }
+            }
+            
+            // 2. Используем DefaultFromEmail если он настроен
+            if (!string.IsNullOrEmpty(settings.DefaultFromEmail) && IsValidEmail(settings.DefaultFromEmail))
+            {
+                _logger.LogDebug("Using DefaultFromEmail: {DefaultFromEmail}", settings.DefaultFromEmail);
+                return settings.DefaultFromEmail;
+            }
+            
+            // 3. Если Username это email - используем его
+            if (!string.IsNullOrEmpty(settings.Username) && IsValidEmail(settings.Username))
+            {
+                _logger.LogDebug("Using Username as email: {Username}", settings.Username);
+                return settings.Username;
+            }
+            
+            // 4. Создаем email из Username и домена
+            if (!string.IsNullOrEmpty(settings.Username) && !string.IsNullOrEmpty(settings.Host))
+            {
+                var domain = settings.Host.StartsWith("smtp.") ? settings.Host.Substring(5) : 
+                            settings.Host.StartsWith("mail.") ? settings.Host.Substring(5) : settings.Host;
+                var constructedEmail = $"{settings.Username}@{domain}";
+                _logger.LogDebug("Constructed email from username and host: {ConstructedEmail}", constructedEmail);
+                return constructedEmail;
+            }
+            
+            // 5. Fallback - используем Username как есть
+            var fallbackEmail = settings.Username ?? "noreply@localhost";
+            _logger.LogWarning("Using fallback email address: {FallbackEmail}", fallbackEmail);
+            return fallbackEmail;
+        }
+        
+        /// <summary>
+        /// Проверить, может ли указанный From адрес использоваться с настройками SMTP
+        /// </summary>
+        private bool CanUseFromAddress(string fromAddress, SmtpSettings settings)
+        {
+            // Для большинства SMTP серверов From адрес должен:
+            // 1. Совпадать с Username (если это email)
+            // 2. Совпадать с DefaultFromEmail  
+            // 3. Быть в том же домене, что и Username
+            
+            if (string.Equals(fromAddress, settings.Username, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            
+            if (!string.IsNullOrEmpty(settings.DefaultFromEmail) && 
+                string.Equals(fromAddress, settings.DefaultFromEmail, StringComparison.OrdinalIgnoreCase))
+            {
+                return true;
+            }
+            
+            // Проверяем домен (упрощенная проверка)
+            if (!string.IsNullOrEmpty(settings.Username) && IsValidEmail(settings.Username))
+            {
+                var usernameDomain = settings.Username.Split('@').LastOrDefault();
+                var fromDomain = fromAddress.Split('@').LastOrDefault();
+                
+                if (!string.IsNullOrEmpty(usernameDomain) && !string.IsNullOrEmpty(fromDomain) &&
+                    string.Equals(usernameDomain, fromDomain, StringComparison.OrdinalIgnoreCase))
+                {
+                    return true;
+                }
+            }
+            
+            return false;
+        }
+        
+        /// <summary>
+        /// Проверить валидность email адреса
+        /// </summary>
+        private bool IsValidEmail(string email)
+        {
+            try
+            {
+                var addr = new System.Net.Mail.MailAddress(email);
+                return addr.Address == email;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+        
+        /// <summary>
+        /// Построить информационную строку о сервере
+        /// </summary>
+        private string BuildServerInfoString(SmtpSettings settings, string testEmail, List<string> capabilities)
+        {
+            var securityInfo = settings.UseSSL ? "SSL" : settings.UseStartTLS ? "StartTLS" : "None";
+            var capabilitiesInfo = capabilities.Count > 0 ? string.Join(", ", capabilities.Take(3)) : "Unknown";
+            
+            return $"{settings.Host}:{settings.Port} ({securityInfo}) | Test Email: {testEmail} | Caps: {capabilitiesInfo}";
+        }
+        
+        /// <summary>
+        /// Форматировать SMTP ошибку для пользователя
+        /// </summary>
+        private string FormatSmtpError(Exception ex)
+        {
+            return ex switch
+            {
+                MailKit.Net.Smtp.SmtpCommandException smtpEx => $"SMTP сервер ответил: {smtpEx.Message} (Код: {smtpEx.StatusCode})",
+                MailKit.Security.AuthenticationException authEx => $"Ошибка аутентификации: {authEx.Message}. Проверьте логин и пароль.",
+                System.Net.Sockets.SocketException sockEx => $"Ошибка подключения: {sockEx.Message}. Проверьте адрес сервера и порт.",
+                System.TimeoutException => "Превышено время ожидания. Проверьте подключение к интернету и настройки брандмауэра.",
+                _ => $"Ошибка подключения: {ex.Message}"
+            };
         }
         
         /// <summary>

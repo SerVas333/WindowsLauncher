@@ -23,30 +23,50 @@ namespace WindowsLauncher.Data.Configurations
                 .IsRequired();
             
             // Обязательные поля
-            builder.Property(c => c.Name)
-                .HasColumnName("NAME")
-                .HasMaxLength(200)
+            builder.Property(c => c.FirstName)
+                .HasColumnName("FIRST_NAME")
+                .HasMaxLength(50)
+                .IsRequired();
+            
+            builder.Property(c => c.LastName)
+                .HasColumnName("LAST_NAME")
+                .HasMaxLength(50)
                 .IsRequired();
             
             builder.Property(c => c.Email)
                 .HasColumnName("EMAIL")
-                .HasMaxLength(250)
+                .HasMaxLength(200)
                 .IsRequired();
             
             // Необязательные поля
+            builder.Property(c => c.Phone)
+                .HasColumnName("PHONE")
+                .HasMaxLength(20)
+                .IsRequired(false);
+            
             builder.Property(c => c.Company)
                 .HasColumnName("COMPANY")
-                .HasMaxLength(200)
+                .HasMaxLength(100)
+                .IsRequired(false);
+            
+            builder.Property(c => c.Department)
+                .HasColumnName("DEPARTMENT")
+                .HasMaxLength(50)
                 .IsRequired(false);
             
             builder.Property(c => c.Group)
                 .HasColumnName("GROUP_NAME") // GROUP - зарезервированное слово в SQL
-                .HasMaxLength(100)
+                .HasMaxLength(50)
                 .IsRequired(false);
             
             builder.Property(c => c.Notes)
                 .HasColumnName("NOTES")
-                .HasMaxLength(1000)
+                .HasMaxLength(500)
+                .IsRequired(false);
+            
+            builder.Property(c => c.CreatedBy)
+                .HasColumnName("CREATED_BY")
+                .HasMaxLength(100)
                 .IsRequired(false);
             
             // Системные поля
@@ -74,13 +94,24 @@ namespace WindowsLauncher.Data.Configurations
                 .IsUnique()
                 .HasFilter("IS_ACTIVE = 1"); // SQLite/Firebird синтаксис
             
-            // Индекс для быстрого поиска по имени
-            builder.HasIndex(c => c.Name)
-                .HasDatabaseName("IX_CONTACTS_NAME");
+            // Индексы для быстрого поиска по имени
+            builder.HasIndex(c => c.FirstName)
+                .HasDatabaseName("IX_CONTACTS_FIRST_NAME");
+            
+            builder.HasIndex(c => c.LastName)
+                .HasDatabaseName("IX_CONTACTS_LAST_NAME");
+            
+            // Индекс для поиска по email
+            builder.HasIndex(c => c.Email)
+                .HasDatabaseName("IX_CONTACTS_EMAIL");
             
             // Индекс для группировки по группам
             builder.HasIndex(c => c.Group)
                 .HasDatabaseName("IX_CONTACTS_GROUP");
+            
+            // Индекс для отдела
+            builder.HasIndex(c => c.Department)
+                .HasDatabaseName("IX_CONTACTS_DEPARTMENT");
             
             // Композитный индекс для фильтрации активных контактов
             builder.HasIndex(c => new { c.IsActive, c.CreatedAt })

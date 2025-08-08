@@ -1,0 +1,342 @@
+<!-- SmtpSettingsWindow.xaml -->
+<Window x:Class="WindowsLauncher.UI.Views.SmtpSettingsWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:loc="clr-namespace:WindowsLauncher.UI.Infrastructure.Localization"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        mc:Ignorable="d"
+        Title="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_WindowTitle}" 
+        Height="700" Width="900"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource SurfaceBrush}"
+        MinHeight="600" MinWidth="800">
+
+    <!-- Все необходимые ресурсы подключены глобально через App.xaml -->
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Header -->
+            <RowDefinition Height="*"/>
+            <!-- Content -->
+            <RowDefinition Height="Auto"/>
+            <!-- Actions -->
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}" Padding="24,16">
+            <StackPanel>
+                <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Title}" 
+                           FontSize="24" FontWeight="Light" 
+                           Foreground="White" FontFamily="Segoe UI"/>
+                <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Subtitle}" 
+                           FontSize="12" Foreground="{StaticResource OnPrimaryBrush}" Opacity="0.9"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" Padding="24" Background="{StaticResource SurfaceVariantBrush}">
+            <Grid>
+                <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <!-- Server Status Overview -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Server Management -->
+                    <RowDefinition Height="Auto"/>
+                    <!-- Test Results -->
+                </Grid.RowDefinitions>
+
+                <!-- Loading Indicator -->
+                <StackPanel Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center"
+                           Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}"
+                           Margin="0,0,0,20">
+                    <fa:ImageAwesome Icon="Spinner" Width="48" Height="48" 
+                                   Foreground="{StaticResource PrimaryBrush}">
+                        <fa:ImageAwesome.RenderTransform>
+                            <RotateTransform/>
+                        </fa:ImageAwesome.RenderTransform>
+                        <fa:ImageAwesome.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                       From="0" To="360" Duration="0:0:1"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </fa:ImageAwesome.Triggers>
+                    </fa:ImageAwesome>
+                    <TextBlock Text="{Binding StatusMessage}" 
+                               FontSize="14" Foreground="{StaticResource PrimaryBrush}" Margin="0,12,0,0"/>
+                </StackPanel>
+
+                <!-- Server Status Overview -->
+                <Border Grid.Row="0" Background="{StaticResource SurfaceBrush}" 
+                       BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                       CornerRadius="8" Margin="0,0,0,20" Padding="20"
+                       Effect="{StaticResource CorporateShadowDepth1}"
+                       Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header -->
+                        <TextBlock Grid.Row="0" Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_ServerOverview}" 
+                                  FontSize="18" FontWeight="SemiBold" 
+                                  Foreground="{StaticResource PrimaryTextBrush}"
+                                  Margin="0,0,0,16"/>
+
+                        <!-- Servers Status -->
+                        <Grid Grid.Row="1">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Primary Server Status -->
+                            <Border Grid.Column="0" Background="White" 
+                                   BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                   CornerRadius="6" Margin="0,0,10,0" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_PrimaryServer}" 
+                                              FontSize="14" FontWeight="SemiBold" 
+                                              Foreground="{StaticResource PrimaryTextBrush}"
+                                              Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding PrimaryServerStatus}" 
+                                              FontSize="12" 
+                                              Foreground="{StaticResource MutedTextBrush}"
+                                              TextWrapping="Wrap"/>
+
+                                    <!-- Primary Server Actions -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                        <Button Style="{StaticResource PrimaryButtonStyle}"
+                                              Command="{Binding AddPrimaryServerCommand}"
+                                              Width="80" Height="28" Margin="0,0,8,0"
+                                              Visibility="{Binding CanAddPrimaryServer, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Add}"
+                                                     Foreground="White" FontSize="11"/>
+                                        </Button>
+
+                                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                              Command="{Binding EditServerCommand}"
+                                              CommandParameter="{Binding PrimaryServer}"
+                                              Width="80" Height="28" Margin="0,0,8,0"
+                                              Visibility="{Binding HasPrimaryServer, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Edit}"
+                                                     Foreground="{StaticResource PrimaryBrush}" FontSize="11"/>
+                                        </Button>
+
+                                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                              Command="{Binding TestConnectionCommand}"
+                                              CommandParameter="{Binding PrimaryServer}"
+                                              Width="80" Height="28"
+                                              Visibility="{Binding HasPrimaryServer, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                              IsEnabled="{Binding IsTestingConnection, Converter={StaticResource InverseBooleanConverter}}">
+                                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Test}"
+                                                     Foreground="{StaticResource PrimaryBrush}" FontSize="11"/>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+
+                            <!-- Backup Server Status -->
+                            <Border Grid.Column="1" Background="White" 
+                                   BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                   CornerRadius="6" Margin="10,0,0,0" Padding="16">
+                                <StackPanel>
+                                    <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_BackupServer}" 
+                                              FontSize="14" FontWeight="SemiBold" 
+                                              Foreground="{StaticResource PrimaryTextBrush}"
+                                              Margin="0,0,0,8"/>
+                                    <TextBlock Text="{Binding BackupServerStatus}" 
+                                              FontSize="12" 
+                                              Foreground="{StaticResource MutedTextBrush}"
+                                              TextWrapping="Wrap"/>
+
+                                    <!-- Backup Server Actions -->
+                                    <StackPanel Orientation="Horizontal" Margin="0,12,0,0">
+                                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                              Command="{Binding AddBackupServerCommand}"
+                                              Width="80" Height="28" Margin="0,0,8,0"
+                                              Visibility="{Binding CanAddBackupServer, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Add}"
+                                                     Foreground="{StaticResource PrimaryBrush}" FontSize="11"/>
+                                        </Button>
+
+                                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                              Command="{Binding EditServerCommand}"
+                                              CommandParameter="{Binding BackupServer}"
+                                              Width="80" Height="28" Margin="0,0,8,0"
+                                              Visibility="{Binding HasBackupServer, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Edit}"
+                                                     Foreground="{StaticResource PrimaryBrush}" FontSize="11"/>
+                                        </Button>
+
+                                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                              Command="{Binding TestConnectionCommand}"
+                                              CommandParameter="{Binding BackupServer}"
+                                              Width="80" Height="28"
+                                              Visibility="{Binding HasBackupServer, Converter={StaticResource BooleanToVisibilityConverter}}"
+                                              IsEnabled="{Binding IsTestingConnection, Converter={StaticResource InverseBooleanConverter}}">
+                                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Test}"
+                                                     Foreground="{StaticResource PrimaryBrush}" FontSize="11"/>
+                                        </Button>
+                                    </StackPanel>
+                                </StackPanel>
+                            </Border>
+                        </Grid>
+                    </Grid>
+                </Border>
+
+                <!-- All Servers List -->
+                <Border Grid.Row="1" Background="{StaticResource SurfaceBrush}" 
+                       BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                       CornerRadius="8" Margin="0,0,0,20" Padding="20"
+                       Effect="{StaticResource CorporateShadowDepth1}"
+                       Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}">
+                    <Grid>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="*"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- Header with Actions -->
+                        <Grid Grid.Row="0" Margin="0,0,0,16">
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="Auto"/>
+                            </Grid.ColumnDefinitions>
+
+                            <TextBlock Grid.Column="0" Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_AllServers}" 
+                                      FontSize="18" FontWeight="SemiBold" 
+                                      Foreground="{StaticResource PrimaryTextBrush}"/>
+
+                            <Button Grid.Column="1" Style="{StaticResource SecondaryButtonStyle}"
+                                  Command="{Binding LoadServersCommand}"
+                                  Width="100" Height="32">
+                                <StackPanel Orientation="Horizontal">
+                                    <fa:ImageAwesome Icon="Refresh" Width="12" Height="12" 
+                                                   Foreground="{StaticResource PrimaryBrush}" 
+                                                   VerticalAlignment="Center" Margin="0,0,6,0"/>
+                                    <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=Common_Refresh}"
+                                             Foreground="{StaticResource PrimaryBrush}" 
+                                             VerticalAlignment="Center"/>
+                                </StackPanel>
+                            </Button>
+                        </Grid>
+
+                        <!-- Servers DataGrid with Border for CornerRadius -->
+                        <Border Grid.Row="1" 
+                                Background="White"
+                                BorderBrush="{StaticResource BorderBrush}"
+                                BorderThickness="1"
+                                CornerRadius="4">
+                            <DataGrid ItemsSource="{Binding SmtpServers}"
+                                     SelectedItem="{Binding SelectedServer}"
+                                     AutoGenerateColumns="False"
+                                     CanUserAddRows="False"
+                                     CanUserDeleteRows="False"
+                                     Background="Transparent"
+                                     BorderThickness="0"
+                                     HeadersVisibility="Column"
+                                     GridLinesVisibility="Horizontal">
+                            <DataGrid.Columns>
+                                <DataGridTextColumn Header="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Name}" 
+                                                   Binding="{Binding Name}" Width="150"/>
+                                <DataGridTextColumn Header="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Type}" 
+                                                   Binding="{Binding ServerType}" Width="100"/>
+                                <DataGridTextColumn Header="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Host}" 
+                                                   Binding="{Binding Host}" Width="200"/>
+                                <DataGridTextColumn Header="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Port}" 
+                                                   Binding="{Binding Port}" Width="80"/>
+                                <DataGridTextColumn Header="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Username}" 
+                                                   Binding="{Binding Username}" Width="150"/>
+                                <DataGridTemplateColumn Header="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=Common_Actions}" Width="200">
+                                    <DataGridTemplateColumn.CellTemplate>
+                                        <DataTemplate>
+                                            <StackPanel Orientation="Horizontal">
+                                                <Button Style="{StaticResource SecondaryButtonStyle}"
+                                                      Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.EditServerCommand}"
+                                                      CommandParameter="{Binding}"
+                                                      Width="60" Height="24" Margin="0,0,4,0">
+                                                    <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=Common_Edit}"
+                                                             Foreground="{StaticResource PrimaryBrush}" FontSize="10"/>
+                                                </Button>
+
+                                                <Button Style="{StaticResource SecondaryButtonStyle}"
+                                                      Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.TestConnectionCommand}"
+                                                      CommandParameter="{Binding}"
+                                                      Width="60" Height="24" Margin="0,0,4,0">
+                                                    <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_Test}"
+                                                             Foreground="{StaticResource PrimaryBrush}" FontSize="10"/>
+                                                </Button>
+
+                                                <Button Style="{StaticResource DangerButtonStyle}"
+                                                      Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.DeleteServerCommand}"
+                                                      CommandParameter="{Binding}"
+                                                      Width="60" Height="24">
+                                                    <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=Common_Delete}"
+                                                             Foreground="{StaticResource WhiteTextBrush}" FontSize="10"/>
+                                                </Button>
+                                            </StackPanel>
+                                        </DataTemplate>
+                                    </DataGridTemplateColumn.CellTemplate>
+                                </DataGridTemplateColumn>
+                            </DataGrid.Columns>
+                            </DataGrid>
+                        </Border>
+                    </Grid>
+                </Border>
+
+                <!-- Test Results -->
+                <Border Grid.Row="2" Background="White" 
+                       BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                       CornerRadius="8" Padding="20"
+                       Visibility="{Binding TestResult, Converter={StaticResource StringToVisibilityConverter}}"
+                       Effect="{StaticResource CorporateShadowDepth1}">
+                    <StackPanel>
+                        <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=SmtpSettings_TestResult}" 
+                                  FontSize="16" FontWeight="SemiBold" 
+                                  Foreground="{StaticResource PrimaryTextBrush}"
+                                  Margin="0,0,0,12"/>
+                        <TextBlock Text="{Binding TestResult}" 
+                                  FontSize="14" 
+                                  Foreground="{StaticResource PrimaryTextBrush}"
+                                  TextWrapping="Wrap"/>
+                    </StackPanel>
+                </Border>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Actions -->
+        <Border Grid.Row="2" Background="White" BorderThickness="0,1,0,0" 
+                BorderBrush="{StaticResource LightGrayBrush}" Padding="24,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Status Message -->
+                <TextBlock Grid.Column="0" Text="{Binding StatusMessage}" 
+                          Foreground="{StaticResource MutedTextBrush}" 
+                          VerticalAlignment="Center"/>
+
+                <!-- Action Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                          Command="{Binding CloseCommand}"
+                          Width="100" Height="36">
+                        <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=Common_Close}"
+                                 Foreground="{StaticResource PrimaryBrush}" 
+                                 VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

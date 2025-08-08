@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using WindowsLauncher.Core.Interfaces;
 
 // ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы
 using CoreApplication = WindowsLauncher.Core.Models.Application;
@@ -14,10 +15,17 @@ namespace WindowsLauncher.UI.ViewModels
     public class ApplicationViewModel : INotifyPropertyChanged
     {
         private readonly CoreApplication _application; // ✅ Используем CoreApplication
+        private readonly ICategoryManagementService? _categoryService;
+        
+        // Кэш данных категории для избежания async проблем
+        private string? _cachedIcon;
+        private string? _cachedColor;
+        private bool _isInitialized;
 
-        public ApplicationViewModel(CoreApplication application) // ✅ Используем CoreApplication
+        public ApplicationViewModel(CoreApplication application, ICategoryManagementService? categoryService = null) // ✅ Используем CoreApplication
         {
             _application = application ?? throw new ArgumentNullException(nameof(application));
+            _categoryService = categoryService;
 
             // Подписываемся на изменение языка
             LocalizationManager.LanguageChanged += OnLanguageChanged;
@@ -38,30 +46,41 @@ namespace WindowsLauncher.UI.ViewModels
         #region UI Properties
 
         /// <summary>
-        /// Иконки в корпоративном стиле
+        /// Иконка категории для FontAwesome
         /// </summary>
-        public string IconText
+        public string CategoryIcon
         {
             get
             {
-                if (string.IsNullOrEmpty(Name))
-                    return "📱";
+                // Используем кэшированную иконку если доступна
+                if (_isInitialized && !string.IsNullOrEmpty(_cachedIcon))
+                {
+                    return _cachedIcon;
+                }
 
+                // Fallback для известных категорий
                 return Category?.ToLower() switch
                 {
-                    "system" => "⚙️",
-                    "utilities" => "🔧",
-                    "development" => "💻",
-                    "business" => "💼",
-                    "communication" => "💬",
-                    "office" => "📊",
-                    "web" => "🌐",
-                    "tools" => "🛠️",
-                    "games" => "🎮",
-                    "media" => "🎵",
-                    "graphics" => "🎨",
-                    "security" => "🔒",
-                    _ => Name[0].ToString().ToUpper()
+                    "forms" => "FileText",
+                    "instructions" => "Book", 
+                    "videoinstructions" => "PlayCircle",
+                    "presentations" => "Image", // Исправлено: Images → Image (FontAwesome enum значение)
+                    "questionnaires" => "ListUl",
+                    "tests" => "CheckCircle",
+                    "applications" => "Th",
+                    "utilities" => "Wrench",
+                    "system" => "Cogs",
+                    "development" => "Code",
+                    "business" => "Briefcase",
+                    "communication" => "Comments",
+                    "office" => "FileExcel",
+                    "web" => "Globe",
+                    "tools" => "Tools",
+                    "games" => "Gamepad",
+                    "media" => "Music",
+                    "graphics" => "Paint",
+                    "security" => "Shield",
+                    _ => "Cube"
                 };
             }
         }
@@ -81,16 +100,30 @@ namespace WindowsLauncher.UI.ViewModels
         }
 
         /// <summary>
-        /// Корпоративные цвета для категорий
+        /// Цвет категории из конфигурации
         /// </summary>
         public string CategoryColor
         {
             get
             {
+                // Используем кэшированный цвет если доступен
+                if (_isInitialized && !string.IsNullOrEmpty(_cachedColor))
+                {
+                    return _cachedColor;
+                }
+
+                // Fallback цвета для известных категорий
                 return Category?.ToLower() switch
                 {
+                    "forms" => "#2196F3",         // Синий
+                    "instructions" => "#4CAF50",  // Зеленый
+                    "videoinstructions" => "#FF9800", // Оранжевый
+                    "presentations" => "#9C27B0", // Фиолетовый
+                    "questionnaires" => "#607D8B", // Синий-серый
+                    "tests" => "#E91E63",         // Розовый
+                    "applications" => "#00BCD4",  // Голубой
+                    "utilities" => "#795548",     // Коричневый
                     "system" => "#C41E3A",        // Корпоративный красный
-                    "utilities" => "#E8324F",     // Светло-красный
                     "development" => "#A01729",   // Темно-красный
                     "business" => "#2E4B8C",      // Корпоративный синий
                     "communication" => "#4CAF50", // Зеленый
@@ -106,31 +139,6 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Иконка категории
-        /// </summary>
-        public string CategoryIcon
-        {
-            get
-            {
-                return Category?.ToLower() switch
-                {
-                    "system" => "⚙️",
-                    "utilities" => "🔧",
-                    "development" => "💻",
-                    "business" => "💼",
-                    "communication" => "💬",
-                    "office" => "📊",
-                    "web" => "🌐",
-                    "tools" => "🛠️",
-                    "games" => "🎮",
-                    "media" => "🎵",
-                    "graphics" => "🎨",
-                    "security" => "🔒",
-                    _ => "📱"
-                };
-            }
-        }
 
         /// <summary>
         /// Показывать ли приложение (фильтрация)
@@ -190,6 +198,45 @@ namespace WindowsLauncher.UI.ViewModels
         #endregion
 
         #region Methods
+
+        /// <summary>
+        /// Асинхронная инициализация данных категории
+        /// </summary>
+        public async Task InitializeAsync()
+        {
+            if (_isInitialized || _categoryService == null || string.IsNullOrEmpty(Category))
+            {
+                _isInitialized = true;
+                return;
+            }
+
+            try
+            {
+                var categoryDef = await _categoryService.GetCategoryByKeyAsync(Category);
+                if (categoryDef != null)
+                {
+                    _cachedIcon = categoryDef.Icon;
+                    _cachedColor = categoryDef.Color;
+                    System.Diagnostics.Debug.WriteLine($"[ApplicationViewModel] Cached category data for {Category}: Icon={_cachedIcon}, Color={_cachedColor}");
+                }
+                else
+                {
+                    System.Diagnostics.Debug.WriteLine($"[ApplicationViewModel] No category definition found for {Category}");
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"[ApplicationViewModel] Error initializing category data for {Category}: {ex.Message}");
+            }
+            finally
+            {
+                _isInitialized = true;
+                
+                // Уведомляем UI об изменении свойств после инициализации
+                OnPropertyChanged(nameof(CategoryIcon));
+                OnPropertyChanged(nameof(CategoryColor));
+            }
+        }
 
         /// <summary>
         /// Получить исходную модель Application
@@ -272,11 +319,45 @@ namespace WindowsLauncher.UI.ViewModels
             if (string.IsNullOrEmpty(category))
                 return category;
 
-            // Словарь для перевода категорий
+            if (_categoryService != null)
+            {
+                // Пытаемся получить локализованное название из сервиса
+                try
+                {
+                    var task = _categoryService.GetCategoryByKeyAsync(category);
+                    task.Wait(); // Временное решение для синхронного доступа
+                    var categoryDef = task.Result;
+                    if (categoryDef != null && !string.IsNullOrEmpty(categoryDef.LocalizationKey))
+                    {
+                        // Пробуем получить локализацию
+                        var localizedName = LocalizationManager.GetString(categoryDef.LocalizationKey);
+                        if (!string.IsNullOrEmpty(localizedName) && localizedName != categoryDef.LocalizationKey)
+                        {
+                            return localizedName;
+                        }
+                    }
+                }
+                catch
+                {
+                    // В случае ошибки используем fallback
+                }
+            }
+
+            // Fallback словарь для перевода категорий
             var categoryTranslations = new Dictionary<string, string>
             {
-                { "System", "Система" },
+                // Новые категории
+                { "Forms", "Бланки" },
+                { "Instructions", "Инструкции" },
+                { "VideoInstructions", "Видеоинструкции" },
+                { "Presentations", "Презентации" },
+                { "Questionnaires", "Анкеты" },
+                { "Tests", "Тесты" },
+                { "Applications", "Приложения" },
                 { "Utilities", "Утилиты" },
+                
+                // Старые категории для совместимости
+                { "System", "Система" },
                 { "Development", "Разработка" },
                 { "Business", "Бизнес" },
                 { "Communication", "Коммуникации" },

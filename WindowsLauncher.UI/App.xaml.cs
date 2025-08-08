@@ -389,6 +389,11 @@ namespace WindowsLauncher.UI
 
             // ViewModels
             services.AddTransient<MainViewModel>();
+            services.AddTransient<AddressBookViewModel>();
+            services.AddTransient<ComposeEmailViewModel>();
+            services.AddTransient<ContactEditViewModel>();
+            services.AddTransient<SmtpSettingsViewModel>();
+            services.AddTransient<SmtpEditViewModel>();
             services.AddTransient<AdminViewModel>();
 
             // Memory Cache для авторизации

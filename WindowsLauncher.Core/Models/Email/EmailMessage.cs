@@ -49,6 +49,22 @@ namespace WindowsLauncher.Core.Models.Email
         public bool IsInline { get; set; } = false;
         
         public string? ContentId { get; set; }
+        
+        /// <summary>
+        /// Отформатированный размер файла для отображения в UI
+        /// </summary>
+        public string FormattedSize
+        {
+            get
+            {
+                if (Size < 1024)
+                    return $"{Size} байт";
+                else if (Size < 1024 * 1024)
+                    return $"{Size / 1024.0:F1} КБ";
+                else
+                    return $"{Size / (1024.0 * 1024.0):F1} МБ";
+            }
+        }
     }
     
     /// <summary>

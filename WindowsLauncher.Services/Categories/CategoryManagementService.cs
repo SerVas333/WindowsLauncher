@@ -21,7 +21,7 @@ namespace WindowsLauncher.Services.Categories
         // Кэш категорий для производительности
         private List<CategoryDefinition>? _cachedCategories;
         private DateTime _cacheExpiry = DateTime.MinValue;
-        private readonly TimeSpan _cacheLifetime = TimeSpan.FromMinutes(5);
+        private readonly TimeSpan _cacheLifetime = TimeSpan.FromMinutes(5); // Обычное время кэширования
 
         public CategoryManagementService(
             IConfiguration configuration,
@@ -510,6 +510,15 @@ namespace WindowsLauncher.Services.Categories
                 _cachedCategories = null;
                 _cacheExpiry = DateTime.MinValue;
             }
+        }
+
+        /// <summary>
+        /// Публичный метод для принудительного сброса кэша категорий
+        /// </summary>
+        public void ClearCache()
+        {
+            InvalidateCache();
+            _logger.LogInformation("Category cache cleared manually");
         }
     }
 }

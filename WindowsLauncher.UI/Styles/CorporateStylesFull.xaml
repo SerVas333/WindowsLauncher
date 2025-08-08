@@ -22,6 +22,10 @@
     <converters:BoolToStringConverter x:Key="BoolToStringConverter"/>
     <converters:EqualityToBooleanConverter x:Key="EqualityToBooleanConverter"/>
     <converters:RoleToVisibilityConverter x:Key="RoleToVisibilityConverter"/>
+    <converters:StringToVisibilityConverter x:Key="StringToVisibilityConverter"/>
+    
+    <!-- Простые boolean конвертеры для SMTP UI -->
+    <converters:NotEqualToBooleanConverter x:Key="InverseBooleanConverter"/>
 
     <!-- =============================================== -->
     <!-- TOUCH MODE КОНФИГУРАЦИЯ -->
@@ -111,6 +115,11 @@
 
     <SolidColorBrush x:Key="InfoBrush" Color="#2196F3"/>
     <SolidColorBrush x:Key="OnInfoBrush" Color="#FFFFFF"/>
+    
+    <!-- Информационные блоки для SMTP UI -->
+    <SolidColorBrush x:Key="InfoBackgroundBrush" Color="#E3F2FD"/>
+    <SolidColorBrush x:Key="InfoBorderBrush" Color="#2196F3"/>
+    <SolidColorBrush x:Key="InfoTextBrush" Color="#1565C0"/>
 
     <!-- Disabled/Hint Colors -->
     <SolidColorBrush x:Key="DisabledBrush" Color="#CCCCCC"/>

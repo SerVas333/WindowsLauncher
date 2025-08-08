@@ -14,6 +14,7 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
+using WindowsLauncher.Core.Interfaces.Email;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Core.Models.Configuration;
 using WindowsLauncher.Core.Enums;
@@ -59,6 +60,10 @@ namespace WindowsLauncher.UI.ViewModels
         private string _buildDate = "";
         private string _databaseVersion = "";
         private string _totalDataSize = "";
+        
+        // Поля для SMTP статуса
+        private string _primarySmtpStatus = "❌ Не настроен";
+        private string _backupSmtpStatus = "❌ Не настроен";
 
         #endregion
 
@@ -301,6 +306,19 @@ namespace WindowsLauncher.UI.ViewModels
             set => SetProperty(ref _totalDataSize, value);
         }
 
+        // SMTP статус свойства
+        public string PrimarySmtpStatus
+        {
+            get => _primarySmtpStatus;
+            set => SetProperty(ref _primarySmtpStatus, value);
+        }
+
+        public string BackupSmtpStatus
+        {
+            get => _backupSmtpStatus;
+            set => SetProperty(ref _backupSmtpStatus, value);
+        }
+
         public string UserSearchText
         {
             get => _userSearchText;
@@ -391,6 +409,7 @@ namespace WindowsLauncher.UI.ViewModels
         public RelayCommand ExportConfigurationCommand { get; private set; } = null!;
         public RelayCommand OpenDataFolderCommand { get; private set; } = null!;
         public AsyncRelayCommand RunDiagnosticsCommand { get; private set; } = null!;
+        public RelayCommand OpenSmtpSettingsCommand { get; private set; } = null!;
 
         private void InitializeCommands()
         {
@@ -475,6 +494,7 @@ namespace WindowsLauncher.UI.ViewModels
             ExportConfigurationCommand = new RelayCommand(ExportConfiguration);
             OpenDataFolderCommand = new RelayCommand(OpenDataFolder);
             RunDiagnosticsCommand = new AsyncRelayCommand(RunSystemDiagnosticsAsync, () => !IsLoading, Logger);
+            OpenSmtpSettingsCommand = new RelayCommand(OpenSmtpSettings);
         }
 
         private void UpdateCommandStates()
@@ -1731,6 +1751,9 @@ namespace WindowsLauncher.UI.ViewModels
                 Logger.LogInformation("Version info loaded: ApplicationVersion={ApplicationVersion}, BuildDate={BuildDate}, DatabaseVersion={DatabaseVersion}, TotalDataSize={TotalDataSize}", 
                     ApplicationVersion, BuildDate, DatabaseVersion, TotalDataSize);
                 
+                // Загружаем статус SMTP серверов
+                await UpdateSmtpStatusAsync();
+                
                 StatusMessage = "Системная информация загружена";
                 Logger.LogInformation("System information loaded successfully");
             }, "load system information");
@@ -1928,6 +1951,109 @@ namespace WindowsLauncher.UI.ViewModels
                 
                 StatusMessage = "Диагностика системы завершена";
             }, "run system diagnostics");
+        }
+        
+        /// <summary>
+        /// Открыть окно настроек SMTP серверов
+        /// </summary>
+        private void OpenSmtpSettings()
+        {
+            try
+            {
+                Logger.LogInformation("Opening SMTP settings window");
+                
+                // Получаем SmtpSettingsViewModel из DI
+                var smtpSettingsViewModel = _serviceProvider.GetService(typeof(SmtpSettingsViewModel)) as SmtpSettingsViewModel;
+                if (smtpSettingsViewModel == null)
+                {
+                    Logger.LogError("Failed to resolve SmtpSettingsViewModel from DI container");
+                    StatusMessage = "Ошибка: не удалось открыть настройки SMTP";
+                    return;
+                }
+                
+                // Создаем и показываем окно настроек SMTP
+                var smtpSettingsWindow = new Views.SmtpSettingsWindow(smtpSettingsViewModel)
+                {
+                    Owner = WpfApplication.Current.MainWindow
+                };
+                
+                var result = smtpSettingsWindow.ShowDialog();
+                
+                if (result == true)
+                {
+                    // Обновляем статус SMTP серверов после закрытия окна
+                    _ = UpdateSmtpStatusAsync();
+                    StatusMessage = "Настройки SMTP обновлены";
+                    Logger.LogInformation("SMTP settings updated successfully");
+                }
+                else
+                {
+                    StatusMessage = "Настройки SMTP не изменены";
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error opening SMTP settings window");
+                StatusMessage = $"Ошибка открытия настроек SMTP: {ex.Message}";
+            }
+        }
+        
+        /// <summary>
+        /// Обновить статус SMTP серверов
+        /// </summary>
+        private async Task UpdateSmtpStatusAsync()
+        {
+            try
+            {
+                // Получаем ISmtpSettingsRepository из DI
+                var smtpRepository = _serviceProvider.GetService(typeof(ISmtpSettingsRepository)) as ISmtpSettingsRepository;
+                if (smtpRepository == null)
+                {
+                    Logger.LogWarning("SmtpSettingsRepository not available in DI container");
+                    PrimarySmtpStatus = "⚠️ Сервис недоступен";
+                    BackupSmtpStatus = "⚠️ Сервис недоступен";
+                    return;
+                }
+                
+                // Загружаем серверы
+                var servers = await smtpRepository.GetActiveSettingsAsync();
+                
+                var primaryServer = servers.FirstOrDefault(s => s.ServerType == Core.Models.Email.SmtpServerType.Primary);
+                var backupServer = servers.FirstOrDefault(s => s.ServerType == Core.Models.Email.SmtpServerType.Backup);
+                
+                // Обновляем статус основного сервера
+                if (primaryServer != null)
+                {
+                    var status = primaryServer.IsActive ? "✅" : "❌";
+                    var errors = primaryServer.ConsecutiveErrors > 0 ? $" ({primaryServer.ConsecutiveErrors} ошибок)" : "";
+                    PrimarySmtpStatus = $"{status} {primaryServer.Host}:{primaryServer.Port}{errors}";
+                }
+                else
+                {
+                    PrimarySmtpStatus = "❌ Не настроен";
+                }
+                
+                // Обновляем статус резервного сервера
+                if (backupServer != null)
+                {
+                    var status = backupServer.IsActive ? "✅" : "❌";
+                    var errors = backupServer.ConsecutiveErrors > 0 ? $" ({backupServer.ConsecutiveErrors} ошибок)" : "";
+                    BackupSmtpStatus = $"{status} {backupServer.Host}:{backupServer.Port}{errors}";
+                }
+                else
+                {
+                    BackupSmtpStatus = "⚠️ Не настроен";
+                }
+                
+                Logger.LogDebug("Updated SMTP status - Primary: {Primary}, Backup: {Backup}", 
+                    PrimarySmtpStatus, BackupSmtpStatus);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error updating SMTP status");
+                PrimarySmtpStatus = "❌ Ошибка загрузки";
+                BackupSmtpStatus = "❌ Ошибка загрузки";
+            }
         }
 
         #endregion

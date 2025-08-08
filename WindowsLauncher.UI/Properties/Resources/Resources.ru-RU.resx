@@ -375,7 +375,7 @@
   <data name="CategoryTools" xml:space="preserve">
     <value>Инструменты</value>
   </data>
-  <data name="CategoryWeb" xml:space="preserve">
+  <data name="Category_Web" xml:space="preserve">
     <value>Веб</value>
   </data>
   <data name="CategorySystem" xml:space="preserve">
@@ -387,11 +387,26 @@
   <data name="CategoryDevelopment" xml:space="preserve">
     <value>Разработка</value>
   </data>
-  <data name="Category_Business" xml:space="preserve">
-    <value>Бизнес</value>
+  <data name="Category_Forms" xml:space="preserve">
+    <value>Бланки</value>
   </data>
-  <data name="Category_Communication" xml:space="preserve">
-    <value>Коммуникации</value>
+  <data name="Category_Instructions" xml:space="preserve">
+    <value>Инструкции</value>
+  </data>
+  <data name="Category_VideoInstructions" xml:space="preserve">
+    <value>Видеоинструкции</value>
+  </data>
+  <data name="Category_Presentations" xml:space="preserve">
+    <value>Презентации</value>
+  </data>
+  <data name="Category_Questionnaires" xml:space="preserve">
+    <value>Анкеты</value>
+  </data>
+  <data name="Category_Tests" xml:space="preserve">
+    <value>Тесты</value>
+  </data>
+  <data name="Category_Applications" xml:space="preserve">
+    <value>Приложения</value>
   </data>
   <data name="Category_Utilities" xml:space="preserve">
     <value>Утилиты</value>
@@ -744,7 +759,6 @@
   <data name="VirtualKeyboardError" xml:space="preserve">
     <value>Виртуальная клавиатура недоступна в данной системе</value>
   </data>
-  <!-- TextEditor Resources -->
   <data name="TextEditor_Title" xml:space="preserve">
     <value>Текстовый редактор KDV</value>
   </data>
@@ -847,7 +861,6 @@
   <data name="TextEditor_FontSizeLabel" xml:space="preserve">
     <value>Размер:</value>
   </data>
-  <!-- Corporate Confirmation Dialog -->
   <data name="Dialog_LogoutTitle" xml:space="preserve">
     <value>Подтверждение выхода</value>
   </data>
@@ -920,7 +933,6 @@
   <data name="AppSwitcher_UnknownMode" xml:space="preserve">
     <value>Режим: Неизвестный</value>
   </data>
-  <!-- LoginWindow additional localization keys -->
   <data name="LoginWindow_LocalUsername" xml:space="preserve">
     <value>Имя пользователя</value>
   </data>
@@ -938,5 +950,251 @@
   </data>
   <data name="LoginWindow_VirtualKeyboardTooltip" xml:space="preserve">
     <value>Виртуальная клавиатура</value>
+  </data>
+  <data name="ComposeEmail_WindowTitle" xml:space="preserve">
+    <value>Создание письма</value>
+  </data>
+  <data name="ComposeEmail_Title" xml:space="preserve">
+    <value>Создать новое сообщение</value>
+  </data>
+  <data name="ComposeEmail_Subtitle" xml:space="preserve">
+    <value>Составление и отправка электронной почты</value>
+  </data>
+  <data name="ComposeEmail_RecipientsGroup" xml:space="preserve">
+    <value>Получатели</value>
+  </data>
+  <data name="ComposeEmail_To" xml:space="preserve">
+    <value>Кому:</value>
+  </data>
+  <data name="ComposeEmail_Cc" xml:space="preserve">
+    <value>Копия:</value>
+  </data>
+  <data name="ComposeEmail_Bcc" xml:space="preserve">
+    <value>Скрытая копия:</value>
+  </data>
+  <data name="ComposeEmail_Subject" xml:space="preserve">
+    <value>Тема:</value>
+  </data>
+  <data name="ComposeEmail_Message" xml:space="preserve">
+    <value>Сообщение:</value>
+  </data>
+  <data name="ComposeEmail_AttachmentsGroup" xml:space="preserve">
+    <value>Вложения</value>
+  </data>
+  <data name="ComposeEmail_AddAttachment" xml:space="preserve">
+    <value>Добавить вложение</value>
+  </data>
+  <data name="ComposeEmail_AddCcBcc" xml:space="preserve">
+    <value>Добавить копию/скрытую копию</value>
+  </data>
+  <data name="ComposeEmail_SelectRecipientsTooltip" xml:space="preserve">
+    <value>Выбрать получателей из адресной книги</value>
+  </data>
+  <data name="ComposeEmail_SelectCcRecipientsTooltip" xml:space="preserve">
+    <value>Выбрать получателей копии из адресной книги</value>
+  </data>
+  <data name="ComposeEmail_SelectBccRecipientsTooltip" xml:space="preserve">
+    <value>Выбрать получателей скрытой копии из адресной книги</value>
+  </data>
+  <data name="ComposeEmail_RemoveAttachmentTooltip" xml:space="preserve">
+    <value>Удалить вложение</value>
+  </data>
+  <data name="ComposeEmail_SaveDraft" xml:space="preserve">
+    <value>Сохранить черновик</value>
+  </data>
+  <data name="ComposeEmail_SaveDraftTooltip" xml:space="preserve">
+    <value>Сохранить сообщение как черновик</value>
+  </data>
+  <data name="ComposeEmail_Send" xml:space="preserve">
+    <value>Отправить</value>
+  </data>
+  <data name="AddressBook_WindowTitle" xml:space="preserve">
+    <value>Адресная книга</value>
+  </data>
+  <data name="AddressBook_Title" xml:space="preserve">
+    <value>Адресная книга</value>
+  </data>
+  <data name="AddressBook_Subtitle" xml:space="preserve">
+    <value>Управление контактами и адресами электронной почты</value>
+  </data>
+  <data name="AddressBook_SearchPlaceholder" xml:space="preserve">
+    <value>Поиск контактов...</value>
+  </data>
+  <data name="AddressBook_AddContact" xml:space="preserve">
+    <value>Добавить контакт</value>
+  </data>
+  <data name="AddressBook_AddContactTooltip" xml:space="preserve">
+    <value>Добавить новый контакт</value>
+  </data>
+  <data name="AddressBook_ImportExportTooltip" xml:space="preserve">
+    <value>Импорт/экспорт контактов</value>
+  </data>
+  <data name="AddressBook_LoadingContacts" xml:space="preserve">
+    <value>Загрузка контактов...</value>
+  </data>
+  <data name="AddressBook_NoContactsFound" xml:space="preserve">
+    <value>Контакты не найдены</value>
+  </data>
+  <data name="AddressBook_NoContactsHint" xml:space="preserve">
+    <value>Попробуйте изменить критерии поиска или добавьте новые контакты</value>
+  </data>
+  <data name="AddressBook_EditContactTooltip" xml:space="preserve">
+    <value>Редактировать контакт</value>
+  </data>
+  <data name="AddressBook_DeleteContactTooltip" xml:space="preserve">
+    <value>Удалить контакт</value>
+  </data>
+  <data name="AddressBook_SelectedCount" xml:space="preserve">
+    <value>Выбрано:</value>
+  </data>
+  <data name="AddressBook_ToggleSelectAllTooltip" xml:space="preserve">
+    <value>Выделить все / Снять выделение</value>
+  </data>
+  <data name="ContactEdit_PersonalInfoGroup" xml:space="preserve">
+    <value>Личная информация</value>
+  </data>
+  <data name="ContactEdit_FirstName" xml:space="preserve">
+    <value>Имя:</value>
+  </data>
+  <data name="ContactEdit_LastName" xml:space="preserve">
+    <value>Фамилия:</value>
+  </data>
+  <data name="ContactEdit_Email" xml:space="preserve">
+    <value>Электронная почта:</value>
+  </data>
+  <data name="ContactEdit_ContactInfoGroup" xml:space="preserve">
+    <value>Контактная информация</value>
+  </data>
+  <data name="ContactEdit_Phone" xml:space="preserve">
+    <value>Телефон:</value>
+  </data>
+  <data name="ContactEdit_Company" xml:space="preserve">
+    <value>Организация:</value>
+  </data>
+  <data name="ContactEdit_Department" xml:space="preserve">
+    <value>Отдел:</value>
+  </data>
+  <data name="ContactEdit_Group" xml:space="preserve">
+    <value>Группа:</value>
+  </data>
+  <data name="ContactEdit_AdditionalInfoGroup" xml:space="preserve">
+    <value>Дополнительная информация</value>
+  </data>
+  <data name="ContactEdit_Notes" xml:space="preserve">
+    <value>Заметки:</value>
+  </data>
+  <data name="ContactEdit_PreviewGroup" xml:space="preserve">
+    <value>Предварительный просмотр контакта</value>
+  </data>
+  <data name="MainWindow_AddressBookTooltip" xml:space="preserve">
+    <value>Адресная книга</value>
+  </data>
+  <data name="SmtpSettings_WindowTitle" xml:space="preserve">
+    <value>Настройки SMTP серверов</value>
+  </data>
+  <data name="SmtpSettings_Title" xml:space="preserve">
+    <value>Управление SMTP серверами</value>
+  </data>
+  <data name="SmtpSettings_Subtitle" xml:space="preserve">
+    <value>Настройка основного и резервного почтовых серверов</value>
+  </data>
+  <data name="SmtpSettings_ServerOverview" xml:space="preserve">
+    <value>Обзор состояния серверов</value>
+  </data>
+  <data name="SmtpSettings_PrimaryServer" xml:space="preserve">
+    <value>Основной сервер</value>
+  </data>
+  <data name="SmtpSettings_BackupServer" xml:space="preserve">
+    <value>Резервный сервер</value>
+  </data>
+  <data name="SmtpSettings_AllServers" xml:space="preserve">
+    <value>Все SMTP серверы</value>
+  </data>
+  <data name="SmtpSettings_Name" xml:space="preserve">
+    <value>Название</value>
+  </data>
+  <data name="SmtpSettings_Type" xml:space="preserve">
+    <value>Тип</value>
+  </data>
+  <data name="SmtpSettings_Host" xml:space="preserve">
+    <value>Хост</value>
+  </data>
+  <data name="SmtpSettings_Port" xml:space="preserve">
+    <value>Порт</value>
+  </data>
+  <data name="SmtpSettings_Username" xml:space="preserve">
+    <value>Пользователь</value>
+  </data>
+  <data name="SmtpSettings_Add" xml:space="preserve">
+    <value>Добавить</value>
+  </data>
+  <data name="SmtpSettings_Edit" xml:space="preserve">
+    <value>Изменить</value>
+  </data>
+  <data name="SmtpSettings_Test" xml:space="preserve">
+    <value>Тест</value>
+  </data>
+  <data name="SmtpSettings_TestResult" xml:space="preserve">
+    <value>Результат тестирования</value>
+  </data>
+  <data name="SmtpEdit_BasicSettings" xml:space="preserve">
+    <value>Основные настройки</value>
+  </data>
+  <data name="SmtpEdit_Name" xml:space="preserve">
+    <value>Название сервера:</value>
+  </data>
+  <data name="SmtpEdit_Type" xml:space="preserve">
+    <value>Тип сервера:</value>
+  </data>
+  <data name="SmtpEdit_Host" xml:space="preserve">
+    <value>SMTP хост:</value>
+  </data>
+  <data name="SmtpEdit_Port" xml:space="preserve">
+    <value>Порт:</value>
+  </data>
+  <data name="SmtpEdit_Authentication" xml:space="preserve">
+    <value>Аутентификация</value>
+  </data>
+  <data name="SmtpEdit_Username" xml:space="preserve">
+    <value>Пользователь:</value>
+  </data>
+  <data name="SmtpEdit_Password" xml:space="preserve">
+    <value>Пароль:</value>
+  </data>
+  <data name="SmtpEdit_TogglePasswordVisibility" xml:space="preserve">
+    <value>Показать/скрыть пароль</value>
+  </data>
+  <data name="SmtpEdit_Security" xml:space="preserve">
+    <value>Настройки безопасности</value>
+  </data>
+  <data name="SmtpEdit_UseSSL" xml:space="preserve">
+    <value>Использовать SSL/TLS шифрование</value>
+  </data>
+  <data name="SmtpEdit_UseStartTLS" xml:space="preserve">
+    <value>Использовать STARTTLS</value>
+  </data>
+  <data name="SmtpEdit_SecurityInfo" xml:space="preserve">
+    <value>Информация о безопасности</value>
+  </data>
+  <data name="SmtpEdit_SecurityDetails" xml:space="preserve">
+    <value>SSL/TLS обеспечивает шифрованное соединение. STARTTLS обновляет обычное соединение до шифрованного. Включите оба параметра для максимальной безопасности.</value>
+  </data>
+  <data name="SmtpEdit_DefaultFrom" xml:space="preserve">
+    <value>Информация об отправителе по умолчанию</value>
+  </data>
+  <data name="SmtpEdit_FromEmail" xml:space="preserve">
+    <value>Email отправителя:</value>
+  </data>
+  <data name="SmtpEdit_FromName" xml:space="preserve">
+    <value>Имя отправителя:</value>
+  </data>
+  <data name="SmtpEdit_FromInfo" xml:space="preserve">
+    <value>Необязательная информация об отправителе по умолчанию, используемая когда конкретный отправитель не указан</value>
+  </data>
+  <data name="SmtpEdit_TestConnection" xml:space="preserve">
+    <value>Тестирование подключения</value>
+  </data>
+  <data name="Category_Feedback" xml:space="preserve">
+    <value>Обратная связь</value>
   </data>
 </root>

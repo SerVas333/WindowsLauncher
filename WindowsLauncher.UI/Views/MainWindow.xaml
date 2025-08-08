@@ -32,8 +32,7 @@
     </Window.Resources>
 
     <Window.InputBindings>
-        <!-- Горячие клавиши для UI Demo -->
-        <KeyBinding Key="U" Modifiers="Ctrl+Shift" Command="{Binding ShowUIDemoCommand}"/>
+        <!-- Горячие клавиши для UI (пока отключены) -->
     </Window.InputBindings>
 
     <Grid>
@@ -99,12 +98,34 @@
                 </StackPanel>
 
                 <!-- Controls -->
-                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Width="200">
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Width="240">
                     <Button Style="{StaticResource SecondaryButtonStyle}"
                             Command="{Binding SwitchUserCommand}"
                             ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_SwitchUserTooltip}"
                             Width="40" Height="32" Padding="4">
                         <ContentPresenter Content="{Binding Source='👤', Converter={StaticResource EmojiToFontAwesome32Converter}}"/>
+                    </Button>
+                    
+                    <!-- Email Compose Button -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
+                            Command="{Binding ComposeEmailCommand}"
+                            ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_ComposeEmailTooltip}"
+                            Width="40" Height="32" Padding="4">
+                        <fa:ImageAwesome Icon="PaperPlane" 
+                                       Width="16" Height="16" 
+                                       Foreground="{StaticResource CorporateGrayBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Button>
+                    
+                    <!-- Address Book Button -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}" 
+                            Command="{Binding OpenAddressBookCommand}"
+                            ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_AddressBookTooltip}"
+                            Width="40" Height="32" Padding="4">
+                        <fa:ImageAwesome Icon="AddressBook" 
+                                       Width="16" Height="16" 
+                                       Foreground="{StaticResource CorporateGrayBrush}"
+                                       HorizontalAlignment="Center" VerticalAlignment="Center"/>
                     </Button>
                     
                     <Button Style="{StaticResource SecondaryButtonStyle}" 
@@ -158,7 +179,7 @@
                     Background="White" 
                     BorderThickness="0,0,1,0" 
                     BorderBrush="{StaticResource LightGrayBrush}"
-                    Width="280"
+                    Width="340"
                     Visibility="{Binding IsSidebarVisible, Converter={StaticResource BoolToVisConverter}}">
                 
                 <ScrollViewer VerticalScrollBarVisibility="Auto" 
@@ -192,7 +213,7 @@
                                                             BorderBrush="{StaticResource LightGrayBrush}"
                                                             BorderThickness="1"
                                                             CornerRadius="4"
-                                                            Padding="18,12">
+                                                            Padding="12,12">
                                                         <Grid>
                                                             <Grid.ColumnDefinitions>
                                                                 <ColumnDefinition Width="Auto"/>
@@ -206,7 +227,7 @@
                                                                            Icon="{Binding Icon}"
                                                                            Width="20" Height="20"
                                                                            Foreground="{Binding Color}"
-                                                                           Margin="0,0,12,0"
+                                                                           Margin="0,0,8,0"
                                                                            VerticalAlignment="Center"/>
                                                             
                                                             <!-- Category Name -->
@@ -261,7 +282,7 @@
                     Padding="20">
                 <Button Command="{Binding ToggleSidebarCommand}"
                         ToolTip="Показать/скрыть боковую панель категорий"
-                        Width="32" Height="32" Padding="4"
+                        Width="38" Height="32" Padding="4"
                         VerticalAlignment="Top"
                         Margin="0,8,0,0">
                     <Button.Style>
@@ -346,11 +367,11 @@
                                            CornerRadius="8"
                                            HorizontalAlignment="Center" 
                                            Margin="0,0,0,12">
-                                        <TextBlock Text="{Binding IconText}" 
-                                                  FontSize="24" 
-                                                  Foreground="White"
-                                                  HorizontalAlignment="Center"
-                                                  VerticalAlignment="Center"/>
+                                        <fa:ImageAwesome Icon="{Binding CategoryIcon}" 
+                                                       Width="24" Height="24" 
+                                                       Foreground="White"
+                                                       HorizontalAlignment="Center"
+                                                       VerticalAlignment="Center"/>
                                     </Border>
 
                                     <!-- App Info -->

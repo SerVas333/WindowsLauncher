@@ -133,10 +133,10 @@
                 <StackPanel Grid.Column="1" Orientation="Horizontal" HorizontalAlignment="Right">
                     <!-- Application Management Toolbar -->
                     <StackPanel Orientation="Horizontal" 
-                                Visibility="{Binding IsApplicationManagementMode, Converter={StaticResource BoolToVisConverter}}">
+                                Visibility="{Binding IsApplicationManagementMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Button Command="{Binding AddApplicationCommand}"
                                 Style="{StaticResource PrimaryButtonStyle}"
-                                Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
+                                Visibility="{Binding IsViewMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="➕" Margin="0,0,8,0"/>
                                 <TextBlock Text="Добавить приложение"/>
@@ -145,7 +145,7 @@
 
                         <Button Command="{Binding RefreshCommand}"
                                 Style="{StaticResource SecondaryButtonStyle}"
-                                Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
+                                Visibility="{Binding IsViewMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="🔄" Margin="0,0,8,0"/>
                                 <TextBlock Text="Обновить"/>
@@ -156,7 +156,7 @@
 
                         <Button Command="{Binding ImportCommand}"
                                 Style="{StaticResource SecondaryButtonStyle}"
-                                Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
+                                Visibility="{Binding IsViewMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📥" Margin="0,0,8,0"/>
                                 <TextBlock Text="Импорт"/>
@@ -165,7 +165,7 @@
 
                         <Button Command="{Binding ExportCommand}"
                                 Style="{StaticResource SecondaryButtonStyle}"
-                                Visibility="{Binding IsViewMode, Converter={StaticResource BoolToVisConverter}}">
+                                Visibility="{Binding IsViewMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                             <StackPanel Orientation="Horizontal">
                                 <TextBlock Text="📤" Margin="0,0,8,0"/>
                                 <TextBlock Text="Экспорт"/>
@@ -175,7 +175,7 @@
 
                     <!-- User Management Toolbar -->
                     <StackPanel Orientation="Horizontal" 
-                                Visibility="{Binding IsUserManagementMode, Converter={StaticResource BoolToVisConverter}}">
+                                Visibility="{Binding IsUserManagementMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Button Command="{Binding AddLocalUserCommand}"
                                 Style="{StaticResource PrimaryButtonStyle}">
                             <StackPanel Orientation="Horizontal">
@@ -195,7 +195,7 @@
 
                     <!-- Edit mode buttons (for applications) -->
                     <StackPanel Orientation="Horizontal" 
-                                Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisConverter}}">
+                                Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                         <Button Command="{Binding SaveCommand}"
                                 Style="{StaticResource PrimaryButtonStyle}">
                             <StackPanel Orientation="Horizontal">
@@ -227,7 +227,7 @@
         <!-- Main Content -->
         <Grid Grid.Row="2">
             <!-- Applications Management Panel -->
-            <Grid Visibility="{Binding IsApplicationManagementMode, Converter={StaticResource BoolToVisConverter}}">
+            <Grid Visibility="{Binding IsApplicationManagementMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="500" MinWidth="400"/>
                     <ColumnDefinition Width="5"/>
@@ -619,7 +619,7 @@
 
                                 <!-- Add Group -->
                                 <StackPanel Grid.Row="0" Orientation="Horizontal" 
-                                            Visibility="{Binding IsEditMode, Converter={StaticResource BoolToVisConverter}}"
+                                            Visibility="{Binding IsEditMode, Converter={StaticResource BooleanToVisibilityConverter}}"
                                             Margin="0,0,0,8">
                                     <ComboBox Width="200" 
                                               ItemsSource="{Binding AvailableGroups}"
@@ -658,7 +658,7 @@
                                                             CommandParameter="{Binding}"
                                                             Visibility="{Binding DataContext.IsEditMode, 
                                                                        RelativeSource={RelativeSource AncestorType=ListBox},
-                                                                       Converter={StaticResource BoolToVisConverter}}"/>
+                                                                       Converter={StaticResource BooleanToVisibilityConverter}}"/>
                                                 </Grid>
                                             </Border>
                                         </DataTemplate>
@@ -698,7 +698,7 @@
             </Grid>
 
             <!-- User Management Panel -->
-            <Grid Visibility="{Binding IsUserManagementMode, Converter={StaticResource BoolToVisConverter}}">
+            <Grid Visibility="{Binding IsUserManagementMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid.RowDefinitions>
                     <RowDefinition Height="Auto"/>
                     <RowDefinition Height="*"/>
@@ -825,7 +825,7 @@
             </Grid>
 
             <!-- System Management Panel -->
-            <Grid Visibility="{Binding IsSystemManagementMode, Converter={StaticResource BoolToVisConverter}}">
+            <Grid Visibility="{Binding IsSystemManagementMode, Converter={StaticResource BooleanToVisibilityConverter}}">
                 <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="5"/>
@@ -961,12 +961,44 @@
                                     </Grid>
                                 </GroupBox>
 
+                                <!-- SMTP Settings -->
+                                <GroupBox Header="📧 Настройки SMTP серверов" Margin="0,0,0,16">
+                                    <StackPanel Margin="8">
+                                        <!-- SMTP Status Info -->
+                                        <Grid Margin="0,0,0,8">
+                                            <Grid.RowDefinitions>
+                                                <RowDefinition Height="Auto"/>
+                                                <RowDefinition Height="Auto"/>
+                                            </Grid.RowDefinitions>
+                                            <Grid.ColumnDefinitions>
+                                                <ColumnDefinition Width="Auto"/>
+                                                <ColumnDefinition Width="*"/>
+                                            </Grid.ColumnDefinitions>
+
+                                            <TextBlock Grid.Row="0" Grid.Column="0" Text="Основной:" FontWeight="SemiBold" Margin="0,0,8,4"/>
+                                            <TextBlock Grid.Row="0" Grid.Column="1" Text="{Binding PrimarySmtpStatus}" 
+                                                       FontSize="11" Margin="0,0,0,4"/>
+
+                                            <TextBlock Grid.Row="1" Grid.Column="0" Text="Резервный:" FontWeight="SemiBold" Margin="0,0,8,0"/>
+                                            <TextBlock Grid.Row="1" Grid.Column="1" Text="{Binding BackupSmtpStatus}" 
+                                                       FontSize="11"/>
+                                        </Grid>
+                                        
+                                        <!-- SMTP Actions -->
+                                        <Button Content="📧 Управление SMTP серверами" 
+                                                Command="{Binding OpenSmtpSettingsCommand}"
+                                                Style="{StaticResource PrimaryButtonStyle}"
+                                                HorizontalAlignment="Stretch"
+                                                Margin="0,0,0,0"/>
+                                    </StackPanel>
+                                </GroupBox>
+
                                 <!-- System Actions -->
                                 <GroupBox Header="Системные операции">
                                     <StackPanel Margin="8">
                                         <Button Content="📋 Экспорт конфигурации" 
                                                 Command="{Binding ExportConfigurationCommand}"
-                                                Style="{StaticResource PrimaryButtonStyle}"
+                                                Style="{StaticResource SecondaryButtonStyle}"
                                                 HorizontalAlignment="Stretch"
                                                 Margin="0,0,0,8"/>
                                         
@@ -1019,7 +1051,7 @@
                                Foreground="{StaticResource PrimaryBrush}"
                                FontWeight="SemiBold"
                                Visibility="{Binding HasUnsavedChanges, 
-                                          Converter={StaticResource BoolToVisConverter}}"
+                                          Converter={StaticResource BooleanToVisibilityConverter}}"
                                Margin="0,0,16,0"/>
                     <TextBlock Text="{Binding IsEditMode, 
                                     Converter={StaticResource BoolToStringConverter}, 

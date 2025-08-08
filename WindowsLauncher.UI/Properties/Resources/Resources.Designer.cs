@@ -61,6 +61,132 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Add Contact.
+        /// </summary>
+        public static string AddressBook_AddContact {
+            get {
+                return ResourceManager.GetString("AddressBook_AddContact", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Add new contact.
+        /// </summary>
+        public static string AddressBook_AddContactTooltip {
+            get {
+                return ResourceManager.GetString("AddressBook_AddContactTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Delete contact.
+        /// </summary>
+        public static string AddressBook_DeleteContactTooltip {
+            get {
+                return ResourceManager.GetString("AddressBook_DeleteContactTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Edit contact.
+        /// </summary>
+        public static string AddressBook_EditContactTooltip {
+            get {
+                return ResourceManager.GetString("AddressBook_EditContactTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Import/Export contacts.
+        /// </summary>
+        public static string AddressBook_ImportExportTooltip {
+            get {
+                return ResourceManager.GetString("AddressBook_ImportExportTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Loading contacts....
+        /// </summary>
+        public static string AddressBook_LoadingContacts {
+            get {
+                return ResourceManager.GetString("AddressBook_LoadingContacts", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на No contacts found.
+        /// </summary>
+        public static string AddressBook_NoContactsFound {
+            get {
+                return ResourceManager.GetString("AddressBook_NoContactsFound", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Try changing search criteria or add new contacts.
+        /// </summary>
+        public static string AddressBook_NoContactsHint {
+            get {
+                return ResourceManager.GetString("AddressBook_NoContactsHint", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Search contacts....
+        /// </summary>
+        public static string AddressBook_SearchPlaceholder {
+            get {
+                return ResourceManager.GetString("AddressBook_SearchPlaceholder", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Selected:.
+        /// </summary>
+        public static string AddressBook_SelectedCount {
+            get {
+                return ResourceManager.GetString("AddressBook_SelectedCount", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Manage contacts and email addresses.
+        /// </summary>
+        public static string AddressBook_Subtitle {
+            get {
+                return ResourceManager.GetString("AddressBook_Subtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Address Book.
+        /// </summary>
+        public static string AddressBook_Title {
+            get {
+                return ResourceManager.GetString("AddressBook_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Select all / Deselect all.
+        /// </summary>
+        public static string AddressBook_ToggleSelectAllTooltip {
+            get {
+                return ResourceManager.GetString("AddressBook_ToggleSelectAllTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Address Book.
+        /// </summary>
+        public static string AddressBook_WindowTitle {
+            get {
+                return ResourceManager.GetString("AddressBook_WindowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Active: .
         /// </summary>
         public static string AdminWindow_ActiveCount {
@@ -583,20 +709,65 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Business.
+        ///   Ищет локализованную строку, похожую на Applications.
         /// </summary>
-        public static string Category_Business {
+        public static string Category_Applications {
             get {
-                return ResourceManager.GetString("Category_Business", resourceCulture);
+                return ResourceManager.GetString("Category_Applications", resourceCulture);
             }
         }
         
         /// <summary>
-        ///   Ищет локализованную строку, похожую на Communication.
+        ///   Ищет локализованную строку, похожую на Feedback.
         /// </summary>
-        public static string Category_Communication {
+        public static string Category_Feedback {
             get {
-                return ResourceManager.GetString("Category_Communication", resourceCulture);
+                return ResourceManager.GetString("Category_Feedback", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Forms.
+        /// </summary>
+        public static string Category_Forms {
+            get {
+                return ResourceManager.GetString("Category_Forms", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Instructions.
+        /// </summary>
+        public static string Category_Instructions {
+            get {
+                return ResourceManager.GetString("Category_Instructions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Presentations.
+        /// </summary>
+        public static string Category_Presentations {
+            get {
+                return ResourceManager.GetString("Category_Presentations", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Questionnaires.
+        /// </summary>
+        public static string Category_Questionnaires {
+            get {
+                return ResourceManager.GetString("Category_Questionnaires", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Tests.
+        /// </summary>
+        public static string Category_Tests {
+            get {
+                return ResourceManager.GetString("Category_Tests", resourceCulture);
             }
         }
         
@@ -606,6 +777,24 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string Category_Utilities {
             get {
                 return ResourceManager.GetString("Category_Utilities", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Video Instructions.
+        /// </summary>
+        public static string Category_VideoInstructions {
+            get {
+                return ResourceManager.GetString("Category_VideoInstructions", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Web.
+        /// </summary>
+        public static string Category_Web {
+            get {
+                return ResourceManager.GetString("Category_Web", resourceCulture);
             }
         }
         
@@ -651,15 +840,6 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string CategoryTools {
             get {
                 return ResourceManager.GetString("CategoryTools", resourceCulture);
-            }
-        }
-        
-        /// <summary>
-        ///   Ищет локализованную строку, похожую на Web.
-        /// </summary>
-        public static string CategoryWeb {
-            get {
-                return ResourceManager.GetString("CategoryWeb", resourceCulture);
             }
         }
         
@@ -799,6 +979,177 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Add Attachment.
+        /// </summary>
+        public static string ComposeEmail_AddAttachment {
+            get {
+                return ResourceManager.GetString("ComposeEmail_AddAttachment", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Add Cc/Bcc.
+        /// </summary>
+        public static string ComposeEmail_AddCcBcc {
+            get {
+                return ResourceManager.GetString("ComposeEmail_AddCcBcc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Attachments.
+        /// </summary>
+        public static string ComposeEmail_AttachmentsGroup {
+            get {
+                return ResourceManager.GetString("ComposeEmail_AttachmentsGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Bcc:.
+        /// </summary>
+        public static string ComposeEmail_Bcc {
+            get {
+                return ResourceManager.GetString("ComposeEmail_Bcc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Cc:.
+        /// </summary>
+        public static string ComposeEmail_Cc {
+            get {
+                return ResourceManager.GetString("ComposeEmail_Cc", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Message:.
+        /// </summary>
+        public static string ComposeEmail_Message {
+            get {
+                return ResourceManager.GetString("ComposeEmail_Message", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Recipients.
+        /// </summary>
+        public static string ComposeEmail_RecipientsGroup {
+            get {
+                return ResourceManager.GetString("ComposeEmail_RecipientsGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Remove attachment.
+        /// </summary>
+        public static string ComposeEmail_RemoveAttachmentTooltip {
+            get {
+                return ResourceManager.GetString("ComposeEmail_RemoveAttachmentTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Save Draft.
+        /// </summary>
+        public static string ComposeEmail_SaveDraft {
+            get {
+                return ResourceManager.GetString("ComposeEmail_SaveDraft", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Save message as draft.
+        /// </summary>
+        public static string ComposeEmail_SaveDraftTooltip {
+            get {
+                return ResourceManager.GetString("ComposeEmail_SaveDraftTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Select Bcc recipients from address book.
+        /// </summary>
+        public static string ComposeEmail_SelectBccRecipientsTooltip {
+            get {
+                return ResourceManager.GetString("ComposeEmail_SelectBccRecipientsTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Select Cc recipients from address book.
+        /// </summary>
+        public static string ComposeEmail_SelectCcRecipientsTooltip {
+            get {
+                return ResourceManager.GetString("ComposeEmail_SelectCcRecipientsTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Select recipients from address book.
+        /// </summary>
+        public static string ComposeEmail_SelectRecipientsTooltip {
+            get {
+                return ResourceManager.GetString("ComposeEmail_SelectRecipientsTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Send.
+        /// </summary>
+        public static string ComposeEmail_Send {
+            get {
+                return ResourceManager.GetString("ComposeEmail_Send", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Subject:.
+        /// </summary>
+        public static string ComposeEmail_Subject {
+            get {
+                return ResourceManager.GetString("ComposeEmail_Subject", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Compose and send email messages.
+        /// </summary>
+        public static string ComposeEmail_Subtitle {
+            get {
+                return ResourceManager.GetString("ComposeEmail_Subtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Create New Message.
+        /// </summary>
+        public static string ComposeEmail_Title {
+            get {
+                return ResourceManager.GetString("ComposeEmail_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на To:.
+        /// </summary>
+        public static string ComposeEmail_To {
+            get {
+                return ResourceManager.GetString("ComposeEmail_To", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Compose Email.
+        /// </summary>
+        public static string ComposeEmail_WindowTitle {
+            get {
+                return ResourceManager.GetString("ComposeEmail_WindowTitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Confirmation.
         /// </summary>
         public static string Confirmation {
@@ -813,6 +1164,114 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string ConfirmLogout {
             get {
                 return ResourceManager.GetString("ConfirmLogout", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Additional Information.
+        /// </summary>
+        public static string ContactEdit_AdditionalInfoGroup {
+            get {
+                return ResourceManager.GetString("ContactEdit_AdditionalInfoGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Company:.
+        /// </summary>
+        public static string ContactEdit_Company {
+            get {
+                return ResourceManager.GetString("ContactEdit_Company", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Contact Information.
+        /// </summary>
+        public static string ContactEdit_ContactInfoGroup {
+            get {
+                return ResourceManager.GetString("ContactEdit_ContactInfoGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Department:.
+        /// </summary>
+        public static string ContactEdit_Department {
+            get {
+                return ResourceManager.GetString("ContactEdit_Department", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Email:.
+        /// </summary>
+        public static string ContactEdit_Email {
+            get {
+                return ResourceManager.GetString("ContactEdit_Email", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на First Name:.
+        /// </summary>
+        public static string ContactEdit_FirstName {
+            get {
+                return ResourceManager.GetString("ContactEdit_FirstName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Group:.
+        /// </summary>
+        public static string ContactEdit_Group {
+            get {
+                return ResourceManager.GetString("ContactEdit_Group", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Last Name:.
+        /// </summary>
+        public static string ContactEdit_LastName {
+            get {
+                return ResourceManager.GetString("ContactEdit_LastName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Notes:.
+        /// </summary>
+        public static string ContactEdit_Notes {
+            get {
+                return ResourceManager.GetString("ContactEdit_Notes", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Personal Information.
+        /// </summary>
+        public static string ContactEdit_PersonalInfoGroup {
+            get {
+                return ResourceManager.GetString("ContactEdit_PersonalInfoGroup", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Phone:.
+        /// </summary>
+        public static string ContactEdit_Phone {
+            get {
+                return ResourceManager.GetString("ContactEdit_Phone", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Contact Preview.
+        /// </summary>
+        public static string ContactEdit_PreviewGroup {
+            get {
+                return ResourceManager.GetString("ContactEdit_PreviewGroup", resourceCulture);
             }
         }
         
@@ -1438,6 +1897,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Address Book.
+        /// </summary>
+        public static string MainWindow_AddressBookTooltip {
+            get {
+                return ResourceManager.GetString("MainWindow_AddressBookTooltip", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на  applications.
         /// </summary>
         public static string MainWindow_ApplicationsCount {
@@ -2046,6 +2514,321 @@ namespace WindowsLauncher.UI.Properties.Resources {
         public static string SetupWindow_Welcome {
             get {
                 return ResourceManager.GetString("SetupWindow_Welcome", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Authentication.
+        /// </summary>
+        public static string SmtpEdit_Authentication {
+            get {
+                return ResourceManager.GetString("SmtpEdit_Authentication", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Basic Settings.
+        /// </summary>
+        public static string SmtpEdit_BasicSettings {
+            get {
+                return ResourceManager.GetString("SmtpEdit_BasicSettings", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Default Sender Information.
+        /// </summary>
+        public static string SmtpEdit_DefaultFrom {
+            get {
+                return ResourceManager.GetString("SmtpEdit_DefaultFrom", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на From Email:.
+        /// </summary>
+        public static string SmtpEdit_FromEmail {
+            get {
+                return ResourceManager.GetString("SmtpEdit_FromEmail", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Optional default sender information used when no specific sender is provided.
+        /// </summary>
+        public static string SmtpEdit_FromInfo {
+            get {
+                return ResourceManager.GetString("SmtpEdit_FromInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на From Name:.
+        /// </summary>
+        public static string SmtpEdit_FromName {
+            get {
+                return ResourceManager.GetString("SmtpEdit_FromName", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на SMTP Host:.
+        /// </summary>
+        public static string SmtpEdit_Host {
+            get {
+                return ResourceManager.GetString("SmtpEdit_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Server Name:.
+        /// </summary>
+        public static string SmtpEdit_Name {
+            get {
+                return ResourceManager.GetString("SmtpEdit_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Password:.
+        /// </summary>
+        public static string SmtpEdit_Password {
+            get {
+                return ResourceManager.GetString("SmtpEdit_Password", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Port:.
+        /// </summary>
+        public static string SmtpEdit_Port {
+            get {
+                return ResourceManager.GetString("SmtpEdit_Port", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Security Settings.
+        /// </summary>
+        public static string SmtpEdit_Security {
+            get {
+                return ResourceManager.GetString("SmtpEdit_Security", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на SSL/TLS provides encrypted communication. STARTTLS upgrades plain connection to encrypted. Enable both for maximum security..
+        /// </summary>
+        public static string SmtpEdit_SecurityDetails {
+            get {
+                return ResourceManager.GetString("SmtpEdit_SecurityDetails", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Security Information.
+        /// </summary>
+        public static string SmtpEdit_SecurityInfo {
+            get {
+                return ResourceManager.GetString("SmtpEdit_SecurityInfo", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Connection Test.
+        /// </summary>
+        public static string SmtpEdit_TestConnection {
+            get {
+                return ResourceManager.GetString("SmtpEdit_TestConnection", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Toggle password visibility.
+        /// </summary>
+        public static string SmtpEdit_TogglePasswordVisibility {
+            get {
+                return ResourceManager.GetString("SmtpEdit_TogglePasswordVisibility", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Server Type:.
+        /// </summary>
+        public static string SmtpEdit_Type {
+            get {
+                return ResourceManager.GetString("SmtpEdit_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Username:.
+        /// </summary>
+        public static string SmtpEdit_Username {
+            get {
+                return ResourceManager.GetString("SmtpEdit_Username", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Use SSL/TLS encryption.
+        /// </summary>
+        public static string SmtpEdit_UseSSL {
+            get {
+                return ResourceManager.GetString("SmtpEdit_UseSSL", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Use STARTTLS.
+        /// </summary>
+        public static string SmtpEdit_UseStartTLS {
+            get {
+                return ResourceManager.GetString("SmtpEdit_UseStartTLS", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Add.
+        /// </summary>
+        public static string SmtpSettings_Add {
+            get {
+                return ResourceManager.GetString("SmtpSettings_Add", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на All SMTP Servers.
+        /// </summary>
+        public static string SmtpSettings_AllServers {
+            get {
+                return ResourceManager.GetString("SmtpSettings_AllServers", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Backup Server.
+        /// </summary>
+        public static string SmtpSettings_BackupServer {
+            get {
+                return ResourceManager.GetString("SmtpSettings_BackupServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Edit.
+        /// </summary>
+        public static string SmtpSettings_Edit {
+            get {
+                return ResourceManager.GetString("SmtpSettings_Edit", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Host.
+        /// </summary>
+        public static string SmtpSettings_Host {
+            get {
+                return ResourceManager.GetString("SmtpSettings_Host", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Name.
+        /// </summary>
+        public static string SmtpSettings_Name {
+            get {
+                return ResourceManager.GetString("SmtpSettings_Name", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Port.
+        /// </summary>
+        public static string SmtpSettings_Port {
+            get {
+                return ResourceManager.GetString("SmtpSettings_Port", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Primary Server.
+        /// </summary>
+        public static string SmtpSettings_PrimaryServer {
+            get {
+                return ResourceManager.GetString("SmtpSettings_PrimaryServer", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Server Status Overview.
+        /// </summary>
+        public static string SmtpSettings_ServerOverview {
+            get {
+                return ResourceManager.GetString("SmtpSettings_ServerOverview", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Configure primary and backup email servers.
+        /// </summary>
+        public static string SmtpSettings_Subtitle {
+            get {
+                return ResourceManager.GetString("SmtpSettings_Subtitle", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Test.
+        /// </summary>
+        public static string SmtpSettings_Test {
+            get {
+                return ResourceManager.GetString("SmtpSettings_Test", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Test Result.
+        /// </summary>
+        public static string SmtpSettings_TestResult {
+            get {
+                return ResourceManager.GetString("SmtpSettings_TestResult", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на SMTP Server Management.
+        /// </summary>
+        public static string SmtpSettings_Title {
+            get {
+                return ResourceManager.GetString("SmtpSettings_Title", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Type.
+        /// </summary>
+        public static string SmtpSettings_Type {
+            get {
+                return ResourceManager.GetString("SmtpSettings_Type", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на Username.
+        /// </summary>
+        public static string SmtpSettings_Username {
+            get {
+                return ResourceManager.GetString("SmtpSettings_Username", resourceCulture);
+            }
+        }
+        
+        /// <summary>
+        ///   Ищет локализованную строку, похожую на SMTP Server Settings.
+        /// </summary>
+        public static string SmtpSettings_WindowTitle {
+            get {
+                return ResourceManager.GetString("SmtpSettings_WindowTitle", resourceCulture);
             }
         }
         

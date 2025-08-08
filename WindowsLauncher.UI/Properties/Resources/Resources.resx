@@ -375,7 +375,7 @@
   <data name="CategoryTools" xml:space="preserve">
     <value>Tools</value>
   </data>
-  <data name="CategoryWeb" xml:space="preserve">
+  <data name="Category_Web" xml:space="preserve">
     <value>Web</value>
   </data>
   <data name="CategorySystem" xml:space="preserve">
@@ -387,11 +387,26 @@
   <data name="CategoryDevelopment" xml:space="preserve">
     <value>Development</value>
   </data>
-  <data name="Category_Business" xml:space="preserve">
-    <value>Business</value>
+  <data name="Category_Forms" xml:space="preserve">
+    <value>Forms</value>
   </data>
-  <data name="Category_Communication" xml:space="preserve">
-    <value>Communication</value>
+  <data name="Category_Instructions" xml:space="preserve">
+    <value>Instructions</value>
+  </data>
+  <data name="Category_VideoInstructions" xml:space="preserve">
+    <value>Video Instructions</value>
+  </data>
+  <data name="Category_Presentations" xml:space="preserve">
+    <value>Presentations</value>
+  </data>
+  <data name="Category_Questionnaires" xml:space="preserve">
+    <value>Questionnaires</value>
+  </data>
+  <data name="Category_Tests" xml:space="preserve">
+    <value>Tests</value>
+  </data>
+  <data name="Category_Applications" xml:space="preserve">
+    <value>Applications</value>
   </data>
   <data name="Category_Utilities" xml:space="preserve">
     <value>Utilities</value>
@@ -744,7 +759,6 @@
   <data name="VirtualKeyboardError" xml:space="preserve">
     <value>Virtual keyboard is not available on this system</value>
   </data>
-  <!-- TextEditor Resources -->
   <data name="TextEditor_Title" xml:space="preserve">
     <value>KDV Text Editor</value>
   </data>
@@ -847,7 +861,6 @@
   <data name="TextEditor_FontSizeLabel" xml:space="preserve">
     <value>Size:</value>
   </data>
-  <!-- Corporate Confirmation Dialog -->
   <data name="Dialog_LogoutTitle" xml:space="preserve">
     <value>Logout Confirmation</value>
   </data>
@@ -920,7 +933,6 @@
   <data name="AppSwitcher_UnknownMode" xml:space="preserve">
     <value>Mode: Unknown</value>
   </data>
-  <!-- LoginWindow additional localization keys -->
   <data name="LoginWindow_LocalUsername" xml:space="preserve">
     <value>Username</value>
   </data>
@@ -938,5 +950,251 @@
   </data>
   <data name="LoginWindow_VirtualKeyboardTooltip" xml:space="preserve">
     <value>Virtual Keyboard</value>
+  </data>
+  <data name="ComposeEmail_WindowTitle" xml:space="preserve">
+    <value>Compose Email</value>
+  </data>
+  <data name="ComposeEmail_Title" xml:space="preserve">
+    <value>Create New Message</value>
+  </data>
+  <data name="ComposeEmail_Subtitle" xml:space="preserve">
+    <value>Compose and send email messages</value>
+  </data>
+  <data name="ComposeEmail_RecipientsGroup" xml:space="preserve">
+    <value>Recipients</value>
+  </data>
+  <data name="ComposeEmail_To" xml:space="preserve">
+    <value>To:</value>
+  </data>
+  <data name="ComposeEmail_Cc" xml:space="preserve">
+    <value>Cc:</value>
+  </data>
+  <data name="ComposeEmail_Bcc" xml:space="preserve">
+    <value>Bcc:</value>
+  </data>
+  <data name="ComposeEmail_Subject" xml:space="preserve">
+    <value>Subject:</value>
+  </data>
+  <data name="ComposeEmail_Message" xml:space="preserve">
+    <value>Message:</value>
+  </data>
+  <data name="ComposeEmail_AttachmentsGroup" xml:space="preserve">
+    <value>Attachments</value>
+  </data>
+  <data name="ComposeEmail_AddAttachment" xml:space="preserve">
+    <value>Add Attachment</value>
+  </data>
+  <data name="ComposeEmail_AddCcBcc" xml:space="preserve">
+    <value>Add Cc/Bcc</value>
+  </data>
+  <data name="ComposeEmail_SelectRecipientsTooltip" xml:space="preserve">
+    <value>Select recipients from address book</value>
+  </data>
+  <data name="ComposeEmail_SelectCcRecipientsTooltip" xml:space="preserve">
+    <value>Select Cc recipients from address book</value>
+  </data>
+  <data name="ComposeEmail_SelectBccRecipientsTooltip" xml:space="preserve">
+    <value>Select Bcc recipients from address book</value>
+  </data>
+  <data name="ComposeEmail_RemoveAttachmentTooltip" xml:space="preserve">
+    <value>Remove attachment</value>
+  </data>
+  <data name="ComposeEmail_SaveDraft" xml:space="preserve">
+    <value>Save Draft</value>
+  </data>
+  <data name="ComposeEmail_SaveDraftTooltip" xml:space="preserve">
+    <value>Save message as draft</value>
+  </data>
+  <data name="ComposeEmail_Send" xml:space="preserve">
+    <value>Send</value>
+  </data>
+  <data name="AddressBook_WindowTitle" xml:space="preserve">
+    <value>Address Book</value>
+  </data>
+  <data name="AddressBook_Title" xml:space="preserve">
+    <value>Address Book</value>
+  </data>
+  <data name="AddressBook_Subtitle" xml:space="preserve">
+    <value>Manage contacts and email addresses</value>
+  </data>
+  <data name="AddressBook_SearchPlaceholder" xml:space="preserve">
+    <value>Search contacts...</value>
+  </data>
+  <data name="AddressBook_AddContact" xml:space="preserve">
+    <value>Add Contact</value>
+  </data>
+  <data name="AddressBook_AddContactTooltip" xml:space="preserve">
+    <value>Add new contact</value>
+  </data>
+  <data name="AddressBook_ImportExportTooltip" xml:space="preserve">
+    <value>Import/Export contacts</value>
+  </data>
+  <data name="AddressBook_LoadingContacts" xml:space="preserve">
+    <value>Loading contacts...</value>
+  </data>
+  <data name="AddressBook_NoContactsFound" xml:space="preserve">
+    <value>No contacts found</value>
+  </data>
+  <data name="AddressBook_NoContactsHint" xml:space="preserve">
+    <value>Try changing search criteria or add new contacts</value>
+  </data>
+  <data name="AddressBook_EditContactTooltip" xml:space="preserve">
+    <value>Edit contact</value>
+  </data>
+  <data name="AddressBook_DeleteContactTooltip" xml:space="preserve">
+    <value>Delete contact</value>
+  </data>
+  <data name="AddressBook_SelectedCount" xml:space="preserve">
+    <value>Selected:</value>
+  </data>
+  <data name="AddressBook_ToggleSelectAllTooltip" xml:space="preserve">
+    <value>Select all / Deselect all</value>
+  </data>
+  <data name="ContactEdit_PersonalInfoGroup" xml:space="preserve">
+    <value>Personal Information</value>
+  </data>
+  <data name="ContactEdit_FirstName" xml:space="preserve">
+    <value>First Name:</value>
+  </data>
+  <data name="ContactEdit_LastName" xml:space="preserve">
+    <value>Last Name:</value>
+  </data>
+  <data name="ContactEdit_Email" xml:space="preserve">
+    <value>Email:</value>
+  </data>
+  <data name="ContactEdit_ContactInfoGroup" xml:space="preserve">
+    <value>Contact Information</value>
+  </data>
+  <data name="ContactEdit_Phone" xml:space="preserve">
+    <value>Phone:</value>
+  </data>
+  <data name="ContactEdit_Company" xml:space="preserve">
+    <value>Company:</value>
+  </data>
+  <data name="ContactEdit_Department" xml:space="preserve">
+    <value>Department:</value>
+  </data>
+  <data name="ContactEdit_Group" xml:space="preserve">
+    <value>Group:</value>
+  </data>
+  <data name="ContactEdit_AdditionalInfoGroup" xml:space="preserve">
+    <value>Additional Information</value>
+  </data>
+  <data name="ContactEdit_Notes" xml:space="preserve">
+    <value>Notes:</value>
+  </data>
+  <data name="ContactEdit_PreviewGroup" xml:space="preserve">
+    <value>Contact Preview</value>
+  </data>
+  <data name="MainWindow_AddressBookTooltip" xml:space="preserve">
+    <value>Address Book</value>
+  </data>
+  <data name="SmtpSettings_WindowTitle" xml:space="preserve">
+    <value>SMTP Server Settings</value>
+  </data>
+  <data name="SmtpSettings_Title" xml:space="preserve">
+    <value>SMTP Server Management</value>
+  </data>
+  <data name="SmtpSettings_Subtitle" xml:space="preserve">
+    <value>Configure primary and backup email servers</value>
+  </data>
+  <data name="SmtpSettings_ServerOverview" xml:space="preserve">
+    <value>Server Status Overview</value>
+  </data>
+  <data name="SmtpSettings_PrimaryServer" xml:space="preserve">
+    <value>Primary Server</value>
+  </data>
+  <data name="SmtpSettings_BackupServer" xml:space="preserve">
+    <value>Backup Server</value>
+  </data>
+  <data name="SmtpSettings_AllServers" xml:space="preserve">
+    <value>All SMTP Servers</value>
+  </data>
+  <data name="SmtpSettings_Name" xml:space="preserve">
+    <value>Name</value>
+  </data>
+  <data name="SmtpSettings_Type" xml:space="preserve">
+    <value>Type</value>
+  </data>
+  <data name="SmtpSettings_Host" xml:space="preserve">
+    <value>Host</value>
+  </data>
+  <data name="SmtpSettings_Port" xml:space="preserve">
+    <value>Port</value>
+  </data>
+  <data name="SmtpSettings_Username" xml:space="preserve">
+    <value>Username</value>
+  </data>
+  <data name="SmtpSettings_Add" xml:space="preserve">
+    <value>Add</value>
+  </data>
+  <data name="SmtpSettings_Edit" xml:space="preserve">
+    <value>Edit</value>
+  </data>
+  <data name="SmtpSettings_Test" xml:space="preserve">
+    <value>Test</value>
+  </data>
+  <data name="SmtpSettings_TestResult" xml:space="preserve">
+    <value>Test Result</value>
+  </data>
+  <data name="SmtpEdit_BasicSettings" xml:space="preserve">
+    <value>Basic Settings</value>
+  </data>
+  <data name="SmtpEdit_Name" xml:space="preserve">
+    <value>Server Name:</value>
+  </data>
+  <data name="SmtpEdit_Type" xml:space="preserve">
+    <value>Server Type:</value>
+  </data>
+  <data name="SmtpEdit_Host" xml:space="preserve">
+    <value>SMTP Host:</value>
+  </data>
+  <data name="SmtpEdit_Port" xml:space="preserve">
+    <value>Port:</value>
+  </data>
+  <data name="SmtpEdit_Authentication" xml:space="preserve">
+    <value>Authentication</value>
+  </data>
+  <data name="SmtpEdit_Username" xml:space="preserve">
+    <value>Username:</value>
+  </data>
+  <data name="SmtpEdit_Password" xml:space="preserve">
+    <value>Password:</value>
+  </data>
+  <data name="SmtpEdit_TogglePasswordVisibility" xml:space="preserve">
+    <value>Toggle password visibility</value>
+  </data>
+  <data name="SmtpEdit_Security" xml:space="preserve">
+    <value>Security Settings</value>
+  </data>
+  <data name="SmtpEdit_UseSSL" xml:space="preserve">
+    <value>Use SSL/TLS encryption</value>
+  </data>
+  <data name="SmtpEdit_UseStartTLS" xml:space="preserve">
+    <value>Use STARTTLS</value>
+  </data>
+  <data name="SmtpEdit_SecurityInfo" xml:space="preserve">
+    <value>Security Information</value>
+  </data>
+  <data name="SmtpEdit_SecurityDetails" xml:space="preserve">
+    <value>SSL/TLS provides encrypted communication. STARTTLS upgrades plain connection to encrypted. Enable both for maximum security.</value>
+  </data>
+  <data name="SmtpEdit_DefaultFrom" xml:space="preserve">
+    <value>Default Sender Information</value>
+  </data>
+  <data name="SmtpEdit_FromEmail" xml:space="preserve">
+    <value>From Email:</value>
+  </data>
+  <data name="SmtpEdit_FromName" xml:space="preserve">
+    <value>From Name:</value>
+  </data>
+  <data name="SmtpEdit_FromInfo" xml:space="preserve">
+    <value>Optional default sender information used when no specific sender is provided</value>
+  </data>
+  <data name="SmtpEdit_TestConnection" xml:space="preserve">
+    <value>Connection Test</value>
+  </data>
+  <data name="Category_Feedback" xml:space="preserve">
+    <value>Feedback</value>
   </data>
 </root>

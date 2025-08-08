@@ -152,14 +152,14 @@ namespace WindowsLauncher.Services.Email
                 
                 var createdContact = await _contactRepository.CreateAsync(contact);
                 
-                _logger.LogInformation("Created new contact: {Name} ({Email}) in group '{Group}'", 
-                    createdContact.Name, createdContact.Email, createdContact.Group ?? "No Group");
+                _logger.LogInformation("Created new contact: {FullName} ({Email}) in group '{Group}'", 
+                    createdContact.FullName, createdContact.Email, createdContact.Group ?? "No Group");
                 
                 return createdContact;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating contact {Name} ({Email})", contact.Name, contact.Email);
+                _logger.LogError(ex, "Error creating contact {FullName} ({Email})", contact.FullName, contact.Email);
                 throw;
             }
         }
@@ -189,8 +189,8 @@ namespace WindowsLauncher.Services.Email
                 
                 var updatedContact = await _contactRepository.UpdateAsync(contact);
                 
-                _logger.LogInformation("Updated contact {Id}: {Name} ({Email})", 
-                    updatedContact.Id, updatedContact.Name, updatedContact.Email);
+                _logger.LogInformation("Updated contact {Id}: {FullName} ({Email})", 
+                    updatedContact.Id, updatedContact.FullName, updatedContact.Email);
                 
                 return updatedContact;
             }
@@ -221,8 +221,8 @@ namespace WindowsLauncher.Services.Email
                 
                 await _contactRepository.UpdateAsync(contact);
                 
-                _logger.LogInformation("Soft deleted contact {Id}: {Name} ({Email})", 
-                    id, contact.Name, contact.Email);
+                _logger.LogInformation("Soft deleted contact {Id}: {FullName} ({Email})", 
+                    id, contact.FullName, contact.Email);
                 
                 return true;
             }
@@ -268,8 +268,8 @@ namespace WindowsLauncher.Services.Email
                 
                 await _contactRepository.UpdateAsync(contact);
                 
-                _logger.LogInformation("Restored contact {Id}: {Name} ({Email})", 
-                    id, contact.Name, contact.Email);
+                _logger.LogInformation("Restored contact {Id}: {FullName} ({Email})", 
+                    id, contact.FullName, contact.Email);
                 
                 return true;
             }
@@ -400,15 +400,18 @@ namespace WindowsLauncher.Services.Email
                 var csv = new StringBuilder();
                 
                 // Заголовок CSV
-                csv.AppendLine("Name,Email,Company,Group,Notes,IsActive,CreatedAt");
+                csv.AppendLine("FirstName,LastName,Email,Phone,Company,Department,Group,Notes,IsActive,CreatedAt");
                 
                 // Данные контактов
                 foreach (var contact in contacts)
                 {
                     var line = string.Join(",", 
-                        EscapeCsvField(contact.Name),
+                        EscapeCsvField(contact.FirstName),
+                        EscapeCsvField(contact.LastName),
                         EscapeCsvField(contact.Email),
+                        EscapeCsvField(contact.Phone ?? ""),
                         EscapeCsvField(contact.Company ?? ""),
+                        EscapeCsvField(contact.Department ?? ""),
                         EscapeCsvField(contact.Group ?? ""),
                         EscapeCsvField(contact.Notes ?? ""),
                         contact.IsActive ? "1" : "0",
@@ -455,11 +458,16 @@ namespace WindowsLauncher.Services.Email
         {
             var errors = new List<string>();
             
-            // Проверка имени
-            if (string.IsNullOrWhiteSpace(contact.Name))
+            // Проверка имени и фамилии
+            if (string.IsNullOrWhiteSpace(contact.FirstName))
                 errors.Add("Имя контакта обязательно для заполнения");
-            else if (contact.Name.Length > 200)
-                errors.Add("Имя контакта не может быть длиннее 200 символов");
+            else if (contact.FirstName.Length > 50)
+                errors.Add("Имя контакта не может быть длиннее 50 символов");
+                
+            if (string.IsNullOrWhiteSpace(contact.LastName))
+                errors.Add("Фамилия контакта обязательна для заполнения");
+            else if (contact.LastName.Length > 50)
+                errors.Add("Фамилия контакта не может быть длиннее 50 символов");
             
             // Проверка email
             if (string.IsNullOrWhiteSpace(contact.Email))
@@ -491,7 +499,8 @@ namespace WindowsLauncher.Services.Email
         /// </summary>
         private void NormalizeContactData(Contact contact)
         {
-            contact.Name = contact.Name?.Trim() ?? "";
+            contact.FirstName = contact.FirstName?.Trim() ?? "";
+            contact.LastName = contact.LastName?.Trim() ?? "";
             contact.Email = contact.Email?.Trim().ToLowerInvariant() ?? "";
             contact.Company = string.IsNullOrWhiteSpace(contact.Company) ? null : contact.Company.Trim();
             contact.Group = string.IsNullOrWhiteSpace(contact.Group) ? null : contact.Group.Trim();
@@ -533,28 +542,34 @@ namespace WindowsLauncher.Services.Email
             
             var fields = ParseCsvFields(line);
             
-            if (fields.Count < 2) // Минимум Name и Email
+            if (fields.Count < 3) // Минимум FirstName, LastName и Email
                 return null;
             
-            var name = fields[0]?.Trim();
-            var email = fields[1]?.Trim();
+            var firstName = fields[0]?.Trim();
+            var lastName = fields[1]?.Trim();
+            var email = fields[2]?.Trim();
             
-            if (string.IsNullOrWhiteSpace(name) || string.IsNullOrWhiteSpace(email))
+            if (string.IsNullOrWhiteSpace(firstName) || string.IsNullOrWhiteSpace(lastName) || string.IsNullOrWhiteSpace(email))
                 return null;
             
             var contact = new Contact
             {
-                Name = name,
+                FirstName = firstName,
+                LastName = lastName,
                 Email = email.ToLowerInvariant(),
-                Company = fields.Count > 2 ? fields[2]?.Trim() : null,
-                Group = fields.Count > 3 ? fields[3]?.Trim() : null,
-                Notes = fields.Count > 4 ? fields[4]?.Trim() : null,
+                Phone = fields.Count > 3 ? fields[3]?.Trim() : null,
+                Company = fields.Count > 4 ? fields[4]?.Trim() : null,
+                Department = fields.Count > 5 ? fields[5]?.Trim() : null,
+                Group = fields.Count > 6 ? fields[6]?.Trim() : null,
+                Notes = fields.Count > 7 ? fields[7]?.Trim() : null,
                 IsActive = true,
                 CreatedAt = DateTime.Now
             };
             
             // Очищаем пустые строки
+            if (string.IsNullOrWhiteSpace(contact.Phone)) contact.Phone = null;
             if (string.IsNullOrWhiteSpace(contact.Company)) contact.Company = null;
+            if (string.IsNullOrWhiteSpace(contact.Department)) contact.Department = null;
             if (string.IsNullOrWhiteSpace(contact.Group)) contact.Group = null;
             if (string.IsNullOrWhiteSpace(contact.Notes)) contact.Notes = null;
             

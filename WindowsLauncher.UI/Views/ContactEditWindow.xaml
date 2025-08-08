@@ -1,0 +1,327 @@
+<!-- ContactEditWindow.xaml -->
+<Window x:Class="WindowsLauncher.UI.Views.ContactEditWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:loc="clr-namespace:WindowsLauncher.UI.Infrastructure.Localization"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        mc:Ignorable="d"
+        Title="{Binding WindowTitle}" 
+        Height="550" Width="500"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource SurfaceBrush}"
+        MinHeight="500" MinWidth="450"
+        ResizeMode="CanResize">
+
+    <Window.Resources>
+        <!-- Конвертеры -->
+        <BooleanToVisibilityConverter x:Key="BoolToVisConverter"/>
+        <loc:LocalizedStringConverter x:Key="LocalizedStringConverter"/>
+    </Window.Resources>
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Header -->
+            <RowDefinition Height="*"/>
+            <!-- Content -->
+            <RowDefinition Height="Auto"/>
+            <!-- Actions -->
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}" Padding="24,16">
+            <StackPanel>
+                <TextBlock Text="{Binding HeaderTitle}" 
+                           FontSize="20" FontWeight="Light" 
+                           Foreground="White" FontFamily="Segoe UI"/>
+                <TextBlock Text="{Binding HeaderSubtitle}" 
+                           FontSize="11" Foreground="{StaticResource OnPrimaryBrush}" Opacity="0.9"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="1" Padding="24" Background="{StaticResource SurfaceVariantBrush}">
+            <StackPanel>
+                
+                <!-- Personal Information -->
+                <GroupBox Header="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_PersonalInfoGroup}" 
+                          Style="{StaticResource GroupBoxStyle}"
+                          Margin="0,0,0,20">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="16"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Grid.RowDefinitions>
+                            <RowDefinition Height="Auto"/>
+                            <RowDefinition Height="16"/>
+                            <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+
+                        <!-- First Name -->
+                        <StackPanel Grid.Column="0" Grid.Row="0">
+                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_FirstName}" 
+                                     FontWeight="SemiBold" 
+                                     Foreground="{StaticResource PrimaryTextBrush}"
+                                     Margin="0,0,0,4"/>
+                            <TextBox Style="{StaticResource TextBoxStyle}"
+                                   Text="{Binding FirstName, UpdateSourceTrigger=PropertyChanged}"
+                                   Padding="12,8"/>
+                        </StackPanel>
+
+                        <!-- Last Name -->
+                        <StackPanel Grid.Column="2" Grid.Row="0">
+                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_LastName}" 
+                                     FontWeight="SemiBold" 
+                                     Foreground="{StaticResource PrimaryTextBrush}"
+                                     Margin="0,0,0,4"/>
+                            <TextBox Style="{StaticResource TextBoxStyle}"
+                                   Text="{Binding LastName, UpdateSourceTrigger=PropertyChanged}"
+                                   Padding="12,8"/>
+                        </StackPanel>
+
+                        <!-- Email (Full Width) -->
+                        <StackPanel Grid.Column="0" Grid.ColumnSpan="3" Grid.Row="2">
+                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_Email}" 
+                                     FontWeight="SemiBold" 
+                                     Foreground="{StaticResource PrimaryTextBrush}"
+                                     Margin="0,0,0,4"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0"
+                                       Style="{StaticResource TextBoxStyle}"
+                                       Text="{Binding Email, UpdateSourceTrigger=PropertyChanged}"
+                                       Padding="12,8"/>
+                                <fa:ImageAwesome Grid.Column="1" Icon="Envelope" 
+                                               Width="16" Height="16" 
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               VerticalAlignment="Center" 
+                                               Margin="12,0,12,0"/>
+                            </Grid>
+                        </StackPanel>
+                    </Grid>
+                </GroupBox>
+
+                <!-- Contact Information -->
+                <GroupBox Header="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_ContactInfoGroup}" 
+                          Style="{StaticResource GroupBoxStyle}"
+                          Margin="0,0,0,20">
+                    <StackPanel>
+                        <!-- Phone -->
+                        <StackPanel Margin="0,0,0,16">
+                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_Phone}" 
+                                     FontWeight="SemiBold" 
+                                     Foreground="{StaticResource PrimaryTextBrush}"
+                                     Margin="0,0,0,4"/>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="*"/>
+                                    <ColumnDefinition Width="Auto"/>
+                                </Grid.ColumnDefinitions>
+                                <TextBox Grid.Column="0"
+                                       Style="{StaticResource TextBoxStyle}"
+                                       Text="{Binding Phone, UpdateSourceTrigger=PropertyChanged}"
+                                       Padding="12,8"/>
+                                <fa:ImageAwesome Grid.Column="1" Icon="Phone" 
+                                               Width="16" Height="16" 
+                                               Foreground="{StaticResource MutedTextBrush}"
+                                               VerticalAlignment="Center" 
+                                               Margin="12,0,12,0"/>
+                            </Grid>
+                        </StackPanel>
+
+                        <!-- Company and Department -->
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="*"/>
+                                <ColumnDefinition Width="16"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+
+                            <!-- Company -->
+                            <StackPanel Grid.Column="0">
+                                <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_Company}" 
+                                         FontWeight="SemiBold" 
+                                         Foreground="{StaticResource PrimaryTextBrush}"
+                                         Margin="0,0,0,4"/>
+                                <TextBox Style="{StaticResource TextBoxStyle}"
+                                       Text="{Binding Company, UpdateSourceTrigger=PropertyChanged}"
+                                       Padding="12,8"/>
+                            </StackPanel>
+
+                            <!-- Department -->
+                            <StackPanel Grid.Column="2">
+                                <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_Department}" 
+                                         FontWeight="SemiBold" 
+                                         Foreground="{StaticResource PrimaryTextBrush}"
+                                         Margin="0,0,0,4"/>
+                                <TextBox Style="{StaticResource TextBoxStyle}"
+                                       Text="{Binding Department, UpdateSourceTrigger=PropertyChanged}"
+                                       Padding="12,8"/>
+                            </StackPanel>
+                        </Grid>
+
+                        <!-- Group -->
+                        <StackPanel>
+                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_Group}" 
+                                     FontWeight="SemiBold" 
+                                     Foreground="{StaticResource PrimaryTextBrush}"
+                                     Margin="0,0,0,4"/>
+                            <ComboBox Style="{StaticResource ComboBoxStyle}"
+                                    Text="{Binding Group, UpdateSourceTrigger=PropertyChanged}"
+                                    ItemsSource="{Binding AvailableGroups}"
+                                    IsEditable="True"
+                                    Padding="12,8"/>
+                        </StackPanel>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- Additional Information -->
+                <GroupBox Header="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_AdditionalInfoGroup}" 
+                          Style="{StaticResource GroupBoxStyle}"
+                          Margin="0,0,0,20">
+                    <StackPanel>
+                        <!-- Notes -->
+                        <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_Notes}" 
+                                 FontWeight="SemiBold" 
+                                 Foreground="{StaticResource PrimaryTextBrush}"
+                                 Margin="0,0,0,4"/>
+                        
+                        <Border Background="White" BorderBrush="{StaticResource LightGrayBrush}" 
+                              BorderThickness="1" CornerRadius="4" Height="80">
+                            <TextBox Style="{StaticResource TextBoxStyle}"
+                                   Text="{Binding Notes, UpdateSourceTrigger=PropertyChanged}"
+                                   TextWrapping="Wrap"
+                                   AcceptsReturn="True"
+                                   VerticalScrollBarVisibility="Auto"
+                                   HorizontalScrollBarVisibility="Disabled"
+                                   Padding="12,8"
+                                   Background="Transparent"
+                                   BorderThickness="0"/>
+                        </Border>
+                    </StackPanel>
+                </GroupBox>
+
+                <!-- Contact Preview -->
+                <GroupBox Header="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=ContactEdit_PreviewGroup}" 
+                          Style="{StaticResource GroupBoxStyle}"
+                          Margin="0,0,0,20">
+                    <Border Background="{StaticResource SurfaceBrush}" 
+                           BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                           CornerRadius="8" Padding="16,12"
+                           Effect="{StaticResource CorporateShadowDepth1}">
+                        <Grid>
+                            <Grid.ColumnDefinitions>
+                                <ColumnDefinition Width="Auto"/>
+                                <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Grid.RowDefinitions>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
+                            </Grid.RowDefinitions>
+
+                            <!-- Avatar -->
+                            <Border Grid.Column="0" Grid.RowSpan="4" 
+                                   Width="48" Height="48" 
+                                   Background="{StaticResource PrimaryBrush}" 
+                                   CornerRadius="24" 
+                                   VerticalAlignment="Center" 
+                                   Margin="0,0,16,0">
+                                <TextBlock Text="{Binding PreviewInitials}" 
+                                         FontSize="18" FontWeight="SemiBold"
+                                         Foreground="White"
+                                         HorizontalAlignment="Center" 
+                                         VerticalAlignment="Center"/>
+                            </Border>
+
+                            <!-- Contact Preview Info -->
+                            <TextBlock Grid.Column="1" Grid.Row="0" 
+                                     Text="{Binding PreviewFullName}" 
+                                     FontWeight="SemiBold" FontSize="14"
+                                     Foreground="{StaticResource PrimaryTextBrush}"
+                                     TextTrimming="CharacterEllipsis"/>
+
+                            <TextBlock Grid.Column="1" Grid.Row="1" 
+                                     Text="{Binding Email}" 
+                                     FontSize="12"
+                                     Foreground="{StaticResource MutedTextBrush}"
+                                     TextTrimming="CharacterEllipsis" 
+                                     Margin="0,2,0,0"/>
+
+                            <TextBlock Grid.Column="1" Grid.Row="2" 
+                                     Text="{Binding Phone}" 
+                                     FontSize="11"
+                                     Foreground="{StaticResource MutedTextBrush}"
+                                     TextTrimming="CharacterEllipsis" 
+                                     Margin="0,2,0,0"
+                                     Visibility="{Binding HasPhone, Converter={StaticResource BoolToVisConverter}}"/>
+
+                            <TextBlock Grid.Column="1" Grid.Row="3" 
+                                     Text="{Binding Department}" 
+                                     FontSize="10"
+                                     Foreground="{StaticResource PrimaryBrush}"
+                                     FontWeight="SemiBold"
+                                     TextTrimming="CharacterEllipsis" 
+                                     Margin="0,4,0,0"
+                                     Visibility="{Binding HasDepartment, Converter={StaticResource BoolToVisConverter}}"/>
+                        </Grid>
+                    </Border>
+                </GroupBox>
+
+            </StackPanel>
+        </ScrollViewer>
+
+        <!-- Actions -->
+        <Border Grid.Row="2" Background="White" BorderThickness="0,1,0,0" 
+                BorderBrush="{StaticResource LightGrayBrush}" Padding="24,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Validation Messages -->
+                <StackPanel Grid.Column="0" VerticalAlignment="Center"
+                           Visibility="{Binding HasValidationErrors, Converter={StaticResource BoolToVisConverter}}">
+                    <TextBlock Text="{Binding ValidationErrorMessage}" 
+                             Foreground="{StaticResource ErrorBrush}" 
+                             FontSize="12"
+                             VerticalAlignment="Center"/>
+                </StackPanel>
+
+                <!-- Action Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <Button Style="{StaticResource PrimaryButtonStyle}"
+                          Command="{Binding SaveContactCommand}"
+                          IsEnabled="{Binding CanSave}"
+                          Width="100" Height="36" Margin="0,0,8,0">
+                        <StackPanel Orientation="Horizontal">
+                            <fa:ImageAwesome Icon="Save" Width="12" Height="12" 
+                                           Foreground="White" 
+                                           VerticalAlignment="Center" Margin="0,0,6,0"/>
+                            <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=Common_Save}"
+                                     Foreground="White" 
+                                     VerticalAlignment="Center"/>
+                        </StackPanel>
+                    </Button>
+
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                          Command="{Binding CancelCommand}"
+                          Width="100" Height="36">
+                        <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=Common_Cancel}"
+                                 Foreground="{StaticResource PrimaryBrush}" 
+                                 VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

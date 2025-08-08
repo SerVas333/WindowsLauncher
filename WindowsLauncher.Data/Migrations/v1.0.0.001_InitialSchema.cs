@@ -479,11 +479,11 @@ namespace WindowsLauncher.Data.Migrations
 
             var applications = new[]
             {
-                $"('Calculator', 'Windows Calculator', 'calc.exe', '', '', '', '🧮', 'Utilities', 0, 2, 1, 1, {timestampValue}, {timestampValue}, 'System', '[]')",
-                $"('Notepad', 'Text Editor', 'notepad.exe', '', '', '', '📝', 'Utilities', 0, 2, 1, 2, {timestampValue}, {timestampValue}, 'System', '[]')",
-                $"('Google', 'Google Search', 'https://www.google.com', '', '', '', '🌐', 'Web', 1, 2, 1, 3, {timestampValue}, {timestampValue}, 'System', '[]')",
-                $"('Control Panel', 'Windows Control Panel', 'control.exe', '', '', '', '⚙️', 'System', 0, 1, 1, 4, {timestampValue}, {timestampValue}, 'System', '[\"LauncherPowerUsers\", \"LauncherAdmins\"]')",
-                $"('Command Prompt', 'Windows Command Line', 'cmd.exe', '', '', '', '💻', 'System', 0, 2, 1, 5, {timestampValue}, {timestampValue}, 'System', '[]')"
+                $"('Calculator', 'Windows Calculator', 'calc.exe', '', '', '', '🧮', 'Утилиты', 0, 2, 1, 1, {timestampValue}, {timestampValue}, 'System', '[]')",
+                $"('Notepad', 'Text Editor', 'notepad.exe', '', '', '', '📝', 'Утилиты', 0, 2, 1, 2, {timestampValue}, {timestampValue}, 'System', '[]')",
+                $"('Google', 'Google Search', 'https://www.google.com', '', '', '', '🌐', 'Приложения', 1, 2, 1, 3, {timestampValue}, {timestampValue}, 'System', '[]')",
+                $"('Control Panel', 'Windows Control Panel', 'control.exe', '', '', '', '⚙️', 'Утилиты', 0, 1, 1, 4, {timestampValue}, {timestampValue}, 'System', '[\"LauncherPowerUsers\", \"LauncherAdmins\"]')",
+                $"('Command Prompt', 'Windows Command Line', 'cmd.exe', '', '', '', '💻', 'Утилиты', 0, 2, 1, 5, {timestampValue}, {timestampValue}, 'System', '[]')"
             };
 
             foreach (var app in applications)

@@ -1,0 +1,316 @@
+<!-- AddressBookWindow.xaml -->
+<Window x:Class="WindowsLauncher.UI.Views.AddressBookWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:loc="clr-namespace:WindowsLauncher.UI.Infrastructure.Localization"
+        xmlns:fa="http://schemas.fontawesome.io/icons/"
+        mc:Ignorable="d"
+        Title="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_WindowTitle}" 
+        Height="650" Width="800"
+        WindowStartupLocation="CenterOwner"
+        Background="{StaticResource SurfaceBrush}"
+        MinHeight="500" MinWidth="700">
+
+    <!-- Все необходимые ресурсы подключены глобально через App.xaml -->
+
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <!-- Header -->
+            <RowDefinition Height="Auto"/>
+            <!-- Search and Controls -->
+            <RowDefinition Height="*"/>
+            <!-- Content -->
+            <RowDefinition Height="Auto"/>
+            <!-- Actions -->
+        </Grid.RowDefinitions>
+
+        <!-- Header -->
+        <Border Grid.Row="0" Background="{StaticResource PrimaryBrush}" Padding="24,16">
+            <StackPanel>
+                <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_Title}" 
+                           FontSize="24" FontWeight="Light" 
+                           Foreground="White" FontFamily="Segoe UI"/>
+                <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_Subtitle}" 
+                           FontSize="12" Foreground="{StaticResource OnPrimaryBrush}" Opacity="0.9"/>
+            </StackPanel>
+        </Border>
+
+        <!-- Search and Controls -->
+        <Border Grid.Row="1" Background="White" BorderThickness="0,0,0,1" 
+                BorderBrush="{StaticResource LightGrayBrush}" Padding="24,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Search Box with Integrated Icon -->
+                <Border Grid.Column="0" Background="White" BorderBrush="{StaticResource LightGrayBrush}" 
+                        BorderThickness="1" CornerRadius="4" VerticalAlignment="Center">
+                    <Grid>
+                        <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        
+                        <!-- Search Icon -->
+                        <fa:ImageAwesome Grid.Column="0" Icon="Search" 
+                                       Width="14" Height="14" 
+                                       Foreground="{StaticResource MutedTextBrush}"
+                                       VerticalAlignment="Center" 
+                                       Margin="12,0,8,0"
+                                       IsHitTestVisible="False"/>
+                        
+                        <!-- Search TextBox -->
+                        <TextBox Grid.Column="1" 
+                               Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                               FontSize="14" Padding="0,8,12,8"
+                               Background="Transparent"
+                               BorderThickness="0"
+                               VerticalAlignment="Center"
+                               Tag="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_SearchPlaceholder}"/>
+                    </Grid>
+                </Border>
+
+                <!-- Add Contact Button (Admin Only) -->
+                <Button Grid.Column="1" Style="{StaticResource PrimaryButtonStyle}"
+                        Command="{Binding AddContactCommand}"
+                        ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_AddContactTooltip}"
+                        Width="120" Height="36" Margin="12,0,0,0"
+                        Visibility="{Binding IsAdminMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <StackPanel Orientation="Horizontal">
+                        <fa:ImageAwesome Icon="Plus" Width="12" Height="12" 
+                                       Foreground="White" 
+                                       VerticalAlignment="Center" Margin="0,0,6,0"/>
+                        <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_AddContact}"
+                                 Foreground="White" 
+                                 VerticalAlignment="Center"/>
+                    </StackPanel>
+                </Button>
+
+                <!-- Import/Export Button (Admin Only) -->
+                <Button Grid.Column="2" Style="{StaticResource SecondaryButtonStyle}"
+                        Command="{Binding ImportExportCommand}"
+                        ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_ImportExportTooltip}"
+                        Width="40" Height="36" Margin="8,0,0,0"
+                        Visibility="{Binding IsAdminMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <fa:ImageAwesome Icon="Download" Width="16" Height="16" 
+                                   Foreground="{StaticResource PrimaryBrush}"/>
+                </Button>
+            </Grid>
+        </Border>
+
+        <!-- Content -->
+        <ScrollViewer Grid.Row="2" Padding="24" Background="{StaticResource SurfaceVariantBrush}">
+            <Grid>
+                <!-- Loading Indicator -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                           Visibility="{Binding IsLoading, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <fa:ImageAwesome Icon="Spinner" Width="48" Height="48" 
+                                   Foreground="{StaticResource PrimaryBrush}">
+                        <fa:ImageAwesome.RenderTransform>
+                            <RotateTransform/>
+                        </fa:ImageAwesome.RenderTransform>
+                        <fa:ImageAwesome.Triggers>
+                            <EventTrigger RoutedEvent="Loaded">
+                                <BeginStoryboard>
+                                    <Storyboard RepeatBehavior="Forever">
+                                        <DoubleAnimation Storyboard.TargetProperty="RenderTransform.Angle"
+                                                       From="0" To="360" Duration="0:0:1"/>
+                                    </Storyboard>
+                                </BeginStoryboard>
+                            </EventTrigger>
+                        </fa:ImageAwesome.Triggers>
+                    </fa:ImageAwesome>
+                    <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_LoadingContacts}" 
+                               FontSize="14" Foreground="{StaticResource PrimaryBrush}" Margin="0,12,0,0"/>
+                </StackPanel>
+
+                <!-- Contacts List -->
+                <ListView x:Name="ContactsListView"
+                         ItemsSource="{Binding FilteredContacts}"
+                         SelectedItem="{Binding SelectedContact}"
+                         SelectionMode="{Binding SelectionMode}"
+                         SelectionChanged="ContactsListView_SelectionChanged"
+                         Visibility="{Binding IsLoading, Converter={StaticResource InverseBooleanToVisibilityConverter}}"
+                         Background="Transparent" BorderThickness="0">
+                    <ListView.ItemsPanel>
+                        <ItemsPanelTemplate>
+                            <UniformGrid Columns="2"/>
+                        </ItemsPanelTemplate>
+                    </ListView.ItemsPanel>
+                    <ListView.ItemTemplate>
+                        <DataTemplate>
+                            <Border Background="{StaticResource SurfaceBrush}" 
+                                   BorderBrush="{StaticResource BorderBrush}" BorderThickness="1"
+                                   CornerRadius="8" Margin="8,4" Padding="16,12"
+                                   Effect="{StaticResource CorporateShadowDepth1}">
+                                <Grid>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="Auto"/>
+                                        <ColumnDefinition Width="*"/>
+                                        <ColumnDefinition Width="Auto"/>
+                                    </Grid.ColumnDefinitions>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+
+                                    <!-- Avatar -->
+                                    <Border Grid.Column="0" Grid.RowSpan="4" 
+                                           Width="48" Height="48" 
+                                           Background="{StaticResource PrimaryBrush}" 
+                                           CornerRadius="24" 
+                                           VerticalAlignment="Center" 
+                                           Margin="0,0,16,0">
+                                        <TextBlock Text="{Binding Initials}" 
+                                                 FontSize="18" FontWeight="SemiBold"
+                                                 Foreground="White"
+                                                 HorizontalAlignment="Center" 
+                                                 VerticalAlignment="Center"/>
+                                    </Border>
+
+                                    <!-- Contact Info -->
+                                    <TextBlock Grid.Column="1" Grid.Row="0" 
+                                             Text="{Binding FullName}" 
+                                             FontWeight="SemiBold" FontSize="14"
+                                             Foreground="{StaticResource PrimaryTextBrush}"
+                                             TextTrimming="CharacterEllipsis"/>
+
+                                    <TextBlock Grid.Column="1" Grid.Row="1" 
+                                             Text="{Binding Email}" 
+                                             FontSize="12"
+                                             Foreground="{StaticResource MutedTextBrush}"
+                                             TextTrimming="CharacterEllipsis" 
+                                             Margin="0,2,0,0"/>
+
+                                    <TextBlock Grid.Column="1" Grid.Row="2" 
+                                             Text="{Binding Phone}" 
+                                             FontSize="11"
+                                             Foreground="{StaticResource MutedTextBrush}"
+                                             TextTrimming="CharacterEllipsis" 
+                                             Margin="0,2,0,0"
+                                             Visibility="{Binding HasPhone, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                                    <TextBlock Grid.Column="1" Grid.Row="3" 
+                                             Text="{Binding Department}" 
+                                             FontSize="10"
+                                             Foreground="{StaticResource PrimaryBrush}"
+                                             FontWeight="SemiBold"
+                                             TextTrimming="CharacterEllipsis" 
+                                             Margin="0,4,0,0"
+                                             Visibility="{Binding HasDepartment, Converter={StaticResource BooleanToVisibilityConverter}}"/>
+
+                                    <!-- Actions (Admin Only) -->
+                                    <StackPanel Grid.Column="2" Grid.RowSpan="4" Orientation="Vertical" 
+                                              VerticalAlignment="Center"
+                                              Visibility="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.IsAdminMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                                        <Button Style="{StaticResource SecondaryButtonStyle}"
+                                              Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.EditContactCommand}"
+                                              CommandParameter="{Binding}"
+                                              ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_EditContactTooltip}"
+                                              Width="24" Height="24" Margin="0,0,0,4">
+                                            <fa:ImageAwesome Icon="Edit" Width="12" Height="12" 
+                                                           Foreground="{StaticResource PrimaryBrush}"/>
+                                        </Button>
+
+                                        <Button Style="{StaticResource DangerButtonStyle}"
+                                              Command="{Binding RelativeSource={RelativeSource AncestorType=Window}, Path=DataContext.DeleteContactCommand}"
+                                              CommandParameter="{Binding}"
+                                              ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_DeleteContactTooltip}"
+                                              Width="24" Height="24">
+                                            <fa:ImageAwesome Icon="Trash" Width="12" Height="12" 
+                                                           Foreground="{StaticResource WhiteTextBrush}"/>
+                                        </Button>
+                                    </StackPanel>
+                                </Grid>
+                            </Border>
+                        </DataTemplate>
+                    </ListView.ItemTemplate>
+                </ListView>
+
+                <!-- No Contacts Message -->
+                <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
+                           Visibility="{Binding HasNoContacts, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <fa:ImageAwesome Icon="AddressBook" Width="64" Height="64" 
+                                   Foreground="{StaticResource MutedTextBrush}" 
+                                   Opacity="0.5" Margin="0,0,0,16"/>
+                    <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_NoContactsFound}" 
+                              FontSize="16" FontWeight="SemiBold" 
+                              Foreground="{StaticResource PrimaryTextBrush}"
+                              HorizontalAlignment="Center"/>
+                    <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_NoContactsHint}" 
+                              FontSize="12" 
+                              Foreground="{StaticResource MutedTextBrush}"
+                              HorizontalAlignment="Center" 
+                              Margin="0,8,0,0"
+                              TextAlignment="Center"/>
+                </StackPanel>
+            </Grid>
+        </ScrollViewer>
+
+        <!-- Actions -->
+        <Border Grid.Row="3" Background="White" BorderThickness="0,1,0,0" 
+                BorderBrush="{StaticResource LightGrayBrush}" Padding="24,16">
+            <Grid>
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+
+                <!-- Selection Info -->
+                <StackPanel Grid.Column="0" Orientation="Horizontal" VerticalAlignment="Center"
+                           Visibility="{Binding IsSelectionMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                    <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_SelectedCount}" 
+                             Foreground="{StaticResource PrimaryTextBrush}" 
+                             VerticalAlignment="Center"/>
+                    <TextBlock Text="{Binding SelectedContactsCount}" 
+                             FontWeight="SemiBold" 
+                             Foreground="{StaticResource PrimaryBrush}" 
+                             VerticalAlignment="Center" 
+                             Margin="4,0,0,0"/>
+                </StackPanel>
+
+                <!-- Action Buttons -->
+                <StackPanel Grid.Column="1" Orientation="Horizontal">
+                    <!-- Select All / Deselect All (Selection Mode) -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                          Command="{Binding ToggleSelectAllCommand}"
+                          ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=AddressBook_ToggleSelectAllTooltip}"
+                          Width="120" Height="36" Margin="0,0,8,0"
+                          Visibility="{Binding IsSelectionMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="{Binding SelectAllButtonText}" 
+                                 Foreground="{StaticResource PrimaryBrush}" 
+                                 VerticalAlignment="Center"/>
+                    </Button>
+
+                    <!-- OK Button (Selection Mode) -->
+                    <Button Style="{StaticResource PrimaryButtonStyle}"
+                          Command="{Binding ConfirmSelectionCommand}"
+                          IsEnabled="{Binding HasSelectedContacts}"
+                          Width="100" Height="36" Margin="0,0,8,0"
+                          Visibility="{Binding IsSelectionMode, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=Common_OK}"
+                                 Foreground="White" 
+                                 VerticalAlignment="Center"/>
+                    </Button>
+
+                    <!-- Cancel Button -->
+                    <Button Style="{StaticResource SecondaryButtonStyle}"
+                          Command="{Binding CancelCommand}"
+                          Width="100" Height="36">
+                        <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=Common_Cancel}"
+                                 Foreground="{StaticResource PrimaryBrush}" 
+                                 VerticalAlignment="Center"/>
+                    </Button>
+                </StackPanel>
+            </Grid>
+        </Border>
+    </Grid>
+</Window>

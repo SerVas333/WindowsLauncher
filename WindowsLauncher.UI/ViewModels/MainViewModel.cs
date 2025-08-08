@@ -221,6 +221,8 @@ namespace WindowsLauncher.UI.ViewModels
         public RelayCommand OpenAdminCommand { get; private set; } = null!;
         public AsyncRelayCommand ShowVirtualKeyboardCommand { get; private set; } = null!;
         public RelayCommand ToggleSidebarCommand { get; private set; } = null!;
+        public RelayCommand ComposeEmailCommand { get; private set; } = null!;
+        public RelayCommand OpenAddressBookCommand { get; private set; } = null!;
 
         private void InitializeCommands()
         {
@@ -256,6 +258,9 @@ namespace WindowsLauncher.UI.ViewModels
             ToggleSidebarCommand = new RelayCommand(
                 ToggleSidebar,
                 () => !IsLoading);
+
+            ComposeEmailCommand = new RelayCommand(ComposeEmail);
+            OpenAddressBookCommand = new RelayCommand(OpenAddressBook);
         }
 
         #endregion
@@ -390,9 +395,20 @@ namespace WindowsLauncher.UI.ViewModels
                 Logger.LogInformation("Found {Count} authorized applications", apps.Count);
 
                 Applications.Clear();
+                
+                // Создаем задачи для параллельной инициализации ApplicationViewModel
+                var initializationTasks = new List<Task<ApplicationViewModel>>();
+                
                 foreach (var app in apps)
                 {
-                    var appViewModel = new ApplicationViewModel(app);
+                    initializationTasks.Add(CreateAndInitializeApplicationViewModelAsync(app));
+                }
+                
+                // Ожидаем завершения всех инициализаций параллельно
+                var initializedViewModels = await Task.WhenAll(initializationTasks);
+                
+                foreach (var appViewModel in initializedViewModels)
+                {
                     Applications.Add(appViewModel);
                 }
 
@@ -576,6 +592,24 @@ namespace WindowsLauncher.UI.ViewModels
             };
         }
 
+        /// <summary>
+        /// Создать и асинхронно инициализировать ApplicationViewModel
+        /// </summary>
+        private async Task<ApplicationViewModel> CreateAndInitializeApplicationViewModelAsync(CoreApplication application)
+        {
+            // Создаем отдельный scope для каждой операции инициализации
+            using var scope = _serviceProvider.CreateScope();
+            var categoryService = scope.ServiceProvider.GetService<ICategoryManagementService>();
+            
+            // Создаем ApplicationViewModel
+            var appViewModel = new ApplicationViewModel(application, categoryService);
+            
+            // Асинхронно инициализируем данные категории
+            await appViewModel.InitializeAsync();
+            
+            return appViewModel;
+        }
+
         private async Task LoadTestDataAsync()
         {
             Logger.LogInformation("Loading test data as fallback...");
@@ -632,9 +666,20 @@ namespace WindowsLauncher.UI.ViewModels
                 }
             };
 
+            // Создаем задачи для параллельной инициализации тестовых ApplicationViewModel
+            var testInitializationTasks = new List<Task<ApplicationViewModel>>();
+            
             foreach (var app in testApps)
             {
-                Applications.Add(new ApplicationViewModel(app));
+                testInitializationTasks.Add(CreateAndInitializeApplicationViewModelAsync(app));
+            }
+            
+            // Ожидаем завершения всех инициализаций параллельно
+            var testViewModels = await Task.WhenAll(testInitializationTasks);
+            
+            foreach (var appViewModel in testViewModels)
+            {
+                Applications.Add(appViewModel);
             }
 
             // Load test categories with icons and colors
@@ -1175,6 +1220,80 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 Logger.LogError(ex, "Error toggling sidebar");
                 DialogService.ShowError($"Ошибка переключения sidebar: {ex.Message}");
+            }
+        }
+
+        /// <summary>
+        /// Открыть окно создания email сообщения
+        /// </summary>
+        private void ComposeEmail()
+        {
+            try
+            {
+                var composeViewModel = _serviceProvider.GetService<ComposeEmailViewModel>();
+                if (composeViewModel == null)
+                {
+                    Logger.LogError("Failed to resolve ComposeEmailViewModel from DI container");
+                    MessageBox.Show(LocalizationHelper.Instance.GetString("Error_EmailServiceNotAvailable"), 
+                        LocalizationHelper.Instance.GetString("Error"), 
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                var composeWindow = new ComposeEmailWindow(composeViewModel)
+                {
+                    Owner = WpfApplication.Current.MainWindow,
+                    Title = LocalizationHelper.Instance.GetString("ComposeEmail_WindowTitle")
+                };
+
+                composeWindow.Show();
+                Logger.LogInformation("Opened compose email window");
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error opening compose email window");
+                MessageBox.Show($"{LocalizationHelper.Instance.GetString("Error_EmailServiceUnavailable")}: {ex.Message}", 
+                    LocalizationHelper.Instance.GetString("Error"), 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
+            }
+        }
+
+        /// <summary>
+        /// Открыть адресную книгу
+        /// </summary>
+        private void OpenAddressBook()
+        {
+            try
+            {
+                var addressBookViewModel = _serviceProvider.GetService<AddressBookViewModel>();
+                if (addressBookViewModel == null)
+                {
+                    Logger.LogError("Failed to resolve AddressBookViewModel from DI container");
+                    MessageBox.Show(LocalizationHelper.Instance.GetString("Error_AddressBookNotAvailable"), 
+                        LocalizationHelper.Instance.GetString("Error"), 
+                        MessageBoxButton.OK, MessageBoxImage.Error);
+                    return;
+                }
+
+                // Настраиваем режим просмотра (не выбор контактов)
+                addressBookViewModel.IsSelectionMode = false;
+                addressBookViewModel.IsAdminMode = CurrentUser?.Role >= Core.Enums.UserRole.Administrator;
+
+                var addressBookWindow = new AddressBookWindow(addressBookViewModel)
+                {
+                    Owner = WpfApplication.Current.MainWindow,
+                    Title = LocalizationHelper.Instance.GetString("AddressBook_WindowTitle")
+                };
+
+                addressBookWindow.Show();
+                Logger.LogInformation("Opened address book window in admin mode: {IsAdminMode}", addressBookViewModel.IsAdminMode);
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error opening address book window");
+                MessageBox.Show($"{LocalizationHelper.Instance.GetString("Error_AddressBookUnavailable")}: {ex.Message}", 
+                    LocalizationHelper.Instance.GetString("Error"), 
+                    MessageBoxButton.OK, MessageBoxImage.Error);
             }
         }
 

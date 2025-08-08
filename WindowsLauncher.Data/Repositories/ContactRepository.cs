@@ -41,7 +41,8 @@ namespace WindowsLauncher.Data.Repositories
                 
                 // Используем совместимые с обеими БД методы сортировки
                 var contacts = await query
-                    .OrderBy(c => c.Name)
+                    .OrderBy(c => c.FirstName)
+                    .ThenBy(c => c.LastName)
                     .ThenBy(c => c.Email)
                     .ToListAsync();
                 
@@ -69,7 +70,7 @@ namespace WindowsLauncher.Data.Repositories
                 
                 if (contact != null)
                 {
-                    _logger.LogDebug("Found contact {Id}: {Name} ({Email})", id, contact.Name, contact.Email);
+                    _logger.LogDebug("Found contact {Id}: {FullName} ({Email})", id, contact.FullName, contact.Email);
                 }
                 
                 return contact;
@@ -99,7 +100,7 @@ namespace WindowsLauncher.Data.Repositories
                 
                 if (contact != null)
                 {
-                    _logger.LogDebug("Found contact by email {Email}: {Name}", email, contact.Name);
+                    _logger.LogDebug("Found contact by email {Email}: {FullName}", email, contact.FullName);
                 }
                 
                 return contact;
@@ -130,14 +131,17 @@ namespace WindowsLauncher.Data.Repositories
                     query = query.Where(c => c.IsActive);
                 }
                 
-                // Поиск по имени, email и компании (совместимо с SQLite и Firebird)
+                // Поиск по имени, фамилии, email и компании (совместимо с SQLite и Firebird)
                 query = query.Where(c => 
-                    c.Name.ToUpper().Contains(normalizedSearch) ||
+                    c.FirstName.ToUpper().Contains(normalizedSearch) ||
+                    c.LastName.ToUpper().Contains(normalizedSearch) ||
                     c.Email.ToUpper().Contains(normalizedSearch) ||
-                    (c.Company != null && c.Company.ToUpper().Contains(normalizedSearch)));
+                    (c.Company != null && c.Company.ToUpper().Contains(normalizedSearch)) ||
+                    (c.Department != null && c.Department.ToUpper().Contains(normalizedSearch)));
                 
                 var contacts = await query
-                    .OrderBy(c => c.Name)
+                    .OrderBy(c => c.FirstName)
+                    .ThenBy(c => c.LastName)
                     .ToListAsync();
                 
                 _logger.LogDebug("Found {Count} contacts matching '{SearchTerm}'", contacts.Count, searchTerm);
@@ -178,7 +182,8 @@ namespace WindowsLauncher.Data.Repositories
                 }
                 
                 var contacts = await query
-                    .OrderBy(c => c.Name)
+                    .OrderBy(c => c.FirstName)
+                    .ThenBy(c => c.LastName)
                     .ToListAsync();
                 
                 _logger.LogDebug("Found {Count} contacts in group '{Group}'", contacts.Count, group ?? "No Group");
@@ -216,14 +221,14 @@ namespace WindowsLauncher.Data.Repositories
                 _context.Contacts.Add(contact);
                 await _context.SaveChangesAsync();
                 
-                _logger.LogInformation("Created new contact {Id}: {Name} ({Email})", 
-                    contact.Id, contact.Name, contact.Email);
+                _logger.LogInformation("Created new contact {Id}: {FullName} ({Email})", 
+                    contact.Id, contact.FullName, contact.Email);
                 
                 return contact;
             }
             catch (Exception ex)
             {
-                _logger.LogError(ex, "Error creating contact {Name} ({Email})", contact.Name, contact.Email);
+                _logger.LogError(ex, "Error creating contact {FullName} ({Email})", contact.FullName, contact.Email);
                 throw;
             }
         }
@@ -252,18 +257,22 @@ namespace WindowsLauncher.Data.Repositories
                 }
                 
                 // Обновляем поля
-                existingContact.Name = contact.Name;
+                existingContact.FirstName = contact.FirstName;
+                existingContact.LastName = contact.LastName;
                 existingContact.Email = contact.Email;
+                existingContact.Phone = contact.Phone;
                 existingContact.Company = contact.Company;
+                existingContact.Department = contact.Department;
                 existingContact.Group = contact.Group;
                 existingContact.Notes = contact.Notes;
                 existingContact.IsActive = contact.IsActive;
+                existingContact.CreatedBy = contact.CreatedBy;
                 existingContact.UpdatedAt = DateTime.Now;
                 
                 await _context.SaveChangesAsync();
                 
-                _logger.LogInformation("Updated contact {Id}: {Name} ({Email})", 
-                    contact.Id, contact.Name, contact.Email);
+                _logger.LogInformation("Updated contact {Id}: {FullName} ({Email})", 
+                    contact.Id, contact.FullName, contact.Email);
                 
                 return existingContact;
             }
@@ -291,8 +300,8 @@ namespace WindowsLauncher.Data.Repositories
                 _context.Contacts.Remove(contact);
                 await _context.SaveChangesAsync();
                 
-                _logger.LogInformation("Deleted contact {Id}: {Name} ({Email})", 
-                    id, contact.Name, contact.Email);
+                _logger.LogInformation("Deleted contact {Id}: {FullName} ({Email})", 
+                    id, contact.FullName, contact.Email);
                 
                 return true;
             }

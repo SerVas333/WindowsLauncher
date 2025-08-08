@@ -360,7 +360,7 @@ namespace WindowsLauncher.UI.Infrastructure.Services
             var sql = databaseType switch
             {
                 DatabaseType.SQLite => @"
-                    INSERT INTO __MigrationHistory (Version, Name, Description, AppliedAt)
+                    INSERT INTO MIGRATION_HISTORY (VERSION, NAME, DESCRIPTION, APPLIED_AT)
                     VALUES (@p0, @p1, @p2, @p3)",
                 DatabaseType.Firebird => @"
                     INSERT INTO MIGRATION_HISTORY (VERSION, NAME, DESCRIPTION, APPLIED_AT)
