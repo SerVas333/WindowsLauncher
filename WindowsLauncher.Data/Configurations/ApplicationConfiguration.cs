@@ -43,10 +43,24 @@ namespace WindowsLauncher.Data.Configurations
                     c => c.Aggregate(0, (a, v) => HashCode.Combine(a, v.GetHashCode())),
                     c => c.ToList()));
 
+            // APK метаданные (только для Android приложений) - маппинг на правильные имена колонок
+            builder.Property(a => a.ApkPackageName).HasColumnName("APK_PACKAGE_NAME").HasMaxLength(200);
+            builder.Property(a => a.ApkVersionCode).HasColumnName("APK_VERSION_CODE"); 
+            builder.Property(a => a.ApkVersionName).HasColumnName("APK_VERSION_NAME").HasMaxLength(50);
+            builder.Property(a => a.ApkMinSdk).HasColumnName("APK_MIN_SDK");
+            builder.Property(a => a.ApkTargetSdk).HasColumnName("APK_TARGET_SDK");
+            builder.Property(a => a.ApkFilePath).HasColumnName("APK_FILE_PATH").HasMaxLength(1000);
+            builder.Property(a => a.ApkFileHash).HasColumnName("APK_FILE_HASH").HasMaxLength(64);
+            builder.Property(a => a.ApkInstallStatus).HasColumnName("APK_INSTALL_STATUS").HasMaxLength(50).HasDefaultValue("NotInstalled");
+
             // Индексы
             builder.HasIndex(a => a.Name);  
             builder.HasIndex(a => a.Category);
             builder.HasIndex(a => a.IsEnabled);
+            
+            // Индексы для Android приложений
+            builder.HasIndex(a => a.ApkPackageName);
+            builder.HasIndex(a => a.ApkFileHash);
         }
     }
 }

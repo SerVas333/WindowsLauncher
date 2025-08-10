@@ -709,6 +709,15 @@ namespace WindowsLauncher.UI.Properties.Resources {
         }
         
         /// <summary>
+        ///   Ищет локализованную строку, похожую на Android.
+        /// </summary>
+        public static string Category_Android {
+            get {
+                return ResourceManager.GetString("Category_Android", resourceCulture);
+            }
+        }
+        
+        /// <summary>
         ///   Ищет локализованную строку, похожую на Applications.
         /// </summary>
         public static string Category_Applications {

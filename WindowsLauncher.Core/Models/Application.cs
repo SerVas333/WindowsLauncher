@@ -38,6 +38,16 @@ namespace WindowsLauncher.Core.Models
         public string Category { get; set; } = "General";
         public ApplicationType Type { get; set; } = ApplicationType.Desktop;
 
+        // APK метаданные (только для Android приложений)
+        public string? ApkPackageName { get; set; }
+        public int? ApkVersionCode { get; set; }
+        public string? ApkVersionName { get; set; }
+        public int? ApkMinSdk { get; set; }
+        public int? ApkTargetSdk { get; set; }
+        public string? ApkFilePath { get; set; }
+        public string? ApkFileHash { get; set; }
+        public string? ApkInstallStatus { get; set; } = "NotInstalled";
+
         // Права доступа
         public List<string> RequiredGroups { get; set; } = new();
         public UserRole MinimumRole { get; set; } = UserRole.Standard;

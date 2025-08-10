@@ -219,6 +219,16 @@
                                 <TextBlock Text="Тест запуска"/>
                             </StackPanel>
                         </Button>
+
+                        <!-- Android Diagnostics Button - скрывается когда AndroidMode = Disabled -->
+                        <Button Click="DiagnoseAndroidButton_Click"
+                                Style="{StaticResource SecondaryButtonStyle}"
+                                Visibility="{Binding IsAndroidEnabled, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            <StackPanel Orientation="Horizontal">
+                                <TextBlock Text="🤖" Margin="0,0,8,0"/>
+                                <TextBlock Text="Диагностика Android"/>
+                            </StackPanel>
+                        </Button>
                     </StackPanel>
                 </StackPanel>
             </Grid>
@@ -457,6 +467,7 @@
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="Auto"/>
+                                <RowDefinition Height="Auto"/>
                                 <RowDefinition Height="*"/>
                             </Grid.RowDefinitions>
                             <Grid.ColumnDefinitions>
@@ -526,6 +537,10 @@
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding}" Value="Folder">
                                                             <Setter Property="Text" Value="Папка"/>
+                                                        </DataTrigger>
+                                                        <!-- Android APK опция - скрывается когда AndroidMode = Disabled -->
+                                                        <DataTrigger Binding="{Binding}" Value="Android">
+                                                            <Setter Property="Text" Value="Android APK"/>
                                                         </DataTrigger>
                                                         <DataTrigger Binding="{Binding}" Value="ChromeApp">
                                                             <Setter Property="Text" Value="Chrome App"/>
@@ -675,6 +690,135 @@
                                       IsChecked="{Binding EditingApplication.IsEnabled}"
                                       IsEnabled="{Binding IsEditMode}"
                                       Margin="0,0,0,12"/>
+
+                            <!-- APK Metadata Section (visible only for Android apps and when Android enabled) -->
+                            <Border Grid.Row="11" Grid.Column="0" Grid.ColumnSpan="2" 
+                                    Background="{StaticResource SurfaceVariantBrush}" 
+                                    CornerRadius="6" Padding="12" Margin="0,12,0,12">
+                                <Border.Style>
+                                    <Style TargetType="Border">
+                                        <Setter Property="Visibility" Value="Collapsed"/>
+                                        <Style.Triggers>
+                                            <MultiDataTrigger>
+                                                <MultiDataTrigger.Conditions>
+                                                    <Condition Binding="{Binding EditingApplication.Type}" Value="Android"/>
+                                                    <Condition Binding="{Binding IsAndroidEnabled}" Value="True"/>
+                                                </MultiDataTrigger.Conditions>
+                                                <Setter Property="Visibility" Value="Visible"/>
+                                            </MultiDataTrigger>
+                                        </Style.Triggers>
+                                    </Style>
+                                </Border.Style>
+                                <Grid>
+                                    <Grid.RowDefinitions>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                        <RowDefinition Height="Auto"/>
+                                    </Grid.RowDefinitions>
+                                    <Grid.ColumnDefinitions>
+                                        <ColumnDefinition Width="150"/>
+                                        <ColumnDefinition Width="*"/>
+                                    </Grid.ColumnDefinitions>
+
+                                    <!-- APK Section Header -->
+                                    <TextBlock Grid.Row="0" Grid.Column="0" Grid.ColumnSpan="2"
+                                               Text="🤖 Метаданные Android APK"
+                                               FontWeight="SemiBold"
+                                               FontSize="14"
+                                               Foreground="{StaticResource PrimaryBrush}"
+                                               Margin="0,0,0,12"/>
+
+                                    <!-- Package Name -->
+                                    <TextBlock Grid.Row="1" Grid.Column="0" 
+                                               Text="Package Name:" 
+                                               VerticalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBox Grid.Row="1" Grid.Column="1" 
+                                             Text="{Binding EditingApplication.ApkPackageName}"
+                                             IsReadOnly="{Binding IsViewMode}"
+                                             Background="Transparent"
+                                             Margin="0,0,0,8"/>
+
+                                    <!-- Version Code -->
+                                    <TextBlock Grid.Row="2" Grid.Column="0" 
+                                               Text="Version Code:" 
+                                               VerticalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBox Grid.Row="2" Grid.Column="1" 
+                                             Text="{Binding EditingApplication.ApkVersionCode}"
+                                             IsReadOnly="{Binding IsViewMode}"
+                                             Background="Transparent"
+                                             Margin="0,0,0,8"/>
+
+                                    <!-- Version Name -->
+                                    <TextBlock Grid.Row="3" Grid.Column="0" 
+                                               Text="Version Name:" 
+                                               VerticalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBox Grid.Row="3" Grid.Column="1" 
+                                             Text="{Binding EditingApplication.ApkVersionName}"
+                                             IsReadOnly="{Binding IsViewMode}"
+                                             Background="Transparent"
+                                             Margin="0,0,0,8"/>
+
+                                    <!-- Min SDK -->
+                                    <TextBlock Grid.Row="4" Grid.Column="0" 
+                                               Text="Min SDK:" 
+                                               VerticalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBox Grid.Row="4" Grid.Column="1" 
+                                             Text="{Binding EditingApplication.ApkMinSdk}"
+                                             IsReadOnly="{Binding IsViewMode}"
+                                             Background="Transparent"
+                                             Margin="0,0,0,8"/>
+
+                                    <!-- Target SDK -->
+                                    <TextBlock Grid.Row="5" Grid.Column="0" 
+                                               Text="Target SDK:" 
+                                               VerticalAlignment="Center" Margin="0,0,0,8"/>
+                                    <TextBox Grid.Row="5" Grid.Column="1" 
+                                             Text="{Binding EditingApplication.ApkTargetSdk}"
+                                             IsReadOnly="{Binding IsViewMode}"
+                                             Background="Transparent"
+                                             Margin="0,0,0,8"/>
+
+                                    <!-- APK File Path -->
+                                    <TextBlock Grid.Row="6" Grid.Column="0" 
+                                               Text="APK File:" 
+                                               VerticalAlignment="Center" Margin="0,0,0,8"/>
+                                    <Grid Grid.Row="6" Grid.Column="1" Margin="0,0,0,8">
+                                        <Grid.ColumnDefinitions>
+                                            <ColumnDefinition Width="*"/>
+                                            <ColumnDefinition Width="Auto"/>
+                                        </Grid.ColumnDefinitions>
+                                        <TextBox Grid.Column="0" 
+                                                 Text="{Binding EditingApplication.ApkFilePath}"
+                                                 IsReadOnly="{Binding IsViewMode}"
+                                                 Background="Transparent"/>
+                                        <Button Grid.Column="1" Content="📁" 
+                                                Width="30" Margin="4,0,0,0"
+                                                IsEnabled="{Binding IsEditMode}"
+                                                ToolTip="Выбрать APK файл"
+                                                Click="BrowseApkFile_Click"/>
+                                    </Grid>
+
+                                    <!-- Install Status -->
+                                    <TextBlock Grid.Row="7" Grid.Column="0" 
+                                               Text="Install Status:" 
+                                               VerticalAlignment="Center" Margin="0,0,0,8"/>
+                                    <ComboBox Grid.Row="7" Grid.Column="1" 
+                                              SelectedValue="{Binding EditingApplication.ApkInstallStatus}"
+                                              IsEnabled="{Binding IsEditMode}"
+                                              Background="Transparent"
+                                              Margin="0,0,0,8">
+                                        <ComboBoxItem Content="Not Installed" />
+                                        <ComboBoxItem Content="Installed" />
+                                        <ComboBoxItem Content="Update Available" />
+                                        <ComboBoxItem Content="Install Failed" />
+                                    </ComboBox>
+                                </Grid>
+                            </Border>
                         </Grid>
                     </ScrollViewer>
 

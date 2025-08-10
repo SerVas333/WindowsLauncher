@@ -378,10 +378,11 @@
                                            CornerRadius="8"
                                            HorizontalAlignment="Center" 
                                            Margin="0,0,0,12">
+                                        <!-- Используем CategoryIcon (FontAwesome) для всех категорий, включая Android -->
                                         <fa:ImageAwesome Icon="{Binding CategoryIcon}" 
                                                        Width="24" Height="24" 
                                                        Foreground="White"
-                                                       HorizontalAlignment="Center"
+                                                       HorizontalAlignment="Center" 
                                                        VerticalAlignment="Center"/>
                                     </Border>
 
@@ -470,6 +471,38 @@
                     <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_ApplicationsCount}" FontSize="12" 
                               Foreground="{StaticResource MutedTextBrush}"/>
 
+                    <!-- WSA Status Indicator -->
+                    <Border x:Name="WSAStatusIndicator"
+                            Background="Transparent"
+                            CornerRadius="4"
+                            Padding="8,4"
+                            Margin="12,0,0,0"
+                            ToolTip="{Binding WSAStatusTooltip}"
+                            Visibility="{Binding ShowWSAStatus, Converter={StaticResource BooleanToVisibilityConverter}}">
+                        <StackPanel Orientation="Horizontal">
+                            <TextBlock Text="🤖" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center"/>
+                            <TextBlock Text="{Binding WSAStatusText}" 
+                                      FontSize="11" 
+                                      FontWeight="SemiBold"
+                                      Foreground="{Binding WSAStatusColor}"
+                                      VerticalAlignment="Center"/>
+                        </StackPanel>
+                        <Border.Style>
+                            <Style TargetType="Border">
+                                <Style.Triggers>
+                                    <DataTrigger Binding="{Binding WSAStatusText}" Value="Ready">
+                                        <Setter Property="Background" Value="#E8F5E8"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WSAStatusText}" Value="Starting">
+                                        <Setter Property="Background" Value="#FFF4E6"/>
+                                    </DataTrigger>
+                                    <DataTrigger Binding="{Binding WSAStatusText}" Value="Error">
+                                        <Setter Property="Background" Value="#FFEBEE"/>
+                                    </DataTrigger>
+                                </Style.Triggers>
+                            </Style>
+                        </Border.Style>
+                    </Border>
 
                     <!-- App Switcher Button -->
                     <Button x:Name="AppSwitcherButton"

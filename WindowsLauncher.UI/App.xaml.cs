@@ -19,6 +19,8 @@ using WindowsLauncher.Services.Audit;
 using WindowsLauncher.Services.Authorization;
 using WindowsLauncher.Services.Authentication;
 using WindowsLauncher.Services;
+using WindowsLauncher.Services.Android;
+using WindowsLauncher.Core.Interfaces.Android;
 using WindowsLauncher.UI.ViewModels;
 using WindowsLauncher.Core.Services;
 using WindowsLauncher.UI.Infrastructure.Services;
@@ -33,6 +35,10 @@ using WindowsLauncher.Services.Lifecycle.Windows;
 using WindowsLauncher.Services.Lifecycle.Monitoring;
 using WindowsLauncher.Services.Lifecycle.Management;
 using WindowsLauncher.Services.Lifecycle.Launchers;
+
+// Android интеграция
+using WindowsLauncher.Core.Interfaces.Android;
+using WindowsLauncher.Services.Android;
 
 // ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы
 using WpfApplication = System.Windows.Application;
@@ -332,6 +338,16 @@ namespace WindowsLauncher.UI
             // Сервис управления данными приложения
             services.AddScoped<ApplicationDataManager>();
 
+            // ===== ANDROID ИНТЕГРАЦИЯ СЕРВИСЫ =====
+            
+            // Android сервисы для WSA интеграции
+            services.AddSingleton<IProcessExecutor, ProcessExecutor>();
+            services.AddScoped<IWSAIntegrationService, WSAIntegrationService>();
+            services.AddScoped<IAndroidApplicationManager, AndroidApplicationManager>();
+            services.AddSingleton<IAndroidSubsystemService, AndroidSubsystemService>();
+            services.AddHostedService<AndroidSubsystemService>(provider => 
+                (AndroidSubsystemService)provider.GetRequiredService<IAndroidSubsystemService>());
+
             // ✅ ДОБАВЛЯЕМ ЛОКАЛИЗАЦИЮ КАК СИНГЛ
             services.AddSingleton<LocalizationHelper>(_ => LocalizationHelper.Instance);
 
@@ -363,6 +379,10 @@ namespace WindowsLauncher.UI
             services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
                 WindowsLauncher.UI.Services.TextEditorApplicationLauncher>();
             
+            // WSA лаунчер для Android приложений (APK)
+            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+                WindowsLauncher.Services.Lifecycle.Launchers.WSAApplicationLauncher>();
+            
             // Главный сервис управления жизненным циклом приложений
             services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLifecycleService, 
                 WindowsLauncher.Services.Lifecycle.ApplicationLifecycleService>();
@@ -386,6 +406,10 @@ namespace WindowsLauncher.UI
             // Сервис конфигурации языка
             services.AddSingleton<WindowsLauncher.Services.Configuration.ILanguageConfigurationService,
                 WindowsLauncher.Services.Configuration.LanguageConfigurationService>();
+
+            // WebView2 безопасность
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Security.IWebView2SecurityConfigurationService,
+                WindowsLauncher.Services.Security.WebView2SecurityConfigurationService>();
 
             // ViewModels
             services.AddTransient<MainViewModel>();

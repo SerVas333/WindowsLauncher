@@ -40,6 +40,16 @@ namespace WindowsLauncher.UI.ViewModels
         public string Category => _application.Category;
         public string ExecutablePath => _application.ExecutablePath;
         public bool IsEnabled => _application.IsEnabled;
+        
+        /// <summary>
+        /// Emoji иконка приложения
+        /// </summary>
+        public string IconText => _application.IconText ?? "📱";
+        
+        /// <summary>
+        /// Тип приложения для определения специальной логики
+        /// </summary>
+        public Core.Enums.ApplicationType Type => _application.Type;
 
         #endregion
 
@@ -80,6 +90,7 @@ namespace WindowsLauncher.UI.ViewModels
                     "media" => "Music",
                     "graphics" => "Paint",
                     "security" => "Shield",
+                    "android" => "Android", // Добавили поддержку Android категории
                     _ => "Cube"
                 };
             }
@@ -134,6 +145,7 @@ namespace WindowsLauncher.UI.ViewModels
                     "media" => "#673AB7",         // Глубокий фиолетовый
                     "graphics" => "#FF5722",      // Глубокий оранжевый
                     "security" => "#F44336",      // Красный
+                    "android" => "#3DDC84",       // Android зеленый
                     _ => "#666666"                // Серый по умолчанию
                 };
             }

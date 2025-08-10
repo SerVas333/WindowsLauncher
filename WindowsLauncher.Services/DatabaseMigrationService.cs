@@ -20,23 +20,27 @@ namespace WindowsLauncher.Services
         private readonly LauncherDbContext _context;
         private readonly IDatabaseConfigurationService _dbConfigService;
         private readonly ILogger<DatabaseMigrationService> _logger;
+        private readonly IApplicationVersionService _versionService;
         private readonly List<IDatabaseMigration> _migrations;
         
         public DatabaseMigrationService(
             LauncherDbContext context,
             IDatabaseConfigurationService dbConfigService,
-            ILogger<DatabaseMigrationService> logger)
+            ILogger<DatabaseMigrationService> logger,
+            IApplicationVersionService versionService)
         {
             _context = context;
             _dbConfigService = dbConfigService;
             _logger = logger;
+            _versionService = versionService;
             
             // Список всех миграций по порядку версий
             _migrations = new List<IDatabaseMigration>
             {
                 new InitialSchema(),        // v1.0.0.001
                 new AddEmailSupport(),      // v1.1.0.001
-                new UpdateCategories()      // v1.1.0.002
+                new UpdateCategories(),     // v1.1.0.002
+                new AddAndroidSupport()     // v1.2.0.001
             };
         }
         
@@ -112,6 +116,8 @@ namespace WindowsLauncher.Services
             
             await EnsureMigrationTableExistsAsync();
             
+            string? latestVersion = null;
+            
             foreach (var migration in pendingMigrations)
             {
                 _logger.LogInformation("Applying migration {Version}: {Name}", migration.Version, migration.Name);
@@ -120,6 +126,7 @@ namespace WindowsLauncher.Services
                 {
                     await migration.UpAsync(migrationContext, config.DatabaseType);
                     await RecordMigrationAsync(migration, config.DatabaseType);
+                    latestVersion = migration.Version;
                     
                     _logger.LogInformation("Successfully applied migration {Version}", migration.Version);
                 }
@@ -128,6 +135,13 @@ namespace WindowsLauncher.Services
                     _logger.LogError(ex, "Failed to apply migration {Version}: {Name}", migration.Version, migration.Name);
                     throw;
                 }
+            }
+            
+            // Обновляем текущую версию БД до последней применённой миграции
+            if (!string.IsNullOrEmpty(latestVersion))
+            {
+                await _versionService.SetDatabaseVersionAsync(latestVersion);
+                _logger.LogInformation("Updated database version to {Version}", latestVersion);
             }
             
             _logger.LogInformation("Applied {Count} migrations successfully", pendingMigrations.Count);
@@ -148,12 +162,22 @@ namespace WindowsLauncher.Services
                 .OrderBy(m => m.Version)
                 .ToList();
             
+            string? latestVersion = null;
+            
             foreach (var migration in targetMigrations)
             {
                 _logger.LogInformation("Applying migration {Version}: {Name}", migration.Version, migration.Name);
                 
                 await migration.UpAsync(migrationContext, config.DatabaseType);
                 await RecordMigrationAsync(migration, config.DatabaseType);
+                latestVersion = migration.Version;
+            }
+            
+            // Обновляем текущую версию БД до последней применённой миграции
+            if (!string.IsNullOrEmpty(latestVersion))
+            {
+                await _versionService.SetDatabaseVersionAsync(latestVersion);
+                _logger.LogInformation("Updated database version to {Version}", latestVersion);
             }
             
             _logger.LogInformation("Migrated to version {Version}", targetVersion);

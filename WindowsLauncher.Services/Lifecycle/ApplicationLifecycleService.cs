@@ -302,6 +302,30 @@ namespace WindowsLauncher.Services.Lifecycle
         
         private IApplicationLauncher? FindLauncherForApplication(Application application)
         {
+            _logger.LogDebug("Finding launcher for application {AppName} (Type: {Type}, Path: {Path})", 
+                application.Name, application.Type, application.ExecutablePath);
+            
+            // Логируем все доступные лаунчеры
+            _logger.LogDebug("Available launchers ({Count}): {Launchers}", 
+                _launchers.Count(), 
+                string.Join(", ", _launchers.Select(l => $"{l.GetType().Name}(Type={l.SupportedType}, Priority={l.Priority})")));
+            
+            // Проверяем каждый лаунчер отдельно для подробной диагностики
+            var debugResults = new List<string>();
+            foreach (var launcher in _launchers)
+            {
+                var typeMatch = launcher.SupportedType == application.Type;
+                var canLaunch = launcher.CanLaunch(application);
+                debugResults.Add($"{launcher.GetType().Name}: TypeMatch={typeMatch}, CanLaunch={canLaunch}");
+                
+                if (typeMatch && !canLaunch)
+                {
+                    _logger.LogDebug("Launcher {LauncherType} supports type {Type} but CanLaunch returned false for {AppName}", 
+                        launcher.GetType().Name, application.Type, application.Name);
+                }
+            }
+            _logger.LogDebug("Launcher evaluation results: {Results}", string.Join("; ", debugResults));
+            
             // Ищем лаунчеры, которые могут обработать данное приложение
             var suitableLaunchers = _launchers
                 .Where(launcher => launcher.SupportedType == application.Type && launcher.CanLaunch(application))
@@ -310,8 +334,10 @@ namespace WindowsLauncher.Services.Lifecycle
             
             if (suitableLaunchers.Count == 0)
             {
-                _logger.LogError("No suitable launcher found for application {AppName} (Type: {Type})", 
-                    application.Name, application.Type);
+                _logger.LogError("No suitable launcher found for application {AppName} (Type: {Type}). " +
+                    "Available launchers: {AvailableLaunchers}", 
+                    application.Name, application.Type,
+                    string.Join(", ", _launchers.Select(l => $"{l.GetType().Name}({l.SupportedType})")));
                 return null;
             }
             
@@ -320,6 +346,9 @@ namespace WindowsLauncher.Services.Lifecycle
                 _logger.LogDebug("Multiple launchers found for {AppName}, using highest priority: {LauncherType}", 
                     application.Name, suitableLaunchers[0].GetType().Name);
             }
+            
+            _logger.LogDebug("Selected launcher {LauncherType} for application {AppName}", 
+                suitableLaunchers[0].GetType().Name, application.Name);
             
             return suitableLaunchers[0];
         }

@@ -91,7 +91,6 @@ namespace WindowsLauncher.UI.ViewModels
             
             // Инициализация коллекции локальных пользователей
             LocalUsers = new ObservableCollection<User>();
-            AvailableTypes = Enum.GetValues<ApplicationType>().ToList();
             AvailableRoles = Enum.GetValues<UserRole>().ToList();
 
             // Настройка фильтрации
@@ -110,7 +109,24 @@ namespace WindowsLauncher.UI.ViewModels
         public ObservableCollection<ApplicationEditViewModel> Applications { get; }
         public ObservableCollection<string> AvailableCategories { get; }
         public ObservableCollection<string> AvailableGroups { get; }
-        public List<ApplicationType> AvailableTypes { get; }
+        /// <summary>
+        /// Доступные типы приложений (исключая Android когда он отключен)
+        /// </summary>
+        public List<ApplicationType> AvailableTypes
+        {
+            get
+            {
+                var allTypes = Enum.GetValues<ApplicationType>().ToList();
+                
+                // Исключаем Android тип когда Android подсистема отключена
+                if (!IsAndroidEnabled)
+                {
+                    allTypes.Remove(ApplicationType.Android);
+                }
+                
+                return allTypes;
+            }
+        }
         public List<UserRole> AvailableRoles { get; }
         public ICollectionView ApplicationsView { get; }
 
@@ -327,6 +343,26 @@ namespace WindowsLauncher.UI.ViewModels
                 if (SetProperty(ref _userSearchText, value))
                 {
                     // TODO: Добавить фильтрацию пользователей
+                }
+            }
+        }
+
+        /// <summary>
+        /// Проверяет, доступна ли Android функциональность (AndroidMode != Disabled)
+        /// </summary>
+        public bool IsAndroidEnabled
+        {
+            get
+            {
+                try
+                {
+                    var androidSubsystem = _serviceProvider.GetService<WindowsLauncher.Core.Interfaces.Android.IAndroidSubsystemService>();
+                    return androidSubsystem?.CurrentMode != AndroidMode.Disabled;
+                }
+                catch (Exception ex)
+                {
+                    Logger.LogWarning(ex, "Failed to check Android subsystem availability");
+                    return false; // По умолчанию скрываем Android функциональность при ошибках
                 }
             }
         }
@@ -2186,6 +2222,55 @@ namespace WindowsLauncher.UI.ViewModels
             set => SetProperty(ref _isNew, value);
         }
 
+        // APK метаданные (только для Android приложений)
+        public string? ApkPackageName
+        {
+            get => _application.ApkPackageName;
+            set => SetProperty(() => _application.ApkPackageName = value);
+        }
+
+        public string? ApkVersionCode
+        {
+            get => _application.ApkVersionCode?.ToString();
+            set => SetProperty(() => _application.ApkVersionCode = int.TryParse(value, out var code) ? code : null);
+        }
+
+        public string? ApkVersionName
+        {
+            get => _application.ApkVersionName;
+            set => SetProperty(() => _application.ApkVersionName = value);
+        }
+
+        public string? ApkMinSdk
+        {
+            get => _application.ApkMinSdk?.ToString();
+            set => SetProperty(() => _application.ApkMinSdk = int.TryParse(value, out var sdk) ? sdk : null);
+        }
+
+        public string? ApkTargetSdk
+        {
+            get => _application.ApkTargetSdk?.ToString();
+            set => SetProperty(() => _application.ApkTargetSdk = int.TryParse(value, out var sdk) ? sdk : null);
+        }
+
+        public string? ApkFilePath
+        {
+            get => _application.ApkFilePath;
+            set => SetProperty(() => _application.ApkFilePath = value);
+        }
+
+        public string? ApkFileHash
+        {
+            get => _application.ApkFileHash;
+            set => SetProperty(() => _application.ApkFileHash = value);
+        }
+
+        public string? ApkInstallStatus
+        {
+            get => _application.ApkInstallStatus;
+            set => SetProperty(() => _application.ApkInstallStatus = value);
+        }
+
         // UI helpers
         public string TypeDisplay => Type switch
         {
@@ -2193,6 +2278,7 @@ namespace WindowsLauncher.UI.ViewModels
             ApplicationType.Web => "Веб-ссылка",
             ApplicationType.Folder => "Папка",
             ApplicationType.ChromeApp => "Chrome App",
+            ApplicationType.Android => "Android APK",
             _ => Type.ToString()
         };
 
@@ -2229,7 +2315,16 @@ namespace WindowsLauncher.UI.ViewModels
                 SortOrder = SortOrder,
                 CreatedDate = CreatedDate,
                 ModifiedDate = ModifiedDate,
-                CreatedBy = CreatedBy
+                CreatedBy = CreatedBy,
+                // APK метаданные
+                ApkPackageName = ApkPackageName,
+                ApkVersionCode = _application.ApkVersionCode,
+                ApkVersionName = ApkVersionName,
+                ApkMinSdk = _application.ApkMinSdk,
+                ApkTargetSdk = _application.ApkTargetSdk,
+                ApkFilePath = ApkFilePath,
+                ApkFileHash = ApkFileHash,
+                ApkInstallStatus = ApkInstallStatus
             };
 
             return new ApplicationEditViewModel(copy) { IsNew = IsNew };
@@ -2248,6 +2343,16 @@ namespace WindowsLauncher.UI.ViewModels
             IsEnabled = other.IsEnabled;
             SortOrder = other.SortOrder;
             ModifiedDate = other.ModifiedDate;
+
+            // APK метаданные
+            ApkPackageName = other.ApkPackageName;
+            ApkVersionCode = other.ApkVersionCode;
+            ApkVersionName = other.ApkVersionName;
+            ApkMinSdk = other.ApkMinSdk;
+            ApkTargetSdk = other.ApkTargetSdk;
+            ApkFilePath = other.ApkFilePath;
+            ApkFileHash = other.ApkFileHash;
+            ApkInstallStatus = other.ApkInstallStatus;
 
             RequiredGroups.Clear();
             foreach (var group in other.RequiredGroups)

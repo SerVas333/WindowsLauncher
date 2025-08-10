@@ -411,6 +411,9 @@
   <data name="Category_Utilities" xml:space="preserve">
     <value>Утилиты</value>
   </data>
+  <data name="Category_Android" xml:space="preserve">
+    <value>Android</value>
+  </data>
   <data name="ConfirmLogout" xml:space="preserve">
     <value>Вы уверены, что хотите выйти?</value>
   </data>
