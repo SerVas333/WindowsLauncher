@@ -17,6 +17,7 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
     public class WSAApplicationLauncher : IApplicationLauncher
     {
         private readonly IAndroidApplicationManager _androidManager;
+        private readonly IAndroidSubsystemService _androidSubsystemService;
         private readonly ILogger<WSAApplicationLauncher> _logger;
         private readonly ConcurrentDictionary<string, ApplicationInstance> _runningInstances;
         private readonly Timer _cleanupTimer;
@@ -27,9 +28,11 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
 
         public WSAApplicationLauncher(
             IAndroidApplicationManager androidManager,
+            IAndroidSubsystemService androidSubsystemService,
             ILogger<WSAApplicationLauncher> logger)
         {
             _androidManager = androidManager ?? throw new ArgumentNullException(nameof(androidManager));
+            _androidSubsystemService = androidSubsystemService ?? throw new ArgumentNullException(nameof(androidSubsystemService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             
             _runningInstances = new ConcurrentDictionary<string, ApplicationInstance>();
@@ -91,6 +94,9 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
             
             _logger.LogInformation("Launching Android application: {ApplicationName} (ID: {ApplicationId}, Instance: {InstanceId})",
                 application.Name, application.Id, instanceId);
+
+            // Обновляем статус WSA перед запуском приложения
+            await _androidSubsystemService.RefreshWSAStatusAsync();
 
             try
             {

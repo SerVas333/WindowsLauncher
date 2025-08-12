@@ -18,6 +18,7 @@ namespace WindowsLauncher.Services.Android
         private readonly IWSAIntegrationService _wsaService;
         private readonly AndroidSubsystemConfiguration _config;
         private readonly Timer? _idleTimer;
+        private readonly Timer? _statusRefreshTimer;
         private DateTime _lastActivity = DateTime.Now;
         private bool _isPreloading = false;
         
@@ -46,6 +47,13 @@ namespace WindowsLauncher.Services.Android
             {
                 _idleTimer = new Timer(CheckIdleTimeoutCallback, null, 
                     TimeSpan.FromMinutes(5), TimeSpan.FromMinutes(5));
+            }
+
+            // Настройка таймера для периодического обновления статуса WSA
+            if (_config.Mode != AndroidMode.Disabled)
+            {
+                _statusRefreshTimer = new Timer(async _ => await RefreshWSAStatusAsync(), null,
+                    TimeSpan.FromSeconds(30), TimeSpan.FromSeconds(60)); // Первая проверка через 30 сек, затем каждые 60 сек
             }
         }
 
@@ -299,6 +307,60 @@ namespace WindowsLauncher.Services.Android
             return status;
         }
 
+        public async Task RefreshWSAStatusAsync()
+        {
+            try
+            {
+                _logger.LogDebug("Refreshing WSA status");
+
+                string newStatus = WSAStatus;
+                
+                switch (_config.Mode)
+                {
+                    case AndroidMode.Disabled:
+                        newStatus = "Disabled";
+                        break;
+
+                    case AndroidMode.OnDemand:
+                        bool isAvailable = await _wsaService.IsWSAAvailableAsync();
+                        newStatus = isAvailable ? "Available" : "Unavailable";
+                        break;
+
+                    case AndroidMode.Preload:
+                        bool available = await _wsaService.IsWSAAvailableAsync();
+                        if (!available)
+                        {
+                            newStatus = "Unavailable";
+                        }
+                        else
+                        {
+                            bool isRunning = await _wsaService.IsWSARunningAsync();
+                            newStatus = isRunning ? "Ready" : "Available";
+                        }
+                        break;
+                }
+
+                // Обновляем статус только если он изменился
+                if (WSAStatus != newStatus)
+                {
+                    var oldStatus = WSAStatus;
+                    WSAStatus = newStatus;
+                    _logger.LogInformation("WSA status updated: {OldStatus} -> {NewStatus}", oldStatus, WSAStatus);
+                    OnStatusChanged(WSAStatus);
+                }
+                else
+                {
+                    _logger.LogDebug("WSA status unchanged: {Status}", WSAStatus);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception occurred while refreshing WSA status");
+                WSAStatus = "Error";
+                OnStatusChanged(WSAStatus);
+            }
+        }
+
         // Методы IHostedService
         public async Task StartAsync(CancellationToken cancellationToken)
         {
@@ -311,6 +373,7 @@ namespace WindowsLauncher.Services.Android
             _logger.LogInformation("Stopping Android Subsystem Service");
 
             _idleTimer?.Dispose();
+            _statusRefreshTimer?.Dispose();
 
             if (_config.Mode == AndroidMode.Preload && await _wsaService.IsWSARunningAsync())
             {
@@ -328,7 +391,13 @@ namespace WindowsLauncher.Services.Android
 
         private void CheckIdleTimeoutCallback(object? state)
         {
-            _ = Task.Run(OptimizeResourceUsageAsync);
+            _ = Task.Run(OptimizeResourceUsageAsync).ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    _logger.LogError(task.Exception, "Error optimizing resource usage");
+                }
+            }, TaskScheduler.Default);
         }
 
         private bool HasSufficientMemory()

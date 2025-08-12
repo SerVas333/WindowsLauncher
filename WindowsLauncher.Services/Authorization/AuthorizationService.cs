@@ -32,7 +32,7 @@ namespace WindowsLauncher.Services.Authorization
             _cache = cache;
         }
 
-        public async Task<bool> CanAccessApplicationAsync(User user, Application application)
+        public Task<bool> CanAccessApplicationAsync(User user, Application application)
         {
             try
             {
@@ -40,14 +40,14 @@ namespace WindowsLauncher.Services.Authorization
                 var cacheKey = $"access_{user.Username}_{application.Id}";
                 if (_cache.TryGetValue(cacheKey, out bool cachedResult))
                 {
-                    return cachedResult;
+                    return Task.FromResult(cachedResult);
                 }
 
                 // Проверка активности приложения
                 if (!application.IsEnabled)
                 {
                     _logger.LogDebug("Application {AppName} is disabled", application.Name);
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 // Проверка минимальной роли
@@ -55,14 +55,14 @@ namespace WindowsLauncher.Services.Authorization
                 {
                     _logger.LogDebug("User {Username} role {UserRole} is below minimum required {MinRole} for app {AppName}",
                         user.Username, user.Role, application.MinimumRole, application.Name);
-                    return false;
+                    return Task.FromResult(false);
                 }
 
                 // Если группы не указаны - доступно всем с подходящей ролью
                 if (!application.RequiredGroups.Any())
                 {
                     _cache.Set(cacheKey, true, _cacheExpiry);
-                    return true;
+                    return Task.FromResult(true);
                 }
 
                 // Проверка пересечения групп пользователя и требуемых групп
@@ -77,13 +77,13 @@ namespace WindowsLauncher.Services.Authorization
                 // Кэшируем результат
                 _cache.Set(cacheKey, hasAccess, _cacheExpiry);
 
-                return hasAccess;
+                return Task.FromResult(hasAccess);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error checking access for user {Username} to application {AppName}",
                     user.Username, application.Name);
-                return false;
+                return Task.FromResult(false);
             }
         }
 

@@ -4,6 +4,7 @@ using System.Windows;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
+using WindowsLauncher.Core.Enums;
 using WindowsLauncher.Core.Models.Lifecycle;
 using WindowsLauncher.Services.Lifecycle.Windows;
 
@@ -77,7 +78,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Windows
         {
             // Arrange
             var windowHandle = new IntPtr(12345);
-            var windowState = WindowState.Maximized;
+            var windowState = ApplicationWindowState.Maximized;
 
             // Act & Assert - не должно выбрасывать исключение
             var result = await _windowManager.SetWindowStateAsync(windowHandle, windowState);
@@ -90,7 +91,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Windows
         {
             // Arrange
             var invalidHandle = IntPtr.Zero;
-            var windowState = WindowState.Normal;
+            var windowState = ApplicationWindowState.Normal;
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentException>(() => 
@@ -98,9 +99,9 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Windows
         }
 
         [Theory]
-        [InlineData((WindowState)999)]
-        [InlineData((WindowState)(-1))]
-        public async Task SetWindowStateAsync_WithInvalidWindowState_ShouldThrowArgumentException(WindowState invalidState)
+        [InlineData((ApplicationWindowState)999)]
+        [InlineData((ApplicationWindowState)(-1))]
+        public async Task SetWindowStateAsync_WithInvalidWindowState_ShouldThrowArgumentException(ApplicationWindowState invalidState)
         {
             // Arrange
             var windowHandle = new IntPtr(12345);
@@ -180,10 +181,10 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Windows
         }
 
         [Theory]
-        [InlineData(WindowState.Normal)]
-        [InlineData(WindowState.Minimized)]
-        [InlineData(WindowState.Maximized)]
-        public async Task SetWindowStateAsync_WithAllValidStates_ShouldNotThrow(WindowState state)
+        [InlineData(ApplicationWindowState.Normal)]
+        [InlineData(ApplicationWindowState.Minimized)]
+        [InlineData(ApplicationWindowState.Maximized)]
+        public async Task SetWindowStateAsync_WithAllValidStates_ShouldNotThrow(ApplicationWindowState state)
         {
             // Arrange
             var windowHandle = new IntPtr(12345);

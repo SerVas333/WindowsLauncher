@@ -97,10 +97,12 @@ namespace WindowsLauncher.Services
                 applicationVersion ??= GetApplicationVersion();
 
                 // Удаляем старую запись и добавляем новую
-                await _context.Database.ExecuteSqlRawAsync("DELETE FROM DATABASE_VERSION;");
-                await _context.Database.ExecuteSqlRawAsync($@"
+                await _context.Database.ExecuteSqlRawAsync("DELETE FROM DATABASE_VERSION");
+                
+                // Используем параметризованный запрос для предотвращения SQL injection
+                await _context.Database.ExecuteSqlAsync($@"
                     INSERT INTO DATABASE_VERSION (VERSION, APPLIED_AT, APPLICATION_VERSION) 
-                    VALUES ('{version}', {timestampValue}, '{applicationVersion}');");
+                    VALUES ({version}, {timestampValue}, {applicationVersion})");
 
                 _logger.LogInformation("Database version updated to {Version} for application {AppVersion}", 
                     version, applicationVersion);

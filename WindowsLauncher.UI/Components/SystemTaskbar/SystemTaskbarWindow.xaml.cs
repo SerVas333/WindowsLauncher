@@ -9,6 +9,8 @@ using WindowsLauncher.Core.Services;
 using WindowsLauncher.UI.Services;
 using WindowsLauncher.UI.Helpers;
 using WindowsLauncher.Core.Interfaces;
+using WindowsLauncher.Core.Interfaces.Android;
+using WindowsLauncher.Core.Enums;
 using WindowsLauncher.UI.ViewModels;
 
 namespace WindowsLauncher.UI.Components.SystemTaskbar
@@ -22,10 +24,87 @@ namespace WindowsLauncher.UI.Components.SystemTaskbar
         private readonly IServiceProvider? _serviceProvider;
         private readonly AppSwitcherService? _appSwitcherService;
         private readonly ShellModeDetectionService? _shellModeDetectionService;
+        private IAndroidSubsystemService? _androidSubsystemService;
         
         private DispatcherTimer? _clockTimer;
+        private DispatcherTimer? _wsaInitTimer;
         private ShellMode _currentShellMode = ShellMode.Normal;
         private bool _disposed = false;
+        private int _wsaInitRetryCount = 0;
+        private const int MAX_WSA_INIT_RETRIES = 5;
+        
+        // WSA Status properties для прямого управления
+        private bool _showWSAStatus = false;
+        private string _wsaStatusText = "Unknown";
+        private string _wsaStatusColor = "#666666";
+        private string _wsaStatusTooltip = "Android подсистема";
+
+        public bool ShowWSAStatus
+        {
+            get => _showWSAStatus;
+            private set
+            {
+                if (_showWSAStatus != value)
+                {
+                    _showWSAStatus = value;
+                    _logger?.LogDebug("WSA indicator visibility: {State}", value ? "Visible" : "Hidden");
+                    
+                    Dispatcher.BeginInvoke(() =>
+                    {
+                        if (WSAStatusIndicator != null)
+                        {
+                            WSAStatusIndicator.Visibility = value ? Visibility.Visible : Visibility.Collapsed;
+                        }
+                        else
+                        {
+                            _logger?.LogWarning("WSAStatusIndicator UI element is null - cannot update visibility");
+                        }
+                    });
+                }
+            }
+        }
+
+        public string WSAStatusText
+        {
+            get => _wsaStatusText;
+            private set
+            {
+                _wsaStatusText = value;
+                Dispatcher.BeginInvoke(() =>
+                {
+                    UpdateWSAStatusDisplay();
+                });
+            }
+        }
+
+        public string WSAStatusColor
+        {
+            get => _wsaStatusColor;
+            private set
+            {
+                _wsaStatusColor = value;
+                Dispatcher.BeginInvoke(() =>
+                {
+                    UpdateWSAStatusDisplay();
+                });
+            }
+        }
+
+        public string WSAStatusTooltip
+        {
+            get => _wsaStatusTooltip;
+            private set
+            {
+                _wsaStatusTooltip = value;
+                Dispatcher.BeginInvoke(() =>
+                {
+                    if (WSAStatusIndicator != null)
+                    {
+                        WSAStatusIndicator.ToolTip = value;
+                    }
+                });
+            }
+        }
 
         public SystemTaskbarWindow()
         {
@@ -39,6 +118,33 @@ namespace WindowsLauncher.UI.Components.SystemTaskbar
                 _logger = app.ServiceProvider.GetService<ILogger<SystemTaskbarWindow>>();
                 _appSwitcherService = app.ServiceProvider.GetService<AppSwitcherService>();
                 _shellModeDetectionService = app.ServiceProvider.GetService<ShellModeDetectionService>();
+                _androidSubsystemService = app.ServiceProvider.GetService<IAndroidSubsystemService>();
+                
+                // Диагностика сервисов
+                _logger?.LogDebug("SystemTaskbarWindow constructor: ServiceProvider available");
+                _logger?.LogDebug("Services resolved: AppSwitcher={AppSwitcher}, ShellMode={ShellMode}, Android={Android}", 
+                    _appSwitcherService != null, 
+                    _shellModeDetectionService != null, 
+                    _androidSubsystemService != null);
+                
+                // AndroidSubsystemService диагностика
+                if (_androidSubsystemService != null)
+                {
+                    _logger?.LogDebug("AndroidSubsystemService found in constructor: Mode={Mode}, Status={Status}", 
+                        _androidSubsystemService.CurrentMode, 
+                        _androidSubsystemService.WSAStatus);
+                }
+                else
+                {
+                    _logger?.LogWarning("AndroidSubsystemService is null in constructor - will attempt delayed initialization");
+                }
+                
+                // Устанавливаем DataContext на self для прямого binding
+                DataContext = this;
+            }
+            else
+            {
+                System.Diagnostics.Debug.WriteLine("SystemTaskbarWindow: ServiceProvider is null!");
             }
 
             InitializeWindow();
@@ -48,6 +154,8 @@ namespace WindowsLauncher.UI.Components.SystemTaskbar
         {
             try
             {
+                _logger?.LogDebug("SystemTaskbarWindow.InitializeWindow started");
+                
                 // Устанавливаем размеры и позицию панели задач
                 SetTaskbarPosition();
                 
@@ -57,10 +165,19 @@ namespace WindowsLauncher.UI.Components.SystemTaskbar
                 // Инициализируем состояние кнопки AppSwitcher
                 InitializeAppSwitcherButton();
                 
-                // Определяем режим Shell
-                _ = DetectShellModeAsync();
+                // Запускаем отложенную инициализацию WSA статуса
+                StartDelayedWSAInitialization();
                 
-                _logger?.LogInformation("SystemTaskbar initialized successfully");
+                // Определяем режим Shell
+                _ = DetectShellModeAsync().ContinueWith(task =>
+                {
+                    if (task.IsFaulted)
+                    {
+                        _logger?.LogError(task.Exception, "Error detecting shell mode");
+                    }
+                }, TaskScheduler.Default);
+                
+                _logger?.LogDebug("SystemTaskbar initialization completed");
             }
             catch (Exception ex)
             {
@@ -208,7 +325,13 @@ namespace WindowsLauncher.UI.Components.SystemTaskbar
                 }
 
                 // Запускаем периодическое обновление счетчика приложений
-                _ = StartAppCountUpdateTimerAsync();
+                _ = StartAppCountUpdateTimerAsync().ContinueWith(task =>
+                {
+                    if (task.IsFaulted)
+                    {
+                        _logger?.LogError(task.Exception, "Error starting app count update timer");
+                    }
+                }, TaskScheduler.Default);
             }
             catch (Exception ex)
             {
@@ -553,6 +676,291 @@ namespace WindowsLauncher.UI.Components.SystemTaskbar
 
         #endregion
 
+        #region WSA Delayed Initialization
+
+        /// <summary>
+        /// Запустить отложенную инициализацию WSA статуса
+        /// </summary>
+        private void StartDelayedWSAInitialization()
+        {
+            try
+            {
+                _logger?.LogDebug("Starting delayed WSA initialization - attempt in 2 seconds");
+                
+                // Создаем таймер для отложенной инициализации
+                _wsaInitTimer = new DispatcherTimer
+                {
+                    Interval = TimeSpan.FromSeconds(2) // Задержка 2 секунды
+                };
+                _wsaInitTimer.Tick += WSAInitTimer_Tick;
+                _wsaInitTimer.Start();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error starting delayed WSA initialization");
+            }
+        }
+
+        /// <summary>
+        /// Обработчик таймера отложенной инициализации WSA
+        /// </summary>
+        private async void WSAInitTimer_Tick(object? sender, EventArgs e)
+        {
+            try
+            {
+                _wsaInitRetryCount++;
+                _logger?.LogDebug("WSA initialization attempt #{Attempt} of {MaxAttempts}", _wsaInitRetryCount, MAX_WSA_INIT_RETRIES);
+                
+                // Останавливаем таймер
+                _wsaInitTimer?.Stop();
+                
+                // Пробуем получить AndroidSubsystemService заново
+                var androidService = _serviceProvider?.GetService<IAndroidSubsystemService>();
+                
+                if (androidService != null)
+                {
+                    _logger?.LogDebug("AndroidSubsystemService found on attempt #{Attempt}: Mode={Mode}, Status={Status}", 
+                        _wsaInitRetryCount, androidService.CurrentMode, androidService.WSAStatus);
+                    
+                    // Заменяем null сервис
+                    _androidSubsystemService = androidService;
+                    
+                    // Инициализируем WSA статус
+                    await InitializeWSAStatusAsync();
+                    
+                    // Останавливаем таймер - успех
+                    _wsaInitTimer = null;
+                }
+                else if (_wsaInitRetryCount < MAX_WSA_INIT_RETRIES)
+                {
+                    _logger?.LogDebug("AndroidSubsystemService still null on attempt #{Attempt}/{MaxAttempts}, retrying in 3 seconds", 
+                        _wsaInitRetryCount, MAX_WSA_INIT_RETRIES);
+                    
+                    // Перезапускаем таймер с увеличенной задержкой
+                    _wsaInitTimer.Interval = TimeSpan.FromSeconds(3);
+                    _wsaInitTimer.Start();
+                }
+                else
+                {
+                    _logger?.LogWarning("AndroidSubsystemService not available after {MaxRetries} attempts, hiding WSA indicator", MAX_WSA_INIT_RETRIES);
+                    _wsaInitTimer = null;
+                    ShowWSAStatus = false;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error during WSA initialization retry #{Attempt}", _wsaInitRetryCount);
+                
+                // Пробуем еще раз если не превысили лимит
+                if (_wsaInitRetryCount < MAX_WSA_INIT_RETRIES && _wsaInitTimer != null)
+                {
+                    _wsaInitTimer.Interval = TimeSpan.FromSeconds(5);
+                    _wsaInitTimer.Start();
+                }
+            }
+        }
+
+        #endregion
+
+        #region WSA Status Management
+
+        /// <summary>
+        /// Инициализировать статус WSA
+        /// </summary>
+        private async Task InitializeWSAStatusAsync()
+        {
+            try
+            {
+                _logger?.LogDebug("InitializeWSAStatusAsync started");
+                
+                if (_androidSubsystemService == null)
+                {
+                    _logger?.LogWarning("AndroidSubsystemService is null, WSA status disabled");
+                    ShowWSAStatus = false;
+                    return;
+                }
+
+                var mode = _androidSubsystemService.CurrentMode;
+                var currentStatus = _androidSubsystemService.WSAStatus;
+                
+                _logger?.LogDebug("AndroidSubsystemService configuration: Mode={Mode}, Status={Status}", mode, currentStatus);
+                
+                ShowWSAStatus = mode != AndroidMode.Disabled;
+
+                if (!ShowWSAStatus)
+                {
+                    _logger?.LogDebug("WSA disabled in configuration (mode: {Mode})", mode);
+                    return;
+                }
+
+                // Подписываемся на изменения статуса
+                _androidSubsystemService.StatusChanged += OnWSAStatusChanged;
+                _logger?.LogDebug("Subscribed to AndroidSubsystemService.StatusChanged event");
+
+                // Обновляем текущий статус
+                await UpdateWSAStatusAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error initializing WSA status in SystemTaskbar");
+                ShowWSAStatus = false;
+            }
+        }
+
+        /// <summary>
+        /// Обработчик изменения статуса WSA
+        /// </summary>
+        private async void OnWSAStatusChanged(object? sender, string status)
+        {
+            try
+            {
+                _logger?.LogDebug("WSA status changed event received: {Status}", status);
+                await UpdateWSAStatusAsync();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error handling WSA status change in SystemTaskbar");
+            }
+        }
+
+        /// <summary>
+        /// Обновить отображение статуса WSA
+        /// </summary>
+        private async Task UpdateWSAStatusAsync()
+        {
+            try
+            {
+                if (_androidSubsystemService == null || !ShowWSAStatus)
+                    return;
+
+                var status = _androidSubsystemService.WSAStatus;
+                var mode = _androidSubsystemService.CurrentMode;
+
+                // Устанавливаем текст и цвет в зависимости от статуса
+                WSAStatusText = GetLocalizedStatusText(status);
+                WSAStatusColor = GetStatusColor(status);
+                WSAStatusTooltip = GetStatusTooltip(status, mode);
+
+                _logger?.LogDebug("WSA status updated: {Status} -> '{Text}'", status, WSAStatusText);
+                
+                await Task.CompletedTask; // Make method properly async
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogError(ex, "Error updating WSA status display");
+            }
+        }
+
+        /// <summary>
+        /// Получить локализованный текст статуса
+        /// </summary>
+        private string GetLocalizedStatusText(string status)
+        {
+            return status switch
+            {
+                "Ready" => "Готов",
+                "Starting" => "Запуск",
+                "Stopping" => "Остановка",
+                "Error" => "Ошибка",
+                "Unavailable" => "Недоступен",
+                "Disabled" => "Отключен",
+                _ => status
+            };
+        }
+
+        /// <summary>
+        /// Получить цвет для статуса
+        /// </summary>
+        private string GetStatusColor(string status)
+        {
+            return status switch
+            {
+                "Ready" => "#4CAF50",           // Зеленый
+                "Starting" => "#FF9800",       // Оранжевый
+                "Stopping" => "#FF9800",       // Оранжевый  
+                "Error" => "#F44336",          // Красный
+                "Unavailable" => "#9E9E9E",    // Серый
+                "Disabled" => "#9E9E9E",       // Серый
+                _ => "#666666"                 // Темно-серый по умолчанию
+            };
+        }
+
+        /// <summary>
+        /// Получить tooltip для статуса
+        /// </summary>
+        private string GetStatusTooltip(string status, AndroidMode mode)
+        {
+            var modeText = mode switch
+            {
+                AndroidMode.Disabled => "Отключен",
+                AndroidMode.OnDemand => "По требованию", 
+                AndroidMode.Preload => "Предзагрузка",
+                _ => mode.ToString()
+            };
+
+            return $"Android подсистема: {GetLocalizedStatusText(status)}\nРежим: {modeText}";
+        }
+
+        /// <summary>
+        /// Обновить отображение WSA статуса в UI
+        /// </summary>
+        private void UpdateWSAStatusDisplay()
+        {
+            try
+            {
+                // Ищем TextBlock по имени
+                var textBlock = FindName("WSAStatusTextBlock") as System.Windows.Controls.TextBlock;
+                if (textBlock != null)
+                {
+                    textBlock.Text = WSAStatusText;
+                    textBlock.Foreground = new System.Windows.Media.SolidColorBrush(
+                        (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(WSAStatusColor));
+                }
+                else
+                {
+                    _logger?.LogWarning("WSAStatusTextBlock not found in UI - cannot update text display");
+                }
+
+                // Обновляем background Border в зависимости от статуса
+                UpdateWSABackgroundColor();
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Error updating WSA status display");
+            }
+        }
+
+
+        /// <summary>
+        /// Обновить цвет фона WSA индикатора
+        /// </summary>
+        private void UpdateWSABackgroundColor()
+        {
+            if (WSAStatusIndicator == null)
+                return;
+            
+            var backgroundColor = WSAStatusText switch
+            {
+                "Готов" => "#E8F5E8",      // Светло-зеленый
+                "Запуск" => "#FFF4E6",     // Светло-оранжевый
+                "Ошибка" => "#FFEBEE",     // Светло-красный
+                _ => "Transparent"         // Прозрачный по умолчанию
+            };
+
+            try
+            {
+                var brush = new System.Windows.Media.SolidColorBrush(
+                    (System.Windows.Media.Color)System.Windows.Media.ColorConverter.ConvertFromString(backgroundColor));
+                WSAStatusIndicator.Background = brush;
+            }
+            catch (Exception ex)
+            {
+                _logger?.LogWarning(ex, "Error setting WSA background color");
+            }
+        }
+
+        #endregion
+
         #region Cleanup
 
         protected override void OnClosed(EventArgs e)
@@ -562,11 +970,24 @@ namespace WindowsLauncher.UI.Components.SystemTaskbar
                 // Устанавливаем флаг для остановки таймера обновления приложений
                 _disposed = true;
                 
-                // Останавливаем таймер
+                // Останавливаем таймер времени
                 if (_clockTimer != null)
                 {
                     _clockTimer.Stop();
                     _clockTimer = null;
+                }
+                
+                // Останавливаем таймер WSA инициализации
+                if (_wsaInitTimer != null)
+                {
+                    _wsaInitTimer.Stop();
+                    _wsaInitTimer = null;
+                }
+                
+                // Отписываемся от событий WSA
+                if (_androidSubsystemService != null)
+                {
+                    _androidSubsystemService.StatusChanged -= OnWSAStatusChanged;
                 }
                 
                 _logger?.LogInformation("SystemTaskbar closed and cleaned up");

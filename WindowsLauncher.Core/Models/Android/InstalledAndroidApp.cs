@@ -51,6 +51,34 @@ namespace WindowsLauncher.Core.Models.Android
         public DateTime? InstalledAt { get; set; }
 
         /// <summary>
+        /// Время установки приложения (alias для совместимости)
+        /// </summary>
+        public DateTime? InstallDate
+        {
+            get => InstalledAt;
+            set => InstalledAt = value;
+        }
+
+        /// <summary>
+        /// Время последнего обновления приложения
+        /// </summary>
+        public DateTime? LastUpdateDate { get; set; }
+
+        /// <summary>
+        /// Время последнего запуска приложения (alias для LastUsedAt)
+        /// </summary>
+        public DateTime? LastLaunchedAt
+        {
+            get => LastUsedAt;
+            set => LastUsedAt = value;
+        }
+
+        /// <summary>
+        /// Запущено ли приложение в данный момент
+        /// </summary>
+        public bool IsRunning { get; set; }
+
+        /// <summary>
         /// Путь к APK файлу (если известен)
         /// </summary>
         public string? ApkPath { get; set; }

@@ -386,14 +386,14 @@ namespace WindowsLauncher.UI.Components.WebView2
 
         private void MinimizeButton_Click(object sender, RoutedEventArgs e)
         {
-            WindowState = WindowState.Minimized;
+            WindowState = System.Windows.WindowState.Minimized;
         }
 
         private void MaximizeButton_Click(object sender, RoutedEventArgs e)
         {
-            WindowState = WindowState == WindowState.Maximized 
-                ? WindowState.Normal 
-                : WindowState.Maximized;
+            WindowState = WindowState == System.Windows.WindowState.Maximized 
+                ? System.Windows.WindowState.Normal 
+                : System.Windows.WindowState.Maximized;
         }
 
         private void CloseButton_Click(object sender, RoutedEventArgs e)
@@ -413,9 +413,9 @@ namespace WindowsLauncher.UI.Components.WebView2
         {
             try
             {
-                if (WindowState == WindowState.Minimized)
+                if (WindowState == System.Windows.WindowState.Minimized)
                 {
-                    WindowState = WindowState.Normal;
+                    WindowState = System.Windows.WindowState.Normal;
                 }
 
                 Activate();
@@ -533,9 +533,9 @@ namespace WindowsLauncher.UI.Components.WebView2
 
             return WindowState switch
             {
-                WindowState.Minimized => ApplicationState.Minimized,
-                WindowState.Maximized => ApplicationState.Running,
-                WindowState.Normal => ApplicationState.Running,
+                System.Windows.WindowState.Minimized => ApplicationState.Minimized,
+                System.Windows.WindowState.Maximized => ApplicationState.Running,
+                System.Windows.WindowState.Normal => ApplicationState.Running,
                 _ => ApplicationState.Running
             };
         }

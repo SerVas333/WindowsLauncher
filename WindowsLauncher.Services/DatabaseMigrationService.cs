@@ -39,7 +39,7 @@ namespace WindowsLauncher.Services
             {
                 new InitialSchema(),        // v1.0.0.001
                 new AddEmailSupport(),      // v1.1.0.001
-                new UpdateCategories(),     // v1.1.0.002
+                //new UpdateCategories(),     // v1.1.0.002
                 new AddAndroidSupport()     // v1.2.0.001
             };
         }
@@ -51,7 +51,10 @@ namespace WindowsLauncher.Services
         
         public async Task<IReadOnlyList<string>> GetAppliedMigrationsAsync()
         {
-            await EnsureMigrationTableExistsAsync();
+            if (!await CheckMigrationTableExistsAsync())
+            {
+                return new List<string>(); // Таблица не существует - возвращаем пустой список
+            }
             
             var config = await _dbConfigService.GetConfigurationAsync();
             var migrationContext = new DatabaseMigrationContext(_context, config.DatabaseType);
@@ -70,7 +73,7 @@ namespace WindowsLauncher.Services
                 
                 if (command.Connection?.State != System.Data.ConnectionState.Open)
                 {
-                    await command.Connection.OpenAsync();
+                    await command.Connection!.OpenAsync();
                 }
                 
                 var appliedMigrations = new List<string>();
@@ -114,7 +117,11 @@ namespace WindowsLauncher.Services
             var config = await _dbConfigService.GetConfigurationAsync();
             var migrationContext = new DatabaseMigrationContext(_context, config.DatabaseType);
             
-            await EnsureMigrationTableExistsAsync();
+            // Проверяем что таблица миграций существует (создается в InitialSchema)
+            if (!await CheckMigrationTableExistsAsync())
+            {
+                _logger.LogWarning("Migration table does not exist, this should only happen on first run before InitialSchema");
+            }
             
             string? latestVersion = null;
             
@@ -154,7 +161,11 @@ namespace WindowsLauncher.Services
             var config = await _dbConfigService.GetConfigurationAsync();
             var migrationContext = new DatabaseMigrationContext(_context, config.DatabaseType);
             
-            await EnsureMigrationTableExistsAsync();
+            // Проверяем что таблица миграций существует (создается в InitialSchema)
+            if (!await CheckMigrationTableExistsAsync())
+            {
+                _logger.LogWarning("Migration table does not exist, this should only happen on first run before InitialSchema");
+            }
             
             var targetMigrations = allMigrations
                 .Where(m => string.Compare(m.Version, targetVersion, StringComparison.Ordinal) <= 0)
@@ -189,7 +200,12 @@ namespace WindowsLauncher.Services
             return pendingMigrations.Count == 0;
         }
         
-        public async Task EnsureMigrationTableExistsAsync()
+        /// <summary>
+        /// Проверяет существование таблицы истории миграций
+        /// ПРИМЕЧАНИЕ: Таблица создается в InitialSchema миграции, а не здесь
+        /// </summary>
+        /// <returns>true если таблица существует</returns>
+        private async Task<bool> CheckMigrationTableExistsAsync()
         {
             var config = await _dbConfigService.GetConfigurationAsync();
             var migrationContext = new DatabaseMigrationContext(_context, config.DatabaseType);
@@ -201,57 +217,20 @@ namespace WindowsLauncher.Services
                 _ => throw new NotSupportedException($"Database type {config.DatabaseType} not supported")
             };
             
-            if (await migrationContext.TableExistsAsync(tableName))
-            {
-                return;
-            }
-            
-            var createTableSql = config.DatabaseType switch
-            {
-                DatabaseType.SQLite => @"
-                    CREATE TABLE IF NOT EXISTS MIGRATION_HISTORY (
-                        VERSION TEXT PRIMARY KEY NOT NULL,
-                        NAME TEXT NOT NULL,
-                        DESCRIPTION TEXT,
-                        APPLIED_AT TEXT NOT NULL
-                    )",
-                DatabaseType.Firebird => @"
-                    CREATE TABLE MIGRATION_HISTORY (
-                        VERSION VARCHAR(50) PRIMARY KEY NOT NULL,
-                        NAME VARCHAR(255) NOT NULL,
-                        DESCRIPTION VARCHAR(1000),
-                        APPLIED_AT TIMESTAMP NOT NULL
-                    )",
-                _ => throw new NotSupportedException($"Database type {config.DatabaseType} not supported")
-            };
-            
-            try
-            {
-                await migrationContext.ExecuteSqlAsync(createTableSql);
-                _logger.LogInformation("Created migration history table for {DatabaseType}", config.DatabaseType);
-            }
-            catch (Microsoft.Data.Sqlite.SqliteException ex) when (ex.SqliteErrorCode == 1 && config.DatabaseType == DatabaseType.SQLite)
-            {
-                // Table already exists - this is expected in concurrent scenarios
-                _logger.LogDebug("Migration history table already exists for {DatabaseType} (concurrent creation)", config.DatabaseType);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Failed to create migration history table for {DatabaseType}", config.DatabaseType);
-                throw;
-            }
+            return await migrationContext.TableExistsAsync(tableName);
         }
         
         private async Task RecordMigrationAsync(IDatabaseMigration migration, DatabaseType databaseType)
         {
+            // Используем полную схему таблицы с ID и ROLLBACK_SCRIPT колонками (как в InitialSchema)
             var sql = databaseType switch
             {
                 DatabaseType.SQLite => @"
-                    INSERT INTO MIGRATION_HISTORY (VERSION, NAME, DESCRIPTION, APPLIED_AT)
-                    VALUES (@p0, @p1, @p2, @p3)",
+                    INSERT INTO MIGRATION_HISTORY (VERSION, NAME, DESCRIPTION, APPLIED_AT, ROLLBACK_SCRIPT)
+                    VALUES (@p0, @p1, @p2, @p3, @p4)",
                 DatabaseType.Firebird => @"
-                    INSERT INTO MIGRATION_HISTORY (VERSION, NAME, DESCRIPTION, APPLIED_AT)
-                    VALUES (@p0, @p1, @p2, @p3)",
+                    INSERT INTO MIGRATION_HISTORY (VERSION, NAME, DESCRIPTION, APPLIED_AT, ROLLBACK_SCRIPT)
+                    VALUES (@p0, @p1, @p2, @p3, @p4)",
                 _ => throw new NotSupportedException($"Database type {databaseType} not supported")
             };
             
@@ -285,9 +264,14 @@ namespace WindowsLauncher.Services
             p3.Value = appliedAt;
             command.Parameters.Add(p3);
             
+            var p4 = command.CreateParameter();
+            p4.ParameterName = "@p4";
+            p4.Value = (object?)null ?? DBNull.Value; // ROLLBACK_SCRIPT пока null (future feature)
+            command.Parameters.Add(p4);
+            
             if (command.Connection?.State != System.Data.ConnectionState.Open)
             {
-                await command.Connection.OpenAsync();
+                await command.Connection!.OpenAsync();
             }
             
             await command.ExecuteNonQueryAsync();

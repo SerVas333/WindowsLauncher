@@ -51,6 +51,11 @@ namespace WindowsLauncher.Core.Models.Lifecycle
         public bool IsResponding { get; set; } = true;
         
         /// <summary>
+        /// Процесс работает (алиас для IsAlive для совместимости с тестами)
+        /// </summary>
+        public bool IsRunning => IsAlive;
+        
+        /// <summary>
         /// Процесс завершился
         /// </summary>
         public bool HasExited { get; set; }

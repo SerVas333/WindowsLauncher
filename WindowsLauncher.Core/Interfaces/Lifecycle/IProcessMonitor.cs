@@ -87,6 +87,46 @@ namespace WindowsLauncher.Core.Interfaces.Lifecycle
         
         #endregion
 
+        #region Мониторинг и управление
+        
+        /// <summary>
+        /// Запустить мониторинг процессов
+        /// </summary>
+        /// <returns>Задача запуска мониторинга</returns>
+        Task StartMonitoringAsync();
+        
+        /// <summary>
+        /// Остановить мониторинг процессов
+        /// </summary>
+        /// <returns>Задача остановки мониторинга</returns>
+        Task StopMonitoringAsync();
+        
+        /// <summary>
+        /// Выполнить очистку ресурсов монитора
+        /// </summary>
+        /// <returns>Задача очистки</returns>
+        Task CleanupAsync();
+        
+        /// <summary>
+        /// Проверить, активен ли мониторинг
+        /// </summary>
+        bool IsMonitoring { get; }
+        
+        /// <summary>
+        /// Получить все отслеживаемые процессы
+        /// </summary>
+        /// <returns>Список информации о процессах</returns>
+        Task<IReadOnlyList<ProcessInfo>> GetAllProcessesAsync();
+        
+        /// <summary>
+        /// Проверить, работает ли процесс
+        /// </summary>
+        /// <param name="processId">ID процесса</param>
+        /// <returns>true если процесс работает</returns>
+        Task<bool> IsProcessRunningAsync(int processId);
+        
+        #endregion
+        
         #region Поиск процессов
         
         /// <summary>

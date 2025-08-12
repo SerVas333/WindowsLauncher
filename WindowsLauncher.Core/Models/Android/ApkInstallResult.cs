@@ -1,3 +1,5 @@
+using WindowsLauncher.Core.Enums;
+
 namespace WindowsLauncher.Core.Models.Android
 {
     /// <summary>
@@ -14,6 +16,21 @@ namespace WindowsLauncher.Core.Models.Android
         /// Package name установленного приложения
         /// </summary>
         public string? PackageName { get; set; }
+
+        /// <summary>
+        /// Метод установки, который был использован
+        /// </summary>
+        public InstallationMethod InstallationMethod { get; set; } = InstallationMethod.Unknown;
+
+        /// <summary>
+        /// Список установленных пакетов (для Split/XAPK установок может быть несколько)
+        /// </summary>
+        public List<string> InstalledPackages { get; set; } = new();
+
+        /// <summary>
+        /// Время выполнения установки в миллисекундах
+        /// </summary>
+        public long InstallDurationMs { get; set; }
 
         /// <summary>
         /// Сообщение об ошибке, если установка не удалась

@@ -595,7 +595,7 @@ namespace WindowsLauncher.Services.Authentication
                 }
 
                 // Проверяем учетные данные
-                if (config.ServiceAdmin.Username != username)
+                if (config.ServiceAdmin?.Username != username)
                 {
                     await RecordFailedServiceAdminLogin(config);
                     return AuthenticationResult.Failure(AuthenticationStatus.InvalidCredentials, "Неверные учетные данные");

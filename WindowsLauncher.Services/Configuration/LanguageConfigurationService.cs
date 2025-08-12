@@ -83,7 +83,7 @@ namespace WindowsLauncher.Services.Configuration
         /// <summary>
         /// Инициализировать язык при запуске приложения
         /// </summary>
-        public async Task<string> InitializeLanguageAsync()
+        public Task<string> InitializeLanguageAsync()
         {
             try
             {
@@ -127,13 +127,12 @@ namespace WindowsLauncher.Services.Configuration
 
                 _logger.LogInformation("Language initialization completed: '{Language}'", targetLanguage);
                 
-                await Task.CompletedTask; // Для совместимости с async интерфейсом
-                return targetLanguage;
+                return Task.FromResult(targetLanguage);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error initializing language configuration");
-                return "en-US"; // Возвращаем fallback язык
+                return Task.FromResult("en-US"); // Возвращаем fallback язык
             }
         }
 

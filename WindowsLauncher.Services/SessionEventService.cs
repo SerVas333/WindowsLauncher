@@ -46,7 +46,17 @@ namespace WindowsLauncher.Services
                 _logger.LogInformation("Starting Windows session event monitoring");
 
                 // Инициализируем режим Shell при первом запуске
-                _ = Task.Run(async () => await InitializeShellModeAsync());
+                _ = Task.Run(async () =>
+                {
+                    try
+                    {
+                        await InitializeShellModeAsync();
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogError(ex, "Error initializing shell mode");
+                    }
+                });
 
                 // Регистрируем обработчики системных событий Windows
                 SystemEvents.SessionEnding += OnSessionEnding;

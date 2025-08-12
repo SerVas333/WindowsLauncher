@@ -73,10 +73,8 @@ namespace WindowsLauncher.UI.Services
         /// <summary>
         /// Скрыть переключатель приложений
         /// </summary>
-        public async Task HideAppSwitcherAsync()
+        public Task HideAppSwitcherAsync()
         {
-            await Task.CompletedTask;
-            
             try
             {
                 if (_switcherWindow != null && _switcherWindow.IsVisible)
@@ -89,6 +87,8 @@ namespace WindowsLauncher.UI.Services
             {
                 _logger.LogError(ex, "Error hiding application switcher");
             }
+            
+            return Task.CompletedTask;
         }
 
         /// <summary>
@@ -96,8 +96,6 @@ namespace WindowsLauncher.UI.Services
         /// </summary>
         public async Task SelectNextApplicationAsync()
         {
-            await Task.CompletedTask;
-            
             try
             {
                 if (_switcherWindow != null && _switcherWindow.IsVisible)
@@ -122,8 +120,6 @@ namespace WindowsLauncher.UI.Services
         /// </summary>
         public async Task SelectPreviousApplicationAsync()
         {
-            await Task.CompletedTask;
-            
             try
             {
                 if (_switcherWindow != null && _switcherWindow.IsVisible)

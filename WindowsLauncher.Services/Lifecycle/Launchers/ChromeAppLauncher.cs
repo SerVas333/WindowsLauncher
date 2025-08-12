@@ -541,44 +541,44 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
             }
         }
 
-        public async Task<bool> SwitchToAsync(string instanceId)
+        public Task<bool> SwitchToAsync(string instanceId)
         {
             try
             {
                 _logger.LogDebug("Switching to Chrome App instance {InstanceId}", instanceId);
-                return await Task.FromResult(false);
+                return Task.FromResult(false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error switching to Chrome App instance {InstanceId}", instanceId);
-                return false;
+                return Task.FromResult(false);
             }
         }
 
-        public async Task<bool> TerminateAsync(string instanceId, bool force = false)
+        public Task<bool> TerminateAsync(string instanceId, bool force = false)
         {
             try
             {
                 _logger.LogDebug("Terminating Chrome App instance {InstanceId} (Force: {Force})", instanceId, force);
-                return await Task.FromResult(false);
+                return Task.FromResult(false);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error terminating Chrome App instance {InstanceId}", instanceId);
-                return false;
+                return Task.FromResult(false);
             }
         }
 
-        public async Task<IReadOnlyList<ApplicationInstance>> GetActiveInstancesAsync()
+        public Task<IReadOnlyList<ApplicationInstance>> GetActiveInstancesAsync()
         {
             try
             {
-                return await Task.FromResult(new List<ApplicationInstance>().AsReadOnly());
+                return Task.FromResult<IReadOnlyList<ApplicationInstance>>(new List<ApplicationInstance>().AsReadOnly());
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error getting active Chrome App instances");
-                return new List<ApplicationInstance>().AsReadOnly();
+                return Task.FromResult<IReadOnlyList<ApplicationInstance>>(new List<ApplicationInstance>().AsReadOnly());
             }
         }
         

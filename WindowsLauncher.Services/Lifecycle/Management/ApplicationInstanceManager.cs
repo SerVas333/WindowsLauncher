@@ -27,6 +27,10 @@ namespace WindowsLauncher.Services.Lifecycle.Management
         public event EventHandler<ApplicationInstanceEventArgs>? InstanceAdded;
         public event EventHandler<ApplicationInstanceEventArgs>? InstanceRemoved;  
         public event EventHandler<ApplicationInstanceEventArgs>? InstanceUpdated;
+        public event EventHandler<ApplicationInstanceEventArgs>? InstanceStarted;
+        public event EventHandler<ApplicationInstanceEventArgs>? InstanceStopped;
+        public event EventHandler<ApplicationInstanceEventArgs>? InstanceStateChanged;
+        public event EventHandler<ApplicationInstanceEventArgs>? InstanceActivated;
         public event EventHandler<EventArgs>? CollectionCleared;
         
         public ApplicationInstanceManager(ILogger<ApplicationInstanceManager> logger)
@@ -619,6 +623,159 @@ namespace WindowsLauncher.Services.Lifecycle.Management
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error raising CollectionCleared event");
+            }
+        }
+        
+        #endregion
+        
+        #region Дополнительные методы для совместимости с тестами
+        
+        /// <summary>
+        /// Получить все экземпляры (алиас для GetAllInstancesAsync)
+        /// </summary>
+        /// <returns>Коллекция всех экземпляров</returns>
+        public async Task<IReadOnlyList<ApplicationInstance>> GetAllAsync()
+        {
+            return await GetAllInstancesAsync();
+        }
+        
+        /// <summary>
+        /// Переключиться на указанный экземпляр приложения
+        /// </summary>
+        /// <param name="instanceId">ID экземпляра</param>
+        /// <returns>true если переключение успешно</returns>
+        public async Task<bool> SwitchToAsync(string instanceId)
+        {
+            var instance = await GetInstanceAsync(instanceId);
+            if (instance == null)
+            {
+                _logger.LogWarning("Cannot switch to non-existent instance {InstanceId}", instanceId);
+                return false;
+            }
+            
+            _logger.LogInformation("Switching to instance {InstanceId} ({AppName})", instanceId, instance.Application?.Name);
+            
+            // Генерируем событие активации
+            try
+            {
+                lock (_eventLock)
+                {
+                    var args = ApplicationInstanceEventArgs.StateChanged(instance, instance.State, ApplicationState.Running, 
+                        "Switched to by user", "ApplicationInstanceManager");
+                    InstanceActivated?.Invoke(this, args);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error raising InstanceActivated event for {InstanceId}", instanceId);
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Завершить экземпляр приложения
+        /// </summary>
+        /// <param name="instanceId">ID экземпляра</param>
+        /// <returns>true если завершение успешно</returns>
+        public async Task<bool> TerminateAsync(string instanceId)
+        {
+            var instance = await GetInstanceAsync(instanceId);
+            if (instance == null)
+            {
+                _logger.LogWarning("Cannot terminate non-existent instance {InstanceId}", instanceId);
+                return false;
+            }
+            
+            _logger.LogInformation("Terminating instance {InstanceId} ({AppName})", instanceId, instance.Application?.Name);
+            
+            // Обновляем состояние
+            var previousState = instance.State;
+            instance.State = ApplicationState.Terminated;
+            instance.EndTime = DateTime.Now;
+            
+            await UpdateInstanceAsync(instance);
+            
+            // Генерируем событие остановки
+            try
+            {
+                lock (_eventLock)
+                {
+                    var args = ApplicationInstanceEventArgs.StateChanged(instance, previousState, ApplicationState.Terminated, 
+                        "Terminated by manager", "ApplicationInstanceManager");
+                    InstanceStopped?.Invoke(this, args);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error raising InstanceStopped event for {InstanceId}", instanceId);
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Принудительно завершить экземпляр приложения
+        /// </summary>
+        /// <param name="instanceId">ID экземпляра</param>
+        /// <returns>true если завершение успешно</returns>
+        public async Task<bool> ForceTerminateAsync(string instanceId)
+        {
+            var instance = await GetInstanceAsync(instanceId);
+            if (instance == null)
+            {
+                _logger.LogWarning("Cannot force terminate non-existent instance {InstanceId}", instanceId);
+                return false;
+            }
+            
+            _logger.LogWarning("Force terminating instance {InstanceId} ({AppName})", instanceId, instance.Application?.Name);
+            
+            // Обновляем состояние с пометкой принудительного завершения
+            var previousState = instance.State;
+            instance.State = ApplicationState.Terminated;
+            instance.EndTime = DateTime.Now;
+            
+            await UpdateInstanceAsync(instance);
+            
+            // Генерируем событие остановки
+            try
+            {
+                lock (_eventLock)
+                {
+                    var args = ApplicationInstanceEventArgs.StateChanged(instance, previousState, ApplicationState.Terminated, 
+                        "Force terminated by manager", "ApplicationInstanceManager");
+                    InstanceStopped?.Invoke(this, args);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error raising InstanceStopped event for force terminated {InstanceId}", instanceId);
+            }
+            
+            return true;
+        }
+        
+        /// <summary>
+        /// Выполнить очистку ресурсов менеджера
+        /// </summary>
+        /// <returns>Задача очистки</returns>
+        public async Task CleanupAsync()
+        {
+            _logger.LogInformation("Starting ApplicationInstanceManager cleanup");
+            
+            await _semaphore.WaitAsync();
+            try
+            {
+                var instanceCount = _instances.Count;
+                _instances.Clear();
+                
+                RaiseCollectionCleared();
+                
+                _logger.LogInformation("ApplicationInstanceManager cleanup completed, cleared {Count} instances", instanceCount);
+            }
+            finally
+            {
+                _semaphore.Release();
             }
         }
         

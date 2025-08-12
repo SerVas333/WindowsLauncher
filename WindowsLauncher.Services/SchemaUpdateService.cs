@@ -79,8 +79,17 @@ namespace WindowsLauncher.Services
                     _ => throw new NotSupportedException($"Database type {databaseType} is not supported")
                 };
 
-                var result = await _context.Database.ExecuteSqlRawAsync($"SELECT 1 FROM ({checkSql}) t WHERE t.count > 0");
-                return true; // Если запрос выполнился без ошибки, колонка существует
+                // Используем безопасный подход без интерполяции строк
+                using var command = _context.Database.GetDbConnection().CreateCommand();
+                command.CommandText = checkSql;
+                
+                if (command.Connection?.State != System.Data.ConnectionState.Open)
+                {
+                    await command.Connection.OpenAsync();
+                }
+                
+                var result = await command.ExecuteScalarAsync();
+                return result != null && Convert.ToInt32(result) > 0;
             }
             catch
             {

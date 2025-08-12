@@ -22,19 +22,17 @@ namespace WindowsLauncher.Core.Services
         /// <summary>
         /// Определить текущий режим работы приложения
         /// </summary>
-        public async Task<ShellMode> DetectShellModeAsync()
+        public Task<ShellMode> DetectShellModeAsync()
         {
-            await Task.CompletedTask;
-
             try
             {
                 // Проверяем несколько индикаторов Shell режима
                 
                 // 1. Проверяем реестр - настроен ли WindowsLauncher как Shell
-                if (await IsRegisteredAsShellAsync())
+                if (IsRegisteredAsShell())
                 {
                     _logger.LogInformation("Detected Shell mode: Application is registered as Windows Shell");
-                    return ShellMode.Shell;
+                    return Task.FromResult(ShellMode.Shell);
                 }
 
                 // 2. Проверяем переменную окружения (можно задать вручную)
@@ -43,7 +41,7 @@ namespace WindowsLauncher.Core.Services
                     Enum.TryParse<ShellMode>(shellModeEnv, true, out var envMode))
                 {
                     _logger.LogInformation("Detected Shell mode from environment variable: {Mode}", envMode);
-                    return envMode;
+                    return Task.FromResult(envMode);
                 }
 
                 // 3. Проверяем аргументы командной строки
@@ -54,34 +52,33 @@ namespace WindowsLauncher.Core.Services
                         arg.Equals("/shell", StringComparison.OrdinalIgnoreCase))
                     {
                         _logger.LogInformation("Detected Shell mode from command line argument");
-                        return ShellMode.Shell;
+                        return Task.FromResult(ShellMode.Shell);
                     }
                 }
 
                 // 4. Проверяем наличие explorer.exe процесса (если нет - возможно Shell режим)
-                if (!await IsExplorerRunningAsync())
+                if (!IsExplorerRunning())
                 {
                     _logger.LogInformation("Explorer.exe not detected - assuming Shell mode");
-                    return ShellMode.Shell;
+                    return Task.FromResult(ShellMode.Shell);
                 }
 
                 // По умолчанию - обычный режим
                 _logger.LogInformation("Detected Normal mode (default)");
-                return ShellMode.Normal;
+                return Task.FromResult(ShellMode.Normal);
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error detecting shell mode, defaulting to Normal");
-                return ShellMode.Normal;
+                return Task.FromResult(ShellMode.Normal);
             }
         }
 
         /// <summary>
         /// Проверить, зарегистрирован ли WindowsLauncher как Shell в реестре
         /// </summary>
-        private async Task<bool> IsRegisteredAsShellAsync()
+        private bool IsRegisteredAsShell()
         {
-            await Task.CompletedTask;
 
             try
             {
@@ -117,9 +114,8 @@ namespace WindowsLauncher.Core.Services
         /// <summary>
         /// Проверить, запущен ли процесс explorer.exe
         /// </summary>
-        private async Task<bool> IsExplorerRunningAsync()
+        private bool IsExplorerRunning()
         {
-            await Task.CompletedTask;
 
             try
             {

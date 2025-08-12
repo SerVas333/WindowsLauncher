@@ -6,6 +6,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Xunit;
+using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Interfaces.Lifecycle;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Core.Models.Lifecycle;
@@ -27,6 +28,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle
         private readonly Mock<IApplicationLauncher> _mockDesktopLauncher;
         private readonly Mock<IApplicationLauncher> _mockChromeLauncher;
         private readonly Mock<ILogger<ApplicationLifecycleService>> _mockLogger;
+        private readonly Mock<IAuditService> _mockAuditService;
         private readonly ApplicationLifecycleService _service;
         private readonly List<IApplicationLauncher> _launchers;
 
@@ -39,6 +41,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle
             _mockDesktopLauncher = new Mock<IApplicationLauncher>();
             _mockChromeLauncher = new Mock<IApplicationLauncher>();
             _mockLogger = new Mock<ILogger<ApplicationLifecycleService>>();
+            _mockAuditService = new Mock<IAuditService>();
 
             // Настраиваем поведение лаунчеров
             _mockDesktopLauncher.Setup(l => l.CanLaunch(It.Is<Application>(app => app.Type == ApplicationType.Desktop)))
@@ -50,11 +53,12 @@ namespace WindowsLauncher.Tests.Services.Lifecycle
 
             // Создаем сервис с моками
             _service = new ApplicationLifecycleService(
+                _mockLogger.Object,
+                _mockInstanceManager.Object,
                 _mockWindowManager.Object,
                 _mockProcessMonitor.Object,
-                _mockInstanceManager.Object,
                 _launchers,
-                _mockLogger.Object
+                _mockAuditService.Object
             );
         }
 
@@ -180,7 +184,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle
         {
             // Arrange
             var instanceId = "test-instance-1";
-            _mockInstanceManager.Setup(im => im.TerminateAsync(instanceId, false))
+            _mockInstanceManager.Setup(im => im.TerminateAsync(instanceId))
                 .ReturnsAsync(true);
 
             // Act
@@ -188,7 +192,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle
 
             // Assert
             Assert.True(result);
-            _mockInstanceManager.Verify(im => im.TerminateAsync(instanceId, false), Times.Once);
+            _mockInstanceManager.Verify(im => im.TerminateAsync(instanceId), Times.Once);
         }
 
         [Fact]
@@ -196,7 +200,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle
         {
             // Arrange
             var instanceId = "test-instance-1";
-            _mockInstanceManager.Setup(im => im.TerminateAsync(instanceId, true))
+            _mockInstanceManager.Setup(im => im.ForceTerminateAsync(instanceId))
                 .ReturnsAsync(true);
 
             // Act
@@ -204,7 +208,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle
 
             // Assert
             Assert.True(result);
-            _mockInstanceManager.Verify(im => im.TerminateAsync(instanceId, true), Times.Once);
+            _mockInstanceManager.Verify(im => im.ForceTerminateAsync(instanceId), Times.Once);
         }
 
         [Fact]
@@ -343,11 +347,12 @@ namespace WindowsLauncher.Tests.Services.Lifecycle
             // Создаем новый сервис с нашим специфичным лаунчером
             var launchers = new List<IApplicationLauncher> { mockLauncher.Object };
             var service = new ApplicationLifecycleService(
+                _mockLogger.Object,
+                _mockInstanceManager.Object,
                 _mockWindowManager.Object,
                 _mockProcessMonitor.Object,
-                _mockInstanceManager.Object,
                 launchers,
-                _mockLogger.Object
+                _mockAuditService.Object
             );
 
             // Act

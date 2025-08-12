@@ -19,6 +19,8 @@
             <ResourceDictionary.MergedDictionaries>
                 <ResourceDictionary Source="/Styles/CorporateStylesFull.xaml"/>
             </ResourceDictionary.MergedDictionaries>
+            <!-- Конвертеры -->
+            <BooleanToVisibilityConverter x:Key="BooleanToVisibilityConverter"/>
         </ResourceDictionary>
     </Window.Resources>
 
@@ -33,7 +35,8 @@
                 <ColumnDefinition Width="Auto"/>
                 <!-- Центральная часть: Растягивается -->
                 <ColumnDefinition Width="*"/>
-                <!-- Правая часть: AppSwitcher + Клавиатура + Время -->
+                <!-- Правая часть: AppSwitcher + WSA + Клавиатура + Время -->
+                <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
                 <ColumnDefinition Width="Auto"/>
@@ -269,9 +272,29 @@
                 </StackPanel>
             </Button>
 
+            <!-- WSA Status Indicator -->
+            <Border x:Name="WSAStatusIndicator"
+                    Grid.Column="3"
+                    Background="Transparent"
+                    CornerRadius="4"
+                    Padding="8,4"
+                    Margin="8,6,4,6"
+                    ToolTip="Android подсистема"
+                    Visibility="Collapsed">
+                <StackPanel Orientation="Horizontal">
+                    <TextBlock Text="🤖" FontSize="14" Margin="0,0,6,0" VerticalAlignment="Center"/>
+                    <TextBlock x:Name="WSAStatusTextBlock" 
+                              Text="Unknown"
+                              FontSize="12" 
+                              FontWeight="SemiBold"
+                              Foreground="#666666"
+                              VerticalAlignment="Center"/>
+                </StackPanel>
+            </Border>
+
             <!-- Кнопка виртуальной клавиатуры -->
             <Button x:Name="VirtualKeyboardButton" 
-                    Grid.Column="3"
+                    Grid.Column="4"
                     Click="VirtualKeyboardButton_Click"
                     Width="48" Height="48" 
                     Margin="4,6,8,6"
@@ -309,7 +332,7 @@
             </Button>
 
             <!-- Системная информация (Время и дата) - крайнее правое положение -->
-            <Border Grid.Column="4" 
+            <Border Grid.Column="5" 
                     Background="{StaticResource PrimaryDarkBrush}"
                     CornerRadius="4" Margin="8,8,8,8" Padding="12,6">
                 <StackPanel Orientation="Vertical">

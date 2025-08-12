@@ -38,10 +38,5 @@ namespace WindowsLauncher.Core.Interfaces
         /// Проверить актуальность схемы базы данных
         /// </summary>
         Task<bool> IsDatabaseUpToDateAsync();
-        
-        /// <summary>
-        /// Создать таблицу для отслеживания миграций
-        /// </summary>
-        Task EnsureMigrationTableExistsAsync();
     }
 }

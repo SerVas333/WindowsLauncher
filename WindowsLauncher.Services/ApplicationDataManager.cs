@@ -77,7 +77,7 @@ namespace WindowsLauncher.Services
         /// <summary>
         /// Получить информацию о данных приложения
         /// </summary>
-        public async Task<ApplicationDataInfo> GetDataInfoAsync()
+        public Task<ApplicationDataInfo> GetDataInfoAsync()
         {
             var info = new ApplicationDataInfo
             {
@@ -100,13 +100,13 @@ namespace WindowsLauncher.Services
             info.DatabaseFiles = dbFiles.ToArray();
             info.TotalDataSize = CalculateDirectorySize(_appDataPath);
 
-            return info;
+            return Task.FromResult(info);
         }
 
-        private async Task DeleteDatabaseFilesAsync()
+        private Task DeleteDatabaseFilesAsync()
         {
             if (!Directory.Exists(_appDataPath))
-                return;
+                return Task.CompletedTask;
 
             // Удаляем SQLite файлы
             var sqliteFiles = Directory.GetFiles(_appDataPath, "*.db", SearchOption.AllDirectories);
@@ -137,6 +137,8 @@ namespace WindowsLauncher.Services
                     _logger.LogWarning(ex, "Failed to delete database file: {File}", file);
                 }
             }
+            
+            return Task.CompletedTask;
         }
 
         private void DeleteLogFiles()

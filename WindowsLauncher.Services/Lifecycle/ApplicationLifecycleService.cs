@@ -1596,6 +1596,86 @@ namespace WindowsLauncher.Services.Lifecycle
             }
         }
         
+        /// <summary>
+        /// Завершить экземпляр приложения (алиас для CloseAsync для совместимости с тестами)
+        /// </summary>
+        /// <param name="instanceId">ID экземпляра</param>
+        /// <returns>true если завершение успешно</returns>
+        public async Task<bool> TerminateAsync(string instanceId)
+        {
+            return await CloseAsync(instanceId);
+        }
+        
+        /// <summary>
+        /// Принудительно завершить экземпляр приложения
+        /// </summary>
+        /// <param name="instanceId">ID экземпляра</param>
+        /// <returns>true если завершение успешно</returns>
+        public async Task<bool> ForceTerminateAsync(string instanceId)
+        {
+            if (string.IsNullOrEmpty(instanceId))
+            {
+                _logger.LogWarning("ForceTerminateAsync called with empty instanceId");
+                return false;
+            }
+            
+            try
+            {
+                var instance = await _instanceManager.GetInstanceAsync(instanceId);
+                if (instance == null)
+                {
+                    _logger.LogWarning("Cannot force terminate non-existent instance {InstanceId}", instanceId);
+                    return false;
+                }
+                
+                _logger.LogWarning("Force terminating instance {InstanceId} ({AppName})", 
+                    instanceId, instance.Application?.Name);
+                
+                // Обновляем состояние
+                var previousState = instance.State;
+                instance.State = ApplicationState.Closing;
+                await _instanceManager.UpdateInstanceAsync(instance);
+                RaiseInstanceStateChanged(instance, previousState, ApplicationState.Closing, "Force termination requested");
+                
+                // Для WebView2 приложений используем launcher с force=true
+                if (instanceId.StartsWith("webview2_"))
+                {
+                    var launcher = FindLauncherForApplication(instance.Application);
+                    if (launcher != null && launcher.GetType().Name == "WebView2ApplicationLauncher")
+                    {
+                        try
+                        {
+                            var terminateMethod = launcher.GetType().GetMethod("TerminateAsync");
+                            if (terminateMethod != null)
+                            {
+                                var task = (Task<bool>)terminateMethod.Invoke(launcher, new object[] { instanceId, true });
+                                return await task;
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogError(ex, "Error force terminating WebView2 instance {InstanceId}", instanceId);
+                        }
+                    }
+                }
+                
+                // Для внешних приложений - принудительное завершение
+                if (instance.ProcessId != Environment.ProcessId)
+                {
+                    return await _processMonitor.KillProcessAsync(instance.ProcessId, 3000);
+                }
+                
+                _logger.LogError("Cannot force terminate main launcher process for instance {InstanceId}", instanceId);
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception occurred while force terminating instance {InstanceId}", instanceId);
+                await _auditService.LogEventAsync("system", $"Force terminate error for {instanceId}", ex.Message, false, ex.Message);
+                return false;
+            }
+        }
+        
         #endregion
         
         #region IDisposable

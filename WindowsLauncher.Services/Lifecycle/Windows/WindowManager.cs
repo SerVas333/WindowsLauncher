@@ -6,6 +6,7 @@ using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 using Microsoft.Extensions.Logging;
+using WindowsLauncher.Core.Enums;
 using WindowsLauncher.Core.Interfaces.Lifecycle;
 using WindowsLauncher.Core.Models.Lifecycle;
 
@@ -937,6 +938,60 @@ namespace WindowsLauncher.Services.Lifecycle.Windows
             }
             
             return windows.ToArray();
+        }
+        
+        #endregion
+        
+        #region Дополнительные методы для совместимости с тестами
+        
+        /// <summary>
+        /// Получить окна по ID процесса (алиас для GetAllWindowsForProcessAsync)
+        /// </summary>
+        /// <param name="processId">ID процесса</param>
+        /// <returns>Список окон процесса</returns>
+        public async Task<IReadOnlyList<WindowInfo>> GetWindowsByProcessIdAsync(int processId)
+        {
+            var windows = await GetAllWindowsForProcessAsync(processId);
+            return windows.ToList().AsReadOnly();
+        }
+        
+        /// <summary>
+        /// Вынести окно на передний план (алиас для ForceToForegroundAsync)
+        /// </summary>
+        /// <param name="windowHandle">Handle окна</param>
+        /// <returns>true если операция успешна</returns>
+        public async Task<bool> BringWindowToFrontAsync(IntPtr windowHandle)
+        {
+            return await ForceToForegroundAsync(windowHandle);
+        }
+        
+        /// <summary>
+        /// Установить состояние окна
+        /// </summary>
+        /// <param name="windowHandle">Handle окна</param>
+        /// <param name="windowState">Желаемое состояние окна</param>
+        /// <returns>true если операция успешна</returns>
+        public async Task<bool> SetWindowStateAsync(IntPtr windowHandle, ApplicationWindowState windowState)
+        {
+            await Task.CompletedTask;
+            
+            try
+            {
+                return windowState switch
+                {
+                    ApplicationWindowState.Normal => ShowWindow(windowHandle, SW_RESTORE),
+                    ApplicationWindowState.Minimized => ShowWindow(windowHandle, SW_MINIMIZE),
+                    ApplicationWindowState.Maximized => ShowWindow(windowHandle, SW_MAXIMIZE),
+                    ApplicationWindowState.Hidden => ShowWindow(windowHandle, SW_HIDE),
+                    ApplicationWindowState.Active => SetForegroundWindow(windowHandle),
+                    _ => false
+                };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error setting window state for {Handle:X} to {State}", (long)windowHandle, windowState);
+                return false;
+            }
         }
         
         #endregion

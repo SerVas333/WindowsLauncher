@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WindowsLauncher.Core.Models.Lifecycle;
+using WindowsLauncher.Core.Enums;
 
 namespace WindowsLauncher.Core.Interfaces.Lifecycle
 {
@@ -30,6 +31,13 @@ namespace WindowsLauncher.Core.Interfaces.Lifecycle
         Task<WindowInfo[]> GetAllWindowsForProcessAsync(int processId);
         
         /// <summary>
+        /// Получить окна по ID процесса (алиас для совместимости с тестами)
+        /// </summary>
+        /// <param name="processId">ID процесса</param>
+        /// <returns>Список окон процесса</returns>
+        Task<IReadOnlyList<WindowInfo>> GetWindowsByProcessIdAsync(int processId);
+        
+        /// <summary>
         /// Найти окно по заголовку среди всех окон системы
         /// </summary>
         /// <param name="windowTitle">Заголовок окна</param>
@@ -54,6 +62,21 @@ namespace WindowsLauncher.Core.Interfaces.Lifecycle
         /// <param name="windowHandle">Handle окна</param>
         /// <returns>true если переключение успешно</returns>
         Task<bool> SwitchToWindowAsync(IntPtr windowHandle);
+        
+        /// <summary>
+        /// Вынести окно на передний план
+        /// </summary>
+        /// <param name="windowHandle">Handle окна</param>
+        /// <returns>true если операция успешна</returns>
+        Task<bool> BringWindowToFrontAsync(IntPtr windowHandle);
+        
+        /// <summary>
+        /// Установить состояние окна
+        /// </summary>
+        /// <param name="windowHandle">Handle окна</param>
+        /// <param name="windowState">Желаемое состояние окна</param>
+        /// <returns>true если операция успешна</returns>
+        Task<bool> SetWindowStateAsync(IntPtr windowHandle, ApplicationWindowState windowState);
         
         /// <summary>
         /// Свернуть окно

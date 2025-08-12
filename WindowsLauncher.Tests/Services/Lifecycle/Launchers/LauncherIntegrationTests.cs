@@ -5,6 +5,7 @@ using Moq;
 using Xunit;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Core.Enums;
+using WindowsLauncher.Core.Interfaces.Lifecycle;
 using WindowsLauncher.Services.Lifecycle.Launchers;
 
 namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
@@ -19,6 +20,8 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         private readonly Mock<ILogger<ChromeAppLauncher>> _mockChromeLogger;
         private readonly Mock<ILogger<WebApplicationLauncher>> _mockWebLogger;
         private readonly Mock<ILogger<FolderLauncher>> _mockFolderLogger;
+        private readonly Mock<IWindowManager> _mockWindowManager;
+        private readonly Mock<IProcessMonitor> _mockProcessMonitor;
 
         public LauncherIntegrationTests()
         {
@@ -26,6 +29,8 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
             _mockChromeLogger = new Mock<ILogger<ChromeAppLauncher>>();
             _mockWebLogger = new Mock<ILogger<WebApplicationLauncher>>();
             _mockFolderLogger = new Mock<ILogger<FolderLauncher>>();
+            _mockWindowManager = new Mock<IWindowManager>();
+            _mockProcessMonitor = new Mock<IProcessMonitor>();
         }
 
         [Theory]
@@ -38,7 +43,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
             ApplicationType appType, string executablePath, string arguments, bool expectedResult)
         {
             // Arrange
-            var launcher = new DesktopApplicationLauncher(_mockDesktopLogger.Object);
+            var launcher = new DesktopApplicationLauncher(_mockDesktopLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
             var app = CreateTestApplication(appType, executablePath, arguments);
 
             // Act
@@ -58,7 +63,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
             ApplicationType appType, string executablePath, string arguments, bool expectedResult)
         {
             // Arrange
-            var launcher = new ChromeAppLauncher(_mockChromeLogger.Object);
+            var launcher = new ChromeAppLauncher(_mockChromeLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
             var app = CreateTestApplication(appType, executablePath, arguments);
 
             // Act
@@ -79,7 +84,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
             ApplicationType appType, string executablePath, string arguments, bool expectedResult)
         {
             // Arrange
-            var launcher = new WebApplicationLauncher(_mockWebLogger.Object);
+            var launcher = new WebApplicationLauncher(_mockWebLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
             var app = CreateTestApplication(appType, executablePath, arguments);
 
             // Act
@@ -100,7 +105,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
             ApplicationType appType, string executablePath, string arguments, bool expectedResult)
         {
             // Arrange
-            var launcher = new FolderLauncher(_mockFolderLogger.Object);
+            var launcher = new FolderLauncher(_mockFolderLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
             var app = CreateTestApplication(appType, executablePath, arguments);
 
             // Act
@@ -114,7 +119,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public async Task DesktopApplicationLauncher_LaunchAsync_WithNullApplication_ShouldThrowArgumentNullException()
         {
             // Arrange
-            var launcher = new DesktopApplicationLauncher(_mockDesktopLogger.Object);
+            var launcher = new DesktopApplicationLauncher(_mockDesktopLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(() => 
@@ -125,7 +130,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public async Task ChromeAppLauncher_LaunchAsync_WithNullApplication_ShouldThrowArgumentNullException()
         {
             // Arrange
-            var launcher = new ChromeAppLauncher(_mockChromeLogger.Object);
+            var launcher = new ChromeAppLauncher(_mockChromeLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(() => 
@@ -136,7 +141,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public async Task WebApplicationLauncher_LaunchAsync_WithNullApplication_ShouldThrowArgumentNullException()
         {
             // Arrange
-            var launcher = new WebApplicationLauncher(_mockWebLogger.Object);
+            var launcher = new WebApplicationLauncher(_mockWebLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(() => 
@@ -147,7 +152,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public async Task FolderLauncher_LaunchAsync_WithNullApplication_ShouldThrowArgumentNullException()
         {
             // Arrange
-            var launcher = new FolderLauncher(_mockFolderLogger.Object);
+            var launcher = new FolderLauncher(_mockFolderLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
 
             // Act & Assert
             await Assert.ThrowsAsync<ArgumentNullException>(() => 
@@ -158,7 +163,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public async Task DesktopApplicationLauncher_LaunchAsync_WithUnsupportedApplication_ShouldReturnFailure()
         {
             // Arrange
-            var launcher = new DesktopApplicationLauncher(_mockDesktopLogger.Object);
+            var launcher = new DesktopApplicationLauncher(_mockDesktopLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
             var app = CreateTestApplication(ApplicationType.ChromeApp, @"C:\Program Files\Google\Chrome\Application\chrome.exe", "--app=https://example.com");
 
             // Act
@@ -173,7 +178,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public async Task ChromeAppLauncher_LaunchAsync_WithUnsupportedApplication_ShouldReturnFailure()
         {
             // Arrange
-            var launcher = new ChromeAppLauncher(_mockChromeLogger.Object);
+            var launcher = new ChromeAppLauncher(_mockChromeLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
             var app = CreateTestApplication(ApplicationType.Desktop, @"C:\Windows\System32\notepad.exe", "");
 
             // Act
@@ -188,7 +193,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public async Task WebApplicationLauncher_LaunchAsync_WithUnsupportedApplication_ShouldReturnFailure()
         {
             // Arrange
-            var launcher = new WebApplicationLauncher(_mockWebLogger.Object);
+            var launcher = new WebApplicationLauncher(_mockWebLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
             var app = CreateTestApplication(ApplicationType.Desktop, @"C:\Windows\System32\notepad.exe", "");
 
             // Act
@@ -203,7 +208,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public async Task FolderLauncher_LaunchAsync_WithUnsupportedApplication_ShouldReturnFailure()
         {
             // Arrange
-            var launcher = new FolderLauncher(_mockFolderLogger.Object);
+            var launcher = new FolderLauncher(_mockFolderLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
             var app = CreateTestApplication(ApplicationType.Desktop, @"C:\Windows\System32\notepad.exe", "");
 
             // Act
@@ -221,10 +226,10 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public async Task AllLaunchers_LaunchAsync_WithNullOrEmptyLaunchedBy_ShouldThrowArgumentException(string launchedBy)
         {
             // Arrange
-            var desktopLauncher = new DesktopApplicationLauncher(_mockDesktopLogger.Object);
-            var chromeLauncher = new ChromeAppLauncher(_mockChromeLogger.Object);
-            var webLauncher = new WebApplicationLauncher(_mockWebLogger.Object);
-            var folderLauncher = new FolderLauncher(_mockFolderLogger.Object);
+            var desktopLauncher = new DesktopApplicationLauncher(_mockDesktopLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
+            var chromeLauncher = new ChromeAppLauncher(_mockChromeLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
+            var webLauncher = new WebApplicationLauncher(_mockWebLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
+            var folderLauncher = new FolderLauncher(_mockFolderLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
 
             var desktopApp = CreateTestApplication(ApplicationType.Desktop, @"C:\Windows\System32\notepad.exe", "");
             var chromeApp = CreateTestApplication(ApplicationType.ChromeApp, @"C:\Program Files\Google\Chrome\Application\chrome.exe", "--app=https://example.com");
@@ -246,7 +251,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public void ChromeAppLauncher_ExtractChromeAppUrl_ShouldHandleVariousUrlFormats()
         {
             // Arrange
-            var launcher = new ChromeAppLauncher(_mockChromeLogger.Object);
+            var launcher = new ChromeAppLauncher(_mockChromeLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
 
             // Test cases for different URL formats in Chrome App arguments
             var testCases = new[]
@@ -275,7 +280,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public void WebApplicationLauncher_ValidateUrl_ShouldAcceptValidUrls()
         {
             // Arrange
-            var launcher = new WebApplicationLauncher(_mockWebLogger.Object);
+            var launcher = new WebApplicationLauncher(_mockWebLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
 
             var validUrls = new[]
             {
@@ -303,7 +308,7 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
         public void FolderLauncher_ValidatePath_ShouldAcceptValidPaths()
         {
             // Arrange
-            var launcher = new FolderLauncher(_mockFolderLogger.Object);
+            var launcher = new FolderLauncher(_mockFolderLogger.Object, _mockWindowManager.Object, _mockProcessMonitor.Object);
 
             var validPaths = new[]
             {

@@ -54,6 +54,12 @@ namespace WindowsLauncher.Core.Interfaces.Lifecycle
         Task<IReadOnlyList<ApplicationInstance>> GetAllInstancesAsync();
         
         /// <summary>
+        /// Получить все экземпляры приложений (алиас для совместимости с тестами)
+        /// </summary>
+        /// <returns>Коллекция всех экземпляров</returns>
+        Task<IReadOnlyList<ApplicationInstance>> GetAllAsync();
+        
+        /// <summary>
         /// Получить экземпляр по ID
         /// </summary>
         /// <param name="instanceId">ID экземпляра</param>
@@ -164,6 +170,33 @@ namespace WindowsLauncher.Core.Interfaces.Lifecycle
         #region Очистка и обслуживание
         
         /// <summary>
+        /// Переключиться на указанный экземпляр приложения
+        /// </summary>
+        /// <param name="instanceId">ID экземпляра</param>
+        /// <returns>true если переключение успешно</returns>
+        Task<bool> SwitchToAsync(string instanceId);
+        
+        /// <summary>
+        /// Завершить экземпляр приложения
+        /// </summary>
+        /// <param name="instanceId">ID экземпляра</param>
+        /// <returns>true если завершение успешно</returns>
+        Task<bool> TerminateAsync(string instanceId);
+        
+        /// <summary>
+        /// Принудительно завершить экземпляр приложения
+        /// </summary>
+        /// <param name="instanceId">ID экземпляра</param>
+        /// <returns>true если завершение успешно</returns>
+        Task<bool> ForceTerminateAsync(string instanceId);
+        
+        /// <summary>
+        /// Выполнить очистку ресурсов менеджера
+        /// </summary>
+        /// <returns>Задача очистки</returns>
+        Task CleanupAsync();
+        
+        /// <summary>
         /// Очистить завершенные экземпляры из коллекции
         /// </summary>
         /// <returns>Количество удаленных экземпляров</returns>
@@ -206,6 +239,26 @@ namespace WindowsLauncher.Core.Interfaces.Lifecycle
         /// Событие обновления экземпляра
         /// </summary>
         event EventHandler<ApplicationInstanceEventArgs> InstanceUpdated;
+        
+        /// <summary>
+        /// Событие запуска экземпляра
+        /// </summary>
+        event EventHandler<ApplicationInstanceEventArgs> InstanceStarted;
+        
+        /// <summary>
+        /// Событие остановки экземпляра
+        /// </summary>
+        event EventHandler<ApplicationInstanceEventArgs> InstanceStopped;
+        
+        /// <summary>
+        /// Событие изменения состояния экземпляра
+        /// </summary>
+        event EventHandler<ApplicationInstanceEventArgs> InstanceStateChanged;
+        
+        /// <summary>
+        /// Событие активации экземпляра
+        /// </summary>
+        event EventHandler<ApplicationInstanceEventArgs> InstanceActivated;
         
         /// <summary>
         /// Событие очистки коллекции

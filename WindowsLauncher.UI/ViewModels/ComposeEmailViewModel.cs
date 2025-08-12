@@ -353,7 +353,7 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
         
-        private async Task SaveDraftAsync()
+        private Task SaveDraftAsync()
         {
             try
             {
@@ -361,13 +361,14 @@ namespace WindowsLauncher.UI.ViewModels
                 MessageBox.Show("Функция сохранения черновиков будет добавлена в следующих версиях.", 
                     "Информация", MessageBoxButton.OK, MessageBoxImage.Information);
                 
-                await Task.CompletedTask;
+                return Task.CompletedTask;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Error saving draft");
                 MessageBox.Show($"Ошибка при сохранении черновика: {ex.Message}", "Ошибка", 
                     MessageBoxButton.OK, MessageBoxImage.Error);
+                return Task.CompletedTask;
             }
         }
         

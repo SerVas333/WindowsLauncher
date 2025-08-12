@@ -13,14 +13,16 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Launchers
     public class WSAApplicationLauncherTests
     {
         private readonly Mock<IAndroidApplicationManager> _mockAndroidManager;
+        private readonly Mock<IAndroidSubsystemService> _mockAndroidSubsystemService;
         private readonly Mock<ILogger<WSAApplicationLauncher>> _mockLogger;
         private readonly WSAApplicationLauncher _launcher;
 
         public WSAApplicationLauncherTests()
         {
             _mockAndroidManager = new Mock<IAndroidApplicationManager>();
+            _mockAndroidSubsystemService = new Mock<IAndroidSubsystemService>();
             _mockLogger = new Mock<ILogger<WSAApplicationLauncher>>();
-            _launcher = new WSAApplicationLauncher(_mockAndroidManager.Object, _mockLogger.Object);
+            _launcher = new WSAApplicationLauncher(_mockAndroidManager.Object, _mockAndroidSubsystemService.Object, _mockLogger.Object);
         }
 
         [Fact]

@@ -49,8 +49,6 @@ namespace WindowsLauncher.UI.Services
         /// </summary>
         public async Task InitializeAsync(Window window, ShellMode shellMode = ShellMode.Normal)
         {
-            await Task.CompletedTask;
-            
             if (window == null)
             {
                 throw new ArgumentNullException(nameof(window));
@@ -90,8 +88,6 @@ namespace WindowsLauncher.UI.Services
         /// </summary>
         private async Task RegisterHotKeysAsync()
         {
-            await Task.CompletedTask;
-
             try
             {
                 if (_currentMode == ShellMode.Shell)
@@ -114,9 +110,8 @@ namespace WindowsLauncher.UI.Services
         /// <summary>
         /// Регистрация хоткеев для Shell режима
         /// </summary>
-        private async Task RegisterShellModeHotKeysAsync()
+        private Task RegisterShellModeHotKeysAsync()
         {
-            await Task.CompletedTask;
 
             // Alt+Tab - основной переключатель
             bool altTabRegistered = RegisterHotKey(_windowHandle, HOTKEY_ALT_TAB, MOD_ALT, VK_TAB);
@@ -139,14 +134,15 @@ namespace WindowsLauncher.UI.Services
             {
                 _logger.LogWarning("Shell mode: Failed to register Ctrl+Alt+Tab hotkey - may be already in use");
             }
+            
+            return Task.CompletedTask;
         }
 
         /// <summary>
         /// Регистрация хоткеев для обычного режима
         /// </summary>
-        private async Task RegisterNormalModeHotKeysAsync()
+        private Task RegisterNormalModeHotKeysAsync()
         {
-            await Task.CompletedTask;
 
             // Win+` - основной переключатель (аналог Alt+Tab)
             bool winGraveRegistered = RegisterHotKey(_windowHandle, HOTKEY_WIN_GRAVE, MOD_WIN, VK_GRAVE);
@@ -169,15 +165,15 @@ namespace WindowsLauncher.UI.Services
             {
                 _logger.LogWarning("Normal mode: Failed to register Win+Shift+` hotkey - may be already in use");
             }
+            
+            return Task.CompletedTask;
         }
 
         /// <summary>
         /// Отмена регистрации горячих клавиш
         /// </summary>
-        private async Task UnregisterHotKeysAsync()
+        private Task UnregisterHotKeysAsync()
         {
-            await Task.CompletedTask;
-
             try
             {
                 if (_windowHandle != IntPtr.Zero)
@@ -195,6 +191,8 @@ namespace WindowsLauncher.UI.Services
             {
                 _logger.LogError(ex, "Error unregistering hotkeys");
             }
+            
+            return Task.CompletedTask;
         }
 
         /// <summary>

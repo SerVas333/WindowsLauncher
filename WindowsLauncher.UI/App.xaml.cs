@@ -27,7 +27,6 @@ using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.Infrastructure.Localization;
 using WindowsLauncher.UI.Views;
 using WindowsLauncher.Core.Configuration;
-using WindowsLauncher.Core.Models;
 
 // Новая архитектура ApplicationLifecycleService
 using WindowsLauncher.Services.Lifecycle;
@@ -35,10 +34,6 @@ using WindowsLauncher.Services.Lifecycle.Windows;
 using WindowsLauncher.Services.Lifecycle.Monitoring;
 using WindowsLauncher.Services.Lifecycle.Management;
 using WindowsLauncher.Services.Lifecycle.Launchers;
-
-// Android интеграция
-using WindowsLauncher.Core.Interfaces.Android;
-using WindowsLauncher.Services.Android;
 
 // ✅ РЕШЕНИЕ КОНФЛИКТА: Явные алиасы
 using WpfApplication = System.Windows.Application;
@@ -338,11 +333,20 @@ namespace WindowsLauncher.UI
             // Сервис управления данными приложения
             services.AddScoped<ApplicationDataManager>();
 
-            // ===== ANDROID ИНТЕГРАЦИЯ СЕРВИСЫ =====
+            // ===== ANDROID ИНТЕГРАЦИЯ СЕРВИСЫ (РЕФАКТОРИРОВАННАЯ АРХИТЕКТУРА) =====
             
-            // Android сервисы для WSA интеграции
+            // Базовые зависимости для Android сервисов
             services.AddSingleton<IProcessExecutor, ProcessExecutor>();
+            
+            // Специализированные Android сервисы (новая архитектура)
+            services.AddSingleton<IWSAConnectionService, WSAConnectionService>();
+            services.AddSingleton<IApkManagementService, ApkManagementService>();
+            services.AddSingleton<IInstalledAppsService, InstalledAppsService>();
+            
+            // Композитный сервис для обратной совместимости
             services.AddScoped<IWSAIntegrationService, WSAIntegrationService>();
+            
+            // Высокоуровневые сервисы
             services.AddScoped<IAndroidApplicationManager, AndroidApplicationManager>();
             services.AddSingleton<IAndroidSubsystemService, AndroidSubsystemService>();
             services.AddHostedService<AndroidSubsystemService>(provider => 
@@ -412,7 +416,7 @@ namespace WindowsLauncher.UI
                 WindowsLauncher.Services.Security.WebView2SecurityConfigurationService>();
 
             // ViewModels
-            services.AddTransient<MainViewModel>();
+            services.AddSingleton<MainViewModel>();
             services.AddTransient<AddressBookViewModel>();
             services.AddTransient<ComposeEmailViewModel>();
             services.AddTransient<ContactEditViewModel>();

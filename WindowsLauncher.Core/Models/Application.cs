@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel.DataAnnotations.Schema;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -55,6 +56,13 @@ namespace WindowsLauncher.Core.Models
         // Настройки отображения
         public bool IsEnabled { get; set; } = true;
         public int SortOrder { get; set; } = 0;
+        
+        /// <summary>
+        /// Указывает, активно ли приложение в данный момент (runtime состояние)
+        /// Не хранится в базе данных - используется только для логики тестов и лаунчеров
+        /// </summary>
+        [NotMapped]
+        public bool IsActive { get; set; } = true;
 
         // Метаданные
         public DateTime CreatedDate { get; set; } = DateTime.Now;

@@ -48,6 +48,11 @@ namespace WindowsLauncher.Core.Interfaces.Android
         Task<Dictionary<string, object>> GetDetailedStatusAsync();
 
         /// <summary>
+        /// Обновить статус WSA (проверить актуальное состояние)
+        /// </summary>
+        Task RefreshWSAStatusAsync();
+
+        /// <summary>
         /// Событие изменения статуса WSA
         /// </summary>
         event EventHandler<string>? StatusChanged;

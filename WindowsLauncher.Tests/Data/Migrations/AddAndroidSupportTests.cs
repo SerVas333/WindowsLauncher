@@ -282,13 +282,13 @@ namespace WindowsLauncher.Tests.Data.Migrations
         [Theory]
         [InlineData("Android")]
         [InlineData(null)]
-        public void Migration_SupportsUnsupportedDatabaseType_ThrowsException(string? databaseTypeStr)
+        public async Task Migration_SupportsUnsupportedDatabaseType_ThrowsException(string? databaseTypeStr)
         {
             // Arrange
             var unsupportedType = (DatabaseType)999;
 
             // Act & Assert
-            Assert.ThrowsAsync<System.NotSupportedException>(
+            await Assert.ThrowsAsync<System.NotSupportedException>(
                 () => _migration.UpAsync(_mockContext.Object, unsupportedType));
         }
     }

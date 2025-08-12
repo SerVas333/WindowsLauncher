@@ -192,9 +192,8 @@ namespace WindowsLauncher.Tests.Services.Lifecycle.Monitoring
             _processMonitor.ProcessStarted += (s, e) => eventFired = true;
             _processMonitor.ProcessTerminated += (s, e) => eventFired = true;
             
-            // Assert - события должны быть доступны для подписки
-            Assert.NotNull(_processMonitor.ProcessStarted);
-            Assert.NotNull(_processMonitor.ProcessTerminated);
+            // Assert - события должны быть доступны для подписки (проверяем что подписка не выбросила исключение)
+            Assert.False(eventFired); // События не должны быть вызваны просто от подписки
         }
 
         [Fact]

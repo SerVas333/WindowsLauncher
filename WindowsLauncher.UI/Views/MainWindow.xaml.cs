@@ -41,7 +41,13 @@ namespace WindowsLauncher.UI
             InitializeViewModel();
             SubscribeToVirtualKeyboardEvents();
             InitializeSessionManagement();
-            _ = InitializeAppSwitcherAsync(); // Инициализируем асинхронно
+            _ = InitializeAppSwitcherAsync().ContinueWith(task =>
+            {
+                if (task.IsFaulted)
+                {
+                    _logger?.LogError(task.Exception, "Error initializing app switcher");
+                }
+            }, TaskScheduler.Default);
             
             // Подписываемся на событие загрузки для настройки адаптивных плиток
             Loaded += MainWindow_Loaded;
@@ -144,7 +150,17 @@ namespace WindowsLauncher.UI
                 if (_sessionManager != null)
                 {
                     // Загружаем конфигурацию сессии
-                    _ = Task.Run(async () => await _sessionManager.LoadConfigurationAsync());
+                    _ = Task.Run(async () =>
+                    {
+                        try
+                        {
+                            await _sessionManager.LoadConfigurationAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger?.LogError(ex, "Error loading session configuration");
+                        }
+                    });
                 }
             }
             catch (Exception ex)
@@ -341,7 +357,13 @@ namespace WindowsLauncher.UI
                 }
 
                 // Запускаем периодическое обновление счетчика приложений
-                _ = StartAppCountUpdateTimerAsync();
+                _ = StartAppCountUpdateTimerAsync().ContinueWith(task =>
+                {
+                    if (task.IsFaulted)
+                    {
+                        _logger?.LogError(task.Exception, "Error starting app count update timer");
+                    }
+                }, TaskScheduler.Default);
             }
             catch (Exception ex)
             {
@@ -753,6 +775,7 @@ namespace WindowsLauncher.UI
                     ResizeMode = ResizeMode.NoResize;
                     
                     // 2. Скрываем статус бар (он есть на SystemTaskbar)
+                    // WSA статус индикатор теперь показывается в SystemTaskbarWindow
                     if (FindName("StatusBar") is Border statusBar)
                     {
                         statusBar.Visibility = Visibility.Collapsed;

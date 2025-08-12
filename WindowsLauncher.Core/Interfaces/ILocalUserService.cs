@@ -123,8 +123,8 @@ namespace WindowsLauncher.Core.Interfaces
         /// Получить информацию о пароле пользователя
         /// </summary>
         /// <param name="userId">ID пользователя</param>
-        /// <returns>Информация о пароле</returns>
-        Task<PasswordInfo> GetPasswordInfoAsync(int userId);
+        /// <returns>Информация о пароле или null если пользователь не найден</returns>
+        Task<PasswordInfo?> GetPasswordInfoAsync(int userId);
 
         #endregion
 

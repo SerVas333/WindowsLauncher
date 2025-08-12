@@ -1395,15 +1395,21 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
+                Logger.LogInformation("Starting WSA status initialization in MainViewModel");
+                
                 using var scope = _serviceProvider.CreateScope();
                 var androidSubsystem = scope.ServiceProvider.GetService<IAndroidSubsystemService>();
 
                 if (androidSubsystem == null)
                 {
-                    Logger.LogDebug("Android subsystem service not available");
+                    Logger.LogWarning("Android subsystem service not available in MainViewModel");
                     ShowWSAStatus = false;
                     return;
                 }
+
+                var mode = androidSubsystem.CurrentMode;
+                var currentStatus = androidSubsystem.WSAStatus;
+                Logger.LogInformation("MainViewModel: AndroidSubsystemService mode: {Mode}, current status: {Status}", mode, currentStatus);
 
                 // Показываем статус только если включено в конфигурации
                 ShowWSAStatus = androidSubsystem.CurrentMode != AndroidMode.Disabled;
