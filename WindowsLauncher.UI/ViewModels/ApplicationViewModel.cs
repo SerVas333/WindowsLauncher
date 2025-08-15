@@ -21,6 +21,9 @@ namespace WindowsLauncher.UI.ViewModels
         private string? _cachedIcon;
         private string? _cachedColor;
         private bool _isInitialized;
+        
+        // Состояние загрузки приложения
+        private bool _isLaunching;
 
         public ApplicationViewModel(CoreApplication application, ICategoryManagementService? categoryService = null) // ✅ Используем CoreApplication
         {
@@ -50,6 +53,22 @@ namespace WindowsLauncher.UI.ViewModels
         /// Тип приложения для определения специальной логики
         /// </summary>
         public Core.Enums.ApplicationType Type => _application.Type;
+        
+        /// <summary>
+        /// Индикатор того, что приложение сейчас запускается
+        /// </summary>
+        public bool IsLaunching
+        {
+            get => _isLaunching;
+            set
+            {
+                if (_isLaunching != value)
+                {
+                    _isLaunching = value;
+                    OnPropertyChanged();
+                }
+            }
+        }
 
         #endregion
 

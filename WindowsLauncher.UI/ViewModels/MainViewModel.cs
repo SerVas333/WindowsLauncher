@@ -95,10 +95,41 @@ namespace WindowsLauncher.UI.ViewModels
                     OpenSettingsCommand.RaiseCanExecuteChanged();
                     OpenAdminCommand.RaiseCanExecuteChanged();
 
-                    // Запускаем инициализацию при первой установке пользователя
-                    if (value != null && !_isInitialized)
+                    // ИСПРАВЛЕНО: Правильная логика реинициализации с учетом guest пользователя
+                    if (value != null)
                     {
-                        _ = InitializeAsync();
+                        var oldUser = _currentUser; // Сохраняем ссылку на старого пользователя
+                        
+                        // Определяем нужна ли реинициализация:
+                        // 1. Если был другой пользователь И система инициализирована
+                        // 2. Если новый пользователь = guest (guest всегда новый экземпляр)
+                        bool needsReinitialization = (oldUser != null && _isInitialized) || 
+                                                    (value.Username?.ToLower() == "guest");
+                        
+                        if (needsReinitialization && _isInitialized)
+                        {
+                            Logger.LogInformation("User changed from {OldUser} to {NewUser} (guest={IsGuest}), resetting initialization", 
+                                oldUser?.Username ?? "none", value.Username, value.Username?.ToLower() == "guest");
+                            _isInitialized = false;
+                            
+                            // Очищаем данные предыдущего пользователя в UI потоке
+                            System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
+                            {
+                                Applications.Clear();
+                                FilteredApplications.Clear();
+                                LocalizedCategories.Clear();
+                                UserSettings = null;
+                                SearchText = "";
+                                SelectedCategory = "All";
+                                HasActiveFilter = false;
+                            });
+                        }
+                        
+                        // Запускаем инициализацию для нового пользователя
+                        if (!_isInitialized)
+                        {
+                            _ = InitializeAsync();
+                        }
                     }
                 }
             }
@@ -444,7 +475,12 @@ namespace WindowsLauncher.UI.ViewModels
                 var apps = await authzService.GetAuthorizedApplicationsAsync(CurrentUser);
                 Logger.LogInformation("Found {Count} authorized applications", apps.Count);
 
-                Applications.Clear();
+                // ИСПРАВЛЕНО: Очистка коллекций в UI потоке
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+                {
+                    Applications.Clear();
+                    FilteredApplications.Clear();
+                });
                 
                 // Создаем задачи для параллельной инициализации ApplicationViewModel
                 var initializationTasks = new List<Task<ApplicationViewModel>>();
@@ -457,10 +493,14 @@ namespace WindowsLauncher.UI.ViewModels
                 // Ожидаем завершения всех инициализаций параллельно
                 var initializedViewModels = await Task.WhenAll(initializationTasks);
                 
-                foreach (var appViewModel in initializedViewModels)
+                // ИСПРАВЛЕНО: Добавление в коллекцию Applications в UI потоке
+                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
                 {
-                    Applications.Add(appViewModel);
-                }
+                    foreach (var appViewModel in initializedViewModels)
+                    {
+                        Applications.Add(appViewModel);
+                    }
+                });
 
                 // Load and localize categories
                 await LoadLocalizedCategoriesAsync(appService);
@@ -664,7 +704,12 @@ namespace WindowsLauncher.UI.ViewModels
         {
             Logger.LogInformation("Loading test data as fallback...");
 
-            Applications.Clear();
+            // ИСПРАВЛЕНО: Очистка коллекций в UI потоке
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
+            {
+                Applications.Clear();
+                FilteredApplications.Clear();
+            });
 
             var testApps = new[]
             {
@@ -727,44 +772,48 @@ namespace WindowsLauncher.UI.ViewModels
             // Ожидаем завершения всех инициализаций параллельно
             var testViewModels = await Task.WhenAll(testInitializationTasks);
             
-            foreach (var appViewModel in testViewModels)
+            // ИСПРАВЛЕНО: Добавление в коллекции в UI потоке
+            await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
             {
-                Applications.Add(appViewModel);
-            }
+                foreach (var appViewModel in testViewModels)
+                {
+                    Applications.Add(appViewModel);
+                }
 
-            // Load test categories with icons and colors
-            LocalizedCategories.Clear();
-            LocalizedCategories.Add(new CategoryViewModel
-            {
-                Key = "All",
-                DisplayName = LocalizationHelper.Instance.GetString("CategoryAll"),
-                IsSelected = true,
-                Color = "#2196F3",
-                Icon = "ViewGridOutline"
-            });
-            LocalizedCategories.Add(new CategoryViewModel
-            {
-                Key = "Utilities",
-                DisplayName = LocalizationHelper.Instance.GetString("Category_Utilities"),
-                IsSelected = false,
-                Color = "#4CAF50",
-                Icon = "Wrench"
-            });
-            LocalizedCategories.Add(new CategoryViewModel
-            {
-                Key = "System",
-                DisplayName = LocalizationHelper.Instance.GetString("CategorySystem"),
-                IsSelected = false,
-                Color = "#2196F3",
-                Icon = "Cogs"
-            });
-            LocalizedCategories.Add(new CategoryViewModel
-            {
-                Key = "Web",
-                DisplayName = LocalizationHelper.Instance.GetString("CategoryWeb"),
-                IsSelected = false,
-                Color = "#9C27B0",
-                Icon = "Globe"
+                // Load test categories with icons and colors
+                LocalizedCategories.Clear();
+                LocalizedCategories.Add(new CategoryViewModel
+                {
+                    Key = "All",
+                    DisplayName = LocalizationHelper.Instance.GetString("CategoryAll"),
+                    IsSelected = true,
+                    Color = "#2196F3",
+                    Icon = "ViewGridOutline"
+                });
+                LocalizedCategories.Add(new CategoryViewModel
+                {
+                    Key = "Utilities",
+                    DisplayName = LocalizationHelper.Instance.GetString("Category_Utilities"),
+                    IsSelected = false,
+                    Color = "#4CAF50",
+                    Icon = "Wrench"
+                });
+                LocalizedCategories.Add(new CategoryViewModel
+                {
+                    Key = "System",
+                    DisplayName = LocalizationHelper.Instance.GetString("CategorySystem"),
+                    IsSelected = false,
+                    Color = "#2196F3",
+                    Icon = "Cogs"
+                });
+                LocalizedCategories.Add(new CategoryViewModel
+                {
+                    Key = "Web",
+                    DisplayName = LocalizationHelper.Instance.GetString("CategoryWeb"),
+                    IsSelected = false,
+                    Color = "#9C27B0",
+                    Icon = "Globe"
+                });
             });
 
             FilterApplications();
@@ -1014,6 +1063,24 @@ namespace WindowsLauncher.UI.ViewModels
             }, "refresh applications");
         }
 
+        /// <summary>
+        /// Обновление приложений после изменений в AdminWindow (сохраняя фильтры пользователя)
+        /// </summary>
+        public async Task RefreshApplicationsFromAdmin()
+        {
+            await ExecuteSafelyAsync(async () =>
+            {
+                Logger.LogInformation("Refreshing applications after AdminWindow changes");
+                StatusMessage = LocalizationHelper.Instance.GetString("LoadingApplications");
+
+                // Просто перезагружаем данные пользователя (без сброса фильтров)
+                await LoadUserDataAsync();
+                
+                StatusMessage = LocalizationHelper.Instance.GetString("ApplicationsRefreshed");
+                Logger.LogInformation("Applications refreshed successfully after AdminWindow changes");
+            }, "refresh applications from admin");
+        }
+
         #endregion
 
         #region Commands Implementation
@@ -1022,28 +1089,39 @@ namespace WindowsLauncher.UI.ViewModels
         {
             if (appViewModel == null || CurrentUser == null) return;
 
-            await ExecuteSafelyAsync(async () =>
+            // Устанавливаем состояние загрузки
+            appViewModel.IsLaunching = true;
+
+            try
             {
-                var app = appViewModel.GetApplication();
-                StatusMessage = LocalizationHelper.Instance.GetFormattedString("LaunchingApp", app.Name);
-
-                using var scope = _serviceScopeFactory.CreateScope();
-                var appService = scope.ServiceProvider.GetRequiredService<IApplicationService>();
-
-                var result = await appService.LaunchApplicationAsync(app, CurrentUser);
-
-                if (result.IsSuccess)
+                await ExecuteSafelyAsync(async () =>
                 {
-                    StatusMessage = LocalizationHelper.Instance.GetFormattedString("SuccessfullyLaunched", app.Name);
-                    Logger.LogInformation("Application launched: {App}", app.Name);
-                }
-                else
-                {
-                    var errorMessage = LocalizationHelper.Instance.GetFormattedString("FailedToLaunch", app.Name, result.ErrorMessage);
-                    StatusMessage = errorMessage;
-                    DialogService.ShowWarning(errorMessage, LocalizationHelper.Instance.GetString("LaunchError"));
-                }
-            }, $"launch application {appViewModel.Name}");
+                    var app = appViewModel.GetApplication();
+                    StatusMessage = LocalizationHelper.Instance.GetFormattedString("LaunchingApp", app.Name);
+
+                    using var scope = _serviceScopeFactory.CreateScope();
+                    var appService = scope.ServiceProvider.GetRequiredService<IApplicationService>();
+
+                    var result = await appService.LaunchApplicationAsync(app, CurrentUser);
+
+                    if (result.IsSuccess)
+                    {
+                        StatusMessage = LocalizationHelper.Instance.GetFormattedString("SuccessfullyLaunched", app.Name);
+                        Logger.LogInformation("Application launched: {App}", app.Name);
+                    }
+                    else
+                    {
+                        var errorMessage = LocalizationHelper.Instance.GetFormattedString("FailedToLaunch", app.Name, result.ErrorMessage);
+                        StatusMessage = errorMessage;
+                        DialogService.ShowWarning(errorMessage, LocalizationHelper.Instance.GetString("LaunchError"));
+                    }
+                }, $"launch application {appViewModel.Name}");
+            }
+            finally
+            {
+                // Всегда сбрасываем состояние загрузки
+                appViewModel.IsLaunching = false;
+            }
         }
 
         private void SelectCategory(string? category)
@@ -1195,7 +1273,8 @@ namespace WindowsLauncher.UI.ViewModels
         }
 
 
-        private void OpenAdminWindow()
+
+        private async void OpenAdminWindow()
         {
             try
             {
@@ -1206,7 +1285,8 @@ namespace WindowsLauncher.UI.ViewModels
                 adminWindow.ShowDialog();
 
                 // После закрытия окна администрирования обновляем список приложений
-                _ = RefreshApplications();
+                // ИСПРАВЛЕНО: используем специальный метод с принудительной очисткой и await
+                await RefreshApplicationsFromAdmin();
             }
             catch (Exception ex)
             {

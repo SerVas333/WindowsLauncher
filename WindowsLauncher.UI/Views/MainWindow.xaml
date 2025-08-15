@@ -363,8 +363,71 @@
                     </ItemsControl.ItemsPanel>
                     <ItemsControl.ItemTemplate>
                         <DataTemplate>
-                            <Border Style="{StaticResource CardStyle}" 
-                                    Width="220" x:Name="AppTileBorder">
+                            <Border Width="220" x:Name="AppTileBorder">
+                                <!-- Добавляем Style с триггерами для эффектов -->
+                                <Border.Style>
+                                    <Style TargetType="Border" BasedOn="{StaticResource CardStyle}">
+                                        <Style.Triggers>
+                                            <!-- Hover эффект -->
+                                            <Trigger Property="IsMouseOver" Value="True">
+                                                <Setter Property="Background">
+                                                    <Setter.Value>
+                                                        <SolidColorBrush Color="#F8F9FA"/>
+                                                    </Setter.Value>
+                                                </Setter>
+                                                <Trigger.EnterActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                           To="1.02" Duration="0:0:0.1"/>
+                                                            <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                           To="1.02" Duration="0:0:0.1"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.EnterActions>
+                                                <Trigger.ExitActions>
+                                                    <BeginStoryboard>
+                                                        <Storyboard>
+                                                            <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                           To="1.0" Duration="0:0:0.1"/>
+                                                            <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                           To="1.0" Duration="0:0:0.1"/>
+                                                        </Storyboard>
+                                                    </BeginStoryboard>
+                                                </Trigger.ExitActions>
+                                            </Trigger>
+                                            
+                                            <!-- Pressed эффект -->
+                                            <EventTrigger RoutedEvent="MouseLeftButtonDown">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                       To="0.95" Duration="0:0:0.05"/>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                       To="0.95" Duration="0:0:0.05"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                            <EventTrigger RoutedEvent="MouseLeftButtonUp">
+                                                <BeginStoryboard>
+                                                    <Storyboard>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleX)"
+                                                                       To="1.0" Duration="0:0:0.1"/>
+                                                        <DoubleAnimation Storyboard.TargetProperty="(Border.RenderTransform).(ScaleTransform.ScaleY)"
+                                                                       To="1.0" Duration="0:0:0.1"/>
+                                                    </Storyboard>
+                                                </BeginStoryboard>
+                                            </EventTrigger>
+                                        </Style.Triggers>
+                                        <Setter Property="RenderTransform">
+                                            <Setter.Value>
+                                                <ScaleTransform ScaleX="1.0" ScaleY="1.0"/>
+                                            </Setter.Value>
+                                        </Setter>
+                                        <Setter Property="RenderTransformOrigin" Value="0.5,0.5"/>
+                                    </Style>
+                                </Border.Style>
+                                
                                 <Grid x:Name="AppTileContent">
                                     <Grid.RowDefinitions>
                                         <RowDefinition Height="Auto"/>
@@ -377,13 +440,15 @@
                                            Background="{Binding CategoryColor}" 
                                            CornerRadius="8"
                                            HorizontalAlignment="Center" 
-                                           Margin="0,0,0,12">
+                                           Margin="0,0,0,12"
+                                           x:Name="AppIconBorder">
                                         <!-- Используем CategoryIcon (FontAwesome) для всех категорий, включая Android -->
                                         <fa:ImageAwesome Icon="{Binding CategoryIcon}" 
                                                        Width="24" Height="24" 
                                                        Foreground="White"
                                                        HorizontalAlignment="Center" 
-                                                       VerticalAlignment="Center"/>
+                                                       VerticalAlignment="Center"
+                                                       x:Name="AppIcon"/>
                                     </Border>
 
                                     <!-- App Info -->
@@ -410,6 +475,48 @@
                                               HorizontalAlignment="Center"
                                               VerticalAlignment="Bottom"
                                               Margin="0,0,0,8"/>
+                                              
+                                    <!-- Loading Overlay -->
+                                    <Border Grid.RowSpan="3" 
+                                           Background="#80FFFFFF"
+                                           CornerRadius="8"
+                                           Visibility="{Binding IsLaunching, Converter={StaticResource BoolToVisConverter}}"
+                                           x:Name="LoadingOverlay">
+                                        <Grid>
+                                            <!-- Spinner -->
+                                            <Ellipse Width="30" Height="30" 
+                                                   StrokeThickness="3" 
+                                                   Stroke="{StaticResource PrimaryBrush}"
+                                                   StrokeDashArray="15,5"
+                                                   HorizontalAlignment="Center"
+                                                   VerticalAlignment="Center"
+                                                   x:Name="LoadingSpinner">
+                                                <Ellipse.RenderTransform>
+                                                    <RotateTransform x:Name="SpinnerRotation" CenterX="15" CenterY="15"/>
+                                                </Ellipse.RenderTransform>
+                                                <Ellipse.Triggers>
+                                                    <EventTrigger RoutedEvent="Loaded">
+                                                        <BeginStoryboard>
+                                                            <Storyboard RepeatBehavior="Forever">
+                                                                <DoubleAnimation Storyboard.TargetName="SpinnerRotation"
+                                                                               Storyboard.TargetProperty="Angle"
+                                                                               From="0" To="360" Duration="0:0:1"/>
+                                                            </Storyboard>
+                                                        </BeginStoryboard>
+                                                    </EventTrigger>
+                                                </Ellipse.Triggers>
+                                            </Ellipse>
+                                            
+                                            <!-- Loading Text -->
+                                            <TextBlock Text="Запуск..." 
+                                                     FontSize="11" 
+                                                     FontWeight="Medium"
+                                                     Foreground="{StaticResource PrimaryTextBrush}"
+                                                     HorizontalAlignment="Center"
+                                                     VerticalAlignment="Center"
+                                                     Margin="0,50,0,0"/>
+                                        </Grid>
+                                    </Border>
                                 </Grid>
 
                                 <Border.InputBindings>
