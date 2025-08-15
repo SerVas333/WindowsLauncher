@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Core.Models.Email;
 using WindowsLauncher.Data.Configurations;
@@ -14,6 +15,7 @@ namespace WindowsLauncher.Data
         {
         }
 
+        [ActivatorUtilitiesConstructor]
         public LauncherDbContext(DbContextOptions<LauncherDbContext> options, 
             IDatabaseConfigurationService databaseConfigurationService) : base(options)
         {

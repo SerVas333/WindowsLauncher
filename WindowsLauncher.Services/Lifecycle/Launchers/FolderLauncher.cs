@@ -24,6 +24,16 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
         
         public ApplicationType SupportedType => ApplicationType.Folder;
         public int Priority => 5; // Низкий приоритет для папок
+
+        /// <summary>
+        /// Событие активации окна приложения (не используется в данном лаунчере)
+        /// </summary>
+        public event EventHandler<ApplicationInstance>? WindowActivated;
+
+        /// <summary>  
+        /// Событие закрытия окна приложения (не используется в данном лаунчере)
+        /// </summary>
+        public event EventHandler<ApplicationInstance>? WindowClosed;
         
         public FolderLauncher(
             ILogger<FolderLauncher> logger,

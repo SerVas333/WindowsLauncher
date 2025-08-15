@@ -10,6 +10,8 @@ using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using WindowsLauncher.UI.Infrastructure.Extensions;
 using Microsoft.Win32;
 using WindowsLauncher.Core.Interfaces.Email;
 using WindowsLauncher.Core.Models.Email;
@@ -29,6 +31,7 @@ namespace WindowsLauncher.UI.ViewModels
         
         private readonly IAddressBookService _addressBookService;
         private readonly ILogger<AddressBookViewModel> _logger;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         
         private string _searchText = string.Empty;
         private bool _isLoading = false;
@@ -139,10 +142,12 @@ namespace WindowsLauncher.UI.ViewModels
         public AddressBookViewModel(
             IAddressBookService addressBookService,
             ILogger<AddressBookViewModel> logger,
-            IDialogService dialogService) : base(logger, dialogService)
+            IDialogService dialogService,
+            IServiceScopeFactory serviceScopeFactory) : base(logger, dialogService)
         {
             _addressBookService = addressBookService ?? throw new ArgumentNullException(nameof(addressBookService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
             
             // Initialize commands
             AddContactCommand = new AsyncRelayCommand(AddContactAsync);
@@ -219,14 +224,7 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 var contact = new Contact();
                 
-                var contactEditViewModel = ((App)Application.Current).ServiceProvider.GetService(typeof(ContactEditViewModel)) as ContactEditViewModel;
-                if (contactEditViewModel == null)
-                {
-                    _logger.LogError("Failed to resolve ContactEditViewModel from DI container");
-                    MessageBox.Show("Ошибка инициализации редактора контактов", "Ошибка", 
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+                var contactEditViewModel = _serviceScopeFactory.CreateScopedService<ContactEditViewModel>();
                 
                 contactEditViewModel.SetContact(contact, isNew: true);
                 
@@ -256,14 +254,7 @@ namespace WindowsLauncher.UI.ViewModels
             
             try
             {
-                var contactEditViewModel = ((App)Application.Current).ServiceProvider.GetService(typeof(ContactEditViewModel)) as ContactEditViewModel;
-                if (contactEditViewModel == null)
-                {
-                    _logger.LogError("Failed to resolve ContactEditViewModel from DI container");
-                    MessageBox.Show("Ошибка инициализации редактора контактов", "Ошибка", 
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+                var contactEditViewModel = _serviceScopeFactory.CreateScopedService<ContactEditViewModel>();
                 
                 // Создаем копию контакта для редактирования
                 var contactCopy = new Contact

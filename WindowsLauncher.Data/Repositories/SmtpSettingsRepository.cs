@@ -16,12 +16,12 @@ namespace WindowsLauncher.Data.Repositories
     /// </summary>
     public class SmtpSettingsRepository : ISmtpSettingsRepository
     {
-        private readonly LauncherDbContext _context;
+        private readonly IDbContextFactory<LauncherDbContext> _contextFactory;
         private readonly ILogger<SmtpSettingsRepository> _logger;
         
-        public SmtpSettingsRepository(LauncherDbContext context, ILogger<SmtpSettingsRepository> logger)
+        public SmtpSettingsRepository(IDbContextFactory<LauncherDbContext> contextFactory, ILogger<SmtpSettingsRepository> logger)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
         
@@ -32,7 +32,8 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
-                var settings = await _context.SmtpSettings
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var settings = await context.SmtpSettings
                     .Where(s => s.IsActive)
                     .OrderBy(s => s.ServerType) // Primary first, then Backup
                     .ToListAsync();
@@ -55,7 +56,8 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
-                var settings = await _context.SmtpSettings
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var settings = await context.SmtpSettings
                     .FirstOrDefaultAsync(s => s.Id == id);
                 
                 if (settings != null)
@@ -80,7 +82,8 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
-                var settings = await _context.SmtpSettings
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var settings = await context.SmtpSettings
                     .FirstOrDefaultAsync(s => s.ServerType == serverType && s.IsActive);
                 
                 if (settings != null)
@@ -119,8 +122,9 @@ namespace WindowsLauncher.Data.Repositories
                 settings.CreatedAt = DateTime.Now;
                 settings.UpdatedAt = null;
                 
-                _context.SmtpSettings.Add(settings);
-                await _context.SaveChangesAsync();
+                using var context = await _contextFactory.CreateDbContextAsync();
+                context.SmtpSettings.Add(settings);
+                await context.SaveChangesAsync();
                 
                 _logger.LogInformation("Created new {ServerType} SMTP settings {Id}: {Host}:{Port}", 
                     settings.ServerType, settings.Id, settings.Host, settings.Port);
@@ -145,7 +149,9 @@ namespace WindowsLauncher.Data.Repositories
             
             try
             {
-                var existingSettings = await GetByIdAsync(settings.Id);
+                using var context = await _contextFactory.CreateDbContextAsync();
+                
+                var existingSettings = await context.SmtpSettings.FirstOrDefaultAsync(s => s.Id == settings.Id);
                 if (existingSettings == null)
                 {
                     throw new InvalidOperationException($"SMTP настройки с ID {settings.Id} не найдены");
@@ -154,7 +160,12 @@ namespace WindowsLauncher.Data.Repositories
                 // Проверяем конфликт типов серверов (только если тип изменился)
                 if (existingSettings.ServerType != settings.ServerType)
                 {
-                    await ValidateServerTypeAsync(settings, isUpdate: true);
+                    var hasConflict = await context.SmtpSettings
+                        .AnyAsync(s => s.ServerType == settings.ServerType && s.IsActive && s.Id != settings.Id);
+                    if (hasConflict)
+                    {
+                        throw new InvalidOperationException($"Активный {settings.ServerType} сервер уже существует");
+                    }
                 }
                 
                 // Обновляем поля
@@ -172,7 +183,7 @@ namespace WindowsLauncher.Data.Repositories
                 existingSettings.LastSuccessfulSend = settings.LastSuccessfulSend;
                 existingSettings.UpdatedAt = DateTime.Now;
                 
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
                 
                 _logger.LogInformation("Updated {ServerType} SMTP settings {Id}: {Host}:{Port}", 
                     settings.ServerType, settings.Id, settings.Host, settings.Port);
@@ -193,15 +204,17 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
-                var settings = await GetByIdAsync(id);
+                using var context = await _contextFactory.CreateDbContextAsync();
+                
+                var settings = await context.SmtpSettings.FirstOrDefaultAsync(s => s.Id == id);
                 if (settings == null)
                 {
                     _logger.LogWarning("SMTP settings {Id} not found for deletion", id);
                     return false;
                 }
                 
-                _context.SmtpSettings.Remove(settings);
-                await _context.SaveChangesAsync();
+                context.SmtpSettings.Remove(settings);
+                await context.SaveChangesAsync();
                 
                 _logger.LogInformation("Deleted {ServerType} SMTP settings {Id}: {Host}:{Port}", 
                     settings.ServerType, id, settings.Host, settings.Port);
@@ -222,7 +235,8 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
-                var hasPrimary = await _context.SmtpSettings
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var hasPrimary = await context.SmtpSettings
                     .AnyAsync(s => s.ServerType == SmtpServerType.Primary && s.IsActive);
                 
                 _logger.LogDebug("Primary SMTP server exists: {HasPrimary}", hasPrimary);
@@ -243,7 +257,8 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
-                var hasBackup = await _context.SmtpSettings
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var hasBackup = await context.SmtpSettings
                     .AnyAsync(s => s.ServerType == SmtpServerType.Backup && s.IsActive);
                 
                 _logger.LogDebug("Backup SMTP server exists: {HasBackup}", hasBackup);
@@ -266,8 +281,9 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
+                using var context = await _contextFactory.CreateDbContextAsync();
                 // Проверяем, что нет другого активного сервера того же типа
-                var query = _context.SmtpSettings
+                var query = context.SmtpSettings
                     .Where(s => s.ServerType == settings.ServerType && s.IsActive);
                 
                 if (isUpdate)
@@ -286,7 +302,7 @@ namespace WindowsLauncher.Data.Repositories
                 }
                 
                 // Дополнительная проверка: нельзя создать более 2 серверов вообще
-                var totalActiveServers = await _context.SmtpSettings
+                var totalActiveServers = await context.SmtpSettings
                     .CountAsync(s => s.IsActive && (!isUpdate || s.Id != settings.Id));
                 
                 if (!isUpdate && totalActiveServers >= 2)

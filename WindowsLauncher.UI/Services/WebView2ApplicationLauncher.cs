@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using WindowsLauncher.UI.Infrastructure.Extensions;
 using WindowsLauncher.Core.Interfaces.Lifecycle;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Core.Models.Lifecycle;
@@ -19,7 +20,7 @@ namespace WindowsLauncher.UI.Services
     /// </summary>
     public class WebView2ApplicationLauncher : IApplicationLauncher
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<WebView2ApplicationLauncher> _logger;
         private readonly Dictionary<string, IWebView2Window> _activeWindows;
 
@@ -30,10 +31,10 @@ namespace WindowsLauncher.UI.Services
         public event EventHandler<ApplicationInstance>? WindowStateChanged;
 
         public WebView2ApplicationLauncher(
-            IServiceProvider serviceProvider,
+            IServiceScopeFactory serviceScopeFactory,
             ILogger<WebView2ApplicationLauncher> logger)
         {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _activeWindows = new Dictionary<string, IWebView2Window>();
         }
@@ -398,8 +399,8 @@ namespace WindowsLauncher.UI.Services
         {
             try
             {
-                // Получаем logger для окна из DI
-                var windowLogger = _serviceProvider.GetRequiredService<ILogger<WebView2ApplicationWindow>>();
+                // Получаем logger для окна из DI через scoped scope
+                var windowLogger = _serviceScopeFactory.CreateScopedService<ILogger<WebView2ApplicationWindow>>();
 
                 // Создаем окно
                 var window = new WebView2ApplicationWindow(application, instanceId, launchedBy, windowLogger);

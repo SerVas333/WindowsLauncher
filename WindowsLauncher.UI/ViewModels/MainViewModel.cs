@@ -12,6 +12,7 @@ using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.ViewModels.Base;
 using WindowsLauncher.UI.Infrastructure.Commands;
 using WindowsLauncher.UI.Infrastructure.Localization;
+using WindowsLauncher.UI.Infrastructure.Extensions;
 using System.ComponentModel;
 using WpfApplication = System.Windows.Application;
 using CoreApplication = WindowsLauncher.Core.Models.Application;
@@ -31,7 +32,7 @@ namespace WindowsLauncher.UI.ViewModels
     {
         #region Fields
 
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private User? _currentUser;
         private UserSettings? _userSettings;
         private string _searchText = "";
@@ -54,12 +55,12 @@ namespace WindowsLauncher.UI.ViewModels
         #region Constructor
 
         public MainViewModel(
-            IServiceProvider serviceProvider,
+            IServiceScopeFactory serviceScopeFactory,
             ILogger<MainViewModel> logger,
             IDialogService dialogService)
             : base(logger, dialogService)
         {
-            _serviceProvider = serviceProvider;
+            _serviceScopeFactory = serviceScopeFactory;
 
             // Инициализируем коллекции
             Applications = new ObservableCollection<ApplicationViewModel>();
@@ -323,7 +324,7 @@ namespace WindowsLauncher.UI.ViewModels
                 IsLoading = true;
                 StatusMessage = LocalizationHelper.Instance.GetString("Initializing");
 
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 Logger.LogInformation("Created DI scope successfully");
 
                 // БД уже должна быть инициализирована на этапе запуска приложения
@@ -382,7 +383,7 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 StatusMessage = LocalizationHelper.Instance.GetString("Authenticating");
 
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
 
                 var authResult = await authService.AuthenticateAsync();
@@ -423,7 +424,7 @@ namespace WindowsLauncher.UI.ViewModels
                 Logger.LogInformation("Loading user data for: {User}", CurrentUser.Username);
                 StatusMessage = LocalizationHelper.Instance.GetString("LoadingApplications");
 
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var authzService = scope.ServiceProvider.GetRequiredService<IAuthorizationService>();
                 var appService = scope.ServiceProvider.GetRequiredService<IApplicationService>();
 
@@ -486,7 +487,7 @@ namespace WindowsLauncher.UI.ViewModels
             try
             {
                 // Используем CategoryManagementService для получения видимых категорий с полными метаданными
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var categoryService = scope.ServiceProvider.GetService<ICategoryManagementService>();
                 
                 LocalizedCategories.Clear();
@@ -647,7 +648,7 @@ namespace WindowsLauncher.UI.ViewModels
         private async Task<ApplicationViewModel> CreateAndInitializeApplicationViewModelAsync(CoreApplication application)
         {
             // Создаем отдельный scope для каждой операции инициализации
-            using var scope = _serviceProvider.CreateScope();
+            using var scope = _serviceScopeFactory.CreateScope();
             var categoryService = scope.ServiceProvider.GetService<ICategoryManagementService>();
             
             // Создаем ApplicationViewModel
@@ -796,7 +797,7 @@ namespace WindowsLauncher.UI.ViewModels
                     {
                         try
                         {
-                            using var scope = _serviceProvider.CreateScope();
+                            using var scope = _serviceScopeFactory.CreateScope();
                             var categoryService = scope.ServiceProvider.GetService<ICategoryManagementService>();
                             
                             if (categoryService != null)
@@ -1026,7 +1027,7 @@ namespace WindowsLauncher.UI.ViewModels
                 var app = appViewModel.GetApplication();
                 StatusMessage = LocalizationHelper.Instance.GetFormattedString("LaunchingApp", app.Name);
 
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var appService = scope.ServiceProvider.GetRequiredService<IApplicationService>();
 
                 var result = await appService.LaunchApplicationAsync(app, CurrentUser);
@@ -1069,7 +1070,7 @@ namespace WindowsLauncher.UI.ViewModels
                 }
 
                 Logger.LogInformation("User confirmed logout, processing...");
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 StatusMessage = LocalizationHelper.Instance.GetString("LoggingOut");
                 
                 // Используем SessionManagementService для обработки выхода
@@ -1156,7 +1157,7 @@ namespace WindowsLauncher.UI.ViewModels
                 StatusMessage = LocalizationHelper.Instance.GetString("SwitchingUser");
 
                 // Используем ту же логику что и в Logout - делегируем SessionManagementService
-                using (var scope = _serviceProvider.CreateScope())
+                using (var scope = _serviceScopeFactory.CreateScope())
                 {
                     var sessionService = scope.ServiceProvider.GetRequiredService<ISessionManagementService>();
                     
@@ -1198,7 +1199,9 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                var adminWindow = new AdminWindow(_serviceProvider);
+                // AdminWindow создается с ServiceScopeFactory для работы с Scoped сервисами  
+                using var scope = _serviceScopeFactory.CreateScope();
+                var adminWindow = new AdminWindow(scope.ServiceProvider);
                 adminWindow.Owner = WpfApplication.Current.MainWindow;
                 adminWindow.ShowDialog();
 
@@ -1217,7 +1220,7 @@ namespace WindowsLauncher.UI.ViewModels
         {
             await ExecuteSafelyAsync(async () =>
             {
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var virtualKeyboardService = scope.ServiceProvider.GetRequiredService<IVirtualKeyboardService>();
 
                 StatusMessage = LocalizationHelper.Instance.GetString("TogglingVirtualKeyboard");
@@ -1279,15 +1282,8 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                var composeViewModel = _serviceProvider.GetService<ComposeEmailViewModel>();
-                if (composeViewModel == null)
-                {
-                    Logger.LogError("Failed to resolve ComposeEmailViewModel from DI container");
-                    MessageBox.Show(LocalizationHelper.Instance.GetString("Error_EmailServiceNotAvailable"), 
-                        LocalizationHelper.Instance.GetString("Error"), 
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+                // Создаем ComposeEmailViewModel через scoped scope для доступа к Scoped сервисам (IEmailService)
+                var composeViewModel = _serviceScopeFactory.CreateScopedService<ComposeEmailViewModel>();
 
                 var composeWindow = new ComposeEmailWindow(composeViewModel)
                 {
@@ -1314,15 +1310,8 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                var addressBookViewModel = _serviceProvider.GetService<AddressBookViewModel>();
-                if (addressBookViewModel == null)
-                {
-                    Logger.LogError("Failed to resolve AddressBookViewModel from DI container");
-                    MessageBox.Show(LocalizationHelper.Instance.GetString("Error_AddressBookNotAvailable"), 
-                        LocalizationHelper.Instance.GetString("Error"), 
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+                // Создаем AddressBookViewModel через scoped scope для доступа к Scoped сервисам (IAddressBookService)
+                var addressBookViewModel = _serviceScopeFactory.CreateScopedService<AddressBookViewModel>();
 
                 // Настраиваем режим просмотра (не выбор контактов)
                 addressBookViewModel.IsSelectionMode = false;
@@ -1397,7 +1386,7 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 Logger.LogInformation("Starting WSA status initialization in MainViewModel");
                 
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var androidSubsystem = scope.ServiceProvider.GetService<IAndroidSubsystemService>();
 
                 if (androidSubsystem == null)

@@ -2,6 +2,7 @@ using System;
 using System.Threading.Tasks;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+using WindowsLauncher.UI.Infrastructure.Extensions;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Interfaces.Lifecycle;
 using WindowsLauncher.Core.Models;
@@ -15,7 +16,7 @@ namespace WindowsLauncher.UI.Services
     /// </summary>
     public class AppSwitcherService : IDisposable
     {
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<AppSwitcherService> _logger;
         private readonly IApplicationLifecycleService _lifecycleService;
         private AppSwitcherWindow? _switcherWindow;
@@ -23,11 +24,11 @@ namespace WindowsLauncher.UI.Services
         private bool _eventsSubscribed = false;
 
         public AppSwitcherService(
-            IServiceProvider serviceProvider,
+            IServiceScopeFactory serviceScopeFactory,
             ILogger<AppSwitcherService> logger,
             IApplicationLifecycleService lifecycleService)
         {
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _lifecycleService = lifecycleService ?? throw new ArgumentNullException(nameof(lifecycleService));
             
@@ -177,9 +178,10 @@ namespace WindowsLauncher.UI.Services
                 }
 
                 // Создаем новое окно через DI
+                var windowLogger = _serviceScopeFactory.CreateScopedService<ILogger<AppSwitcherWindow>>();
                 _switcherWindow = new AppSwitcherWindow(
                     _lifecycleService,
-                    _serviceProvider.GetRequiredService<ILogger<AppSwitcherWindow>>()
+                    windowLogger
                 );
 
                 _logger.LogDebug("Created new application switcher window");

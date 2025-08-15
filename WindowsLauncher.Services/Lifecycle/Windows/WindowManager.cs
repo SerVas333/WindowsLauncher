@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -19,6 +20,12 @@ namespace WindowsLauncher.Services.Lifecycle.Windows
     public class WindowManager : IWindowManager
     {
         private readonly ILogger<WindowManager> _logger;
+        
+        // НОВОЕ: Кэширование WSA окон для оптимизации производительности
+        private readonly Dictionary<string, (WindowInfo Window, DateTime CachedAt)> _wsaWindowCache 
+            = new Dictionary<string, (WindowInfo, DateTime)>();
+        private readonly TimeSpan _wsaCacheTimeout = TimeSpan.FromSeconds(60); // TTL 60 секунд
+        private readonly object _cacheLocker = new object();
         
         #region Windows API Declarations
         
@@ -85,6 +92,24 @@ namespace WindowsLauncher.Services.Lifecycle.Windows
         [DllImport("user32.dll")]
         private static extern bool IsWindowEnabled(IntPtr hWnd);
         
+        // Process-related APIs
+        [DllImport("kernel32.dll")]
+        private static extern IntPtr OpenProcess(uint dwDesiredAccess, bool bInheritHandle, uint dwProcessId);
+        
+        [DllImport("kernel32.dll")]
+        private static extern bool CloseHandle(IntPtr hObject);
+        
+        
+        [DllImport("psapi.dll", CharSet = CharSet.Auto)]
+        private static extern uint GetProcessImageFileName(IntPtr hProcess, StringBuilder lpImageFileName, uint nSize);
+
+        // Новые P/Invoke декларации для WSA window detection
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern int GetClassNameW(IntPtr hWnd, StringBuilder lpClassName, int nMaxCount);
+
+        [DllImport("user32.dll", SetLastError = true, CharSet = CharSet.Unicode)]
+        private static extern int GetWindowTextW(IntPtr hWnd, StringBuilder lpWindowText, int nMaxCount);
+        
         private delegate bool EnumWindowsProc(IntPtr hWnd, IntPtr lParam);
         
         // Constants
@@ -109,6 +134,10 @@ namespace WindowsLauncher.Services.Lifecycle.Windows
         private const uint SWP_NOMOVE = 0x0002;
         private const uint SWP_NOSIZE = 0x0001;
         private const uint SWP_SHOWWINDOW = 0x0040;
+        
+        // Process access rights
+        private const uint PROCESS_QUERY_INFORMATION = 0x0400;
+        private const uint PROCESS_VM_READ = 0x0010;
         
         private const byte VK_MENU = 0x12; // Alt key
         private const uint KEYEVENTF_EXTENDEDKEY = 0x0001;
@@ -994,6 +1023,964 @@ namespace WindowsLauncher.Services.Lifecycle.Windows
             }
         }
         
+        #endregion
+
+        #region WSA (Windows Subsystem for Android) Support
+
+        /// <summary>
+        /// Найти WSA-окно по package name и activity name
+        /// Использует корреляционный алгоритм поиска на основе времени запуска и заголовка
+        /// </summary>
+        /// <param name="packageName">Android package name (например, com.example.app)</param>
+        /// <param name="activityName">Имя Android активности (опционально)</param>
+        /// <returns>Информация о найденном WSA-окне или null</returns>
+        public async Task<WindowInfo?> FindWSAWindowAsync(string packageName, string activityName = "")
+        {
+            await Task.CompletedTask; // Заглушка для async контракта
+            
+            try
+            {
+                _logger.LogDebug("Searching for WSA window with package: {PackageName}, activity: {ActivityName}", 
+                    packageName, activityName);
+
+                if (string.IsNullOrWhiteSpace(packageName))
+                {
+                    _logger.LogWarning("Package name is empty - cannot search for WSA window");
+                    return null;
+                }
+                
+                // НОВОЕ: Проверяем кэш перед дорогим поиском
+                var cacheKey = $"{packageName}:{activityName}";
+                lock (_cacheLocker)
+                {
+                    if (_wsaWindowCache.TryGetValue(cacheKey, out var cachedEntry))
+                    {
+                        var age = DateTime.Now - cachedEntry.CachedAt;
+                        if (age < _wsaCacheTimeout)
+                        {
+                            // Проверяем что окно все еще существует
+                            if (IsWindow(cachedEntry.Window.Handle))
+                            {
+                                _logger.LogTrace("Found WSA window in cache for {PackageName}: Handle={Handle:X} (Age: {Age})", 
+                                    packageName, (long)cachedEntry.Window.Handle, age);
+                                return cachedEntry.Window;
+                            }
+                            else
+                            {
+                                // Окно больше не существует, удаляем из кэша
+                                _wsaWindowCache.Remove(cacheKey);
+                                _logger.LogTrace("Removed stale WSA window from cache for {PackageName}", packageName);
+                            }
+                        }
+                        else
+                        {
+                            // Кэш устарел, удаляем запись
+                            _wsaWindowCache.Remove(cacheKey);
+                            _logger.LogTrace("Removed expired WSA window from cache for {PackageName}", packageName);
+                        }
+                    }
+                }
+
+                // Шаг 1: Получить все WSA-окна (ApplicationFrameWindow)
+                var wsaWindows = await GetWSAWindowsAsync();
+                if (wsaWindows.Count == 0)
+                {
+                    _logger.LogDebug("No WSA windows found in system");
+                    return null;
+                }
+
+                _logger.LogDebug("Found {Count} potential WSA windows to analyze", wsaWindows.Count);
+
+                // Шаг 2: Корреляционный алгоритм поиска
+                var currentTime = DateTime.Now;
+                var searchTimeWindow = TimeSpan.FromMinutes(5); // Окно поиска 5 минут
+
+                // Извлекаем простое имя приложения из package name (com.example.app -> app)
+                var simpleAppName = ExtractSimpleAppName(packageName);
+
+                foreach (var window in wsaWindows)
+                {
+                    // Фильтр по времени - окно должно быть создано недавно
+                    var windowAge = currentTime - window.CreatedAt;
+                    if (windowAge > searchTimeWindow)
+                    {
+                        _logger.LogTrace("Skipping window {Handle:X} - too old ({Age})", 
+                            (long)window.Handle, windowAge);
+                        continue;
+                    }
+
+                    // Проверка по заголовку окна (содержит имя приложения)
+                    var titleMatch = CheckWindowTitleMatch(window.Title, packageName, simpleAppName);
+                    if (titleMatch)
+                    {
+                        _logger.LogInformation("Found WSA window by title match: {Title} for package {PackageName}", 
+                            window.Title, packageName);
+                        
+                        // НОВОЕ: Сохраняем в кэш перед возвратом
+                        lock (_cacheLocker)
+                        {
+                            _wsaWindowCache[cacheKey] = (window, DateTime.Now);
+                            _logger.LogTrace("Cached WSA window for {PackageName}: Handle={Handle:X}", 
+                                packageName, (long)window.Handle);
+                        }
+                        
+                        return window;
+                    }
+
+                    _logger.LogTrace("Window {Handle:X} title '{Title}' doesn't match package {PackageName}", 
+                        (long)window.Handle, window.Title, packageName);
+                }
+
+                // Если точное совпадение не найдено, возвращаем самое свежее WSA-окно
+                var newestWindow = wsaWindows
+                    .Where(w => currentTime - w.CreatedAt <= searchTimeWindow)
+                    .OrderByDescending(w => w.CreatedAt)
+                    .FirstOrDefault();
+
+                if (newestWindow != null)
+                {
+                    _logger.LogWarning("No exact match found for package {PackageName}, returning newest WSA window: {Title}", 
+                        packageName, newestWindow.Title);
+                    return newestWindow;
+                }
+
+                _logger.LogDebug("No suitable WSA window found for package: {PackageName}", packageName);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching for WSA window: {PackageName}", packageName);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Получить все WSA-окна в системе
+        /// Использует двойной поиск: ApplicationFrameWindow + Chrome_WidgetWin_*
+        /// </summary>
+        /// <returns>Список всех WSA-окон</returns>
+        public async Task<IReadOnlyList<WindowInfo>> GetWSAWindowsAsync()
+        {
+            try
+            {
+                _logger.LogDebug("Getting all WSA windows using dual search strategy");
+
+                // Стратегия 1: Ищем окна класса ApplicationFrameWindow (классический WSA)
+                var applicationFrameWindows = await FindWindowsByClassAsync("ApplicationFrameWindow");
+                _logger.LogTrace("Found {Count} ApplicationFrameWindow instances", applicationFrameWindows.Count);
+
+                // Стратегия 2: Ищем окна класса Chrome_WidgetWin_* (Chromium-based WSA)
+                var chromeWidgetWindows = await FindWindowsByClassPatternAsync("Chrome_WidgetWin_*");
+                _logger.LogTrace("Found {Count} Chrome_WidgetWin_* instances", chromeWidgetWindows.Count);
+
+                // Объединяем результаты и убираем дубликаты по Handle
+                var allCandidateWindows = new Dictionary<IntPtr, WindowInfo>();
+                
+                foreach (var window in applicationFrameWindows)
+                {
+                    allCandidateWindows[window.Handle] = window;
+                }
+                
+                foreach (var window in chromeWidgetWindows)
+                {
+                    allCandidateWindows[window.Handle] = window;
+                }
+
+                _logger.LogTrace("Combined {Total} unique candidate windows from both searches", 
+                    allCandidateWindows.Count);
+
+                // Фильтруем кандидатов через WSA проверку
+                var confirmedWSAWindows = new List<WindowInfo>();
+                
+                foreach (var window in allCandidateWindows.Values)
+                {
+                    // Дополнительная проверка что это именно WSA-окно
+                    if (await IsWSAWindowAsync(window.Handle))
+                    {
+                        confirmedWSAWindows.Add(window);
+                        _logger.LogTrace("Confirmed WSA window: {Handle:X}, Class: '{Class}', Title: '{Title}'", 
+                            (long)window.Handle, window.ClassName, window.Title);
+                    }
+                    else
+                    {
+                        _logger.LogTrace("Window {Handle:X} rejected by WSA verification: '{Title}'", 
+                            (long)window.Handle, window.Title);
+                    }
+                }
+
+                _logger.LogDebug("Found {WSACount} confirmed WSA windows out of {CandidateCount} candidates " +
+                    "({AppFrameCount} ApplicationFrameWindow + {ChromeCount} Chrome_WidgetWin_*)", 
+                    confirmedWSAWindows.Count, allCandidateWindows.Count, 
+                    applicationFrameWindows.Count, chromeWidgetWindows.Count);
+                
+                return confirmedWSAWindows.AsReadOnly();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error getting WSA windows");
+                return new List<WindowInfo>().AsReadOnly();
+            }
+        }
+
+        /// <summary>
+        /// Проверить, является ли окно WSA-окном
+        /// Использует комбинированную проверку: класс окна + WSA процесс + эвристики
+        /// </summary>
+        /// <param name="windowHandle">Handle окна для проверки</param>
+        /// <returns>true если окно создано WSA</returns>
+        public async Task<bool> IsWSAWindowAsync(IntPtr windowHandle)
+        {
+            try
+            {
+                if (!IsWindow(windowHandle))
+                {
+                    _logger.LogTrace("Window handle {Handle:X} is not valid", (long)windowHandle);
+                    return false;
+                }
+
+                // Получаем базовую информацию об окне
+                var windowClass = GetWindowClass(windowHandle);
+                var windowTitle = GetWindowTitle(windowHandle);
+                
+                GetWindowThreadProcessId(windowHandle, out uint processId);
+                
+                _logger.LogTrace("Checking WSA window: Handle={Handle:X}, Class='{Class}', Title='{Title}', PID={ProcessId}", 
+                    (long)windowHandle, windowClass, windowTitle, processId);
+
+                // Шаг 1: Проверка класса окна (поддерживаем оба типа WSA окон)
+                bool hasWSAWindowClass = string.Equals(windowClass, "ApplicationFrameWindow", StringComparison.OrdinalIgnoreCase) ||
+                                       IsChromeWidgetWindow(windowClass);
+                
+                if (!hasWSAWindowClass)
+                {
+                    _logger.LogTrace("Window {Handle:X} rejected - unsupported class: {Class}", 
+                        (long)windowHandle, windowClass);
+                    return false;
+                }
+
+                // Шаг 2: Проверка WSA процесса (самый надежный критерий)
+                bool isWSAProcess = await IsWSAProcessAsync((int)processId);
+                
+                if (isWSAProcess)
+                {
+                    _logger.LogDebug("Window {Handle:X} confirmed as WSA by process check: Class='{Class}', Title='{Title}'", 
+                        (long)windowHandle, windowClass, windowTitle);
+                    return true;
+                }
+
+                // Шаг 3: Если процесс не WSA, но класс подходящий - дополнительные эвристики
+                _logger.LogTrace("Window {Handle:X} has WSA-compatible class but non-WSA process, applying heuristics", 
+                    (long)windowHandle);
+
+                // Исключаем известные Windows приложения
+                var excludePatterns = new[]
+                {
+                    "Microsoft Store", "Settings", "Calculator", "Mail", "Calendar", "Photos",
+                    "Movies & TV", "Groove Music", "Microsoft Edge", "File Explorer",
+                    "Task Manager", "Control Panel", "Registry Editor"
+                };
+
+                foreach (var pattern in excludePatterns)
+                {
+                    if (windowTitle.Contains(pattern, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogTrace("Window {Handle:X} excluded as Windows app by pattern '{Pattern}': {Title}", 
+                            (long)windowHandle, pattern, windowTitle);
+                        return false;
+                    }
+                }
+
+                // Пустой заголовок = системное окно
+                if (string.IsNullOrWhiteSpace(windowTitle))
+                {
+                    _logger.LogTrace("Window {Handle:X} rejected - empty title", (long)windowHandle);
+                    return false;
+                }
+
+                // Положительные индикаторы Android приложений
+                var androidIndicators = new[]
+                {
+                    // Популярные Android приложения
+                    "WhatsApp", "Telegram", "Instagram", "TikTok", "YouTube", "Facebook",
+                    "Chrome", "Firefox", "VLC", "Spotify", "Netflix", "Amazon",
+                    // Android package name признаки
+                    "com.", "org.", "net.", "io.", "app.",
+                    // Android UI элементы
+                    "MainActivity", "Activity", "Fragment"
+                };
+
+                foreach (var indicator in androidIndicators)
+                {
+                    if (windowTitle.Contains(indicator, StringComparison.OrdinalIgnoreCase))
+                    {
+                        _logger.LogDebug("Window {Handle:X} identified as WSA by title indicator '{Indicator}': {Title}", 
+                            (long)windowHandle, indicator, windowTitle);
+                        return true;
+                    }
+                }
+
+                // Для Chrome_WidgetWin_* окон, не принадлежащих WSA процессу - скорее всего НЕ WSA
+                if (IsChromeWidgetWindow(windowClass))
+                {
+                    _logger.LogTrace("Window {Handle:X} rejected - Chrome_WidgetWin_* class but non-WSA process", 
+                        (long)windowHandle);
+                    return false;
+                }
+
+                // Для ApplicationFrameWindow без WSA процесса - консервативный подход
+                _logger.LogDebug("Window {Handle:X} tentatively identified as WSA: class={Class}, title='{Title}' (fallback)", 
+                    (long)windowHandle, windowClass, windowTitle);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error checking if window is WSA: {Handle:X}", (long)windowHandle);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Извлекает простое имя приложения из Android package name
+        /// Например: com.example.myapp -> myapp
+        /// </summary>
+        /// <param name="packageName">Android package name</param>
+        /// <returns>Простое имя приложения</returns>
+        private string ExtractSimpleAppName(string packageName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(packageName))
+                    return string.Empty;
+
+                // Разделяем package name по точкам
+                var parts = packageName.Split('.');
+                if (parts.Length == 0)
+                    return packageName;
+
+                // Берем последнюю часть (обычно это имя приложения)
+                var lastPart = parts[parts.Length - 1];
+                
+                // Если последняя часть слишком короткая или общая, берем предпоследнюю
+                if (lastPart.Length <= 2 || IsCommonAppSuffix(lastPart))
+                {
+                    if (parts.Length >= 2)
+                    {
+                        lastPart = parts[parts.Length - 2];
+                    }
+                }
+
+                _logger.LogTrace("Extracted simple app name '{SimpleAppName}' from package '{PackageName}'", 
+                    lastPart, packageName);
+                
+                return lastPart;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error extracting simple app name from package: {PackageName}", packageName);
+                return packageName; // Fallback к исходному имени
+            }
+        }
+
+        /// <summary>
+        /// Проверяет, является ли суффикс общим для Android приложений
+        /// </summary>
+        /// <param name="suffix">Суффикс для проверки</param>
+        /// <returns>true если суффикс общий</returns>
+        private bool IsCommonAppSuffix(string suffix)
+        {
+            var commonSuffixes = new[] { "app", "main", "ui", "client", "mobile", "android" };
+            return commonSuffixes.Contains(suffix.ToLowerInvariant());
+        }
+
+        /// <summary>
+        /// Проверяет соответствие заголовка окна Android package name
+        /// </summary>
+        /// <param name="windowTitle">Заголовок окна</param>
+        /// <param name="packageName">Android package name</param>
+        /// <param name="simpleAppName">Простое имя приложения</param>
+        /// <returns>true если заголовок соответствует приложению</returns>
+        private bool CheckWindowTitleMatch(string windowTitle, string packageName, string simpleAppName)
+        {
+            try
+            {
+                if (string.IsNullOrWhiteSpace(windowTitle))
+                    return false;
+
+                var titleLower = windowTitle.ToLowerInvariant();
+                var packageLower = packageName.ToLowerInvariant();
+                var simpleAppLower = simpleAppName.ToLowerInvariant();
+
+                // Точное совпадение с package name
+                if (titleLower.Contains(packageLower))
+                {
+                    _logger.LogTrace("Window title contains full package name: '{Title}' contains '{PackageName}'", 
+                        windowTitle, packageName);
+                    return true;
+                }
+
+                // Совпадение с простым именем приложения
+                if (!string.IsNullOrEmpty(simpleAppLower) && titleLower.Contains(simpleAppLower))
+                {
+                    _logger.LogTrace("Window title contains simple app name: '{Title}' contains '{SimpleAppName}'", 
+                        windowTitle, simpleAppName);
+                    return true;
+                }
+
+                // Проверка отдельных частей package name
+                var packageParts = packageName.Split('.');
+                foreach (var part in packageParts)
+                {
+                    if (part.Length >= 3 && !IsCommonAppSuffix(part) && 
+                        titleLower.Contains(part.ToLowerInvariant()))
+                    {
+                        _logger.LogTrace("Window title contains package part: '{Title}' contains '{Part}'", 
+                            windowTitle, part);
+                        return true;
+                    }
+                }
+
+                // Специальные случаи для известных Android приложений
+                if (CheckSpecialAndroidAppCases(titleLower, packageLower))
+                {
+                    _logger.LogTrace("Window title matches special Android app case: '{Title}' for package '{PackageName}'", 
+                        windowTitle, packageName);
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogWarning(ex, "Error checking window title match for package: {PackageName}", packageName);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Проверяет специальные случаи для известных Android приложений
+        /// </summary>
+        /// <param name="titleLower">Заголовок окна в нижнем регистре</param>
+        /// <param name="packageLower">Package name в нижнем регистре</param>
+        /// <returns>true если найдено совпадение</returns>
+        private bool CheckSpecialAndroidAppCases(string titleLower, string packageLower)
+        {
+            // Известные mappings для популярных Android приложений
+            var knownMappings = new Dictionary<string, string[]>
+            {
+                ["com.whatsapp"] = new[] { "whatsapp" },
+                ["com.instagram.android"] = new[] { "instagram" },
+                ["com.facebook.katana"] = new[] { "facebook" },
+                ["com.twitter.android"] = new[] { "twitter" },
+                ["com.google.android.youtube"] = new[] { "youtube" },
+                ["com.spotify.music"] = new[] { "spotify" },
+                ["com.netflix.mediaclient"] = new[] { "netflix" },
+                ["com.microsoft.office.outlook"] = new[] { "outlook", "microsoft outlook" },
+                ["com.adobe.reader"] = new[] { "adobe", "acrobat", "reader" },
+                ["com.skype.raider"] = new[] { "skype" }
+            };
+
+            if (knownMappings.TryGetValue(packageLower, out var aliases))
+            {
+                return aliases.Any(alias => titleLower.Contains(alias));
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Проверяет, является ли процесс WSA процессом
+        /// </summary>
+        /// <param name="processId">ID процесса для проверки</param>
+        /// <returns>true если процесс принадлежит WSA</returns>
+        private async Task<bool> IsWSAProcessAsync(int processId)
+        {
+            try
+            {
+                await Task.CompletedTask; // Заглушка для async контракта
+
+                // Получаем имя процесса через Windows API
+                var processName = GetProcessNameById(processId);
+                if (string.IsNullOrEmpty(processName))
+                    return false;
+
+                var nameLower = processName.ToLowerInvariant();
+                
+                // Проверка известных имён WSA процессов
+                if (nameLower == "wsaclient" || nameLower == "wsaservice" || 
+                    nameLower == "wsa" || nameLower.Contains("subsystemforandroid"))
+                {
+                    _logger.LogTrace("Process {ProcessId} identified as WSA by name: {ProcessName}", 
+                        processId, processName);
+                    return true;
+                }
+
+                // Проверка пути процесса через Windows API
+                try
+                {
+                    var processPath = GetProcessPathById(processId);
+                    if (!string.IsNullOrEmpty(processPath))
+                    {
+                        var pathLower = processPath.ToLowerInvariant();
+                        if (pathLower.Contains("microsoftcorporationii.windowssubsystemforandroid") ||
+                            pathLower.Contains("subsystemforandroid") ||
+                            pathLower.Contains("wsa"))
+                        {
+                            _logger.LogTrace("Process {ProcessId} identified as WSA by path: {Path}", 
+                                processId, processPath);
+                            return true;
+                        }
+                    }
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogTrace(ex, "Could not get process path for {ProcessId}", processId);
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogTrace(ex, "Error checking if process {ProcessId} is WSA process", processId);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Проверяет, соответствует ли класс окна паттерну Chrome_WidgetWin_*
+        /// </summary>
+        /// <param name="className">Класс окна для проверки</param>
+        /// <returns>true если класс соответствует паттерну Chrome_WidgetWin_*</returns>
+        private bool IsChromeWidgetWindow(string className)
+        {
+            if (string.IsNullOrEmpty(className))
+                return false;
+
+            // Chrome_WidgetWin_0, Chrome_WidgetWin_1, etc.
+            return className.StartsWith("Chrome_WidgetWin_", StringComparison.OrdinalIgnoreCase);
+        }
+
+        /// <summary>
+        /// Находит окна по паттерну класса (для Chrome_WidgetWin_*)
+        /// </summary>
+        /// <param name="classPattern">Паттерн класса для поиска</param>
+        /// <returns>Список найденных окон</returns>
+        private async Task<IReadOnlyList<WindowInfo>> FindWindowsByClassPatternAsync(string classPattern)
+        {
+            await Task.CompletedTask;
+            
+            var windows = new List<WindowInfo>();
+            var enumCount = 0;
+            var maxEnumCount = 2000;
+
+            try
+            {
+                var startTime = DateTime.Now;
+                
+                EnumWindows((hWnd, lParam) =>
+                {
+                    enumCount++;
+                    
+                    if (enumCount > maxEnumCount || (DateTime.Now - startTime).TotalSeconds > 10)
+                    {
+                        _logger.LogWarning("EnumWindows stopped due to safety limits while searching for pattern '{Pattern}'", classPattern);
+                        return false;
+                    }
+                    
+                    try
+                    {
+                        var className = GetWindowClass(hWnd);
+                        
+                        // Проверяем соответствие паттерну
+                        bool matches = classPattern == "Chrome_WidgetWin_*" 
+                            ? IsChromeWidgetWindow(className)
+                            : string.Equals(className, classPattern, StringComparison.OrdinalIgnoreCase);
+                        
+                        if (matches && IsWindowVisible(hWnd))
+                        {
+                            GetWindowThreadProcessId(hWnd, out uint processId);
+                            var windowInfo = CreateWindowInfoFromHandle(hWnd, processId);
+                            
+                            if (windowInfo != null)
+                            {
+                                windows.Add(windowInfo);
+                                _logger.LogTrace("Found window with class pattern '{Pattern}': Handle={Handle:X}, Title='{Title}'", 
+                                    classPattern, (long)hWnd, windowInfo.Title);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogTrace(ex, "Error processing window handle {Handle:X} during pattern search", (long)hWnd);
+                    }
+                    
+                    return true;
+                }, IntPtr.Zero);
+                
+                _logger.LogDebug("Found {Count} windows matching class pattern '{Pattern}' in {EnumCount} enumerated windows", 
+                    windows.Count, classPattern, enumCount);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching for windows by class pattern '{Pattern}'", classPattern);
+            }
+            
+            return windows;
+        }
+
+        /// <summary>
+        /// Получает имя процесса по его ID через Process.GetProcessById (безопасный метод)
+        /// </summary>
+        /// <param name="processId">ID процесса</param>
+        /// <returns>Имя процесса или empty string при ошибке</returns>
+        private string GetProcessNameById(int processId)
+        {
+            try
+            {
+                using var process = Process.GetProcessById(processId);
+                if (process.HasExited)
+                    return string.Empty;
+                
+                return process.ProcessName ?? string.Empty;
+            }
+            catch (ArgumentException)
+            {
+                // Process not found
+                return string.Empty;
+            }
+            catch (InvalidOperationException)
+            {
+                // Process has exited
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogTrace(ex, "Error getting process name for PID {ProcessId}", processId);
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Получает полный путь к исполняемому файлу процесса по его ID через Process.GetProcessById (безопасный метод)
+        /// </summary>
+        /// <param name="processId">ID процесса</param>
+        /// <returns>Полный путь к процессу или empty string при ошибке</returns>
+        private string GetProcessPathById(int processId)
+        {
+            try
+            {
+                using var process = Process.GetProcessById(processId);
+                if (process.HasExited)
+                    return string.Empty;
+                
+                // Пытаемся получить путь к исполняемому файлу
+                try
+                {
+                    var mainModule = process.MainModule;
+                    if (mainModule != null)
+                    {
+                        return mainModule.FileName ?? string.Empty;
+                    }
+                }
+                catch (Win32Exception)
+                {
+                    // Access denied или процесс системный
+                    _logger.LogTrace("Access denied getting main module for PID {ProcessId}", processId);
+                }
+                catch (InvalidOperationException)
+                {
+                    // Process has exited during access
+                    return string.Empty;
+                }
+                
+                // Fallback: используем GetProcessImageFileName через P/Invoke
+                IntPtr processHandle = OpenProcess(PROCESS_QUERY_INFORMATION | PROCESS_VM_READ, false, (uint)processId);
+                if (processHandle != IntPtr.Zero)
+                {
+                    try
+                    {
+                        var fileName = new StringBuilder(1024);
+                        uint size = GetProcessImageFileName(processHandle, fileName, (uint)fileName.Capacity);
+                        if (size > 0)
+                        {
+                            return fileName.ToString();
+                        }
+                    }
+                    finally
+                    {
+                        CloseHandle(processHandle);
+                    }
+                }
+            }
+            catch (ArgumentException)
+            {
+                // Process not found
+                return string.Empty;
+            }
+            catch (InvalidOperationException)
+            {
+                // Process has exited
+                return string.Empty;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogTrace(ex, "Error getting process path for PID {ProcessId}", processId);
+            }
+            
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Ищет WSA приложение по заданным критериям используя правильные Windows API
+        /// </summary>
+        /// <param name="packageName">Package name Android приложения</param>
+        /// <param name="activityName">Activity name (может быть null)</param>
+        /// <param name="windowName">Точное имя окна для поиска (из AndroidArgumentsParser)</param>
+        /// <returns>Информация о найденном окне или null</returns>
+        public async Task<WindowInfo?> FindWSAApplicationWindowAsync(string packageName, string? activityName = null, string? windowName = null)
+        {
+            return await Task.Run(() =>
+            {
+                try
+                {
+                    _logger.LogDebug("Searching for WSA window: Package={PackageName}, Activity={ActivityName}, WindowName={WindowName}", 
+                        packageName, activityName, windowName);
+
+                    var wsaWindows = new List<(IntPtr hWnd, string title, string className, uint processId, string processName)>();
+                    
+                    // Перебираем все окна системы
+                    EnumWindows((hWnd, lParam) =>
+                    {
+                        try
+                        {
+                            // Получаем класс окна
+                            var className = new StringBuilder(256);
+                            int classResult = GetClassNameW(hWnd, className, className.Capacity);
+                            
+                            if (classResult == 0 || className.ToString() != "ApplicationFrameWindow")
+                            {
+                                return true; // Продолжаем поиск
+                            }
+                            
+                            // Получаем заголовок окна
+                            var windowTitle = new StringBuilder(256);
+                            GetWindowTextW(hWnd, windowTitle, windowTitle.Capacity);
+                            
+                            // Получаем PID процесса (используем правильное имя параметра)
+                            uint processId = 0;
+                            GetWindowThreadProcessId(hWnd, out processId);
+                            
+                            if (processId == 0)
+                            {
+                                return true; // Продолжаем поиск
+                            }
+                            
+                            // Получаем имя процесса
+                            string processName = GetProcessNameById((int)processId);
+                            
+                            // Проверяем что это WSA процесс
+                            if (IsWSAProcess(processName))
+                            {
+                                wsaWindows.Add((hWnd, windowTitle.ToString(), className.ToString(), processId, processName));
+                                
+                                _logger.LogTrace("Found WSA window: Handle={Handle:X}, Title='{Title}', PID={ProcessId}, Process={ProcessName}", 
+                                    (long)hWnd, windowTitle.ToString(), processId, processName);
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            _logger.LogTrace(ex, "Error processing window during WSA search");
+                        }
+                        
+                        return true; // Продолжаем поиск
+                    }, IntPtr.Zero);
+                    
+                    _logger.LogDebug("Found {Count} WSA windows total", wsaWindows.Count);
+                    
+                    // Ищем наиболее подходящее окно
+                    foreach (var (hWnd, title, className, processId, processName) in wsaWindows)
+                    {
+                        // Приоритет 1: Точное совпадение по window_name
+                        if (!string.IsNullOrEmpty(windowName) && 
+                            title.Equals(windowName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            _logger.LogInformation("Found WSA window by exact window_name match: '{WindowName}', PID={ProcessId}", 
+                                windowName, processId);
+                            
+                            return CreateWindowInfoFromHandle(hWnd, title, (int)processId);
+                        }
+                        
+                        // Приоритет 2: Содержит package name в заголовке
+                        if (title.Contains(packageName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            _logger.LogInformation("Found WSA window by package name match: '{Title}' contains '{PackageName}', PID={ProcessId}", 
+                                title, packageName, processId);
+                            
+                            return CreateWindowInfoFromHandle(hWnd, title, (int)processId);
+                        }
+                        
+                        // Приоритет 3: Содержит activity name в заголовке
+                        if (!string.IsNullOrEmpty(activityName) && 
+                            title.Contains(activityName, StringComparison.OrdinalIgnoreCase))
+                        {
+                            _logger.LogInformation("Found WSA window by activity name match: '{Title}' contains '{ActivityName}', PID={ProcessId}", 
+                                title, activityName, processId);
+                            
+                            return CreateWindowInfoFromHandle(hWnd, title, (int)processId);
+                        }
+                    }
+                    
+                    // Если точного совпадения нет, берем первое WSA окно
+                    if (wsaWindows.Count > 0)
+                    {
+                        var (hWnd, title, className, processId, processName) = wsaWindows[0];
+                        _logger.LogInformation("Using first available WSA window: '{Title}', PID={ProcessId}", title, processId);
+                        
+                        return CreateWindowInfoFromHandle(hWnd, title, (int)processId);
+                    }
+                    
+                    _logger.LogWarning("No WSA windows found for package '{PackageName}'", packageName);
+                    return null;
+                }
+                catch (Exception ex)
+                {
+                    _logger.LogError(ex, "Error searching for WSA application window");
+                    return null;
+                }
+            });
+        }
+        
+        /// <summary>
+        /// Проверяет, является ли процесс WSA процессом
+        /// </summary>
+        /// <param name="processName">Имя процесса</param>
+        /// <returns>true если это WSA процесс</returns>
+        private static bool IsWSAProcess(string processName)
+        {
+            if (string.IsNullOrEmpty(processName))
+                return false;
+                
+            return processName.Equals("WsaClient", StringComparison.OrdinalIgnoreCase) ||
+                   processName.Equals("WindowsSubsystemForAndroid", StringComparison.OrdinalIgnoreCase);
+        }
+        
+        /// <summary>
+        /// Создает WindowInfo из Handle окна
+        /// </summary>
+        /// <param name="hWnd">Handle окна</param>
+        /// <param name="title">Заголовок окна</param>
+        /// <param name="processId">PID процесса</param>
+        /// <returns>WindowInfo объект</returns>
+        private WindowInfo CreateWindowInfoFromHandle(IntPtr hWnd, string title, int processId)
+        {
+            var windowInfo = new WindowInfo
+            {
+                Handle = hWnd,
+                Title = title,
+                ProcessId = (uint)processId, // Приведение к uint
+                ClassName = "ApplicationFrameWindow",
+                IsVisible = IsWindowVisible(hWnd)
+            };
+
+            // Получаем размеры и позицию окна
+            try
+            {
+                RECT rect;
+                if (GetWindowRect(hWnd, out rect))
+                {
+                    windowInfo.X = rect.Left;
+                    windowInfo.Y = rect.Top;
+                    windowInfo.Width = rect.Right - rect.Left;
+                    windowInfo.Height = rect.Bottom - rect.Top;
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogTrace(ex, "Error getting window rect for handle {Handle:X}", (long)hWnd);
+            }
+
+            return windowInfo;
+        }
+
+        #endregion
+        
+        #region WSA Window Cache Management
+        
+        /// <summary>
+        /// Очистить кэш WSA окон
+        /// Полезно при проблемах с кэшированием или для принудительного обновления
+        /// </summary>
+        public void ClearWSAWindowCache()
+        {
+            lock (_cacheLocker)
+            {
+                var count = _wsaWindowCache.Count;
+                _wsaWindowCache.Clear();
+                _logger.LogDebug("Cleared WSA window cache ({Count} entries removed)", count);
+            }
+        }
+        
+        /// <summary>
+        /// Очистить устаревшие записи из кэша WSA окон
+        /// Вызывается автоматически, но можно вызвать принудительно
+        /// </summary>
+        public void CleanupExpiredWSAWindowCache()
+        {
+            lock (_cacheLocker)
+            {
+                var expiredKeys = new List<string>();
+                var currentTime = DateTime.Now;
+                
+                foreach (var kvp in _wsaWindowCache)
+                {
+                    var age = currentTime - kvp.Value.CachedAt;
+                    if (age >= _wsaCacheTimeout || !IsWindow(kvp.Value.Window.Handle))
+                    {
+                        expiredKeys.Add(kvp.Key);
+                    }
+                }
+                
+                foreach (var key in expiredKeys)
+                {
+                    _wsaWindowCache.Remove(key);
+                }
+                
+                if (expiredKeys.Count > 0)
+                {
+                    _logger.LogTrace("Cleaned up {Count} expired WSA window cache entries", expiredKeys.Count);
+                }
+            }
+        }
+        
+        /// <summary>
+        /// Получить статистику кэша WSA окон для диагностики
+        /// </summary>
+        /// <returns>Информация о состоянии кэша</returns>
+        public (int TotalEntries, int ValidEntries, int ExpiredEntries) GetWSAWindowCacheStats()
+        {
+            lock (_cacheLocker)
+            {
+                var total = _wsaWindowCache.Count;
+                var valid = 0;
+                var expired = 0;
+                var currentTime = DateTime.Now;
+                
+                foreach (var kvp in _wsaWindowCache)
+                {
+                    var age = currentTime - kvp.Value.CachedAt;
+                    if (age < _wsaCacheTimeout && IsWindow(kvp.Value.Window.Handle))
+                    {
+                        valid++;
+                    }
+                    else
+                    {
+                        expired++;
+                    }
+                }
+                
+                return (total, valid, expired);
+            }
+        }
+
         #endregion
     }
 }

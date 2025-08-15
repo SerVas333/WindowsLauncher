@@ -7,6 +7,7 @@ using System.Text.Json;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 using Microsoft.Extensions.DependencyInjection;
+using WindowsLauncher.Core.Infrastructure.Extensions;
 
 namespace WindowsLauncher.Services.Android
 {
@@ -17,18 +18,18 @@ namespace WindowsLauncher.Services.Android
     {
         private readonly IWSAIntegrationService _wsaService;
         private readonly IAndroidSubsystemService _androidSubsystem;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ILogger<AndroidApplicationManager> _logger;
         private bool? _androidSupportAvailable;
         private bool _environmentInitialized;
         private readonly Dictionary<string, ApkMetadata> _metadataCache;
         private readonly object _cacheLock = new object();
 
-        public AndroidApplicationManager(IWSAIntegrationService wsaService, IAndroidSubsystemService androidSubsystem, IServiceProvider serviceProvider, ILogger<AndroidApplicationManager> logger)
+        public AndroidApplicationManager(IWSAIntegrationService wsaService, IAndroidSubsystemService androidSubsystem, IServiceScopeFactory serviceScopeFactory, ILogger<AndroidApplicationManager> logger)
         {
             _wsaService = wsaService ?? throw new ArgumentNullException(nameof(wsaService));
             _androidSubsystem = androidSubsystem ?? throw new ArgumentNullException(nameof(androidSubsystem));
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _metadataCache = new Dictionary<string, ApkMetadata>();
         }
@@ -827,8 +828,8 @@ namespace WindowsLauncher.Services.Android
             {
                 _logger.LogDebug("Searching for APK file for package: {PackageName}", packageName);
 
-                // Получаем IApplicationService через ServiceProvider чтобы избежать циклической зависимости
-                var applicationService = _serviceProvider.GetRequiredService<IApplicationService>();
+                // Получаем IApplicationService через ServiceScopeFactory чтобы избежать циклической зависимости
+                var applicationService = _serviceScopeFactory.CreateScopedService<IApplicationService>();
                 
                 // Получаем все Android приложения из базы данных
                 var allApps = await applicationService.GetAllApplicationsAsync();

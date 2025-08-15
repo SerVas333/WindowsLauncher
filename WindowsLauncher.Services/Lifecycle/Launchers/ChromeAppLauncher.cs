@@ -26,6 +26,16 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
         
         public ApplicationType SupportedType => ApplicationType.ChromeApp;
         public int Priority => 5; // Низкий приоритет - fallback для WebView2ApplicationLauncher
+
+        /// <summary>
+        /// Событие активации окна приложения (не используется в данном лаунчере)
+        /// </summary>
+        public event EventHandler<ApplicationInstance>? WindowActivated;
+
+        /// <summary>  
+        /// Событие закрытия окна приложения (не используется в данном лаунчере)
+        /// </summary>
+        public event EventHandler<ApplicationInstance>? WindowClosed;
         
         // Регулярные выражения для поиска Chrome App процессов
         private static readonly Regex ChromeProcessRegex = new(@"chrome\.exe", RegexOptions.IgnoreCase | RegexOptions.Compiled);

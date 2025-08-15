@@ -12,6 +12,7 @@ using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.UI.Properties.Resources;
 using WindowsLauncher.UI.Infrastructure.Localization;
+using WindowsLauncher.UI.Infrastructure.Extensions;
 using WindowsLauncher.UI.Helpers;
 
 // Алиасы для разрешения конфликтов имен
@@ -25,16 +26,16 @@ namespace WindowsLauncher.UI.Views
     /// </summary>
     public partial class LoginWindow : Window
     {
-        private readonly IAuthenticationService? _authService;
-        private readonly ILogger<LoginWindow>? _logger;
-        private readonly IServiceProvider? _serviceProvider;
+        private readonly IAuthenticationService _authService;
+        private readonly ILogger<LoginWindow> _logger;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private bool _isAuthenticating = false;
 
         // Публичные свойства для доступа к результату
         public AuthenticationResult AuthenticationResult { get; private set; } = null!;
         public User AuthenticatedUser => AuthenticationResult?.User;
 
-        public LoginWindow()
+        public LoginWindow(IAuthenticationService authService, ILogger<LoginWindow> logger, IServiceScopeFactory serviceScopeFactory)
         {
             try
             {
@@ -42,17 +43,12 @@ namespace WindowsLauncher.UI.Views
                 InitializeComponent();
                 System.Diagnostics.Debug.WriteLine("LoginWindow: InitializeComponent completed successfully");
                 
-                // Инициализация readonly полей в конструкторе
-                System.Diagnostics.Debug.WriteLine("LoginWindow: Starting service initialization...");
-                var app = WpfApplication.Current as App;
-                if (app?.ServiceProvider != null)
-                {
-                    _serviceProvider = app.ServiceProvider;
-                    _authService = app.ServiceProvider.GetService<IAuthenticationService>();
-                    _logger = app.ServiceProvider.GetService<ILogger<LoginWindow>>();
-                    
-                    System.Diagnostics.Debug.WriteLine("LoginWindow: Services initialized successfully");
-                }
+                // Инициализация зависимостей через constructor injection
+                _authService = authService;
+                _logger = logger;
+                _serviceScopeFactory = serviceScopeFactory;
+                
+                System.Diagnostics.Debug.WriteLine("LoginWindow: Services initialized via DI successfully");
                 
                 System.Diagnostics.Debug.WriteLine("LoginWindow: Starting InitializeWindow...");
                 InitializeWindow();
@@ -69,7 +65,8 @@ namespace WindowsLauncher.UI.Views
             }
         }
 
-        public LoginWindow(string errorMessage) : this()
+        public LoginWindow(IAuthenticationService authService, ILogger<LoginWindow> logger, IServiceScopeFactory serviceScopeFactory, string errorMessage) 
+            : this(authService, logger, serviceScopeFactory)
         {
             if (!string.IsNullOrEmpty(errorMessage))
             {
@@ -357,13 +354,7 @@ namespace WindowsLauncher.UI.Views
         {
             try
             {
-                if (_authService == null)
-                {
-                    // Fallback аутентификация для тестирования
-                    return CreateFallbackAuthResult(credentials);
-                }
-
-                // Реальная аутентификация через сервис
+                // Реальная аутентификация через сервис (DI гарантирует наличие сервиса)
                 LoadingText.Text = credentials.AuthenticationType == AuthenticationType.LocalUsers
                     ? "Аутентификация локального пользователя..."
                     : LocalizationHelper.Instance.GetString("LoginWindow_AuthenticatingDomain");
@@ -513,7 +504,7 @@ namespace WindowsLauncher.UI.Views
         {
             try
             {
-                if (_authService == null || ConnectionStatusIndicator == null || ConnectionStatusText == null)
+                if (ConnectionStatusIndicator == null || ConnectionStatusText == null)
                     return;
 
                 var isAvailable = await _authService.IsDomainAvailableAsync(null);
@@ -592,9 +583,9 @@ namespace WindowsLauncher.UI.Views
 
         #region Static Methods
 
-        public static LoginWindow ShowLoginDialog(string domain = null, string username = null, bool serviceMode = false)
+        public static LoginWindow ShowLoginDialog(IAuthenticationService authService, ILogger<LoginWindow> logger, IServiceScopeFactory serviceScopeFactory, string domain = null, string username = null, bool serviceMode = false)
         {
-            var window = new LoginWindow();
+            var window = new LoginWindow(authService, logger, serviceScopeFactory);
 
             try
             {
@@ -631,40 +622,34 @@ namespace WindowsLauncher.UI.Views
         {
             try
             {
-                var app = WpfApplication.Current as App;
-                if (app?.ServiceProvider != null)
+                var virtualKeyboardService = _serviceScopeFactory.CreateScopedService<IVirtualKeyboardService>();
+                
+                // Сначала выполняем диагностику
+                var diagnosis = await virtualKeyboardService.DiagnoseVirtualKeyboardAsync();
+                _logger?.LogInformation("Диагностика перед показом клавиатуры:\n{Diagnosis}", diagnosis);
+                
+                // Затем пытаемся показать клавиатуру
+                var success = await virtualKeyboardService.ShowVirtualKeyboardAsync();
+                
+                if (!success)
                 {
-                    var virtualKeyboardService = app.ServiceProvider.GetService<IVirtualKeyboardService>();
-                    if (virtualKeyboardService != null)
-                    {
-                        // Сначала выполняем диагностику
-                        var diagnosis = await virtualKeyboardService.DiagnoseVirtualKeyboardAsync();
-                        _logger?.LogInformation("Диагностика перед показом клавиатуры:\n{Diagnosis}", diagnosis);
-                        
-                        // Затем пытаемся показать клавиатуру
-                        var success = await virtualKeyboardService.ShowVirtualKeyboardAsync();
-                        
-                        if (!success)
-                        {
-                            // Дополнительная попытка принудительного позиционирования
-                            _logger?.LogInformation("Первая попытка не удалась, пытаемся принудительное позиционирование");
-                            success = await virtualKeyboardService.RepositionKeyboardAsync();
-                        }
-                        
-                        if (!success)
-                        {
-                            // Если всё ещё не удалось, показываем диагностику пользователю
-                            var finalDiagnosis = await virtualKeyboardService.DiagnoseVirtualKeyboardAsync();
-                            MessageBox.Show($"Не удалось показать виртуальную клавиатуру.\n\nДиагностика:\n{finalDiagnosis}", 
-                                          "Диагностика виртуальной клавиатуры", 
-                                          MessageBoxButton.OK, 
-                                          MessageBoxImage.Information);
-                        }
-                        else
-                        {
-                            _logger?.LogInformation("Виртуальная клавиатура успешно показана");
-                        }
-                    }
+                    // Дополнительная попытка принудительного позиционирования
+                    _logger?.LogInformation("Первая попытка не удалась, пытаемся принудительное позиционирование");
+                    success = await virtualKeyboardService.RepositionKeyboardAsync();
+                }
+                
+                if (!success)
+                {
+                    // Если всё ещё не удалось, показываем диагностику пользователю
+                    var finalDiagnosis = await virtualKeyboardService.DiagnoseVirtualKeyboardAsync();
+                    MessageBox.Show($"Не удалось показать виртуальную клавиатуру.\n\nДиагностика:\n{finalDiagnosis}", 
+                                  "Диагностика виртуальной клавиатуры", 
+                                  MessageBoxButton.OK, 
+                                  MessageBoxImage.Information);
+                }
+                else
+                {
+                    _logger?.LogInformation("Виртуальная клавиатура успешно показана");
                 }
             }
             catch (Exception ex)

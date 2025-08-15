@@ -12,6 +12,7 @@ using System.Windows.Data;
 using Microsoft.Win32;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using WindowsLauncher.UI.Infrastructure.Extensions;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Interfaces.Email;
@@ -38,7 +39,7 @@ namespace WindowsLauncher.UI.ViewModels
         private readonly IApplicationService _applicationService;
         private readonly IAuthorizationService _authorizationService;
         private readonly ILocalUserService _localUserService;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly ApplicationDataManager _applicationDataManager;
 
         private ApplicationEditViewModel? _selectedApplication;
@@ -73,7 +74,7 @@ namespace WindowsLauncher.UI.ViewModels
             IApplicationService applicationService,
             IAuthorizationService authorizationService,
             ILocalUserService localUserService,
-            IServiceProvider serviceProvider,
+            IServiceScopeFactory serviceScopeFactory,
             ApplicationDataManager applicationDataManager,
             ILogger<AdminViewModel> logger,
             IDialogService dialogService)
@@ -82,7 +83,7 @@ namespace WindowsLauncher.UI.ViewModels
             _applicationService = applicationService;
             _authorizationService = authorizationService;
             _localUserService = localUserService;
-            _serviceProvider = serviceProvider;
+            _serviceScopeFactory = serviceScopeFactory;
             _applicationDataManager = applicationDataManager;
 
             Applications = new ObservableCollection<ApplicationEditViewModel>();
@@ -356,7 +357,9 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 try
                 {
-                    var androidSubsystem = _serviceProvider.GetService<WindowsLauncher.Core.Interfaces.Android.IAndroidSubsystemService>();
+                    // AndroidSubsystemService является Singleton, можно получать напрямую
+                using var scope = _serviceScopeFactory.CreateScope();
+                var androidSubsystem = scope.ServiceProvider.GetService<WindowsLauncher.Core.Interfaces.Android.IAndroidSubsystemService>();
                     return androidSubsystem?.CurrentMode != AndroidMode.Disabled;
                 }
                 catch (Exception ex)
@@ -610,7 +613,7 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 AvailableCategories.Clear();
                 
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var categoryService = scope.ServiceProvider.GetService<ICategoryManagementService>();
                 
                 if (categoryService != null)
@@ -1511,12 +1514,8 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                var auditService = _serviceProvider.GetService(typeof(IAuditService)) as IAuditService;
-                if (auditService == null)
-                {
-                    DialogService.ShowError("Не удалось получить сервис аудита", "Ошибка");
-                    return;
-                }
+                // Получаем AuditService через scoped scope
+                var auditService = _serviceScopeFactory.CreateScopedService<IAuditService>();
 
                 var dialogViewModel = new LocalUserDialogViewModel(_localUserService, auditService, GetCurrentUserId());
                 var dialog = new LocalUserDialog(dialogViewModel);
@@ -1542,12 +1541,8 @@ namespace WindowsLauncher.UI.ViewModels
 
             try
             {
-                var auditService = _serviceProvider.GetService(typeof(IAuditService)) as IAuditService;
-                if (auditService == null)
-                {
-                    DialogService.ShowError("Не удалось получить сервис аудита", "Ошибка");
-                    return;
-                }
+                // Получаем AuditService через scoped scope
+                var auditService = _serviceScopeFactory.CreateScopedService<IAuditService>();
 
                 var dialogViewModel = new LocalUserDialogViewModel(_localUserService, auditService, user, GetCurrentUserId());
                 var dialog = new LocalUserDialog(dialogViewModel);
@@ -1775,7 +1770,7 @@ namespace WindowsLauncher.UI.ViewModels
                     DatabaseInfo.AppDataPath, DatabaseInfo.FormattedDataSize, DatabaseInfo.ConfigurationExists);
                 
                 // Загружаем версионную информацию
-                using var scope = _serviceProvider.CreateScope();
+                using var scope = _serviceScopeFactory.CreateScope();
                 var versionService = scope.ServiceProvider.GetRequiredService<WindowsLauncher.Core.Services.IVersionService>();
                 var appVersionService = scope.ServiceProvider.GetRequiredService<WindowsLauncher.Core.Interfaces.IApplicationVersionService>();
                 
@@ -1966,7 +1961,7 @@ namespace WindowsLauncher.UI.ViewModels
                 diagnostics.Add("=== Проверка сервисов ===");
                 try
                 {
-                    using var scope = _serviceProvider.CreateScope();
+                    using var scope = _serviceScopeFactory.CreateScope();
                     var dbConfigService = scope.ServiceProvider.GetRequiredService<IDatabaseConfigurationService>();
                     var isConfigured = await dbConfigService.IsConfiguredAsync();
                     diagnostics.Add($"БД сконфигурирована: {(isConfigured ? "✓" : "✗")}");
@@ -1999,7 +1994,7 @@ namespace WindowsLauncher.UI.ViewModels
                 Logger.LogInformation("Opening SMTP settings window");
                 
                 // Получаем SmtpSettingsViewModel из DI
-                var smtpSettingsViewModel = _serviceProvider.GetService(typeof(SmtpSettingsViewModel)) as SmtpSettingsViewModel;
+                var smtpSettingsViewModel = _serviceScopeFactory.CreateScopedService<SmtpSettingsViewModel>();
                 if (smtpSettingsViewModel == null)
                 {
                     Logger.LogError("Failed to resolve SmtpSettingsViewModel from DI container");
@@ -2041,15 +2036,8 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                // Получаем ISmtpSettingsRepository из DI
-                var smtpRepository = _serviceProvider.GetService(typeof(ISmtpSettingsRepository)) as ISmtpSettingsRepository;
-                if (smtpRepository == null)
-                {
-                    Logger.LogWarning("SmtpSettingsRepository not available in DI container");
-                    PrimarySmtpStatus = "⚠️ Сервис недоступен";
-                    BackupSmtpStatus = "⚠️ Сервис недоступен";
-                    return;
-                }
+                // Получаем SmtpSettingsRepository через scoped scope
+                var smtpRepository = _serviceScopeFactory.CreateScopedService<ISmtpSettingsRepository>();
                 
                 // Загружаем серверы
                 var servers = await smtpRepository.GetActiveSettingsAsync();

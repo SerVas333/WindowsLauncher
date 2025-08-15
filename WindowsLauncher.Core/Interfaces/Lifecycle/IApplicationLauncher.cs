@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
 using WindowsLauncher.Core.Enums;
@@ -87,5 +88,17 @@ namespace WindowsLauncher.Core.Interfaces.Lifecycle
         /// </summary>
         /// <returns>Список активных экземпляров</returns>
         Task<IReadOnlyList<ApplicationInstance>> GetActiveInstancesAsync();
+
+        /// <summary>
+        /// Событие активации окна приложения (для интеграции с AppSwitcher)
+        /// Генерируется когда окно приложения становится активным/получает фокус
+        /// </summary>
+        event EventHandler<ApplicationInstance>? WindowActivated;
+
+        /// <summary>
+        /// Событие закрытия окна приложения (для управления жизненным циклом)
+        /// Генерируется когда окно приложения закрывается пользователем
+        /// </summary>
+        event EventHandler<ApplicationInstance>? WindowClosed;
     }
 }

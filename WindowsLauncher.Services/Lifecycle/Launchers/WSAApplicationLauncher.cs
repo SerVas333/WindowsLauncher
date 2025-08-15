@@ -1,4 +1,6 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using WindowsLauncher.Core.Infrastructure.Extensions;
 using System.Collections.Concurrent;
 using System.IO;
 using System.Linq;
@@ -7,6 +9,7 @@ using WindowsLauncher.Core.Interfaces.Android;
 using WindowsLauncher.Core.Interfaces.Lifecycle;
 using WindowsLauncher.Core.Models;
 using WindowsLauncher.Core.Models.Lifecycle;
+using WindowsLauncher.Core.Services.Android;
 
 namespace WindowsLauncher.Services.Lifecycle.Launchers
 {
@@ -16,30 +19,50 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
     /// </summary>
     public class WSAApplicationLauncher : IApplicationLauncher
     {
-        private readonly IAndroidApplicationManager _androidManager;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         private readonly IAndroidSubsystemService _androidSubsystemService;
+        private readonly IWindowManager _windowManager;
         private readonly ILogger<WSAApplicationLauncher> _logger;
+        private readonly AndroidArgumentsParser _argumentsParser;
         private readonly ConcurrentDictionary<string, ApplicationInstance> _runningInstances;
         private readonly Timer _cleanupTimer;
+        private readonly Timer _windowMonitorTimer;
 
         public ApplicationType SupportedType => ApplicationType.Android;
         public int Priority => 25; // Выше DesktopApplicationLauncher (10) но ниже TextEditor (30)
 
+        /// <summary>
+        /// Событие активации окна приложения (для интеграции с AppSwitcher)
+        /// </summary>
+        public event EventHandler<ApplicationInstance>? WindowActivated;
+
+        /// <summary>  
+        /// Событие закрытия окна приложения (для управления жизненным циклом)
+        /// </summary>
+        public event EventHandler<ApplicationInstance>? WindowClosed;
+
 
         public WSAApplicationLauncher(
-            IAndroidApplicationManager androidManager,
+            IServiceScopeFactory serviceScopeFactory,
             IAndroidSubsystemService androidSubsystemService,
+            IWindowManager windowManager,
             ILogger<WSAApplicationLauncher> logger)
         {
-            _androidManager = androidManager ?? throw new ArgumentNullException(nameof(androidManager));
+            _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
             _androidSubsystemService = androidSubsystemService ?? throw new ArgumentNullException(nameof(androidSubsystemService));
+            _windowManager = windowManager ?? throw new ArgumentNullException(nameof(windowManager));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _argumentsParser = new AndroidArgumentsParser(logger);
             
             _runningInstances = new ConcurrentDictionary<string, ApplicationInstance>();
 
             // Таймер для очистки завершенных экземпляров
             _cleanupTimer = new Timer(CleanupCompletedInstances, null, 
                 TimeSpan.FromMinutes(1), TimeSpan.FromMinutes(5));
+            
+            // НОВОЕ: Таймер для мониторинга WSA окон
+            _windowMonitorTimer = new Timer(MonitorWSAWindows, null,
+                TimeSpan.FromSeconds(10), TimeSpan.FromSeconds(5)); // Проверяем каждые 5 секунд после 10-секундной задержки
         }
 
         public bool CanLaunch(Application application)
@@ -122,11 +145,12 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                 _logger.LogDebug("Launching Android package: {PackageName}", packageName);
 
                 // Запускаем приложение через AndroidApplicationManager
-                var launchResult = await _androidManager.LaunchAndroidAppAsync(packageName);
+                var androidManager = _serviceScopeFactory.CreateScopedService<IAndroidApplicationManager>();
+                var launchResult = await androidManager.LaunchAndroidAppAsync(packageName);
 
                 if (launchResult.Success)
                 {
-                    var instance = CreateApplicationInstance(application, instanceId, packageName, launchResult, launchedBy);
+                    var instance = await CreateApplicationInstanceAsync(application, instanceId, packageName, launchResult, launchedBy);
                     
                     // Добавляем в список запущенных экземпляров
                     _runningInstances.TryAdd(instanceId, instance);
@@ -178,12 +202,37 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                 {
                     if (instance.State == ApplicationState.Running)
                     {
-                        // Для Android приложений "переключение" означает повторный запуск активности
+                        // НОВОЕ: Сначала пытаемся переключиться на реальное WSA окно
+                        if (instance.MainWindow != null && instance.MainWindow.Handle != IntPtr.Zero && !instance.IsVirtual)
+                        {
+                            _logger.LogDebug("Attempting to activate real WSA window for instance {InstanceId}: Handle={Handle:X}", 
+                                instanceId, (long)instance.MainWindow.Handle);
+                            
+                            var activationResult = await _windowManager.BringWindowToFrontAsync(instance.MainWindow.Handle);
+                            if (activationResult)
+                            {
+                                // Обновляем время последней активности
+                                instance.LastUpdate = DateTime.Now;
+                                instance.IsActive = true;
+
+                                // Уведомляем о активации окна
+                                WindowActivated?.Invoke(this, instance);
+                                
+                                _logger.LogInformation("Successfully activated WSA window for instance {InstanceId}: {Title}", 
+                                    instanceId, instance.MainWindow.Title);
+                                return true;
+                            }
+                            
+                            _logger.LogWarning("Failed to activate WSA window, falling back to Android app launch");
+                        }
+                        
+                        // Fallback: запуск Android активности (старый способ)
                         var packageName = ExtractPackageNameFromExecutablePath(instance.Application.ExecutablePath ?? "");
                         
                         if (!string.IsNullOrEmpty(packageName))
                         {
-                            var launchResult = await _androidManager.LaunchAndroidAppAsync(packageName);
+                            var androidManager = _serviceScopeFactory.CreateScopedService<IAndroidApplicationManager>();
+                            var launchResult = await androidManager.LaunchAndroidAppAsync(packageName);
                             
                             if (launchResult.Success)
                             {
@@ -191,7 +240,7 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                                 instance.LastUpdate = DateTime.Now;
                                 instance.IsActive = true;
 
-                                _logger.LogInformation("Successfully switched to Android application: {InstanceId}", instanceId);
+                                _logger.LogInformation("Successfully switched to Android application via re-launch: {InstanceId}", instanceId);
                                 return true;
                             }
                         }
@@ -252,7 +301,8 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
         {
             try
             {
-                var metadata = await _androidManager.ExtractApkMetadataAsync(apkPath);
+                var androidManager = _serviceScopeFactory.CreateScopedService<IAndroidApplicationManager>();
+                var metadata = await androidManager.ExtractApkMetadataAsync(apkPath);
                 return metadata?.PackageName ?? "";
             }
             catch (Exception ex)
@@ -297,7 +347,7 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
             return $"android_{application.Id}_{timestamp:X}_{random:X}";
         }
 
-        private ApplicationInstance CreateApplicationInstance(
+        private async Task<ApplicationInstance> CreateApplicationInstanceAsync(
             Application application, 
             string instanceId, 
             string packageName, 
@@ -309,7 +359,7 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                 InstanceId = instanceId,
                 Application = application,
                 LaunchedBy = launchedBy,
-                ProcessId = launchResult.ProcessId ?? 0,
+                ProcessId = 0, // Будет установлен позже на основе реального WSA окна
                 ProcessName = $"android_{packageName}",
                 State = ApplicationState.Running,
                 StartTime = DateTime.Now,
@@ -317,17 +367,72 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                 IsActive = true
             };
 
+            // НОВОЕ: Парсим Android-специфические аргументы
+            var androidArgs = _argumentsParser.Parse(application.Arguments);
+            _logger.LogDebug("Parsed Android arguments for {ApplicationName}: {Arguments}", 
+                application.Name, androidArgs.ToString());
+
             // Добавляем Android-специфичные метаданные
             instance.Metadata["AndroidPackageName"] = packageName;
-            instance.Metadata["AndroidActivity"] = launchResult.ActivityName ?? "MainActivity";
+            instance.Metadata["AndroidActivity"] = launchResult.ActivityName ?? androidArgs.ActivityName ?? "MainActivity";
             instance.Metadata["LauncherType"] = "WSA";
+            
+            // Добавляем извлеченные аргументы в метаданные
+            if (!string.IsNullOrEmpty(androidArgs.WindowName))
+                instance.Metadata["AndroidWindowName"] = androidArgs.WindowName;
+            if (androidArgs.LaunchTimeout.HasValue)
+                instance.Metadata["AndroidLaunchTimeout"] = androidArgs.LaunchTimeout.Value.TotalSeconds.ToString();
 
-            // Создаем виртуальную информацию об окне для Android приложений
-            instance.MainWindow = WindowInfo.Create(
-                handle: IntPtr.Zero, // Android приложения не имеют Windows Handle
-                title: $"{application.Name} (Android)",
-                processId: (uint)(launchResult.ProcessId ?? 0)
-            );
+            // ОБНОВЛЕННОЕ: Пытаемся найти реальное WSA окно с учетом window_name из аргументов
+            var realWindow = await FindWSAWindowForPackageAsync(packageName, launchResult.ActivityName, androidArgs.WindowName);
+            
+            if (realWindow != null)
+            {
+                // Найдено реальное WSA окно!
+                instance.MainWindow = realWindow;
+                instance.ProcessId = (int)realWindow.ProcessId; // Используем ProcessId реального WSA окна
+                instance.IsVirtual = false;
+                instance.Metadata["WindowDetectionMethod"] = !string.IsNullOrEmpty(androidArgs.WindowName) ? 
+                    "WindowNameArgument" : "WSAWindowSearch";
+                
+                _logger.LogInformation("Found real WSA window for {PackageName}: Handle={Handle:X}, Title='{Title}', PID={ProcessId} - window monitoring enabled", 
+                    packageName, (long)realWindow.Handle, realWindow.Title, realWindow.ProcessId);
+                
+                // Уведомляем о активации окна
+                WindowActivated?.Invoke(this, instance);
+            }
+            else
+            {
+                // Проверяем, разрешен ли virtual fallback (по умолчанию разрешен для обратной совместимости)
+                bool allowVirtualFallback = androidArgs.VirtualFallback ?? true;
+                
+                if (allowVirtualFallback)
+                {
+                    // Fallback к виртуальному окну
+                    instance.MainWindow = WindowInfo.Create(
+                        handle: IntPtr.Zero,
+                        title: $"{application.Name} (Android)",
+                        processId: 0 // Для виртуальных окон не используем ProcessId
+                    );
+                    instance.ProcessId = -1; // Специальный ProcessId для виртуальных WSA приложений
+                    instance.IsVirtual = true;
+                    instance.Metadata["WindowDetectionMethod"] = "VirtualFallback";
+                    
+                    _logger.LogWarning("Could not find real WSA window for {PackageName}, using virtual window fallback with PID={ProcessId}", 
+                        packageName, instance.ProcessId);
+                }
+                else
+                {
+                    // Virtual fallback отключен - помечаем экземпляр как ошибочный
+                    instance.State = ApplicationState.Error;
+                    instance.ErrorMessage = "WSA window not found and virtual fallback is disabled";
+                    instance.IsVirtual = true;
+                    instance.ProcessId = -1;
+                    instance.Metadata["WindowDetectionMethod"] = "Failed_NoVirtualFallback";
+                    
+                    _logger.LogError("WSA window not found for {PackageName} and virtual fallback is disabled", packageName);
+                }
+            }
             
             return instance;
         }
@@ -403,20 +508,131 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
         }
 
         /// <summary>
+        /// Мониторинг WSA окон и автоматическое управление жизненным циклом
+        /// Проверяет состояние реальных WSA окон и отправляет события WindowClosed при их закрытии
+        /// </summary>
+        private async void MonitorWSAWindows(object? state)
+        {
+            try
+            {
+                // Получаем снимок текущих экземпляров для безопасной итерации
+                var instances = _runningInstances.Values.ToList();
+                var checkedInstances = 0;
+                var closedInstances = 0;
+                
+                foreach (var instance in instances)
+                {
+                    try
+                    {
+                        // Пропускаем виртуальные экземпляры или экземпляры без окон
+                        if (instance.IsVirtual || instance.MainWindow == null || instance.MainWindow.Handle == IntPtr.Zero)
+                            continue;
+                        
+                        // Пропускаем уже завершенные или ошибочные экземпляры
+                        if (instance.State == ApplicationState.Terminated || instance.State == ApplicationState.Error)
+                            continue;
+                        
+                        checkedInstances++;
+                        
+                        // Проверяем существование окна
+                        var windowExists = await _windowManager.IsWindowValidAsync(instance.MainWindow.Handle);
+                        
+                        if (!windowExists)
+                        {
+                            // Окно закрыто - обновляем состояние экземпляра
+                            instance.State = ApplicationState.Terminated;
+                            instance.EndTime = DateTime.Now;
+                            instance.IsActive = false;
+                            instance.LastUpdate = DateTime.Now;
+                            
+                            closedInstances++;
+                            
+                            _logger.LogInformation("WSA window closed for Android app {AppName} (Instance: {InstanceId}, Handle: {Handle:X})", 
+                                instance.Application.Name, instance.InstanceId, (long)instance.MainWindow.Handle);
+                            
+                            // Отправляем событие WindowClosed для интеграции с ApplicationLifecycleService
+                            try
+                            {
+                                WindowClosed?.Invoke(this, instance);
+                            }
+                            catch (Exception eventEx)
+                            {
+                                _logger.LogError(eventEx, "Error invoking WindowClosed event for instance {InstanceId}", 
+                                    instance.InstanceId);
+                            }
+                            
+                            // Помечаем для удаления из коллекции (будет удален в CleanupCompletedInstances)
+                            _logger.LogDebug("Marked WSA instance {InstanceId} for cleanup after window closure", 
+                                instance.InstanceId);
+                        }
+                        else
+                        {
+                            // Окно существует - обновляем время последней проверки
+                            instance.LastUpdate = DateTime.Now;
+                            
+                            // Дополнительно проверяем видимость окна для обновления IsActive
+                            var isVisible = await _windowManager.IsWindowVisibleAsync(instance.MainWindow.Handle);
+                            var isActive = await _windowManager.IsWindowActiveAsync(instance.MainWindow.Handle);
+                            
+                            // Обновляем статус активности
+                            bool wasActive = instance.IsActive;
+                            instance.IsActive = isVisible && !await _windowManager.IsWindowMinimizedAsync(instance.MainWindow.Handle);
+                            
+                            // Если статус активности изменился, логируем это
+                            if (wasActive != instance.IsActive)
+                            {
+                                _logger.LogTrace("WSA window activity changed for {AppName} (Instance: {InstanceId}): Active={IsActive}", 
+                                    instance.Application.Name, instance.InstanceId, instance.IsActive);
+                            }
+                        }
+                    }
+                    catch (Exception ex)
+                    {
+                        _logger.LogTrace(ex, "Error monitoring WSA window for instance {InstanceId}", 
+                            instance.InstanceId);
+                    }
+                }
+                
+                // Логируем статистику мониторинга если есть активность
+                if (checkedInstances > 0)
+                {
+                    _logger.LogTrace("WSA window monitoring completed: checked {CheckedCount} instances, found {ClosedCount} closed windows", 
+                        checkedInstances, closedInstances);
+                }
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Exception during WSA window monitoring");
+            }
+        }
+
+        /// <summary>
         /// Найти главное окно для запущенного процесса приложения
-        /// Для Android приложений возвращает виртуальную информацию об окне
+        /// ОБНОВЛЕНО: теперь пытается найти реальное WSA окно перед созданием виртуального
         /// </summary>
         /// <param name="processId">ID процесса</param>
         /// <param name="application">Модель приложения</param>
-        /// <returns>Информация о виртуальном окне Android приложения</returns>
+        /// <returns>Информация о реальном или виртуальном окне Android приложения</returns>
         public async Task<WindowInfo?> FindMainWindowAsync(int processId, Application application)
         {
             try
             {
                 _logger.LogDebug("Finding main window for Android application process: {ProcessId}", processId);
 
-                // Для Android приложений создаем виртуальное окно
-                // так как они не имеют реального Windows Handle
+                // НОВОЕ: Сначала пытаемся найти реальное WSA окно
+                string packageName = ExtractPackageNameFromExecutablePath(application.ExecutablePath ?? "");
+                if (!string.IsNullOrEmpty(packageName))
+                {
+                    var realWindow = await FindWSAWindowForPackageAsync(packageName);
+                    if (realWindow != null)
+                    {
+                        _logger.LogInformation("Found real WSA window for Android app {AppName}: Handle={Handle:X}, Title='{Title}'", 
+                            application.Name, (long)realWindow.Handle, realWindow.Title);
+                        return realWindow;
+                    }
+                }
+
+                // Fallback к виртуальному окну (старое поведение)
                 var virtualWindow = WindowInfo.Create(
                     handle: IntPtr.Zero,
                     title: $"{application.Name} (Android)",
@@ -427,11 +643,9 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                 virtualWindow.ClassName = "AndroidWindowClass";
                 virtualWindow.IsVisible = true;
                 virtualWindow.IsResponding = true;
-                virtualWindow.AdditionalInfo = $"Virtual window for Android package";
+                virtualWindow.AdditionalInfo = $"Virtual window for Android package {packageName}";
 
-                await Task.Delay(10); // Минимальная задержка для async контракта
-
-                _logger.LogDebug("Created virtual window for Android application: {Title}", virtualWindow.Title);
+                _logger.LogDebug("Created virtual window fallback for Android application: {Title}", virtualWindow.Title);
                 return virtualWindow;
             }
             catch (Exception ex)
@@ -474,7 +688,8 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                     // Пытаемся корректно завершить Android приложение
                     try
                     {
-                        var stopResult = await _androidManager.StopAndroidAppAsync(packageName);
+                        var androidManager = _serviceScopeFactory.CreateScopedService<IAndroidApplicationManager>();
+                        var stopResult = await androidManager.StopAndroidAppAsync(packageName);
                         if (stopResult)
                         {
                             _logger.LogInformation("Successfully stopped Android application: {PackageName}", packageName);
@@ -564,6 +779,174 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
             }
         }
 
+        /// <summary>
+        /// Поиск реального WSA окна для Android приложения
+        /// </summary>
+        /// <param name="packageName">Имя Android пакета</param>
+        /// <param name="activityName">Имя активности (опционально)</param>
+        /// <param name="windowName">Точное имя окна из аргументов --window_name (приоритетный поиск)</param>
+        /// <returns>Информация о найденном WSA окне или null</returns>
+        private async Task<WindowInfo?> FindWSAWindowForPackageAsync(string packageName, string? activityName = null, string? windowName = null)
+        {
+            try
+            {
+                _logger.LogDebug("Searching for WSA window for package: {PackageName}, activity: {ActivityName}, window_name: {WindowName}", 
+                    packageName, activityName ?? "any", windowName ?? "none");
+
+                // НОВЫЙ УЛУЧШЕННЫЙ ПОИСК: Используем новый метод WindowManager с правильными P/Invoke
+                var wsaWindow = await _windowManager.FindWSAApplicationWindowAsync(packageName, activityName, windowName);
+                
+                if (wsaWindow != null)
+                {
+                    _logger.LogInformation("Successfully found WSA window using improved detection for {PackageName}: Handle={Handle:X}, Title='{Title}', PID={ProcessId}", 
+                        packageName, (long)wsaWindow.Handle, wsaWindow.Title, wsaWindow.ProcessId);
+                    return wsaWindow;
+                }
+
+                _logger.LogWarning("No WSA window found using improved detection for package {PackageName}", packageName);
+                
+                // FALLBACK: Старый метод на случай проблем с новым подходом
+                _logger.LogDebug("Falling back to legacy WSA window search for package {PackageName}", packageName);
+                var legacyWindow = await _windowManager.FindWSAWindowAsync(packageName, activityName ?? "");
+                
+                if (legacyWindow != null)
+                {
+                    _logger.LogInformation("Found WSA window via legacy search for {PackageName}: Handle={Handle:X}, Title='{Title}'", 
+                        packageName, (long)legacyWindow.Handle, legacyWindow.Title);
+                    return legacyWindow;
+                }
+
+                // ДОПОЛНИТЕЛЬНЫЙ FALLBACK: ищем среди всех WSA окон по package name
+                _logger.LogDebug("Legacy search also failed, trying final fallback among all WSA windows");
+                var allWindows = await _windowManager.GetWSAWindowsAsync();
+                
+                if (allWindows.Count == 0)
+                {
+                    _logger.LogWarning("No WSA windows found in system at all for package {PackageName}", packageName);
+                    return null;
+                }
+
+                // Пытаемся найти окно по совпадению названия приложения
+                foreach (var window in allWindows)
+                {
+                    if (DoesWindowMatchPackage(window, packageName))
+                    {
+                        _logger.LogInformation("Found WSA window via fallback search for {PackageName}: Handle={Handle:X}, Title='{Title}'", 
+                            packageName, (long)window.Handle, window.Title);
+                        return window;
+                    }
+                }
+
+                _logger.LogDebug("No matching WSA window found for package {PackageName} among {Count} available windows", 
+                    packageName, allWindows.Count);
+                return null;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error searching for WSA window for package {PackageName}", packageName);
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Проверяет точное совпадение заголовка окна с указанным именем (для --window_name)
+        /// </summary>
+        /// <param name="window">Информация об окне</param>
+        /// <param name="windowName">Точное имя окна для поиска</param>
+        /// <returns>true если найдено точное совпадение</returns>
+        private bool DoesWindowMatchExactName(WindowInfo window, string windowName)
+        {
+            try
+            {
+                if (window == null || string.IsNullOrEmpty(window.Title) || string.IsNullOrEmpty(windowName))
+                    return false;
+
+                var windowTitle = window.Title.Trim();
+                var targetName = windowName.Trim();
+
+                // Точное совпадение (case-sensitive)
+                if (windowTitle.Equals(targetName, StringComparison.Ordinal))
+                {
+                    _logger.LogTrace("Exact match found: '{WindowTitle}' == '{TargetName}'", windowTitle, targetName);
+                    return true;
+                }
+
+                // Точное совпадение без учета регистра
+                if (windowTitle.Equals(targetName, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogTrace("Case-insensitive match found: '{WindowTitle}' == '{TargetName}'", windowTitle, targetName);
+                    return true;
+                }
+
+                // Проверка содержания (только если точное совпадение не найдено)
+                if (windowTitle.Contains(targetName, StringComparison.OrdinalIgnoreCase))
+                {
+                    _logger.LogTrace("Partial match found: '{WindowTitle}' contains '{TargetName}'", windowTitle, targetName);
+                    return true;
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogTrace(ex, "Error matching window title to exact name {WindowName}", windowName);
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Проверяет, соответствует ли WSA окно указанному Android пакету
+        /// </summary>
+        /// <param name="window">Информация об окне</param>
+        /// <param name="packageName">Имя Android пакета</param>
+        /// <returns>true если окно соответствует пакету</returns>
+        private bool DoesWindowMatchPackage(WindowInfo window, string packageName)
+        {
+            try
+            {
+                if (window == null || string.IsNullOrEmpty(window.Title) || string.IsNullOrEmpty(packageName))
+                    return false;
+
+                var titleLower = window.Title.ToLowerInvariant();
+                var packageLower = packageName.ToLowerInvariant();
+
+                // Прямое совпадение с package name
+                if (titleLower.Contains(packageLower))
+                    return true;
+
+                // Извлекаем простое имя приложения из package name
+                var packageParts = packageName.Split('.');
+                if (packageParts.Length > 0)
+                {
+                    var simpleAppName = packageParts[packageParts.Length - 1].ToLowerInvariant();
+                    if (titleLower.Contains(simpleAppName) && simpleAppName.Length >= 3)
+                        return true;
+                }
+
+                // Специальные случаи для популярных приложений
+                var knownMappings = new Dictionary<string, string[]>
+                {
+                    ["com.whatsapp"] = new[] { "whatsapp" },
+                    ["com.instagram.android"] = new[] { "instagram" },
+                    ["com.facebook.katana"] = new[] { "facebook" },
+                    ["com.google.android.youtube"] = new[] { "youtube" },
+                    ["com.spotify.music"] = new[] { "spotify" }
+                };
+
+                if (knownMappings.TryGetValue(packageLower, out var aliases))
+                {
+                    return aliases.Any(alias => titleLower.Contains(alias));
+                }
+
+                return false;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogTrace(ex, "Error matching window to package {PackageName}", packageName);
+                return false;
+            }
+        }
+
         #endregion
 
         #region IDisposable
@@ -577,6 +960,7 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
                 if (disposing)
                 {
                     _cleanupTimer?.Dispose();
+                    _windowMonitorTimer?.Dispose(); // НОВОЕ: освобождаем таймер мониторинга
                     
                     // Завершаем все активные экземпляры
                     foreach (var instance in _runningInstances.Values)

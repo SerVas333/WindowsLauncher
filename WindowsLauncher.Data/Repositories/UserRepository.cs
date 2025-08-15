@@ -1,56 +1,63 @@
-﻿// WindowsLauncher.Data/Repositories/UserRepository.cs
+﻿// WindowsLauncher.Data/Repositories/UserRepository.cs - ВЕРСИЯ С BaseRepositoryWithFactory
 using Microsoft.EntityFrameworkCore;
 using WindowsLauncher.Core.Interfaces;
 using WindowsLauncher.Core.Models;
 
 namespace WindowsLauncher.Data.Repositories
 {
-    public class UserRepository : BaseRepository<User>, IUserRepository
+    public class UserRepository : BaseRepositoryWithFactory<User>, IUserRepository
     {
-        public UserRepository(LauncherDbContext context) : base(context)
+        public UserRepository(IDbContextFactory<LauncherDbContext> contextFactory) : base(contextFactory)
         {
         }
 
         public async Task<User?> GetByUsernameAsync(string username)
         {
-            return await _dbSet.FirstOrDefaultAsync(u => u.Username == username);
+            return await ExecuteWithContextAsync(async context =>
+                await context.Users.FirstOrDefaultAsync(u => u.Username == username));
         }
 
         public async Task<User> UpsertUserAsync(User user)
         {
-            var existingUser = await GetByUsernameAsync(user.Username);
-
-            if (existingUser == null)
+            return await ExecuteWithContextAsync(async context =>
             {
-                await AddAsync(user);
-            }
-            else
-            {
-                // Обновляем существующего пользователя
-                existingUser.DisplayName = user.DisplayName;
-                existingUser.Email = user.Email;
-                existingUser.Groups = user.Groups;
-                existingUser.Role = user.Role;
-                existingUser.LastLogin = user.LastLogin;
-                existingUser.IsActive = user.IsActive;
+                var existingUser = await context.Users.FirstOrDefaultAsync(u => u.Username == user.Username);
 
-                await UpdateAsync(existingUser);
-                user = existingUser;
-            }
+                if (existingUser == null)
+                {
+                    context.Users.Add(user);
+                    await context.SaveChangesAsync();
+                    return user;
+                }
+                else
+                {
+                    // Обновляем существующего пользователя
+                    existingUser.DisplayName = user.DisplayName;
+                    existingUser.Email = user.Email;
+                    existingUser.Groups = user.Groups;
+                    existingUser.Role = user.Role;
+                    existingUser.LastLogin = user.LastLogin;
+                    existingUser.IsActive = user.IsActive;
 
-            await SaveChangesAsync();
-            return user;
+                    context.Users.Update(existingUser);
+                    await context.SaveChangesAsync();
+                    return existingUser;
+                }
+            });
         }
 
         public async Task UpdateLastLoginAsync(string username)
         {
-            var user = await GetByUsernameAsync(username);
-            if (user != null)
+            await ExecuteWithContextAsync(async context =>
             {
-                user.LastLogin = DateTime.Now;
-                await UpdateAsync(user);
-                await SaveChangesAsync();
-            }
+                var user = await context.Users.FirstOrDefaultAsync(u => u.Username == username);
+                if (user != null)
+                {
+                    user.LastLogin = DateTime.Now;
+                    context.Users.Update(user);
+                    await context.SaveChangesAsync();
+                }
+            });
         }
 
         #region Методы для гибридной авторизации
@@ -60,7 +67,8 @@ namespace WindowsLauncher.Data.Repositories
         /// </summary>
         public async Task<List<User>> GetByAuthenticationTypeAsync(AuthenticationType authType)
         {
-            return await _dbSet.Where(u => u.AuthenticationType == authType).ToListAsync();
+            return await ExecuteWithContextAsync(async context =>
+                await context.Users.Where(u => u.AuthenticationType == authType).ToListAsync());
         }
 
         /// <summary>
@@ -68,12 +76,13 @@ namespace WindowsLauncher.Data.Repositories
         /// </summary>
         public async Task<List<User>> GetLocalUsersAsync()
         {
-            return await _dbSet.Where(u => (u.IsLocalUser && 
-                                           (u.AuthenticationType == AuthenticationType.LocalUsers || 
-                                            u.AuthenticationType == AuthenticationType.LocalService)) ||
-                                           u.AuthenticationType == AuthenticationType.Guest)
-                              .OrderBy(u => u.Username)
-                              .ToListAsync();
+            return await ExecuteWithContextAsync(async context =>
+                await context.Users.Where(u => (u.IsLocalUser && 
+                                               (u.AuthenticationType == AuthenticationType.LocalUsers || 
+                                                u.AuthenticationType == AuthenticationType.LocalService)) ||
+                                               u.AuthenticationType == AuthenticationType.Guest)
+                                  .OrderBy(u => u.Username)
+                                  .ToListAsync());
         }
 
         /// <summary>
@@ -81,9 +90,10 @@ namespace WindowsLauncher.Data.Repositories
         /// </summary>
         public async Task<List<User>> GetCachedDomainUsersAsync()
         {
-            return await _dbSet.Where(u => u.AuthenticationType == AuthenticationType.CachedDomain)
-                              .OrderBy(u => u.LastDomainSync)
-                              .ToListAsync();
+            return await ExecuteWithContextAsync(async context =>
+                await context.Users.Where(u => u.AuthenticationType == AuthenticationType.CachedDomain)
+                                  .OrderBy(u => u.LastDomainSync)
+                                  .ToListAsync());
         }
 
         /// <summary>
@@ -91,7 +101,8 @@ namespace WindowsLauncher.Data.Repositories
         /// </summary>
         public async Task<User?> GetByDomainUsernameAsync(string domainUsername)
         {
-            return await _dbSet.FirstOrDefaultAsync(u => u.DomainUsername == domainUsername);
+            return await ExecuteWithContextAsync(async context =>
+                await context.Users.FirstOrDefaultAsync(u => u.DomainUsername == domainUsername));
         }
 
         /// <summary>
@@ -100,9 +111,10 @@ namespace WindowsLauncher.Data.Repositories
         public async Task<List<User>> GetUsersRequiringSyncAsync(TimeSpan maxAge)
         {
             var cutoffDate = DateTime.UtcNow - maxAge;
-            return await _dbSet.Where(u => u.AuthenticationType == AuthenticationType.CachedDomain &&
-                                          (u.LastDomainSync == null || u.LastDomainSync < cutoffDate))
-                              .ToListAsync();
+            return await ExecuteWithContextAsync(async context =>
+                await context.Users.Where(u => u.AuthenticationType == AuthenticationType.CachedDomain &&
+                                              (u.LastDomainSync == null || u.LastDomainSync < cutoffDate))
+                                  .ToListAsync());
         }
 
         /// <summary>
@@ -110,13 +122,16 @@ namespace WindowsLauncher.Data.Repositories
         /// </summary>
         public async Task UpdateDomainSyncAsync(int userId)
         {
-            var user = await GetByIdAsync(userId);
-            if (user != null)
+            await ExecuteWithContextAsync(async context =>
             {
-                user.UpdateDomainSync();
-                await UpdateAsync(user);
-                await SaveChangesAsync();
-            }
+                var user = await context.Users.FindAsync(userId);
+                if (user != null)
+                {
+                    user.UpdateDomainSync();
+                    context.Users.Update(user);
+                    await context.SaveChangesAsync();
+                }
+            });
         }
 
         /// <summary>
@@ -124,35 +139,38 @@ namespace WindowsLauncher.Data.Repositories
         /// </summary>
         public async Task<User> UpsertCachedDomainUserAsync(User domainUser, string domainUsername)
         {
-            var existingUser = await GetByDomainUsernameAsync(domainUsername);
-
-            if (existingUser == null)
+            return await ExecuteWithContextAsync(async context =>
             {
-                // Создаем нового кэшированного пользователя
-                domainUser.AuthenticationType = AuthenticationType.CachedDomain;
-                domainUser.DomainUsername = domainUsername;
-                domainUser.IsLocalUser = false;
-                domainUser.AllowLocalLogin = true;
-                domainUser.UpdateDomainSync();
-                
-                await AddAsync(domainUser);
-            }
-            else
-            {
-                // Обновляем существующего
-                existingUser.DisplayName = domainUser.DisplayName;
-                existingUser.Email = domainUser.Email;
-                existingUser.Groups = domainUser.Groups;
-                existingUser.Role = domainUser.Role;
-                existingUser.IsActive = domainUser.IsActive;
-                existingUser.UpdateDomainSync();
+                var existingUser = await context.Users.FirstOrDefaultAsync(u => u.DomainUsername == domainUsername);
 
-                await UpdateAsync(existingUser);
-                domainUser = existingUser;
-            }
+                if (existingUser == null)
+                {
+                    // Создаем нового кэшированного пользователя
+                    domainUser.AuthenticationType = AuthenticationType.CachedDomain;
+                    domainUser.DomainUsername = domainUsername;
+                    domainUser.IsLocalUser = false;
+                    domainUser.AllowLocalLogin = true;
+                    domainUser.UpdateDomainSync();
+                    
+                    context.Users.Add(domainUser);
+                    await context.SaveChangesAsync();
+                    return domainUser;
+                }
+                else
+                {
+                    // Обновляем существующего
+                    existingUser.DisplayName = domainUser.DisplayName;
+                    existingUser.Email = domainUser.Email;
+                    existingUser.Groups = domainUser.Groups;
+                    existingUser.Role = domainUser.Role;
+                    existingUser.IsActive = domainUser.IsActive;
+                    existingUser.UpdateDomainSync();
 
-            await SaveChangesAsync();
-            return domainUser;
+                    context.Users.Update(existingUser);
+                    await context.SaveChangesAsync();
+                    return existingUser;
+                }
+            });
         }
 
         #endregion

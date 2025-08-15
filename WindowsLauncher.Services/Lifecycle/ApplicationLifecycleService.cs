@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Timers;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using WindowsLauncher.Core.Enums;
 using WindowsLauncher.Core.Interfaces;
@@ -26,7 +27,7 @@ namespace WindowsLauncher.Services.Lifecycle
         private readonly IApplicationInstanceManager _instanceManager;
         private readonly IWindowManager _windowManager;
         private readonly IProcessMonitor _processMonitor;
-        private readonly IEnumerable<IApplicationLauncher> _launchers;
+        private readonly IServiceScopeFactory _scopeFactory;
         private readonly IAuditService _auditService;
         
         private readonly Timer _monitoringTimer;
@@ -46,14 +47,14 @@ namespace WindowsLauncher.Services.Lifecycle
             IApplicationInstanceManager instanceManager,
             IWindowManager windowManager,
             IProcessMonitor processMonitor,
-            IEnumerable<IApplicationLauncher> launchers,
+            IServiceScopeFactory scopeFactory,
             IAuditService auditService)
         {
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
             _instanceManager = instanceManager ?? throw new ArgumentNullException(nameof(instanceManager));
             _windowManager = windowManager ?? throw new ArgumentNullException(nameof(windowManager));
             _processMonitor = processMonitor ?? throw new ArgumentNullException(nameof(processMonitor));
-            _launchers = launchers ?? throw new ArgumentNullException(nameof(launchers));
+            _scopeFactory = scopeFactory ?? throw new ArgumentNullException(nameof(scopeFactory));
             _auditService = auditService ?? throw new ArgumentNullException(nameof(auditService));
             
             _monitoringSemaphore = new SemaphoreSlim(1, 1);
@@ -75,9 +76,22 @@ namespace WindowsLauncher.Services.Lifecycle
             // Подписываемся на события лаунчеров (например, WebView2ApplicationLauncher)
             SubscribeToLauncherEvents();
             
+            // Логируем количество лаунчеров при инициализации
+            using var initScope = _scopeFactory.CreateScope();
+            var initLaunchers = initScope.ServiceProvider.GetServices<IApplicationLauncher>();
             _logger.LogInformation("ApplicationLifecycleService initialized with {LauncherCount} launchers", 
-                _launchers.Count());
+                initLaunchers.Count());
         }
+        
+        /// <summary>
+        /// Получает коллекцию лаунчеров через временный scope для корректной работы с DI
+        /// </summary>
+        private IEnumerable<IApplicationLauncher> GetLaunchers()
+        {
+            using var scope = _scopeFactory.CreateScope();
+            return scope.ServiceProvider.GetServices<IApplicationLauncher>().ToList();
+        }
+        
         
         #region Запуск приложений
         
@@ -305,14 +319,17 @@ namespace WindowsLauncher.Services.Lifecycle
             _logger.LogDebug("Finding launcher for application {AppName} (Type: {Type}, Path: {Path})", 
                 application.Name, application.Type, application.ExecutablePath);
             
+            // Получаем лаунчеры через scope
+            var launchers = GetLaunchers();
+            
             // Логируем все доступные лаунчеры
             _logger.LogDebug("Available launchers ({Count}): {Launchers}", 
-                _launchers.Count(), 
-                string.Join(", ", _launchers.Select(l => $"{l.GetType().Name}(Type={l.SupportedType}, Priority={l.Priority})")));
+                launchers.Count(), 
+                string.Join(", ", launchers.Select(l => $"{l.GetType().Name}(Type={l.SupportedType}, Priority={l.Priority})")));
             
             // Проверяем каждый лаунчер отдельно для подробной диагностики
             var debugResults = new List<string>();
-            foreach (var launcher in _launchers)
+            foreach (var launcher in launchers)
             {
                 var typeMatch = launcher.SupportedType == application.Type;
                 var canLaunch = launcher.CanLaunch(application);
@@ -327,7 +344,7 @@ namespace WindowsLauncher.Services.Lifecycle
             _logger.LogDebug("Launcher evaluation results: {Results}", string.Join("; ", debugResults));
             
             // Ищем лаунчеры, которые могут обработать данное приложение
-            var suitableLaunchers = _launchers
+            var suitableLaunchers = launchers
                 .Where(launcher => launcher.SupportedType == application.Type && launcher.CanLaunch(application))
                 .OrderByDescending(launcher => launcher.Priority) // Сортируем по приоритету
                 .ToList();
@@ -337,7 +354,7 @@ namespace WindowsLauncher.Services.Lifecycle
                 _logger.LogError("No suitable launcher found for application {AppName} (Type: {Type}). " +
                     "Available launchers: {AvailableLaunchers}", 
                     application.Name, application.Type,
-                    string.Join(", ", _launchers.Select(l => $"{l.GetType().Name}({l.SupportedType})")));
+                    string.Join(", ", launchers.Select(l => $"{l.GetType().Name}({l.SupportedType})")));
                 return null;
             }
             
@@ -1096,12 +1113,15 @@ namespace WindowsLauncher.Services.Lifecycle
         /// </summary>
         private void SubscribeToLauncherEvents()
         {
-            foreach (var launcher in _launchers)
+            var launchers = GetLaunchers();
+            foreach (var launcher in launchers)
             {
                 var launcherType = launcher.GetType();
                 
-                // Проверяем является ли лаунчер WebView2ApplicationLauncher или TextEditorApplicationLauncher через рефлексию
-                if (launcherType.Name == "WebView2ApplicationLauncher" || launcherType.Name == "TextEditorApplicationLauncher")
+                // Проверяем является ли лаунчер WebView2ApplicationLauncher, TextEditorApplicationLauncher или WSAApplicationLauncher через рефлексию
+                if (launcherType.Name == "WebView2ApplicationLauncher" || 
+                    launcherType.Name == "TextEditorApplicationLauncher" ||
+                    launcherType.Name == "WSAApplicationLauncher")
                 {
                     try
                     {

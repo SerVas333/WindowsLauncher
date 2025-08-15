@@ -25,6 +25,16 @@ namespace WindowsLauncher.Services.Lifecycle.Launchers
         
         public ApplicationType SupportedType => ApplicationType.Web;
         public int Priority => 10; // Средний приоритет - fallback для WebView2ApplicationLauncher
+
+        /// <summary>
+        /// Событие активации окна приложения (не используется в данном лаунчере)
+        /// </summary>
+        public event EventHandler<ApplicationInstance>? WindowActivated;
+
+        /// <summary>  
+        /// Событие закрытия окна приложения (не используется в данном лаунчере)
+        /// </summary>
+        public event EventHandler<ApplicationInstance>? WindowClosed;
         
         public WebApplicationLauncher(
             ILogger<WebApplicationLauncher> logger,

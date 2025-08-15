@@ -4,6 +4,9 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
+using Serilog;
+using Serilog.Extensions.Hosting;
+using Serilog.Events;
 using FirebirdSql.EntityFrameworkCore.Firebird.Extensions;
 using System;
 using System.IO;
@@ -56,6 +59,23 @@ namespace WindowsLauncher.UI
                 // Настройка Host с конфигурацией и DI
                 _host = CreateHostBuilder(e.Args).Build();
                 ServiceProvider = _host.Services;
+
+                // ✅ ТЕСТОВОЕ ЛОГИРОВАНИЕ ДЛЯ ПРОВЕРКИ СИСТЕМЫ
+                var appLogger = ServiceProvider.GetService<ILogger<App>>();
+                appLogger?.LogInformation("WindowsLauncher приложение запущено. Тестирование логирования...");
+                appLogger?.LogDebug("Debug логирование работает");
+                appLogger?.LogTrace("Trace логирование работает");
+                
+                // Создаем папку логов если не существует
+                try 
+                {
+                    Directory.CreateDirectory(@"C:\WindowsLauncher\Logs");
+                    appLogger?.LogInformation("Папка логов создана: C:\\WindowsLauncher\\Logs");
+                } 
+                catch (Exception ex) 
+                {
+                    appLogger?.LogError(ex, "Ошибка создания папки логов");
+                }
 
                 // Инициализация языка через новый сервис
                 await InitializeLanguageServiceAsync();
@@ -198,11 +218,40 @@ namespace WindowsLauncher.UI
                 {
                     ConfigureServices(services, context.Configuration);
                 })
-                .ConfigureLogging((context, logging) =>
+                .UseSerilog((context, configuration) => 
                 {
-                    logging.ClearProviders();
-                    logging.AddConsole();
-                    logging.AddDebug();
+                    configuration
+                        .ReadFrom.Configuration(context.Configuration)
+                        .Enrich.FromLogContext()
+                        .WriteTo.Console(outputTemplate: "{Timestamp:HH:mm:ss} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+                        .WriteTo.Debug()
+                        .WriteTo.File(
+                            path: context.Configuration["Logging:File:Path"] ?? "C:\\WindowsLauncher\\Logs\\app-.log",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 7,
+                            fileSizeLimitBytes: 50_000_000,
+                            shared: true,
+                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}")
+                        .WriteTo.File(
+                            path: context.Configuration["Logging:WSAJsonFile:Path"] ?? "C:\\WindowsLauncher\\Logs\\wsa-events-.json",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 5,
+                            fileSizeLimitBytes: 20_000_000,
+                            shared: true,
+                            restrictedToMinimumLevel: LogEventLevel.Debug,
+                            outputTemplate: "{Timestamp:yyyy-MM-dd HH:mm:ss.fff} [{Level:u3}] {SourceContext}: {Message:lj}{NewLine}{Exception}");
+                    
+                    // Добавляем debug файл если включен
+                    if (context.Configuration.GetValue<bool>("Logging:DebugFile:Enabled", false))
+                    {
+                        configuration.WriteTo.File(
+                            path: context.Configuration["Logging:DebugFile:Path"] ?? "C:\\WindowsLauncher\\Logs\\debug-.log",
+                            rollingInterval: RollingInterval.Day,
+                            retainedFileCountLimit: 3,
+                            fileSizeLimitBytes: 100_000_000,
+                            shared: true,
+                            restrictedToMinimumLevel: LogEventLevel.Verbose);
+                    }
                 });
 
         private static void ConfigureServices(IServiceCollection services, IConfiguration configuration)
@@ -219,80 +268,21 @@ namespace WindowsLauncher.UI
             services.AddSingleton<IEncryptionService, WindowsLauncher.Services.Security.EncryptionService>();
             services.AddSingleton<IDatabaseConfigurationService, DatabaseConfigurationService>();
             services.AddScoped<IDatabaseMigrationService, DatabaseMigrationService>();
-            services.AddDbContext<LauncherDbContext>((serviceProvider, options) =>
+            // Используем только DbContextFactory для всех сервисов (рекомендуемый паттерн для WPF)
+            services.AddDbContextFactory<LauncherDbContext>((serviceProvider, options) =>
             {
-                try
-                {
-                    // Получаем сервис конфигурации БД
-                    var dbConfigService = serviceProvider.GetRequiredService<IDatabaseConfigurationService>();
-                    
-                    // Проверяем существует ли файл конфигурации
-                    DatabaseConfiguration dbConfig;
-                    if (dbConfigService.ConfigurationFileExists())
-                    {
-                        // Загружаем синхронно для избежания deadlock в DI
-                        var configPath = dbConfigService.GetConfigurationFilePath();
-                        var json = File.ReadAllText(configPath);
-                        dbConfig = System.Text.Json.JsonSerializer.Deserialize<DatabaseConfiguration>(json) 
-                                   ?? dbConfigService.GetDefaultConfiguration();
-                        
-                        // Простая расшифровка пароля если нужно
-                        var encryptionService = serviceProvider.GetRequiredService<IEncryptionService>();
-                        if (encryptionService.IsEncrypted(dbConfig.Password))
-                        {
-                            dbConfig.Password = encryptionService.Decrypt(dbConfig.Password);
-                        }
-                    }
-                    else
-                    {
-                        // Используем дефолтную конфигурацию
-                        dbConfig = dbConfigService.GetDefaultConfiguration();
-                    }
-
-                    // Настраиваем провайдер в зависимости от типа БД
-                    switch (dbConfig.DatabaseType)
-                    {
-                        case Core.Models.DatabaseType.SQLite:
-                            options.UseSqlite(dbConfig.GetSQLiteConnectionString(), sqliteOptions =>
-                            {
-                                sqliteOptions.CommandTimeout(dbConfig.ConnectionTimeout);
-                            });
-                            break;
-
-                        case Core.Models.DatabaseType.Firebird:
-                            options.UseFirebird(dbConfig.GetFirebirdConnectionString(), firebirdOptions =>
-                            {
-                                firebirdOptions.CommandTimeout(dbConfig.ConnectionTimeout);
-                            });
-                            break;
-
-                        default:
-                            // Fallback к SQLite
-                            var fallbackConnectionString = configuration.GetConnectionString("DefaultConnection")
-                                ?? GetDefaultConnectionString();
-                            options.UseSqlite(fallbackConnectionString);
-                            break;
-                    }
-                }
-                catch (Exception ex)
-                {
-                    // В случае ошибки загрузки конфигурации используем SQLite fallback
-                    System.Diagnostics.Debug.WriteLine($"Error loading DB config, using SQLite fallback: {ex.Message}");
-                    var fallbackConnectionString = configuration.GetConnectionString("DefaultConnection")
-                        ?? GetDefaultConnectionString();
-                    options.UseSqlite(fallbackConnectionString);
-                }
+                ConfigureDbContextOptions(serviceProvider, options, configuration);
             });
 
-            // Репозитории
-            services.AddScoped<IApplicationRepository, ApplicationRepository>();
-            services.AddScoped<IUserRepository, UserRepository>();
-            services.AddScoped<IAuditLogRepository, AuditLogRepository>();
-            services.AddScoped<IUserSettingsRepository, UserSettingsRepository>();
+            // Репозитории - все как Singleton с IDbContextFactory
+            services.AddSingleton<IApplicationRepository, ApplicationRepository>();
+            services.AddSingleton<IUserRepository, UserRepository>();
+            services.AddSingleton<IAuditLogRepository, AuditLogRepository>();
+            services.AddSingleton<IUserSettingsRepository, UserSettingsRepository>();
             
             // Email репозитории
-            services.AddScoped<IContactRepository, WindowsLauncher.Data.Repositories.ContactRepository>();
-            services.AddScoped<ISmtpSettingsRepository, WindowsLauncher.Data.Repositories.SmtpSettingsRepository>();
+            services.AddSingleton<IContactRepository, WindowsLauncher.Data.Repositories.ContactRepository>();
+            services.AddSingleton<ISmtpSettingsRepository, WindowsLauncher.Data.Repositories.SmtpSettingsRepository>();
 
             // Основные сервисы
             services.AddSingleton<IAuthenticationConfigurationService, AuthenticationConfigurationService>();
@@ -301,7 +291,7 @@ namespace WindowsLauncher.UI
             services.AddScoped<IAuthorizationService, AuthorizationService>();
             services.AddScoped<IApplicationService, ApplicationService>();
             services.AddScoped<ICategoryManagementService, WindowsLauncher.Services.Categories.CategoryManagementService>();
-            services.AddScoped<IAuditService, AuditService>();
+            services.AddSingleton<IAuditService, AuditService>();
             
             // Email сервисы
             services.AddScoped<WindowsLauncher.Core.Interfaces.Email.IEmailService, WindowsLauncher.Services.Email.EmailService>();
@@ -327,8 +317,8 @@ namespace WindowsLauncher.UI
             
             // Сервисы версионирования
             services.AddSingleton<IVersionService, VersionService>();
-            services.AddScoped<IApplicationStartupService, ApplicationStartupService>();
-            services.AddScoped<IApplicationVersionService, ApplicationVersionService>();
+            services.AddSingleton<IApplicationStartupService, ApplicationStartupService>();
+            services.AddSingleton<IApplicationVersionService, ApplicationVersionService>();
             
             // Сервис управления данными приложения
             services.AddScoped<ApplicationDataManager>();
@@ -344,10 +334,10 @@ namespace WindowsLauncher.UI
             services.AddSingleton<IInstalledAppsService, InstalledAppsService>();
             
             // Композитный сервис для обратной совместимости
-            services.AddScoped<IWSAIntegrationService, WSAIntegrationService>();
+            services.AddSingleton<IWSAIntegrationService, WSAIntegrationService>();
             
             // Высокоуровневые сервисы
-            services.AddScoped<IAndroidApplicationManager, AndroidApplicationManager>();
+            services.AddSingleton<IAndroidApplicationManager, AndroidApplicationManager>();
             services.AddSingleton<IAndroidSubsystemService, AndroidSubsystemService>();
             services.AddHostedService<AndroidSubsystemService>(provider => 
                 (AndroidSubsystemService)provider.GetRequiredService<IAndroidSubsystemService>());
@@ -365,26 +355,26 @@ namespace WindowsLauncher.UI
             services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationInstanceManager, 
                 WindowsLauncher.Services.Lifecycle.Management.ApplicationInstanceManager>();
             
-            // Специализированные лаунчеры приложений
-            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+            // Специализированные лаунчеры приложений (Singleton для интеграции с ApplicationLifecycleService)
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
                 WindowsLauncher.Services.Lifecycle.Launchers.DesktopApplicationLauncher>();
-            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
                 WindowsLauncher.Services.Lifecycle.Launchers.ChromeAppLauncher>();
-            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
                 WindowsLauncher.Services.Lifecycle.Launchers.WebApplicationLauncher>();
-            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
                 WindowsLauncher.Services.Lifecycle.Launchers.FolderLauncher>();
             
             // WebView2 лаунчер для замены Chrome Apps
-            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
                 WindowsLauncher.UI.Services.WebView2ApplicationLauncher>();
             
             // TextEditor лаунчер для встроенного текстового редактора
-            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
                 WindowsLauncher.UI.Services.TextEditorApplicationLauncher>();
             
             // WSA лаунчер для Android приложений (APK)
-            services.AddScoped<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
+            services.AddSingleton<WindowsLauncher.Core.Interfaces.Lifecycle.IApplicationLauncher, 
                 WindowsLauncher.Services.Lifecycle.Launchers.WSAApplicationLauncher>();
             
             // Главный сервис управления жизненным циклом приложений
@@ -424,8 +414,76 @@ namespace WindowsLauncher.UI
             services.AddTransient<SmtpEditViewModel>();
             services.AddTransient<AdminViewModel>();
 
+            // UI компоненты - Windows и Views
+            services.AddTransient<Views.LoginWindow>();
+
             // Memory Cache для авторизации
             services.AddMemoryCache();
+        }
+
+        private static void ConfigureDbContextOptions(IServiceProvider serviceProvider, DbContextOptionsBuilder options, IConfiguration configuration)
+        {
+            try
+            {
+                // Получаем сервис конфигурации БД
+                var dbConfigService = serviceProvider.GetRequiredService<IDatabaseConfigurationService>();
+                
+                // Проверяем существует ли файл конфигурации
+                DatabaseConfiguration dbConfig;
+                if (dbConfigService.ConfigurationFileExists())
+                {
+                    // Загружаем синхронно для избежания deadlock в DI
+                    var configPath = dbConfigService.GetConfigurationFilePath();
+                    var json = File.ReadAllText(configPath);
+                    dbConfig = System.Text.Json.JsonSerializer.Deserialize<DatabaseConfiguration>(json) 
+                               ?? dbConfigService.GetDefaultConfiguration();
+                    
+                    // Простая расшифровка пароля если нужно
+                    var encryptionService = serviceProvider.GetRequiredService<IEncryptionService>();
+                    if (encryptionService.IsEncrypted(dbConfig.Password))
+                    {
+                        dbConfig.Password = encryptionService.Decrypt(dbConfig.Password);
+                    }
+                }
+                else
+                {
+                    // Используем дефолтную конфигурацию
+                    dbConfig = dbConfigService.GetDefaultConfiguration();
+                }
+
+                // Настраиваем провайдер в зависимости от типа БД
+                switch (dbConfig.DatabaseType)
+                {
+                    case Core.Models.DatabaseType.SQLite:
+                        options.UseSqlite(dbConfig.GetSQLiteConnectionString(), sqliteOptions =>
+                        {
+                            sqliteOptions.CommandTimeout(dbConfig.ConnectionTimeout);
+                        });
+                        break;
+
+                    case Core.Models.DatabaseType.Firebird:
+                        options.UseFirebird(dbConfig.GetFirebirdConnectionString(), firebirdOptions =>
+                        {
+                            firebirdOptions.CommandTimeout(dbConfig.ConnectionTimeout);
+                        });
+                        break;
+
+                    default:
+                        // Fallback к SQLite
+                        var fallbackConnectionString = configuration.GetConnectionString("DefaultConnection")
+                            ?? GetDefaultConnectionString();
+                        options.UseSqlite(fallbackConnectionString);
+                        break;
+                }
+            }
+            catch (Exception ex)
+            {
+                // В случае ошибки загрузки конфигурации используем SQLite fallback
+                System.Diagnostics.Debug.WriteLine($"Error loading DB config, using SQLite fallback: {ex.Message}");
+                var fallbackConnectionString = configuration.GetConnectionString("DefaultConnection")
+                    ?? GetDefaultConnectionString();
+                options.UseSqlite(fallbackConnectionString);
+            }
         }
 
         private static string GetDefaultConnectionString()
@@ -740,7 +798,9 @@ namespace WindowsLauncher.UI
                 var logger = ServiceProvider.GetRequiredService<ILogger<App>>();
                 logger.LogInformation("Showing login window");
                 
-                var loginWindow = new LoginWindow();
+                // Создаем LoginWindow через scoped scope для доступа к scoped сервисам
+                using var scope = ServiceProvider.CreateScope();
+                var loginWindow = scope.ServiceProvider.GetRequiredService<Views.LoginWindow>();
                 
                 // Показываем модально
                 var result = loginWindow.ShowDialog();

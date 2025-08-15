@@ -14,16 +14,16 @@ namespace WindowsLauncher.Services
     /// </summary>
     public class ApplicationVersionService : IApplicationVersionService
     {
-        private readonly LauncherDbContext _context;
+        private readonly IDbContextFactory<LauncherDbContext> _contextFactory;
         private readonly IDatabaseConfigurationService _dbConfigService;
         private readonly ILogger<ApplicationVersionService> _logger;
         
         public ApplicationVersionService(
-            LauncherDbContext context,
+            IDbContextFactory<LauncherDbContext> contextFactory,
             IDatabaseConfigurationService dbConfigService,
             ILogger<ApplicationVersionService> logger)
         {
-            _context = context;
+            _contextFactory = contextFactory;
             _dbConfigService = dbConfigService;
             _logger = logger;
         }
@@ -39,6 +39,8 @@ namespace WindowsLauncher.Services
         {
             try
             {
+                using var context = await _contextFactory.CreateDbContextAsync();
+                
                 // Проверяем существование таблицы DATABASE_VERSION
                 var config = await _dbConfigService.GetConfigurationAsync();
                 string checkTableSql = config.DatabaseType switch
@@ -48,7 +50,7 @@ namespace WindowsLauncher.Services
                     _ => throw new NotSupportedException($"Database type {config.DatabaseType} is not supported")
                 };
 
-                var connection = _context.Database.GetDbConnection();
+                var connection = context.Database.GetDbConnection();
                 if (connection.State != System.Data.ConnectionState.Open)
                 {
                     await connection.OpenAsync();
@@ -86,6 +88,8 @@ namespace WindowsLauncher.Services
         {
             try
             {
+                using var context = await _contextFactory.CreateDbContextAsync();
+                
                 var config = await _dbConfigService.GetConfigurationAsync();
                 string timestampValue = config.DatabaseType switch
                 {
@@ -97,10 +101,10 @@ namespace WindowsLauncher.Services
                 applicationVersion ??= GetApplicationVersion();
 
                 // Удаляем старую запись и добавляем новую
-                await _context.Database.ExecuteSqlRawAsync("DELETE FROM DATABASE_VERSION");
+                await context.Database.ExecuteSqlRawAsync("DELETE FROM DATABASE_VERSION");
                 
                 // Используем параметризованный запрос для предотвращения SQL injection
-                await _context.Database.ExecuteSqlAsync($@"
+                await context.Database.ExecuteSqlAsync($@"
                     INSERT INTO DATABASE_VERSION (VERSION, APPLIED_AT, APPLICATION_VERSION) 
                     VALUES ({version}, {timestampValue}, {applicationVersion})");
 

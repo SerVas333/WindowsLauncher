@@ -7,6 +7,8 @@ using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Input;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.DependencyInjection;
+using WindowsLauncher.UI.Infrastructure.Extensions;
 using Microsoft.Win32;
 using WindowsLauncher.Core.Interfaces.Email;
 using WindowsLauncher.Core.Models.Email;
@@ -27,6 +29,7 @@ namespace WindowsLauncher.UI.ViewModels
         private readonly IEmailService _emailService;
         private readonly IAddressBookService _addressBookService;
         private readonly ILogger<ComposeEmailViewModel> _logger;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         
         private string _subject = string.Empty;
         private string _messageBody = string.Empty;
@@ -101,11 +104,13 @@ namespace WindowsLauncher.UI.ViewModels
             IEmailService emailService,
             IAddressBookService addressBookService,
             ILogger<ComposeEmailViewModel> logger,
-            IDialogService dialogService) : base(logger, dialogService)
+            IDialogService dialogService,
+            IServiceScopeFactory serviceScopeFactory) : base(logger, dialogService)
         {
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _addressBookService = addressBookService ?? throw new ArgumentNullException(nameof(addressBookService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
+            _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
             
             // Initialize commands
             SelectToRecipientsCommand = new AsyncRelayCommand(() => SelectRecipientsAsync(RecipientType.To));
@@ -141,15 +146,8 @@ namespace WindowsLauncher.UI.ViewModels
         {
             try
             {
-                // Создаем окно выбора контактов из адресной книги
-                var addressBookViewModel = ((App)Application.Current).ServiceProvider.GetService(typeof(AddressBookViewModel)) as AddressBookViewModel;
-                if (addressBookViewModel == null)
-                {
-                    _logger.LogError("Failed to resolve AddressBookViewModel from DI container");
-                    MessageBox.Show("Ошибка инициализации адресной книги", "Ошибка", 
-                        MessageBoxButton.OK, MessageBoxImage.Error);
-                    return;
-                }
+                // Создаем AddressBookViewModel через scoped scope для доступа к Scoped сервисам
+                var addressBookViewModel = _serviceScopeFactory.CreateScopedService<AddressBookViewModel>();
                 
                 // Настраиваем режим выбора
                 addressBookViewModel.IsSelectionMode = true;

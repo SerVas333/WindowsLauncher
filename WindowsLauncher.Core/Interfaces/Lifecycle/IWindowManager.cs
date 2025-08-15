@@ -179,5 +179,40 @@ namespace WindowsLauncher.Core.Interfaces.Lifecycle
         Task<WindowInfo?> EnumerateAndFindWindowAsync(int processId, string? titleFilter = null);
         
         #endregion
+
+        #region WSA (Windows Subsystem for Android) Support
+        
+        /// <summary>
+        /// Найти WSA-окно по package name и activity name
+        /// Использует корреляционный алгоритм поиска на основе времени запуска и заголовка
+        /// </summary>
+        /// <param name="packageName">Android package name (например, com.example.app)</param>
+        /// <param name="activityName">Имя Android активности (опционально)</param>
+        /// <returns>Информация о найденном WSA-окне или null</returns>
+        Task<WindowInfo?> FindWSAWindowAsync(string packageName, string activityName = "");
+        
+        /// <summary>
+        /// Получить все WSA-окна в системе
+        /// </summary>
+        /// <returns>Список всех WSA-окон</returns>
+        Task<IReadOnlyList<WindowInfo>> GetWSAWindowsAsync();
+        
+        /// <summary>
+        /// Проверить, является ли окно WSA-окном
+        /// </summary>
+        /// <param name="windowHandle">Handle окна для проверки</param>
+        /// <returns>true если окно создано WSA</returns>
+        Task<bool> IsWSAWindowAsync(IntPtr windowHandle);
+
+        /// <summary>
+        /// Ищет WSA приложение по заданным критериям используя правильные Windows API
+        /// </summary>
+        /// <param name="packageName">Package name Android приложения</param>
+        /// <param name="activityName">Activity name (может быть null)</param>
+        /// <param name="windowName">Точное имя окна для поиска (из AndroidArgumentsParser)</param>
+        /// <returns>Информация о найденном окне или null</returns>
+        Task<WindowInfo?> FindWSAApplicationWindowAsync(string packageName, string? activityName = null, string? windowName = null);
+        
+        #endregion
     }
 }

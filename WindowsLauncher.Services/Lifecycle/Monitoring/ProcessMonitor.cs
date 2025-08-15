@@ -41,6 +41,20 @@ namespace WindowsLauncher.Services.Lifecycle.Monitoring
         {
             try
             {
+                // Специальная обработка для виртуальных WSA приложений
+                if (processId == -1)
+                {
+                    _logger.LogTrace("Virtual WSA application (ProcessId = -1) considered always alive");
+                    return Task.FromResult(true);
+                }
+                
+                // Невалидный ProcessId
+                if (processId <= 0)
+                {
+                    _logger.LogTrace("Invalid ProcessId {ProcessId}, considering process dead", processId);
+                    return Task.FromResult(false);
+                }
+                
                 using var process = Process.GetProcessById(processId);
                 return Task.FromResult(!process.HasExited);
             }
@@ -104,6 +118,31 @@ namespace WindowsLauncher.Services.Lifecycle.Monitoring
             
             try
             {
+                // Специальная обработка для виртуальных WSA приложений
+                if (processId == -1)
+                {
+                    _logger.LogTrace("Creating virtual ProcessInfo for WSA application (ProcessId = -1)");
+                    return new ProcessInfo
+                    {
+                        ProcessId = -1,
+                        ProcessName = "virtual_wsa_app",
+                        IsAlive = true,
+                        HasExited = false,
+                        IsResponding = true,
+                        WorkingSetMemory = 0,
+                        VirtualMemory = 0,
+                        PrivateMemory = 0,
+                        CollectedAt = DateTime.Now,
+                        Source = "ProcessMonitor_Virtual"
+                    };
+                }
+                
+                // Невалидный ProcessId
+                if (processId <= 0)
+                {
+                    return ProcessInfo.CreateWithError(processId, "Invalid ProcessId");
+                }
+                
                 using var process = Process.GetProcessById(processId);
                 
                 var processInfo = new ProcessInfo

@@ -16,12 +16,12 @@ namespace WindowsLauncher.Data.Repositories
     /// </summary>
     public class ContactRepository : IContactRepository
     {
-        private readonly LauncherDbContext _context;
+        private readonly IDbContextFactory<LauncherDbContext> _contextFactory;
         private readonly ILogger<ContactRepository> _logger;
         
-        public ContactRepository(LauncherDbContext context, ILogger<ContactRepository> logger)
+        public ContactRepository(IDbContextFactory<LauncherDbContext> contextFactory, ILogger<ContactRepository> logger)
         {
-            _context = context ?? throw new ArgumentNullException(nameof(context));
+            _contextFactory = contextFactory ?? throw new ArgumentNullException(nameof(contextFactory));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         }
         
@@ -32,7 +32,8 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
-                var query = _context.Contacts.AsQueryable();
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var query = context.Contacts.AsQueryable();
                 
                 if (!includeInactive)
                 {
@@ -65,7 +66,8 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
-                var contact = await _context.Contacts
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var contact = await context.Contacts
                     .FirstOrDefaultAsync(c => c.Id == id);
                 
                 if (contact != null)
@@ -95,7 +97,8 @@ namespace WindowsLauncher.Data.Repositories
                 // Используем ToUpper() для совместимости с обеими БД (UPPERCASE поля)
                 var normalizedEmail = email.Trim().ToUpper();
                 
-                var contact = await _context.Contacts
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var contact = await context.Contacts
                     .FirstOrDefaultAsync(c => c.Email.ToUpper() == normalizedEmail && c.IsActive);
                 
                 if (contact != null)
@@ -124,7 +127,8 @@ namespace WindowsLauncher.Data.Repositories
             {
                 var normalizedSearch = searchTerm.Trim().ToUpper();
                 
-                var query = _context.Contacts.AsQueryable();
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var query = context.Contacts.AsQueryable();
                 
                 if (!includeInactive)
                 {
@@ -162,7 +166,8 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
-                var query = _context.Contacts.AsQueryable();
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var query = context.Contacts.AsQueryable();
                 
                 if (!includeInactive)
                 {
@@ -218,8 +223,9 @@ namespace WindowsLauncher.Data.Repositories
                 contact.CreatedAt = DateTime.Now;
                 contact.UpdatedAt = null;
                 
-                _context.Contacts.Add(contact);
-                await _context.SaveChangesAsync();
+                using var context = await _contextFactory.CreateDbContextAsync();
+                context.Contacts.Add(contact);
+                await context.SaveChangesAsync();
                 
                 _logger.LogInformation("Created new contact {Id}: {FullName} ({Email})", 
                     contact.Id, contact.FullName, contact.Email);
@@ -243,14 +249,17 @@ namespace WindowsLauncher.Data.Repositories
             
             try
             {
-                var existingContact = await GetByIdAsync(contact.Id);
+                using var context = await _contextFactory.CreateDbContextAsync();
+                
+                var existingContact = await context.Contacts.FirstOrDefaultAsync(c => c.Id == contact.Id);
                 if (existingContact == null)
                 {
                     throw new InvalidOperationException($"Контакт с ID {contact.Id} не найден");
                 }
                 
                 // Проверяем уникальность email (исключая текущий контакт)
-                var emailExists = await EmailExistsAsync(contact.Email, contact.Id);
+                var emailExists = await context.Contacts
+                    .AnyAsync(c => c.Email.ToUpper() == contact.Email.ToUpper() && c.Id != contact.Id && c.IsActive);
                 if (emailExists)
                 {
                     throw new InvalidOperationException($"Контакт с email '{contact.Email}' уже существует");
@@ -269,7 +278,7 @@ namespace WindowsLauncher.Data.Repositories
                 existingContact.CreatedBy = contact.CreatedBy;
                 existingContact.UpdatedAt = DateTime.Now;
                 
-                await _context.SaveChangesAsync();
+                await context.SaveChangesAsync();
                 
                 _logger.LogInformation("Updated contact {Id}: {FullName} ({Email})", 
                     contact.Id, contact.FullName, contact.Email);
@@ -290,15 +299,17 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
-                var contact = await GetByIdAsync(id);
+                using var context = await _contextFactory.CreateDbContextAsync();
+                
+                var contact = await context.Contacts.FirstOrDefaultAsync(c => c.Id == id);
                 if (contact == null)
                 {
                     _logger.LogWarning("Contact {Id} not found for deletion", id);
                     return false;
                 }
                 
-                _context.Contacts.Remove(contact);
-                await _context.SaveChangesAsync();
+                context.Contacts.Remove(contact);
+                await context.SaveChangesAsync();
                 
                 _logger.LogInformation("Deleted contact {Id}: {FullName} ({Email})", 
                     id, contact.FullName, contact.Email);
@@ -319,8 +330,9 @@ namespace WindowsLauncher.Data.Repositories
         {
             try
             {
+                using var context = await _contextFactory.CreateDbContextAsync();
                 // Используем совместимый с обеими БД запрос
-                var groups = await _context.Contacts
+                var groups = await context.Contacts
                     .Where(c => c.IsActive && c.Group != null && c.Group != "")
                     .Select(c => c.Group!)
                     .Distinct()
@@ -350,7 +362,8 @@ namespace WindowsLauncher.Data.Repositories
             {
                 var normalizedEmail = email.Trim().ToUpper();
                 
-                var query = _context.Contacts
+                using var context = await _contextFactory.CreateDbContextAsync();
+                var query = context.Contacts
                     .Where(c => c.Email.ToUpper() == normalizedEmail && c.IsActive);
                 
                 if (excludeId.HasValue)
@@ -389,8 +402,9 @@ namespace WindowsLauncher.Data.Repositories
                     contact.UpdatedAt = null;
                 }
                 
-                _context.Contacts.AddRange(contactList);
-                await _context.SaveChangesAsync();
+                using var context = await _contextFactory.CreateDbContextAsync();
+                context.Contacts.AddRange(contactList);
+                await context.SaveChangesAsync();
                 
                 _logger.LogInformation("Created batch of {Count} contacts", contactList.Count);
                 

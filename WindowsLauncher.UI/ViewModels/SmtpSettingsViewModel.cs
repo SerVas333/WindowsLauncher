@@ -15,6 +15,7 @@ using WindowsLauncher.UI.Infrastructure.Services;
 using WindowsLauncher.UI.Views;
 using WindowsLauncher.Services.Security;
 using Microsoft.Extensions.DependencyInjection;
+using WindowsLauncher.UI.Infrastructure.Extensions;
 
 namespace WindowsLauncher.UI.ViewModels
 {
@@ -30,7 +31,7 @@ namespace WindowsLauncher.UI.ViewModels
         private readonly IEmailService _emailService;
         private readonly WindowsLauncher.Core.Interfaces.IEncryptionService _encryptionService;
         private readonly ILogger<SmtpSettingsViewModel> _logger;
-        private readonly IServiceProvider _serviceProvider;
+        private readonly IServiceScopeFactory _serviceScopeFactory;
         
         private ObservableCollection<SmtpSettings> _smtpServers = new();
         private SmtpSettings? _selectedServer = null;
@@ -166,13 +167,13 @@ namespace WindowsLauncher.UI.ViewModels
             WindowsLauncher.Core.Interfaces.IEncryptionService encryptionService,
             ILogger<SmtpSettingsViewModel> logger,
             IDialogService dialogService,
-            IServiceProvider serviceProvider) : base(logger, dialogService)
+            IServiceScopeFactory serviceScopeFactory) : base(logger, dialogService)
         {
             _smtpRepository = smtpRepository ?? throw new ArgumentNullException(nameof(smtpRepository));
             _emailService = emailService ?? throw new ArgumentNullException(nameof(emailService));
             _encryptionService = encryptionService ?? throw new ArgumentNullException(nameof(encryptionService));
             _logger = logger ?? throw new ArgumentNullException(nameof(logger));
-            _serviceProvider = serviceProvider ?? throw new ArgumentNullException(nameof(serviceProvider));
+            _serviceScopeFactory = serviceScopeFactory ?? throw new ArgumentNullException(nameof(serviceScopeFactory));
             
             // Initialize commands
             LoadServersCommand = new AsyncRelayCommand(LoadServersAsync);
@@ -289,8 +290,8 @@ namespace WindowsLauncher.UI.ViewModels
             {
                 _logger.LogInformation("Opening SMTP editor for new server: {ServerType}", newServer.ServerType);
                 
-                // Создаем SmtpEditViewModel через DI
-                var editViewModel = _serviceProvider.GetRequiredService<SmtpEditViewModel>();
+                // Создаем SmtpEditViewModel через scoped scope для доступа к Scoped сервисам
+                var editViewModel = _serviceScopeFactory.CreateScopedService<SmtpEditViewModel>();
                 
                 // Настраиваем ViewModel для создания нового сервера
                 editViewModel.SetServer(newServer, isNew: true);
@@ -342,8 +343,8 @@ namespace WindowsLauncher.UI.ViewModels
                 _logger.LogInformation("Opening SMTP editor for server: {ServerName} ({ServerType})", 
                     server.Name, server.ServerType);
                 
-                // Создаем SmtpEditViewModel через DI
-                var editViewModel = _serviceProvider.GetRequiredService<SmtpEditViewModel>();
+                // Создаем SmtpEditViewModel через scoped scope для доступа к Scoped сервисам
+                var editViewModel = _serviceScopeFactory.CreateScopedService<SmtpEditViewModel>();
                 
                 // Настраиваем ViewModel для редактирования существующего сервера
                 editViewModel.SetServer(server, isNew: false);
