@@ -304,10 +304,10 @@ namespace WindowsLauncher.UI
             services.AddSingleton<ISessionManagementService, SessionManagementService>();
             
             // Сервисы виртуальной клавиатуры с адаптивным выбором по версии Windows
-            services.AddScoped<VirtualKeyboardService>(); // Универсальный сервис
-            services.AddScoped<Windows10TouchKeyboardService>(); // Windows 10 специфичный
-            services.AddScoped<VirtualKeyboardServiceFactory>(); // Фабрика для выбора подходящего сервиса
-            services.AddScoped<IVirtualKeyboardService, AdaptiveVirtualKeyboardService>(); // Адаптивный сервис
+            services.AddSingleton<VirtualKeyboardService>(); // Универсальный сервис - Singleton для стабильности
+            services.AddSingleton<Windows10TouchKeyboardService>(); // Windows 10 специфичный - Singleton для стабильности
+            services.AddSingleton<VirtualKeyboardServiceFactory>(); // Фабрика для выбора подходящего сервиса
+            services.AddSingleton<IVirtualKeyboardService, AdaptiveVirtualKeyboardService>(); // Адаптивный сервис - Singleton для root provider
             services.AddSingleton<WindowsLauncher.UI.Services.GlobalTouchKeyboardManager>();
 
             // Infrastructure сервисы
@@ -407,6 +407,8 @@ namespace WindowsLauncher.UI
 
             // ViewModels
             services.AddSingleton<MainViewModel>();
+            services.AddSingleton<OfficeToolsViewModel>(); // Singleton для переиспользования офисных инструментов
+            services.AddSingleton<ApplicationManagementViewModel>(); // Singleton для управления приложениями
             services.AddTransient<AddressBookViewModel>();
             services.AddTransient<ComposeEmailViewModel>();
             services.AddTransient<ContactEditViewModel>();

@@ -532,7 +532,7 @@
 
                 <!-- No Applications Message -->
                 <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center"
-                           Visibility="{Binding HasNoApplications, Converter={StaticResource BoolToVisConverter}}">
+                           Visibility="{Binding HasNoFilteredApplications, Converter={StaticResource BoolToVisConverter}}">
                     <Border Width="80" Height="80" Background="{StaticResource CorporateGrayDarkBrush}" 
                             CornerRadius="40" Margin="0,0,0,20">
                         <ContentPresenter Content="{Binding Source='📱', Converter={StaticResource EmojiToFontAwesome32Converter}}"
@@ -572,7 +572,7 @@
 
                 <StackPanel Grid.Column="1" Orientation="Horizontal" VerticalAlignment="Center">
                     <!-- Application Count -->
-                    <TextBlock Text="{Binding ApplicationCount}" 
+                    <TextBlock Text="{Binding FilteredApplicationCount}" 
                               FontSize="12" FontWeight="SemiBold"
                               Foreground="{StaticResource PrimaryBrush}"/>
                     <TextBlock Text="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_ApplicationsCount}" FontSize="12" 
@@ -585,7 +585,7 @@
                             Padding="8,4"
                             Margin="12,0,0,0"
                             ToolTip="{Binding WSAStatusTooltip}"
-                            Visibility="{Binding ShowWSAStatus, Converter={StaticResource BooleanToVisibilityConverter}}">
+                            Visibility="{Binding ShowWSAStatus, Converter={StaticResource BoolToVisConverter}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🤖" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center"/>
                             <TextBlock Text="{Binding WSAStatusText}" 
@@ -668,12 +668,7 @@
                             Margin="8,0,0,0">
                         <Button.Style>
                             <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
-                                <Style.Triggers>
-                                    <DataTrigger Binding="{Binding IsVirtualKeyboardVisible}" Value="True">
-                                        <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
-                                        <Setter Property="Foreground" Value="White"/>
-                                    </DataTrigger>
-                                </Style.Triggers>
+                                <!-- IsVirtualKeyboardVisible удален - неработающий функционал -->
                             </Style>
                         </Button.Style>
                         <ContentPresenter Content="{Binding Source='⌨️', Converter={StaticResource EmojiToFontAwesome32Converter}}"

@@ -2,7 +2,7 @@ using System;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows;
-using MaterialDesignThemes.Wpf;
+// using MaterialDesignThemes.Wpf; // Убрано - не используем MaterialDesignThemes
 using WindowsLauncher.UI.Infrastructure.Localization;
 
 namespace WindowsLauncher.UI.Components.Dialogs
@@ -19,7 +19,7 @@ namespace WindowsLauncher.UI.Components.Dialogs
         private string _dialogDetails = "";
         private string _confirmButtonText = "Да";
         private string _cancelButtonText = "Отмена";
-        private PackIconKind _dialogIconKind = PackIconKind.AlertCircleOutline;
+        private string _dialogIcon = "⚠️"; // Используем эмодзи вместо PackIconKind
 
         #endregion
 
@@ -55,16 +55,10 @@ namespace WindowsLauncher.UI.Components.Dialogs
             set => SetProperty(ref _cancelButtonText, value);
         }
 
-        public PackIconKind DialogIconKind
+        public string DialogIcon
         {
-            get => _dialogIconKind;
-            set
-            {
-                if (SetProperty(ref _dialogIconKind, value))
-                {
-                    DialogIcon.Kind = value;
-                }
-            }
+            get => _dialogIcon;
+            set => SetProperty(ref _dialogIcon, value);
         }
 
         public bool HasDetails => !string.IsNullOrEmpty(DialogDetails);
@@ -84,7 +78,7 @@ namespace WindowsLauncher.UI.Components.Dialogs
 
         public CorporateConfirmationDialog(string title, string message, string details = "", 
             string confirmText = "", string cancelText = "", 
-            PackIconKind iconKind = PackIconKind.AlertCircleOutline) : this()
+            string iconEmoji = "⚠️") : this()
         {
             DialogTitle = title;
             DialogMessage = message;
@@ -98,7 +92,7 @@ namespace WindowsLauncher.UI.Components.Dialogs
                 ? LocalizationHelper.Instance.GetString("Common_Cancel") 
                 : cancelText;
                 
-            DialogIconKind = iconKind;
+            DialogIcon = iconEmoji;
         }
 
         #endregion
@@ -141,7 +135,7 @@ namespace WindowsLauncher.UI.Components.Dialogs
                 details: LocalizationHelper.Instance.GetString("Dialog_LogoutDetails"),
                 confirmText: LocalizationHelper.Instance.GetString("Dialog_Confirm"),
                 cancelText: LocalizationHelper.Instance.GetString("Common_Cancel"),
-                iconKind: PackIconKind.ExitToApp
+                iconEmoji: "🚪" // Эмодзи двери для выхода
             );
 
             if (owner != null)
@@ -161,7 +155,7 @@ namespace WindowsLauncher.UI.Components.Dialogs
                 details: LocalizationHelper.Instance.GetString("Dialog_DeleteDetails"),
                 confirmText: LocalizationHelper.Instance.GetString("Dialog_Delete"),
                 cancelText: LocalizationHelper.Instance.GetString("Common_Cancel"),
-                iconKind: PackIconKind.DeleteOutline
+                iconEmoji: "🗑️" // Эмодзи корзины для удаления
             );
 
             if (owner != null)
@@ -175,7 +169,7 @@ namespace WindowsLauncher.UI.Components.Dialogs
         /// </summary>
         public static bool ShowConfirmation(string title, string message, string details = "",
             string confirmText = "", string cancelText = "", 
-            PackIconKind iconKind = PackIconKind.AlertCircleOutline, Window? owner = null)
+            string iconEmoji = "⚠️", Window? owner = null)
         {
             // Используем локализованные значения по умолчанию
             if (string.IsNullOrEmpty(confirmText))
@@ -183,7 +177,7 @@ namespace WindowsLauncher.UI.Components.Dialogs
             if (string.IsNullOrEmpty(cancelText))
                 cancelText = LocalizationHelper.Instance.GetString("Common_Cancel");
                 
-            var dialog = new CorporateConfirmationDialog(title, message, details, confirmText, cancelText, iconKind);
+            var dialog = new CorporateConfirmationDialog(title, message, details, confirmText, cancelText, iconEmoji);
 
             if (owner != null)
                 dialog.Owner = owner;

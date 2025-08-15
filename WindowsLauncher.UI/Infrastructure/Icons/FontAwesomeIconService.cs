@@ -43,8 +43,8 @@ namespace WindowsLauncher.UI.Infrastructure.Icons
             {"🔧", FontAwesomeIcon.Wrench},
             {"⏳", FontAwesomeIcon.Refresh},
 
-            // Клавиатура (используем иконку сетки как альтернативу)
-            {"⌨️", FontAwesomeIcon.ThLarge},
+            // Клавиатура (контурная иконка клавиатуры)
+            {"⌨️", FontAwesomeIcon.KeyboardOutline},
 
             // Статусы и предупреждения
             {"⚠️", FontAwesomeIcon.Warning},

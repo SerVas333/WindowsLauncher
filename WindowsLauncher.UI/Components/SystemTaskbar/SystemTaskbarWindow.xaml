@@ -327,7 +327,7 @@
                     </Style>
                 </Button.Style>
                 <fa:ImageAwesome Icon="KeyboardOutline" 
-                                 Width="24" Height="18" 
+                                 Width="36" Height="18" 
                                  Foreground="{Binding RelativeSource={RelativeSource AncestorType=Button}, Path=Foreground}"/>
             </Button>
 

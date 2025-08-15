@@ -211,9 +211,6 @@ namespace WindowsLauncher.Services
         {
             try
             {
-                // Сначала убиваем все существующие процессы TabTip
-                await KillExistingTabTipProcesses();
-
                 // Метод с использованием cmd для запуска
                 var cmdStartInfo = new ProcessStartInfo
                 {
@@ -315,39 +312,6 @@ namespace WindowsLauncher.Services
             {
                 _logger.LogWarning(ex, "Ошибка запуска через реестр");
                 return false;
-            }
-        }
-
-        private async Task KillExistingTabTipProcesses()
-        {
-            try
-            {
-                var processes = Process.GetProcessesByName(TOUCH_KEYBOARD_PROCESS_NAME);
-                foreach (var process in processes)
-                {
-                    try
-                    {
-                        if (!process.HasExited)
-                        {
-                            process.Kill();
-                            await process.WaitForExitAsync();
-                        }
-                        process.Dispose();
-                    }
-                    catch (Exception ex)
-                    {
-                        _logger.LogWarning(ex, "Не удалось завершить процесс TabTip {ProcessId}", process.Id);
-                    }
-                }
-                
-                if (processes.Length > 0)
-                {
-                    await Task.Delay(1000); // Даем время на завершение
-                }
-            }
-            catch (Exception ex)
-            {
-                _logger.LogWarning(ex, "Ошибка при завершении процессов TabTip");
             }
         }
 

@@ -83,7 +83,9 @@ namespace WindowsLauncher.UI
             try
             {
                 var serviceProvider = ((App)System.Windows.Application.Current).ServiceProvider;
-                var virtualKeyboardService = serviceProvider.GetService<IVirtualKeyboardService>();
+                var serviceScopeFactory = serviceProvider.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>();
+                using var scope = serviceScopeFactory.CreateScope();
+                var virtualKeyboardService = scope.ServiceProvider.GetService<IVirtualKeyboardService>();
                 
                 if (virtualKeyboardService != null)
                 {
@@ -127,10 +129,11 @@ namespace WindowsLauncher.UI
                     }
 
                     // Обновляем состояние в ViewModel
-                    if (DataContext is MainViewModel viewModel)
-                    {
-                        viewModel.IsVirtualKeyboardVisible = e.IsVisible;
-                    }
+                    // IsVirtualKeyboardVisible удалено - неработающий функционал
+                    // if (DataContext is MainViewModel viewModel)
+                    // {
+                    //     viewModel.IsVirtualKeyboardVisible = e.IsVisible;
+                    // }
                 }
                 catch (Exception ex)
                 {
@@ -195,7 +198,9 @@ namespace WindowsLauncher.UI
             {
                 // Отписываемся от событий при закрытии окна
                 var serviceProvider = ((App)System.Windows.Application.Current).ServiceProvider;
-                var virtualKeyboardService = serviceProvider.GetService<IVirtualKeyboardService>();
+                var serviceScopeFactory = serviceProvider.GetRequiredService<Microsoft.Extensions.DependencyInjection.IServiceScopeFactory>();
+                using var scope = serviceScopeFactory.CreateScope();
+                var virtualKeyboardService = scope.ServiceProvider.GetService<IVirtualKeyboardService>();
                 
                 if (virtualKeyboardService != null)
                 {
