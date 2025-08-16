@@ -21,8 +21,6 @@ using System.Windows;
 using System.Windows.Input;
 using WindowsLauncher.UI.Components.Dialogs;
 using WindowsLauncher.Core.Interfaces.Lifecycle;
-using WindowsLauncher.Core.Interfaces.Android;
-using WindowsLauncher.Core.Enums;
 
 namespace WindowsLauncher.UI.ViewModels
 {
@@ -40,13 +38,6 @@ namespace WindowsLauncher.UI.ViewModels
         private bool _isLoading = false;
         private bool _isInitialized = false;
         private bool _isSidebarVisible = false;
-        private bool _hasActiveFilter = false;
-
-        // WSA Status Fields
-        private bool _showWSAStatus = false;
-        private string _wsaStatusText = "";
-        private string _wsaStatusTooltip = "";
-        private string _wsaStatusColor = "#666666";
 
         #endregion
 
@@ -57,18 +48,27 @@ namespace WindowsLauncher.UI.ViewModels
             ILogger<MainViewModel> logger,
             IDialogService dialogService,
             OfficeToolsViewModel officeToolsViewModel,
-            ApplicationManagementViewModel applicationManagementViewModel)
+            ApplicationManagementViewModel applicationManagementViewModel,
+            WSAStatusViewModel wsaStatusViewModel,
+            CategoryManagementViewModel categoryManagementViewModel,
+            UserSessionViewModel userSessionViewModel)
             : base(logger, dialogService)
         {
             _serviceScopeFactory = serviceScopeFactory;
             OfficeTools = officeToolsViewModel;
             ApplicationManager = applicationManagementViewModel;
+            WSAStatus = wsaStatusViewModel;
+            CategoryManager = categoryManagementViewModel;
+            UserSession = userSessionViewModel;
 
             // Настраиваем провайдер роли пользователя для офисных инструментов
             OfficeTools.SetCurrentUserRoleProvider(() => CurrentUser?.Role);
 
-            // Инициализируем коллекции (только те что не делегируются)
-            LocalizedCategories = new ObservableCollection<CategoryViewModel>();
+            // Подписываемся на события CategoryManager
+            CategoryManager.FilteringRequested += OnFilteringRequested;
+            
+            // Подписываемся на события UserSession
+            UserSession.UserChanged += OnUserChanged;
 
             // Инициализируем команды
             InitializeCommands();
@@ -83,62 +83,18 @@ namespace WindowsLauncher.UI.ViewModels
 
         #region Properties
 
+        /// <summary>
+        /// Делегированное свойство к UserSession для обратной совместимости с XAML
+        /// </summary>
         public User? CurrentUser
         {
-            get => _currentUser;
+            get => UserSession.CurrentUser;
             set
             {
-                if (SetProperty(ref _currentUser, value))
+                // Простое делегирование - вся логика теперь в OnUserChanged через событие
+                if (UserSession.CurrentUser != value)
                 {
-                    OnPropertyChanged(nameof(WindowTitle));
-                    OnPropertyChanged(nameof(LocalizedRole));
-                    OnPropertyChanged(nameof(CanManageSettings));
-
-                    // Передаем пользователя в ApplicationManager
-                    ApplicationManager.CurrentUser = value;
-
-                    // Обновляем команды
-                    OpenSettingsCommand.RaiseCanExecuteChanged();
-                    OpenAdminCommand.RaiseCanExecuteChanged();
-
-                    // Упрощенная логика смены пользователя с обеспечением безопасности
-                    if (value != null)
-                    {
-                        var oldUser = _currentUser; // Сохраняем ссылку на старого пользователя
-                        
-                        // Проверяем смену пользователя (сравниваем ID, не имена)
-                        bool isUserChanged = oldUser != null && oldUser.Id != value.Id;
-                        
-                        if (isUserChanged && _isInitialized)
-                        {
-                            Logger.LogWarning("SECURITY: User changed from {OldUser} (ID: {OldId}) to {NewUser} (ID: {NewId})", 
-                                oldUser.Username, oldUser.Id, value.Username, value.Id);
-                            
-                            // КРИТИЧНО: Закрываем все приложения старого пользователя для безопасности
-                            _ = Task.Run(async () =>
-                            {
-                                await CloseUserApplicationsAsync(oldUser);
-                                await ClearUserStateAsync();
-                                
-                                // Сбрасываем инициализацию для перезагрузки данных нового пользователя
-                                _isInitialized = false;
-                                
-                                // Запускаем инициализацию для нового пользователя в UI потоке
-                                await System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
-                                {
-                                    await InitializeAsync();
-                                });
-                            });
-                        }
-                        else if (!_isInitialized)
-                        {
-                            // Первая инициализация или пользователь не изменился - выполняем в UI потоке
-                            _ = System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
-                            {
-                                await InitializeAsync();
-                            });
-                        }
-                    }
+                    UserSession.CurrentUser = value;
                 }
             }
         }
@@ -157,25 +113,17 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
 
-        // Делегированные свойства к ApplicationManager для обратной совместимости с XAML
+        // Делегированные свойства к CategoryManager для обратной совместимости с XAML
         public string SearchText
         {
-            get => ApplicationManager.SearchText;
-            set 
-            { 
-                ApplicationManager.SearchText = value;
-                UpdateActiveFilterStatus(); // Обновляем индикатор при изменении поиска
-            }
+            get => CategoryManager.SearchText;
+            set => CategoryManager.SearchText = value;
         }
 
         public string SelectedCategory
         {
-            get => ApplicationManager.SelectedCategory;
-            set
-            {
-                ApplicationManager.SelectedCategory = value;
-                UpdateCategorySelection();
-            }
+            get => CategoryManager.SelectedCategory;
+            set => CategoryManager.SelectedCategory = value;
         }
 
         public string StatusMessage
@@ -190,10 +138,10 @@ namespace WindowsLauncher.UI.ViewModels
             set => SetProperty(ref _isLoading, value);
         }
 
-        // Делегированные коллекции к ApplicationManager
+        // Делегированные коллекции к ApplicationManager и CategoryManager
         public ObservableCollection<ApplicationViewModel> Applications => ApplicationManager.Applications;
         public ObservableCollection<ApplicationViewModel> FilteredApplications => ApplicationManager.FilteredApplications;
-        public ObservableCollection<CategoryViewModel> LocalizedCategories { get; }
+        public ObservableCollection<CategoryViewModel> LocalizedCategories => CategoryManager.LocalizedCategories;
 
         // Computed Properties
         public string WindowTitle
@@ -207,26 +155,18 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
 
-        public string LocalizedRole
-        {
-            get
-            {
-                if (CurrentUser == null) return "";
-
-                return CurrentUser.Role switch
-                {
-                    Core.Enums.UserRole.Administrator => LocalizationHelper.Instance.GetString("RoleAdministrator"),
-                    Core.Enums.UserRole.PowerUser => LocalizationHelper.Instance.GetString("RolePowerUser"),
-                    Core.Enums.UserRole.Standard => LocalizationHelper.Instance.GetString("RoleStandard"),
-                    _ => CurrentUser.Role.ToString()
-                };
-            }
-        }
+        /// <summary>
+        /// Делегированное свойство к UserSession для обратной совместимости с XAML
+        /// </summary>
+        public string LocalizedRole => UserSession.LocalizedRole;
 
         public int TileSize => UserSettings?.TileSize ?? 150;
         public bool ShowCategories => UserSettings?.ShowCategories ?? true;
         public string Theme => UserSettings?.Theme ?? "Light";
-        public bool CanManageSettings => CurrentUser?.Role >= Core.Enums.UserRole.PowerUser;
+        /// <summary>
+        /// Делегированное свойство к UserSession для обратной совместимости с XAML
+        /// </summary>
+        public bool CanManageSettings => UserSession.CanManageSettings;
         public int ApplicationCount => ApplicationManager.ApplicationCount;
         public bool HasNoApplications => ApplicationManager.HasNoApplications;
         
@@ -243,47 +183,13 @@ namespace WindowsLauncher.UI.ViewModels
         /// <summary>
         /// Индикатор активного фильтра для визуальной индикации на кнопке Sidebar
         /// </summary>
-        public bool HasActiveFilter
-        {
-            get => _hasActiveFilter;
-            set => SetProperty(ref _hasActiveFilter, value);
-        }
+        public bool HasActiveFilter => CategoryManager.HasActiveFilter;
 
-        /// <summary>
-        /// Показывать ли индикатор статуса WSA в UI
-        /// </summary>
-        public bool ShowWSAStatus
-        {
-            get => _showWSAStatus;
-            set => SetProperty(ref _showWSAStatus, value);
-        }
-
-        /// <summary>
-        /// Текст статуса WSA
-        /// </summary>
-        public string WSAStatusText
-        {
-            get => _wsaStatusText;
-            set => SetProperty(ref _wsaStatusText, value);
-        }
-
-        /// <summary>
-        /// Подсказка для статуса WSA
-        /// </summary>
-        public string WSAStatusTooltip
-        {
-            get => _wsaStatusTooltip;
-            set => SetProperty(ref _wsaStatusTooltip, value);
-        }
-
-        /// <summary>
-        /// Цвет текста статуса WSA
-        /// </summary>
-        public string WSAStatusColor
-        {
-            get => _wsaStatusColor;
-            set => SetProperty(ref _wsaStatusColor, value);
-        }
+        // Делегированные свойства к WSAStatus для обратной совместимости с XAML
+        public bool ShowWSAStatus => WSAStatus.ShowWSAStatus;
+        public string WSAStatusText => WSAStatus.WSAStatusText;
+        public string WSAStatusTooltip => WSAStatus.WSAStatusTooltip;
+        public string WSAStatusColor => WSAStatus.WSAStatusColor;
 
         /// <summary>
         /// Офисные инструменты: email, адресная книга, справка
@@ -295,17 +201,34 @@ namespace WindowsLauncher.UI.ViewModels
         /// </summary>
         public ApplicationManagementViewModel ApplicationManager { get; }
 
+        /// <summary>
+        /// Статус Android подсистемы (WSA)
+        /// </summary>
+        public WSAStatusViewModel WSAStatus { get; }
+
+        /// <summary>
+        /// Управление категориями и фильтрацией
+        /// </summary>
+        public CategoryManagementViewModel CategoryManager { get; }
+
+        /// <summary>
+        /// Управление пользовательскими сессиями
+        /// </summary>
+        public UserSessionViewModel UserSession { get; }
+
         #endregion
 
         #region Commands
 
-        // Делегированные команды к ApplicationManager для обратной совместимости с XAML
+        // Делегированные команды к ApplicationManager и CategoryManager для обратной совместимости с XAML
         public AsyncRelayCommand<ApplicationViewModel> LaunchApplicationCommand => ApplicationManager.LaunchApplicationCommand;
-        public RelayCommand<string> SelectCategoryCommand { get; private set; } = null!;
+        public RelayCommand<string> SelectCategoryCommand => CategoryManager.SelectCategoryCommand;
         public AsyncRelayCommand RefreshCommand => ApplicationManager.RefreshCommand;
-        public RelayCommand LogoutCommand { get; private set; } = null!;
+        /// <summary>
+        /// Делегированная команда к UserSession для обратной совместимости с XAML
+        /// </summary>
+        public RelayCommand ExitApplicationCommand => UserSession.ExitApplicationCommand;
         public RelayCommand OpenSettingsCommand { get; private set; } = null!;
-        public RelayCommand SwitchUserCommand { get; private set; } = null!;
         public RelayCommand OpenAdminCommand { get; private set; } = null!;
         public AsyncRelayCommand ShowVirtualKeyboardCommand { get; private set; } = null!;
         public RelayCommand ToggleSidebarCommand { get; private set; } = null!;
@@ -317,17 +240,11 @@ namespace WindowsLauncher.UI.ViewModels
 
         private void InitializeCommands()
         {
-            // LaunchApplicationCommand и RefreshCommand теперь делегируются к ApplicationManager
-
-            SelectCategoryCommand = new RelayCommand<string>(SelectCategory);
-
-            LogoutCommand = new RelayCommand(Logout);
+            // LaunchApplicationCommand, RefreshCommand и SelectCategoryCommand теперь делегируются
 
             OpenSettingsCommand = new RelayCommand(
                 OpenSettings,
                 () => CanManageSettings);
-
-            SwitchUserCommand = new RelayCommand(SwitchUser);
 
             OpenAdminCommand = new RelayCommand(
                 OpenAdminWindow,
@@ -375,7 +292,7 @@ namespace WindowsLauncher.UI.ViewModels
                 if (CurrentUser == null)
                 {
                     Logger.LogInformation("Starting user authentication");
-                    await AuthenticateUserAsync();
+                    await UserSession.AuthenticateUserAsync();
 
                     if (CurrentUser == null)
                     {
@@ -391,8 +308,8 @@ namespace WindowsLauncher.UI.ViewModels
                 // Load user data
                 await LoadUserDataAsync();
 
-                // Initialize WSA status
-                await InitializeWSAStatusAsync();
+                // Initialize WSA status через делегированный ViewModel
+                await WSAStatus.InitializeWSAStatusAsync();
 
                 StatusMessage = LocalizationHelper.Instance.GetString("Ready");
                 _isInitialized = true;
@@ -420,40 +337,6 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
 
-        private async Task AuthenticateUserAsync()
-        {
-            try
-            {
-
-                using var scope = _serviceScopeFactory.CreateScope();
-                var authService = scope.ServiceProvider.GetRequiredService<IAuthenticationService>();
-
-                var authResult = await authService.AuthenticateAsync();
-
-                if (authResult.IsSuccess && authResult.User != null)
-                {
-                    CurrentUser = authResult.User;
-                    Logger.LogInformation("User authenticated: {User} ({Role})",
-                        CurrentUser.Username, CurrentUser.Role);
-                }
-                else
-                {
-                    var errorMessage = LocalizationHelper.Instance.GetFormattedString("AuthenticationFailed",
-                        authResult.ErrorMessage ?? "Unknown error");
-
-                    Logger.LogError("Authentication failed: {Error}", authResult.ErrorMessage);
-                    StatusMessage = errorMessage;
-                    DialogService.ShowError(errorMessage);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Authentication error");
-                var errorMessage = LocalizationHelper.Instance.GetFormattedString("AuthenticationFailed", ex.Message);
-                StatusMessage = errorMessage;
-                DialogService.ShowError(errorMessage);
-            }
-        }
 
         private async Task LoadUserDataAsync()
         {
@@ -482,8 +365,8 @@ namespace WindowsLauncher.UI.ViewModels
                 // Load applications через ApplicationManager
                 await ApplicationManager.LoadApplicationsAsync();
 
-                // Load and localize categories
-                await LoadLocalizedCategoriesAsync(appService);
+                // Load and localize categories через CategoryManager
+                await CategoryManager.LoadLocalizedCategoriesAsync(appService);
 
                 var appCount = ApplicationManager.ApplicationCount;
                 Logger.LogInformation("User data loaded: {AppCount} apps", appCount);
@@ -497,139 +380,7 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
 
-        private async Task LoadLocalizedCategoriesAsync(IApplicationService appService)
-        {
-            try
-            {
-                // Используем CategoryManagementService для получения видимых категорий с полными метаданными
-                using var scope = _serviceScopeFactory.CreateScope();
-                var categoryService = scope.ServiceProvider.GetService<ICategoryManagementService>();
-                
-                LocalizedCategories.Clear();
-
-                // Add "All" category first
-                var allCategory = new CategoryViewModel
-                {
-                    Key = "All",
-                    DisplayName = LocalizationHelper.Instance.GetString("CategoryAll"),
-                    IsSelected = SelectedCategory == "All",
-                    IsChecked = true, // "Все" по умолчанию включено
-                    Color = "#2196F3", // Default blue for "All" category
-                    Icon = "ThLarge" // Grid icon for all items view (FontAwesome)
-                };
-                
-                // Подписываемся на изменения чекбокса "Все"
-                allCategory.PropertyChanged += OnCategoryPropertyChanged;
-                LocalizedCategories.Add(allCategory);
-
-                if (categoryService != null && CurrentUser != null)
-                {
-                    // Получаем видимые категории с метаданными через CategoryManagementService
-                    var categoryDefinitions = await categoryService.GetVisibleCategoriesAsync(CurrentUser);
-                    
-                    foreach (var categoryDef in categoryDefinitions)
-                    {
-                        // Используем CategoryManagementService для получения базового имени
-                        var baseName = categoryService.GetLocalizedCategoryName(categoryDef);
-                        
-                        // Применяем UI-слойную локализацию через LocalizationHelper
-                        var localizedName = GetLocalizedCategoryName(categoryDef.LocalizationKey, baseName);
-                        
-                        var categoryViewModel = new CategoryViewModel
-                        {
-                            Key = categoryDef.Key,
-                            DisplayName = localizedName,
-                            IsSelected = SelectedCategory == categoryDef.Key,
-                            IsChecked = true, // По умолчанию все категории включены
-                            Color = categoryDef.Color,
-                            Icon = categoryDef.Icon
-                        };
-                        
-                        // Подписываемся на изменения чекбоксов категорий
-                        categoryViewModel.PropertyChanged += OnCategoryPropertyChanged;
-                        LocalizedCategories.Add(categoryViewModel);
-                    }
-                    
-                    Logger.LogInformation("Loaded {Count} categories via CategoryManagementService (predefined + dynamic)", LocalizedCategories.Count - 1);
-                }
-                else
-                {
-                    // Fallback: используем старый метод через ApplicationService
-                    Logger.LogWarning("CategoryManagementService not available, falling back to ApplicationService");
-                    
-                    var categories = await appService.GetCategoriesAsync();
-                    var hiddenCategories = UserSettings?.HiddenCategories ?? new List<string>();
-
-                    // Add other categories with defaults
-                    foreach (var category in categories.Where(c => !hiddenCategories.Contains(c)))
-                    {
-                        var localizedName = GetLocalizedCategoryName(category);
-                        var categoryViewModel = new CategoryViewModel
-                        {
-                            Key = category,
-                            DisplayName = localizedName,
-                            IsSelected = SelectedCategory == category,
-                            IsChecked = true, // По умолчанию все категории включены
-                            Color = "#666666", // Default gray
-                            Icon = "FolderOpen" // Default folder icon (FontAwesome)
-                        };
-                        
-                        // Подписываемся на изменения чекбоксов категорий
-                        categoryViewModel.PropertyChanged += OnCategoryPropertyChanged;
-                        LocalizedCategories.Add(categoryViewModel);
-                    }
-                    
-                    Logger.LogInformation("Loaded {Count} categories via ApplicationService fallback", LocalizedCategories.Count - 1);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to load categories");
-                
-                // Добавляем минимальную категорию "All" для стабильности UI
-                if (LocalizedCategories.Count == 0)
-                {
-                    var allCategory = new CategoryViewModel
-                    {
-                        Key = "All",
-                        DisplayName = LocalizationHelper.Instance.GetString("CategoryAll") ?? "All",
-                        IsSelected = true,
-                        IsChecked = true,
-                        Color = "#2196F3",
-                        Icon = "ThLarge" // Grid icon (FontAwesome)
-                    };
-                    
-                    // Подписываемся на изменения чекбокса "Все"
-                    allCategory.PropertyChanged += OnCategoryPropertyChanged;
-                    LocalizedCategories.Add(allCategory);
-                }
-            }
-        }
-
-        private string GetLocalizedCategoryName(string localizationKey, string fallbackName = null)
-        {
-            if (string.IsNullOrEmpty(localizationKey)) 
-                return fallbackName ?? "";
-
-            try
-            {
-                // Если ключ не содержит подчеркивания, считаем его категорией и формируем ключ
-                var actualKey = localizationKey.Contains("_") ? localizationKey : $"Category_{localizationKey}";
-                var actualFallback = fallbackName ?? localizationKey;
-                
-                var localized = LocalizationHelper.Instance.GetString(actualKey);
-                
-                // Если локализация найдена и отличается от ключа, используем её
-                return !string.IsNullOrEmpty(localized) && localized != actualKey 
-                    ? localized 
-                    : actualFallback;
-            }
-            catch (Exception ex)
-            {
-                Logger.LogDebug(ex, "Error getting localized name for key {Key}, using fallback", localizationKey);
-                return fallbackName ?? localizationKey;
-            }
-        }
+        // LoadLocalizedCategoriesAsync и GetLocalizedCategoryName удалены - теперь обрабатываются в CategoryManagementViewModel
 
         private UserSettings CreateDefaultSettings()
         {
@@ -659,7 +410,7 @@ namespace WindowsLauncher.UI.ViewModels
 
         #region Localization
 
-        private void OnLanguageChanged(object? sender, EventArgs e)
+        private async void OnLanguageChanged(object? sender, EventArgs e)
         {
             Logger.LogInformation("Language changed, updating UI strings");
 
@@ -667,55 +418,8 @@ namespace WindowsLauncher.UI.ViewModels
             OnPropertyChanged(nameof(WindowTitle));
             OnPropertyChanged(nameof(LocalizedRole));
 
-            // Обновляем категории с учетом новой системы CategoryManagementService
-            foreach (var category in LocalizedCategories)
-            {
-                if (category.Key == "All")
-                {
-                    category.DisplayName = LocalizationHelper.Instance.GetString("CategoryAll");
-                }
-                else
-                {
-                    // Используем CategoryManagementService для получения правильного ключа локализации
-                    _ = Task.Run(async () =>
-                    {
-                        try
-                        {
-                            using var scope = _serviceScopeFactory.CreateScope();
-                            var categoryService = scope.ServiceProvider.GetService<ICategoryManagementService>();
-                            
-                            if (categoryService != null)
-                            {
-                                var categoryDef = await categoryService.GetCategoryByKeyAsync(category.Key);
-                                if (categoryDef != null)
-                                {
-                                    var baseName = categoryService.GetLocalizedCategoryName(categoryDef);
-                                    var localizedName = GetLocalizedCategoryName(categoryDef.LocalizationKey, baseName);
-                                    
-                                    // Обновляем в UI потоке
-                                    System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
-                                    {
-                                        category.DisplayName = localizedName;
-                                    });
-                                }
-                            }
-                            else
-                            {
-                                // Fallback на старую логику
-                                var localizedName = GetLocalizedCategoryName(category.Key);
-                                System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
-                                {
-                                    category.DisplayName = localizedName;
-                                });
-                            }
-                        }
-                        catch (Exception ex)
-                        {
-                            Logger.LogError(ex, "Error updating category localization for {Key}", category.Key);
-                        }
-                    });
-                }
-            }
+            // Обновляем локализацию категорий через CategoryManager
+            await CategoryManager.UpdateLocalizationAsync();
 
             // Обновляем статус если это стандартное сообщение
             if (StatusMessage == "Ready")
@@ -732,6 +436,67 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
 
+        /// <summary>
+        /// Обработчик события обновления фильтрации от CategoryManagementViewModel
+        /// </summary>
+        /// <summary>
+        /// Обработчик события изменения пользователя из UserSessionViewModel
+        /// </summary>
+        private void OnUserChanged(object? sender, User? user)
+        {
+            try
+            {
+                Logger.LogDebug("User changed event received: {Username}", user?.Username ?? "null");
+                
+                // Обновляем внутреннее поле для совместимости
+                _currentUser = user;
+                
+                // Уведомляем об изменении свойств
+                OnPropertyChanged(nameof(CurrentUser));
+                OnPropertyChanged(nameof(WindowTitle));
+                OnPropertyChanged(nameof(LocalizedRole));
+                OnPropertyChanged(nameof(CanManageSettings));
+
+                // Передаем пользователя в ApplicationManager и CategoryManager
+                ApplicationManager.CurrentUser = user;
+                CategoryManager.CurrentUser = user;
+
+                // Обновляем команды
+                OpenSettingsCommand.RaiseCanExecuteChanged();
+                OpenAdminCommand.RaiseCanExecuteChanged();
+
+                // ИСПРАВЛЕНИЕ: Сбрасываем флаг инициализации при любой смене пользователя
+                // Это позволяет новому пользователю инициализироваться заново в Singleton ViewModel
+                _isInitialized = false;
+                
+                if (user != null)
+                {
+                    // Инициализация для любого нового пользователя - выполняем в UI потоке
+                    _ = System.Windows.Application.Current.Dispatcher.InvokeAsync(async () =>
+                    {
+                        await InitializeAsync();
+                    });
+                }
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error handling user changed event");
+            }
+        }
+
+        private void OnFilteringRequested(object? sender, EventArgs e)
+        {
+            try
+            {
+                Logger.LogDebug("Filtering requested by CategoryManagementViewModel");
+                FilterApplications();
+            }
+            catch (Exception ex)
+            {
+                Logger.LogError(ex, "Error handling filtering request");
+            }
+        }
+
         #endregion
 
         #region Data Operations
@@ -745,23 +510,17 @@ namespace WindowsLauncher.UI.ViewModels
                 
                 var filtered = ApplicationManager.Applications.AsEnumerable();
 
-                // Filter by checked categories (UI-специфичная логика)
-                var checkedCategories = LocalizedCategories
-                    .Where(c => c.IsChecked)
-                    .Select(c => c.Key)
-                    .ToHashSet();
-                
-                // Если чекбокс "Все" не включен, фильтруем по выбранным категориям
-                if (!checkedCategories.Contains("All"))
+                // Filter by checked categories через CategoryManager
+                if (!CategoryManager.ShouldIncludeAllCategories())
                 {
+                    var checkedCategories = CategoryManager.GetCheckedCategories();
                     filtered = filtered.Where(a => checkedCategories.Contains(a.Category));
                 }
-                // Если "Все" включено, показываем все приложения
 
                 // Filter by search (дублируем логику поиска из ApplicationManager для консистентности)
-                if (!string.IsNullOrWhiteSpace(SearchText))
+                if (!string.IsNullOrWhiteSpace(CategoryManager.SearchText))
                 {
-                    var searchLower = SearchText.ToLower();
+                    var searchLower = CategoryManager.SearchText.ToLower();
                     filtered = filtered.Where(a =>
                         a.Name.ToLower().Contains(searchLower) ||
                         (!string.IsNullOrEmpty(a.Description) && a.Description.ToLower().Contains(searchLower)));
@@ -786,112 +545,7 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
 
-        /// <summary>
-        /// Обработчик изменений чекбоксов категорий
-        /// </summary>
-        private void OnCategoryPropertyChanged(object? sender, PropertyChangedEventArgs e)
-        {
-            if (e.PropertyName != nameof(CategoryViewModel.IsChecked) || sender is not CategoryViewModel changedCategory)
-                return;
-
-            try
-            {
-                // Логика чекбокса "Все"
-                if (changedCategory.Key == "All")
-                {
-                    // При установке "Все" в True → все остальные чекбоксы становятся True
-                    if (changedCategory.IsChecked)
-                    {
-                        foreach (var category in LocalizedCategories.Where(c => c.Key != "All"))
-                        {
-                            category.PropertyChanged -= OnCategoryPropertyChanged; // Отключаем обработчик для избежания рекурсии
-                            category.IsChecked = true;
-                            category.PropertyChanged += OnCategoryPropertyChanged; // Включаем обратно
-                        }
-                        Logger.LogDebug("Чекбокс 'Все' установлен в True - все категории включены");
-                    }
-                    // При установке "Все" в False → все остальные чекбоксы становятся False
-                    else
-                    {
-                        foreach (var category in LocalizedCategories.Where(c => c.Key != "All"))
-                        {
-                            category.PropertyChanged -= OnCategoryPropertyChanged; // Отключаем обработчик для избежания рекурсии
-                            category.IsChecked = false;
-                            category.PropertyChanged += OnCategoryPropertyChanged; // Включаем обратно
-                        }
-                        Logger.LogDebug("Чекбокс 'Все' установлен в False - все категории отключены");
-                    }
-                }
-                else
-                {
-                    // При установке любого чекбокса в False → "Все" становится False
-                    if (!changedCategory.IsChecked)
-                    {
-                        var allCategory = LocalizedCategories.FirstOrDefault(c => c.Key == "All");
-                        if (allCategory != null && allCategory.IsChecked)
-                        {
-                            allCategory.PropertyChanged -= OnCategoryPropertyChanged; // Отключаем обработчик
-                            allCategory.IsChecked = false;
-                            allCategory.PropertyChanged += OnCategoryPropertyChanged; // Включаем обратно
-                            Logger.LogDebug("Категория '{CategoryName}' отключена - чекбокс 'Все' сброшен", changedCategory.DisplayName);
-                        }
-                    }
-                    // Проверяем, если все категории (кроме "Все") включены, то ставим "Все" в True
-                    else if (changedCategory.IsChecked)
-                    {
-                        var allNonAllCategoriesChecked = LocalizedCategories.Where(c => c.Key != "All").All(c => c.IsChecked);
-                        if (allNonAllCategoriesChecked)
-                        {
-                            var allCategory = LocalizedCategories.FirstOrDefault(c => c.Key == "All");
-                            if (allCategory != null && !allCategory.IsChecked)
-                            {
-                                allCategory.PropertyChanged -= OnCategoryPropertyChanged;
-                                allCategory.IsChecked = true;
-                                allCategory.PropertyChanged += OnCategoryPropertyChanged;
-                                Logger.LogDebug("Все категории включены - чекбокс 'Все' установлен в True");
-                            }
-                        }
-                    }
-                }
-
-                // Обновляем фильтрацию приложений
-                FilterApplications();
-                
-                // Обновляем индикатор активного фильтра
-                UpdateActiveFilterStatus();
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Ошибка при обработке изменения чекбокса категории");
-            }
-        }
-
-        /// <summary>
-        /// Обновляет статус активного фильтра для визуальной индикации
-        /// </summary>
-        private void UpdateActiveFilterStatus()
-        {
-            try
-            {
-                // Фильтр активен, если:
-                // 1. Не все категории включены (чекбокс "Все" отключен или не все категории включены)
-                // 2. Есть активный поиск
-                
-                var allCategory = LocalizedCategories.FirstOrDefault(c => c.Key == "All");
-                var hasSearchFilter = !string.IsNullOrWhiteSpace(SearchText);
-                var allCategoriesSelected = allCategory?.IsChecked == true;
-                
-                // Фильтр активен, если есть поиск или не все категории выбраны
-                HasActiveFilter = hasSearchFilter || !allCategoriesSelected;
-                
-                Logger.LogDebug("Статус фильтра: HasActiveFilter={HasActiveFilter}, Поиск: '{SearchText}', Все категории: {AllSelected}", 
-                    HasActiveFilter, SearchText, allCategoriesSelected);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Ошибка при обновлении статуса активного фильтра");
-            }
-        }
+        // OnCategoryPropertyChanged и UpdateActiveFilterStatus удалены - теперь обрабатываются в CategoryManagementViewModel
 
         // RefreshApplications удален - теперь используется ApplicationManager.RefreshCommand
 
@@ -925,56 +579,6 @@ namespace WindowsLauncher.UI.ViewModels
             }
         }
 
-        private async void Logout()
-        {
-            try
-            {
-                Logger.LogInformation("Logout process started");
-                // Показываем диалог подтверждения выхода
-                var confirmed = CorporateConfirmationDialog.ShowLogoutConfirmation(
-                    WpfApplication.Current.MainWindow);
-                
-                if (!confirmed)
-                {
-                    Logger.LogInformation("Logout cancelled by user");
-                    return;
-                }
-
-                Logger.LogInformation("User confirmed logout, processing...");
-                using var scope = _serviceScopeFactory.CreateScope();
-                
-                // Используем SessionManagementService для обработки выхода
-                var sessionManager = scope.ServiceProvider.GetRequiredService<ISessionManagementService>();
-                var success = await sessionManager.HandleLogoutRequestAsync().ConfigureAwait(false);
-                
-                if (success)
-                {
-                    Logger.LogInformation("User logged out successfully: {User}", CurrentUser?.Username);
-                    StatusMessage = LocalizationHelper.Instance.GetString("LoggedOut"); // Оставляем финальное состояние
-                    
-                    // Закрываем MainWindow - это запустит HandleMainWindowClosedAsync в App.xaml.cs
-                    System.Windows.Application.Current.Dispatcher.BeginInvoke(() =>
-                    {
-                        var mainWindow = System.Windows.Application.Current.MainWindow;
-                        mainWindow?.Close();
-                    });
-                }
-                else
-                {
-                    Logger.LogWarning("Logout failed");
-                    StatusMessage = LocalizationHelper.Instance.GetString("LogoutFailed"); // Оставляем для ошибки
-                }
-                
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Logout process failed");
-                var errorMessage = LocalizationHelper.Instance.GetFormattedString("LogoutError", ex.Message);
-                StatusMessage = errorMessage;
-                DialogService.ShowError(errorMessage);
-                Logger.LogError(ex, "Error during logout");
-            }
-        }
 
         private void OpenSettings()
         {
@@ -983,82 +587,7 @@ namespace WindowsLauncher.UI.ViewModels
                 LocalizationHelper.Instance.GetString("Settings"));
         }
 
-        private async void SwitchUser()
-        {
-            try
-            {
-                // ИСПРАВЛЕНИЕ: Показываем диалог подтверждения смены пользователя
-                Logger.LogInformation("User switch requested by {Username}", CurrentUser?.Username);
 
-                bool confirmed = Components.Dialogs.CorporateConfirmationDialog.ShowConfirmation(
-                    LocalizationHelper.Instance.GetString("Dialog_SwitchUserTitle"),
-                    LocalizationHelper.Instance.GetString("Dialog_SwitchUserMessage"),
-                    LocalizationHelper.Instance.GetString("Dialog_SwitchUserDetails"),
-                    LocalizationHelper.Instance.GetString("Dialog_Confirm"),
-                    LocalizationHelper.Instance.GetString("Common_Cancel"),
-                    "👤", // Эмодзи пользователя для смены пользователя
-                    WpfApplication.Current.MainWindow);
-
-                if (!confirmed)
-                {
-                    Logger.LogInformation("User switch cancelled by user");
-                    return;
-                }
-
-                // Завершаем сессию текущего пользователя (НЕ перезапускаем процесс)
-                await HandleUserSwitchAsync();
-            }
-            catch (Exception ex)
-            {
-                var errorMessage = LocalizationHelper.Instance.GetFormattedString("SwitchUserError", ex.Message);
-                StatusMessage = errorMessage;
-                DialogService.ShowError(errorMessage);
-                Logger.LogError(ex, "Error during user switch");
-            }
-        }
-
-        private async Task HandleUserSwitchAsync()
-        {
-            try
-            {
-                Logger.LogInformation("Handling user switch for {Username}", CurrentUser?.Username);
-
-                // Используем ту же логику что и в Logout - делегируем SessionManagementService
-                using (var scope = _serviceScopeFactory.CreateScope())
-                {
-                    var sessionService = scope.ServiceProvider.GetRequiredService<ISessionManagementService>();
-                    
-                    // Завершаем сессию через тот же механизм что и Logout
-                    var success = await sessionService.HandleLogoutRequestAsync();
-                    
-                    if (success)
-                    {
-                        Logger.LogInformation("User switch successful for {Username}", CurrentUser?.Username);
-                        
-                        // Закрываем MainWindow - это запустит HandleMainWindowClosedAsync в App.xaml.cs
-                        // который покажет LoginWindow автоматически
-                        WpfApplication.Current.Dispatcher.BeginInvoke(() =>
-                        {
-                            var mainWindow = WpfApplication.Current.MainWindow;
-                            mainWindow?.Close();
-                        });
-                    }
-                    else
-                    {
-                        Logger.LogWarning("User switch failed for {Username}", CurrentUser?.Username);
-                        StatusMessage = LocalizationHelper.Instance.GetString("UserSwitchFailed"); // Оставляем для ошибки
-                        DialogService.ShowError("Не удалось выполнить смену пользователя");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Error handling user switch for {Username}", CurrentUser?.Username);
-                var errorMessage = LocalizationHelper.Instance.GetFormattedString("SwitchUserError", ex.Message);
-                StatusMessage = errorMessage;
-                DialogService.ShowError(errorMessage);
-            }
-        }
 
 
 
@@ -1155,252 +684,12 @@ namespace WindowsLauncher.UI.ViewModels
             base.Dispose(disposing);
         }
 
-        /// <summary>
-        /// Инициализация статуса Android подсистемы
-        /// </summary>
-        private async Task InitializeWSAStatusAsync()
-        {
-            try
-            {
-                Logger.LogInformation("Starting WSA status initialization in MainViewModel");
-                
-                using var scope = _serviceScopeFactory.CreateScope();
-                var androidSubsystem = scope.ServiceProvider.GetService<IAndroidSubsystemService>();
-
-                if (androidSubsystem == null)
-                {
-                    Logger.LogWarning("Android subsystem service not available in MainViewModel");
-                    ShowWSAStatus = false;
-                    return;
-                }
-
-                var mode = androidSubsystem.CurrentMode;
-                var currentStatus = androidSubsystem.WSAStatus;
-                Logger.LogInformation("MainViewModel: AndroidSubsystemService mode: {Mode}, current status: {Status}", mode, currentStatus);
-
-                // Показываем статус только если включено в конфигурации
-                ShowWSAStatus = androidSubsystem.CurrentMode != AndroidMode.Disabled;
-                
-                if (!ShowWSAStatus)
-                {
-                    Logger.LogDebug("WSA status hidden - Android subsystem disabled");
-                    return;
-                }
-
-                // Подписываемся на изменения статуса
-                androidSubsystem.StatusChanged += OnWSAStatusChanged;
-
-                // Устанавливаем начальный статус
-                await UpdateWSAStatusDisplayAsync(androidSubsystem);
-
-                Logger.LogInformation("WSA status initialized for {Mode} mode", androidSubsystem.CurrentMode);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to initialize WSA status");
-                ShowWSAStatus = false;
-            }
-        }
-
-        /// <summary>
-        /// Обработчик изменения статуса WSA
-        /// </summary>
-        private async void OnWSAStatusChanged(object? sender, string status)
-        {
-            try
-            {
-                if (sender is IAndroidSubsystemService androidSubsystem)
-                {
-                    await UpdateWSAStatusDisplayAsync(androidSubsystem);
-                }
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Error handling WSA status change");
-            }
-        }
-
-        /// <summary>
-        /// Обновление отображения статуса WSA
-        /// </summary>
-        private async Task UpdateWSAStatusDisplayAsync(IAndroidSubsystemService androidSubsystem)
-        {
-            try
-            {
-                var status = androidSubsystem.WSAStatus;
-                var mode = androidSubsystem.CurrentMode;
-
-                // Обновляем UI в главном потоке
-                await WpfApplication.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    WSAStatusText = GetLocalizedStatusText(status);
-                    WSAStatusColor = GetStatusColor(status);
-                    WSAStatusTooltip = GetStatusTooltip(status, mode);
-                });
-
-                Logger.LogDebug("WSA status updated: {Status} in {Mode} mode", status, mode);
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Failed to update WSA status display");
-            }
-        }
-
-        /// <summary>
-        /// Получить локализованный текст статуса
-        /// </summary>
-        private string GetLocalizedStatusText(string status)
-        {
-            return status switch
-            {
-                "Ready" => "Готов",
-                "Starting" => "Запуск",
-                "Stopping" => "Остановка",
-                "Available" => "Доступен",
-                "Unavailable" => "Недоступен",
-                "Disabled" => "Отключен",
-                "Error" => "Ошибка",
-                "Initializing" => "Инициализация",
-                "Suspended (Low Memory)" => "Приостановлен",
-                _ => status
-            };
-        }
-
-        /// <summary>
-        /// Получить цвет для статуса
-        /// </summary>
-        private string GetStatusColor(string status)
-        {
-            return status switch
-            {
-                "Ready" => "#4CAF50",           // Зеленый
-                "Available" => "#2196F3",       // Синий
-                "Starting" or "Initializing" => "#FF9800",  // Оранжевый
-                "Stopping" => "#FF9800",        // Оранжевый
-                "Error" => "#F44336",           // Красный
-                "Unavailable" or "Disabled" => "#757575",  // Серый
-                "Suspended (Low Memory)" => "#FF5722",     // Темно-оранжевый
-                _ => "#666666"                  // Серый по умолчанию
-            };
-        }
-
-        /// <summary>
-        /// Получить подсказку для статуса
-        /// </summary>
-        private string GetStatusTooltip(string status, AndroidMode mode)
-        {
-            var modeText = mode switch
-            {
-                AndroidMode.Disabled => "отключен",
-                AndroidMode.OnDemand => "по требованию", 
-                AndroidMode.Preload => "предзагрузка",
-                _ => mode.ToString()
-            };
-
-            return status switch
-            {
-                "Ready" => $"Android подсистема готова к работе\nРежим: {modeText}",
-                "Starting" => $"Запуск Android подсистемы...\nРежим: {modeText}",
-                "Available" => $"Android подсистема доступна\nРежим: {modeText}",
-                "Unavailable" => $"Android подсистема недоступна\nПроверьте установку WSA",
-                "Error" => $"Ошибка Android подсистемы\nПроверьте логи для подробностей",
-                "Disabled" => "Android функции отключены в настройках",
-                "Suspended (Low Memory)" => "Android подсистема приостановлена\nНедостаточно свободной памяти",
-                _ => $"Android подсистема: {status}\nРежим: {modeText}"
-            };
-        }
 
         #endregion
 
         #region Security Methods
 
-        /// <summary>
-        /// Безопасно закрыть все приложения пользователя при смене пользователя
-        /// Критично для предотвращения утечки персональной информации
-        /// </summary>
-        private async Task CloseUserApplicationsAsync(User user)
-        {
-            if (user == null) return;
 
-            try
-            {
-                Logger.LogWarning("SECURITY: Closing all applications for user {Username} during user switch", user.Username);
-                
-                await ExecuteInScopeAsync(async (serviceProvider) =>
-                {
-                    var lifecycleService = serviceProvider.GetRequiredService<IApplicationLifecycleService>();
-                    
-                    // Получаем все приложения пользователя
-                    var userApplications = await lifecycleService.GetByUserAsync(user.Username);
-                    
-                    if (userApplications.Count > 0)
-                    {
-                        Logger.LogWarning("SECURITY: Found {Count} applications to close for user {Username}", 
-                            userApplications.Count, user.Username);
-                        
-                        // Закрываем все приложения пользователя
-                        var result = await lifecycleService.CloseAllAsync(timeoutMs: 10000);
-                        
-                        if (result.Success)
-                        {
-                            Logger.LogInformation("SECURITY: Successfully closed all applications for user {Username}", user.Username);
-                        }
-                        else
-                        {
-                            Logger.LogError("SECURITY: Failed to close some applications for user {Username}: {Errors}", 
-                                user.Username, string.Join(", ", result.Errors));
-                        }
-                    }
-                    else
-                    {
-                        Logger.LogInformation("SECURITY: No applications to close for user {Username}", user.Username);
-                    }
-                });
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "SECURITY: Critical error closing applications for user {Username}", user.Username);
-                // Не выбрасываем исключение - смена пользователя должна продолжиться даже при ошибке
-            }
-        }
-
-        /// <summary>
-        /// Полная очистка состояния пользователя в UI
-        /// </summary>
-        private async Task ClearUserStateAsync()
-        {
-            Logger.LogInformation("Clearing user state for user switch");
-            
-            try
-            {
-                // Очищаем ApplicationManager
-                await ApplicationManager.ClearAsync();
-                
-                // Очистка остального состояния в UI потоке
-                await System.Windows.Application.Current.Dispatcher.InvokeAsync(() =>
-                {
-                    LocalizedCategories.Clear();
-                    UserSettings = null;
-                    HasActiveFilter = false;
-                    
-                    // Принудительно обновляем связанные свойства UI
-                    OnPropertyChanged(nameof(ApplicationCount));
-                    OnPropertyChanged(nameof(HasNoApplications));
-                    OnPropertyChanged(nameof(FilteredApplicationCount));
-                    OnPropertyChanged(nameof(HasNoFilteredApplications));
-                    OnPropertyChanged(nameof(TileSize));
-                    OnPropertyChanged(nameof(ShowCategories));
-                    OnPropertyChanged(nameof(Theme));
-                });
-                
-                Logger.LogInformation("User state cleared successfully");
-            }
-            catch (Exception ex)
-            {
-                Logger.LogError(ex, "Error clearing user state");
-                throw;
-            }
-        }
 
         #endregion
 
@@ -1445,103 +734,5 @@ namespace WindowsLauncher.UI.ViewModels
         #endregion
     }
 
-    /// <summary>
-    /// ViewModel для категорий с локализацией
-    /// </summary>
-    public class CategoryViewModel : INotifyPropertyChanged
-    {
-        private string _displayName = "";
-        private bool _isSelected;
-        private bool _isChecked = true; // По умолчанию все категории видимы
-        private string _color = "#666666";
-        private string _icon = "FolderOpen";
-
-        public string Key { get; set; } = "";
-
-        public string DisplayName
-        {
-            get => _displayName;
-            set
-            {
-                if (_displayName != value)
-                {
-                    _displayName = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public bool IsSelected
-        {
-            get => _isSelected;
-            set
-            {
-                if (_isSelected != value)
-                {
-                    _isSelected = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Включена ли категория в фильтрацию (для чекбоксов в Sidebar)
-        /// </summary>
-        public bool IsChecked
-        {
-            get => _isChecked;
-            set
-            {
-                if (_isChecked != value)
-                {
-                    _isChecked = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Цвет категории в hex формате
-        /// </summary>
-        public string Color
-        {
-            get => _color;
-            set
-            {
-                if (_color != value)
-                {
-                    _color = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        /// <summary>
-        /// Иконка FontAwesome
-        /// </summary>
-        public string Icon
-        {
-            get => _icon;
-            set
-            {
-                if (_icon != value)
-                {
-                    _icon = value;
-                    OnPropertyChanged();
-                }
-            }
-        }
-
-        public event PropertyChangedEventHandler? PropertyChanged;
-
-        protected virtual void OnPropertyChanged([System.Runtime.CompilerServices.CallerMemberName] string? propertyName = null)
-        {
-            PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
-        }
-
-        public override string ToString()
-        {
-            return $"{Key}: {DisplayName} ({IsSelected})";
-        }
-    }
+    // CategoryViewModel перенесен в CategoryManagementViewModel.cs
 }

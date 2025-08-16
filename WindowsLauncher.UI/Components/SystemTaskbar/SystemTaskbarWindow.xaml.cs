@@ -490,10 +490,10 @@ namespace WindowsLauncher.UI.Components.SystemTaskbar
                 var app = System.Windows.Application.Current as App;
                 if (app?.MainWindow?.DataContext is MainViewModel mainViewModel)
                 {
-                    if (mainViewModel.SwitchUserCommand?.CanExecute(null) == true)
+                    if (mainViewModel.ExitApplicationCommand?.CanExecute(null) == true)
                     {
-                        mainViewModel.SwitchUserCommand.Execute(null);
-                        _logger?.LogDebug("Switch user command executed from Start menu");
+                        mainViewModel.ExitApplicationCommand.Execute(null);
+                        _logger?.LogDebug("Exit application command executed from Start menu");
                     }
                 }
             }
@@ -582,10 +582,10 @@ namespace WindowsLauncher.UI.Components.SystemTaskbar
                 var app = System.Windows.Application.Current as App;
                 if (app?.MainWindow?.DataContext is MainViewModel mainViewModel)
                 {
-                    if (mainViewModel.LogoutCommand?.CanExecute(null) == true)
+                    if (mainViewModel.ExitApplicationCommand?.CanExecute(null) == true)
                     {
-                        mainViewModel.LogoutCommand.Execute(null);
-                        _logger?.LogDebug("Logout command executed from Start menu");
+                        mainViewModel.ExitApplicationCommand.Execute(null);
+                        _logger?.LogDebug("Exit application command executed from Start menu");
                     }
                 }
             }

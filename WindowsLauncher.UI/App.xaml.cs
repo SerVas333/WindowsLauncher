@@ -409,6 +409,9 @@ namespace WindowsLauncher.UI
             services.AddSingleton<MainViewModel>();
             services.AddSingleton<OfficeToolsViewModel>(); // Singleton для переиспользования офисных инструментов
             services.AddSingleton<ApplicationManagementViewModel>(); // Singleton для управления приложениями
+            services.AddSingleton<WSAStatusViewModel>(); // Singleton для статуса Android подсистемы
+            services.AddSingleton<CategoryManagementViewModel>(); // Singleton для управления категориями и фильтрацией
+            services.AddSingleton<UserSessionViewModel>(); // Singleton для управления пользовательскими сессиями
             services.AddTransient<AddressBookViewModel>();
             services.AddTransient<ComposeEmailViewModel>();
             services.AddTransient<ContactEditViewModel>();

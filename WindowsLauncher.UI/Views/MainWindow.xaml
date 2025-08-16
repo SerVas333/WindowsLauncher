@@ -59,6 +59,8 @@
                     <!-- User info -->
                     <ColumnDefinition Width="Auto"/>
                     <!-- Controls -->
+                    <ColumnDefinition Width="Auto"/>
+                    <!-- Exit button -->
                 </Grid.ColumnDefinitions>
 
                 <!-- Logo -->
@@ -83,7 +85,7 @@
                 <!-- Search -->
                 <TextBox Grid.Column="2" 
                          Style="{StaticResource TextBoxStyle}"
-                         Text="{Binding SearchText, UpdateSourceTrigger=PropertyChanged}"
+                         Text="{Binding CategoryManager.SearchText, UpdateSourceTrigger=PropertyChanged}"
                          VerticalAlignment="Center"
                          Margin="20,0"/>
 
@@ -98,13 +100,7 @@
                 </StackPanel>
 
                 <!-- Controls -->
-                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Width="280">
-                    <Button Style="{StaticResource SecondaryButtonStyle}"
-                            Command="{Binding SwitchUserCommand}"
-                            ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_SwitchUserTooltip}"
-                            Width="40" Height="32" Padding="4">
-                        <ContentPresenter Content="{Binding Source='👤', Converter={StaticResource EmojiToFontAwesome32Converter}}"/>
-                    </Button>
+                <StackPanel Grid.Column="4" Orientation="Horizontal" VerticalAlignment="Center" HorizontalAlignment="Left" Width="240">
                     
                     <!-- Email Compose Button -->
                     <Button Style="{StaticResource SecondaryButtonStyle}" 
@@ -163,14 +159,21 @@
                         <ContentPresenter Content="{Binding Source='🔄', Converter={StaticResource EmojiToFontAwesome32Converter}}"/>
                     </Button>
 
-                    <Button Style="{StaticResource SecondaryButtonStyle}" 
-                            Command="{Binding LogoutCommand}"
-                            ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_ExitTooltip}"
-                            Width="40" Height="32" Padding="4"
-                            Margin="8,0,0,0">
-                        <ContentPresenter Content="{Binding Source='🚪', Converter={StaticResource EmojiToFontAwesome32Converter}}"/>
-                    </Button>
                 </StackPanel>
+                
+                <!-- Logout/Switch User Button -->
+                <Button Grid.Column="5" 
+                        Style="{StaticResource SecondaryButtonStyle}" 
+                        Command="{Binding ExitApplicationCommand}"
+                        ToolTip="{Binding Source={x:Static loc:LocalizationHelper.Instance}, Path=CurrentCulture, Converter={StaticResource LocalizedStringConverter}, ConverterParameter=MainWindow_LogoutTooltip}"
+                        Width="40" Height="32" Padding="4"
+                        Margin="20,0,0,0"
+                        VerticalAlignment="Center">
+                    <fa:ImageAwesome Icon="SignOut" 
+                                   Width="16" Height="16" 
+                                   Foreground="{StaticResource CorporateGrayBrush}"
+                                   HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                </Button>
             </Grid>
         </Border>
 
@@ -206,7 +209,7 @@
                                    Margin="0,0,0,16"/>
                         
                         <!-- Categories List -->
-                        <ItemsControl ItemsSource="{Binding LocalizedCategories}">
+                        <ItemsControl ItemsSource="{Binding CategoryManager.LocalizedCategories}">
                             <ItemsControl.ItemTemplate>
                                 <DataTemplate>
                                     <Border Margin="0,0,0,8" 
@@ -300,7 +303,7 @@
                         <Style TargetType="Button" BasedOn="{StaticResource SecondaryButtonStyle}">
                             <Style.Triggers>
                                 <!-- Индикация активного фильтра -->
-                                <DataTrigger Binding="{Binding HasActiveFilter}" Value="True">
+                                <DataTrigger Binding="{Binding CategoryManager.HasActiveFilter}" Value="True">
                                     <Setter Property="Background" Value="{StaticResource PrimaryBrush}"/>
                                 </DataTrigger>
                             </Style.Triggers>
@@ -314,7 +317,7 @@
                                 <Setter Property="Foreground" Value="{StaticResource PrimaryBrush}"/>
                                 <Style.Triggers>
                                     <!-- Изменяем цвет иконки при активном фильтре -->
-                                    <DataTrigger Binding="{Binding HasActiveFilter}" Value="True">
+                                    <DataTrigger Binding="{Binding CategoryManager.HasActiveFilter}" Value="True">
                                         <Setter Property="Foreground" Value="{StaticResource OnPrimaryBrush}"/>
                                     </DataTrigger>
                                 </Style.Triggers>
@@ -584,26 +587,26 @@
                             CornerRadius="4"
                             Padding="8,4"
                             Margin="12,0,0,0"
-                            ToolTip="{Binding WSAStatusTooltip}"
-                            Visibility="{Binding ShowWSAStatus, Converter={StaticResource BoolToVisConverter}}">
+                            ToolTip="{Binding WSAStatus.WSAStatusTooltip}"
+                            Visibility="{Binding WSAStatus.ShowWSAStatus, Converter={StaticResource BoolToVisConverter}}">
                         <StackPanel Orientation="Horizontal">
                             <TextBlock Text="🤖" FontSize="12" Margin="0,0,4,0" VerticalAlignment="Center"/>
-                            <TextBlock Text="{Binding WSAStatusText}" 
+                            <TextBlock Text="{Binding WSAStatus.WSAStatusText}" 
                                       FontSize="11" 
                                       FontWeight="SemiBold"
-                                      Foreground="{Binding WSAStatusColor}"
+                                      Foreground="{Binding WSAStatus.WSAStatusColor}"
                                       VerticalAlignment="Center"/>
                         </StackPanel>
                         <Border.Style>
                             <Style TargetType="Border">
                                 <Style.Triggers>
-                                    <DataTrigger Binding="{Binding WSAStatusText}" Value="Ready">
+                                    <DataTrigger Binding="{Binding WSAStatus.WSAStatusText}" Value="Ready">
                                         <Setter Property="Background" Value="#E8F5E8"/>
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding WSAStatusText}" Value="Starting">
+                                    <DataTrigger Binding="{Binding WSAStatus.WSAStatusText}" Value="Starting">
                                         <Setter Property="Background" Value="#FFF4E6"/>
                                     </DataTrigger>
-                                    <DataTrigger Binding="{Binding WSAStatusText}" Value="Error">
+                                    <DataTrigger Binding="{Binding WSAStatus.WSAStatusText}" Value="Error">
                                         <Setter Property="Background" Value="#FFEBEE"/>
                                     </DataTrigger>
                                 </Style.Triggers>
